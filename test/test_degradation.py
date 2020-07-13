@@ -1,6 +1,16 @@
+
+
 import unittest
 
+from pof.degradation import Degradation
+
 class TestDegradation(unittest.TestCase):
+
+    def test_class_creation(self):
+        deg = Degradation()
+
+        self.assertTrue(True)
+        
 
     def test_degradation_array(self):
         self.assertTrue(False)
