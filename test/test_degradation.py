@@ -6,36 +6,26 @@ from pof.degradation import Degradation
 
 class TestDegradation(unittest.TestCase):
 
-    def test_class_creation(self):
+    def test_instantiate(self):
         deg = Degradation()
 
         self.assertTrue(True)
         
 
-    def test_degradation_array(self):
+    def test_all_tests_written(self):
         self.assertTrue(False)
         
 
-    # Check the boundary cases
-    
-"""
-    def test_consume_food_consumes_the_apple(self):
-        c = Consumer()
-        c.consume_food()
-        self.assertTrue(c.apple.consumed,
-                        "Expected apple to be consumed")
+    # Check whole degradation
+    # test_starts_perfect_ends_perfect
+    # test_starts_perfect_ends_partial
+    # test_starts_perfect_ends_failed
+    # test_starts_partial_ends_partial
+    # test_starts_partial_ends_partial
+    # test_starts_partial_ends_failed
 
-    def test_consume_food_cuts_the_food(self):
-        c = Consumer()
-        c.consume_food()
-        self.assertTrue(c.apple.been_cut,
-                        "Expected apple to be cut")
-
-    def test_pick_food_always_selects_the_apple(self):
-        c = Consumer()
-        food = c.pick_food()
-        self.assertEquals(c.apple, food,
-                          "Expected apple to have been picked")"""
+    # test_perfect_prior_to_start
+    # test_partial_prior_to_start
 
 
 if __name__ == '__main__':
