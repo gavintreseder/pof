@@ -45,3 +45,11 @@ class Distribution:
 
         return P
 
+    def likelihood(self, x=None): # TODO not sure if we need this
+
+        if x is None:
+            #Return pdf
+            return 1
+        else:
+            #Return 
+            return 0

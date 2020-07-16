@@ -8,11 +8,12 @@ import numpy as np
 import pandas as pd
 import scipy.stats as ss
 from scipy.linalg import circulant
-from random import random
-from random import seed
+from matplotlib import pyplot as plt
+from random import random, seed
 
 from pof.degradation import Degradation
 from pof.distribution import Distribution
+from pof.consequence import Consequence
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -25,6 +26,7 @@ class FailureMode: #Maybe rename to failure mode
 
         # Failure behaviour
         self.failure_dist = Distribution(alpha=50, beta=1.5, gamma=10)
+        self.init_dist = None
 
         # Set the time period of interested # TODO Make this an input
         self.t = np.arange(0,101,1)
@@ -35,10 +37,13 @@ class FailureMode: #Maybe rename to failure mode
 
         # Failure information
         self.t_fm = 0
+        self.cof = Consequence() #TODO change to a consequence model
+        self.pof = None #TODO
 
         # failure state
-        self.initiated = False
-        self.detected = False
+        self._initiated = False
+        self._detected = False
+        self._failed = False
 
         self.t_initiated = False #TODO
 
@@ -53,7 +58,18 @@ class FailureMode: #Maybe rename to failure mode
 
 
         # State History
+        self._history = dict(
+            t_fm = [],
+            _initiated = [],
+            _detected = [],
+            _failed = [],
 
+        ) #TODO fix this ugly beast up
+
+
+        # kpis? #TODO
+        # Cost and Value of current task? #TODO
+        self.value = None #TODO
 
         return
     
@@ -62,7 +78,7 @@ class FailureMode: #Maybe rename to failure mode
         Convert the probability of failure into a probability of initiation
         """
 
-        # Super simple placeholder
+        # Super simple placeholder # TODO add other methods
         alpha = self.failure_dist.alpha
         beta = self.failure_dist.beta
         gamma = self.failure_dist.gamma - self.pf_interval
@@ -128,63 +144,36 @@ class FailureMode: #Maybe rename to failure mode
         return p_i
         
 
-    def sim_step(self, t_step):
+    def is_initiated(self, t_step=None):
         """
-        Calculate the expected state of an asset after an interval
+        Return p
         """
-
-        # Check if it has initiated 
-        self.sim_initiation(t_step)
-
-        # Check if symptom present
-
-        # Check condition loss
-
-        # Check if symptom detected
-
-        # Check condition measured
-
-
-        # Initation - check for initiation
-
-            # Sytmptoms
-            # Condition Loss
-
-            # Initiation Flag
         
-        # Inspection - check symptoms and condition
-
-            # Detect Symptoms
-            # Measure Condition
-
-            # Detection Flag
-
-
-        # Task - if detected, check task triggers
-
-            # Do task action based on trigger (condition windows)
-
-
-        # Failure - check for failure
-
-
-        # Incremenet failure mode age
-        self.t_fm = self.t_fm + t_step
-
-    def check_for_initiation(self, t_step):
-        
-        if self.initated == True:
+        if self._initiated == True:
             return True
-    
+
         else:
-            p_i = self.init_dist.likelihood(self.t_fm, self.t_fm + t_step)
+
+            p_i = self.init_dist.conditional_f(self.t_fm, self.t_fm + t_step)
+
+
+    def p_failed(self, t_step=None):
+        """
+        """
+
+        if self._failed == True:
+            return 1
+
+        else:
+
+            return 0 # TODO add rest of options
 
 
     # *************** Condition Loss ***************
 
     def measure_condition_loss(self):
 
-        return self.expected_condition
+        return self.degradation.measure()
 
     def get_cond_loss(self):
 
@@ -194,7 +183,7 @@ class FailureMode: #Maybe rename to failure mode
     
     def get_p_initiation(self, t_step): #TODO make a robust time step. (t_min, t_max, etc)
 
-        if self.initiated == True:
+        if self._initiated == True:
             p_i = 1
         else:
             p_i = self.init_dist.conditional_f(self.t_fm, self.t_fm + t_step) #TODO update to actual time
@@ -204,20 +193,100 @@ class FailureMode: #Maybe rename to failure mode
 
     # ****************** Simulate *******************
 
-    def sim_initiation(self,t_step):
+    def sim(self, t_step):
 
-        if self.initiated == False:
+        # Check for initiation
+        self.sim_initiation(t_step)
+
+        # Check for degradation
+        if self._initiated:
+
+            # TODO check for all degradation for loop
+            self.sim_degradation(t_step)
+
+            # Check for failure
+            self.sim_failure(t_step)
+
+            if self._failed:
+                
+                #Trigger corrective Maintenance
+                self.corrective_maintenance()
+
+        # Check for detection TODO is this just a task
+        
+        #self.sim_detection(t_step)
+
+        # Check for tasks
+            # Replace
+            # Repair 
+
+        # Increment time
+        self.t_fm = self.t_fm + t_step
+
+        # Record History
+        self.record_history()
+
+        return
+
+    def sim_initiation(self, t_step):
+
+        if self._initiated == False:
 
             p_i = self.get_p_initiation(t_step = t_step)
             
             if(random() < p_i):
 
-                self.initiated = True
+                self._initiated = True
                 self.t_initiated = self.t_fm
 
+        return
 
-    def sim_condition_loss(self, t_step):
+    def sim_degradation(self, t_step):
 
         # Simple method -> increment the condition
-        return self.degradation.expected(t_step - self.t_fm)
+        return self.degradation.sim(t_step)
 
+    def sim_failure(self, t_step):
+
+        # TODO add for loop and check all methods
+        self._failed = self.degradation.limit_reached() #TODO or sytmpom or safety factor failure?
+
+        return self._failed
+
+    def sim_tasks(self, t_step):
+
+        # Check if task is triggered
+        # Implement action
+        return
+
+
+    def sim_history(self):
+
+        nrows = len(self._history)
+        fig, ax = plt.subplots(nrows=5, ncols=1)
+
+        row = 0
+        for field in self._history:
+
+                ax[row].plot(self._history[field])
+                ax[row].set_ylabel(field)
+
+            row = row + 1
+
+
+    def corrective_maintenance(self):
+
+        return
+
+    def record_history(self):
+
+        vars_record = ['t_fm', "_initiated", "_detected", '_failed']
+
+        #for var in vars_record:
+        #    self._history[var].append(self.)
+        
+        self._history['t_fm'].append(self.t_fm)
+        self._history['_initiated'].append(self._initiated)
+        self._history['_detected'].append(self._detected)
+        self._history['_failed'].append(self._failed)
+        self._history['_failed'].append(self._failed)

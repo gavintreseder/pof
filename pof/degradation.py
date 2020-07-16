@@ -84,7 +84,7 @@ class Degradation():
 
         # Get the condition profile
         if self.cond_profile_type == 'linear':
-            m = -10
+            m = 10
             b = self.condition_perfect
 
             y = m * x + b
@@ -114,6 +114,18 @@ class Degradation():
         self.t_condition = t + self.t_condition
         
         return self.current()
+
+    # ************** Check Failure *********************
+
+    def limit_reached(self):
+        
+        if self.cond_type == 'loss' and self.condition_profile[self.t_condition] <= self.condition_limit:
+            return True
+        
+        if self.cond_type != 'loss' and self.condition_profile[self.t_condition] >= self.condition_limit:
+            return True
+
+        return False
 
     # ************** Access Condition ******************
 
@@ -203,3 +215,11 @@ class Degradation():
         plt.plot(self.t_condition, self.current(), 'rd')
         plt.show()
         
+
+class Symptom():
+
+
+    # TODO consider combining symptom and degradation?
+    def __init__(self):
+        
+        self.time_to_failure = 5 #TODO update

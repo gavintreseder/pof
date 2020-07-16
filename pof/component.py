@@ -26,6 +26,11 @@ class Component():
         
         self.age = 0
         self.age_last_insp = 0
+
+        # Link to other componenets
+
+        self._parent_id
+        self._children_id
         
 
         return
