@@ -58,7 +58,8 @@ class FailureMode: #Maybe rename to failure mode
         return
     
     def calc_init_dist(self): #TODO needs to get passed a degradation and a pof
-        """ Convert the probability of failure into a probability of initiation
+        """
+        Convert the probability of failure into a probability of initiation
         """
 
         # Super simple placeholder

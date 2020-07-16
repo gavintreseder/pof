@@ -7,7 +7,8 @@ Author: Gavin Treseder
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
-from scipy.linalg import circulant
+from matplotlib import pyplot as plt
+from random import random
 
 from pof.distribution import Distribution
 
@@ -27,24 +28,27 @@ class Degradation():
                     Probability that the 
                 
     """
-    def __init__(self, perfect=0, limit=100):
+    def __init__(self, perfect=100, limit=0):
 
+        # Degradation details
         self.cond_type = 'loss' #TODO not used
         self.cond_profile_type = 'linear'
         self.pf_interval = 5
 
+        # Time
+        self.t_condition = 0
+        self.t_max = 100 # TODO calculate this
+        self.t_accumulated = 0
+
+        # Condition
         self.condition_perfect = perfect
         self.condition_accumulated = 0
         self.condition = 0
         self.condition_threshold = 100
         self.condition_limit = limit
 
+        # Methods 
         self.set_condition_profile()
-
-        self.t_condition = 0
-        self.t_max = 100 # TODO calculate this
-
-        self.t_accumulated = 0
 
         return
     
@@ -59,11 +63,15 @@ class Degradation():
     def set_condition(self, new_condition = None): # Rewrite
 
         if new_condition is None:
-            self.condition = self.condition_limit
+            self.condition = self.condition_perfect
         else:
             self.condition = new_condition
+            self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
 
         return
+
+    def set_t_condition(self, t_condition):
+        self.t_condition = t_condition
 
     def set_condition_profile(self, t_min=0, t_max=100): # Change limits for time to match max degradation profile
         """
@@ -97,23 +105,62 @@ class Degradation():
 
         self.condition_profile = y
 
+    # ************** Simulate Condition ***************
 
-    def expected(self, t = None, direction = 'loss'):
+    def sim(self, t):
+        """
+        Increment the current time by t and return the new condition
+        """
+        self.t_condition = t + self.t_condition
+        
+        return self.current()
+
+    # ************** Access Condition ******************
+
+    def forecast(self, t):
+        """
+        Return the condition at a future time t
+        """
+        return self.at_time(t + self.t_condition)
+
+    def current(self):
+        """
+        Return the condition at time t
+        """
+        return self.at_time(self.t_condition)
+
+    def at_time(self, t):
 
         if t < 0:
             t = 0
-        elif t > len(self.condition_profile):
-            t = len(self.condition_profile)
+        elif t >= len(self.condition_profile):
+            t = len(self.condition_profile) - 1
 
         cond = self.condition_profile[t]
 
         return cond
 
-    def expected_range(self, t=None,):
-        # Placeholder for when this is updated to a range
-        return
+    # *************** Measure Condition ****************
 
-    def reset_degradation(self, t_new=None, t_reverse=None, t_percent=None, cond_new=None, cond_reverse=None, cond_percent=None, var='time', method='reset'):
+    def measure(self):
+        """
+        Returns a measurement of the condition based on uncertainty around its measurement
+        """
+
+        # TODO use variables
+        # TODO add other methods
+        # TODO make sure it works for positive and negative
+
+        m_mean = self.current()
+        m_sigma = (m_mean - self.condition_perfect)/6
+
+        measurement = ss.norm.ppf(random(), loc=m_mean, scale=m_sigma)
+
+        return measurement
+    
+    # *************** Reset **********************
+
+    def reset_degradation(self, t_new=0, t_reverse=None, t_percent=None, cond_new=None, cond_reverse=None, cond_percent=None, var='time', method='reset'):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
@@ -131,20 +178,28 @@ class Degradation():
         self.t_accumulated = int(min(max(0, t), self.t_max))
 
         # Calculate accumulated condition 
-        cond_now = self.condition_profile[self.t_condition]
-        if method == 'reset':
+
+        cond = self.current()
+        """if method == 'reset':
             cond = cond_new
 
         if method == 'rf':
-            cond = cond_now * cond_percent
+            cond = self.current() * cond_percent
 
         if method == 'reverse':
-            cond = cond_now - cond_reverse
+            cond = self.current() - cond_reverse"""
 
         if self.condition_perfect < self.condition_limit:
             self.cond_accumulated = min(max(0, cond), self.condition_limit)
         else:
             self.cond_accumulated = min(max(0, cond), self.condition_perfect)
 
+        self.t_condition=0
+
         return
+
+    def plot_condition_profile(self):
+        plt.plot(self.condition_profile)
+        plt.plot(self.t_condition, self.current(), 'rd')
+        plt.show()
         
