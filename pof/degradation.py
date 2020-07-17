@@ -15,7 +15,6 @@ from pof.distribution import Distribution
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 
-
 class Degradation():
 
     """
@@ -28,24 +27,26 @@ class Degradation():
                     Probability that the 
                 
     """
-    def __init__(self, perfect=100, limit=0):
+    def __init__(self, perfect=100, limit=0, cond_profile_type = 'linear', cond_profile_params = [-10]):
 
         # Degradation details
         self.cond_type = 'loss' #TODO not used
-        self.cond_profile_type = 'linear'
+        self.cond_profile_type = cond_profile_type
+        self.cond_profile_params = cond_profile_params
         self.pf_interval = 5
 
         # Time
         self.t_condition = 0
-        self.t_max = 100 # TODO calculate this
+        self.t_max = 0 # TODO calculate this
         self.t_accumulated = 0
 
         # Condition
         self.condition_perfect = perfect
         self.condition_accumulated = 0
-        self.condition = 0
-        self.condition_threshold = 100
+        self.condition = 0 
+        self.condition_threshold = limit
         self.condition_limit = limit
+        self.condition_profile = None
 
         # Methods 
         self.set_condition_profile()
@@ -84,7 +85,7 @@ class Degradation():
 
         # Get the condition profile
         if self.cond_profile_type == 'linear':
-            m = 10
+            m = self.cond_profile_params[0]
             b = self.condition_perfect
 
             y = m * x + b
@@ -96,12 +97,18 @@ class Degradation():
 
         # Add the accumulated condition
         if self.condition_perfect < self.condition_limit:
-            y = y + self.condition_accumulated
-            y[y > self.condition_limit] = self.condition_limit
-        else:
-            y = y - self.condition_accumulated
-            y[y < self.condition_limit] = self.condition_limit
 
+            y = y + self.condition_accumulated
+            self.t_max = np.argmax(y >= self.condition_limit)
+            y = y[:self.t_max + 1]
+            y[y > self.condition_limit] = self.condition_limit
+
+        else:
+
+            y = y - self.condition_accumulated
+            self.t_max = np.argmax(y <= self.condition_limit)
+            y = y[:self.t_max + 1]
+            y[y < self.condition_limit] = self.condition_limit
 
         self.condition_profile = y
 
@@ -111,7 +118,7 @@ class Degradation():
         """
         Increment the current time by t and return the new condition
         """
-        self.t_condition = t + self.t_condition
+        self.t_condition = min(t + self.t_condition,self.t_max)
         
         return self.current()
 
@@ -119,10 +126,10 @@ class Degradation():
 
     def limit_reached(self):
         
-        if self.cond_type == 'loss' and self.condition_profile[self.t_condition] <= self.condition_limit:
+        if self.cond_type == 'loss' and self.condition_profile[self.t_condition] <= self.condition_threshold:
             return True
         
-        if self.cond_type != 'loss' and self.condition_profile[self.t_condition] >= self.condition_limit:
+        if self.cond_type != 'loss' and self.condition_profile[self.t_condition] >= self.condition_threshold:
             return True
 
         return False
@@ -172,7 +179,22 @@ class Degradation():
     
     # *************** Reset **********************
 
-    def reset_degradation(self, t_new=0, t_reverse=None, t_percent=None, cond_new=None, cond_reverse=None, cond_percent=None, var='time', method='reset'):
+    def reset(self):
+        
+        # Reset the time
+        self.t_condition = 0
+        self.t_accumulated = 0
+        self.t_max = None
+
+        # Reset the condition
+        self.condition = 0 
+        self.condition_accumulated = 0
+
+        # Reset the condition profile 
+        self.set_condition_profile()
+
+
+    def reset_degradation(self, reset = 0, reduction_factor = 1, reduction_quantity=0, method='reset', axis='time'):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
@@ -181,7 +203,7 @@ class Degradation():
         if method == 'reset':
             t = t_new
 
-        if method == 'rf':
+        if method == 'reduction_factor':
             t = self.t_condition * t_percent
 
         if method == 'reverse':

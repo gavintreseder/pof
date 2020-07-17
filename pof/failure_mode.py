@@ -33,7 +33,7 @@ class FailureMode: #Maybe rename to failure mode
 
         self.pf_interval = 5 #TODO
 
-        self.degradation = Degradation(0,100) #TODO update with all the other options
+        self.degradation = Degradation(100, 0, 'linear', [-5]) #TODO update with all the other options
 
         # Failure information
         self.t_fm = 0
@@ -63,7 +63,8 @@ class FailureMode: #Maybe rename to failure mode
             _initiated = [],
             _detected = [],
             _failed = [],
-
+            degradation = [],
+        
         ) #TODO fix this ugly beast up
 
 
@@ -266,11 +267,17 @@ class FailureMode: #Maybe rename to failure mode
         fig, ax = plt.subplots(nrows=5, ncols=1)
 
         row = 0
-        for field in self._history:
 
-                ax[row].plot(self._history[field])
-                ax[row].set_ylabel(field)
+        for field in  ["_initiated", "_detected", '_failed']:
+            ax[row].step(self._history['t_fm'], self._history[field])
+            ax[row].set_ylabel(field)
+            
+            row = row + 1
 
+        for field in  ['degradation']:
+            ax[row].plot(self._history['t_fm'], self._history[field])
+            ax[row].set_ylabel(field)
+            
             row = row + 1
 
 
@@ -280,7 +287,6 @@ class FailureMode: #Maybe rename to failure mode
 
     def record_history(self):
 
-        vars_record = ['t_fm', "_initiated", "_detected", '_failed']
 
         #for var in vars_record:
         #    self._history[var].append(self.)
@@ -289,4 +295,4 @@ class FailureMode: #Maybe rename to failure mode
         self._history['_initiated'].append(self._initiated)
         self._history['_detected'].append(self._detected)
         self._history['_failed'].append(self._failed)
-        self._history['_failed'].append(self._failed)
+        self._history['degradation'].append(self.degradation.current())
