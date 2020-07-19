@@ -194,41 +194,35 @@ class Degradation():
         self.set_condition_profile()
 
 
-    def reset_degradation(self, reset = 0, reduction_factor = 1, reduction_quantity=0, method='reset', axis='time'):
+    def reset_degradation(self, target=0, reduction_factor=1, reverse=0, method='reset', axis='time'):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
         
-        # Calculated accumulated time
+
+
         if method == 'reset':
-            t = t_new
-
-        if method == 'reduction_factor':
-            t = self.t_condition * t_percent
-
-        if method == 'reverse':
-            t = self.t_condition - t_reverse
-
-        self.t_accumulated = int(min(max(0, t), self.t_max))
-
-        # Calculate accumulated condition 
-
-        cond = self.current()
-        """if method == 'reset':
-            cond = cond_new
-
-        if method == 'rf':
-            cond = self.current() * cond_percent
-
-        if method == 'reverse':
-            cond = self.current() - cond_reverse"""
-
-        if self.condition_perfect < self.condition_limit:
-            self.cond_accumulated = min(max(0, cond), self.condition_limit)
+            new = target
         else:
-            self.cond_accumulated = min(max(0, cond), self.condition_perfect)
 
-        self.t_condition=0
+
+        elif method == 'reduction_factor':
+            new = current * reduction_factor
+
+        elif method == 'reverse':
+            new = current - reverse
+
+        # Calculate the accumulated degradation
+        if axis == 'time':
+
+            self.t_accumulated = int(min(max(0, current), self.t_max))
+
+        elif axis == 'condition'
+
+            if self.condition_perfect < self.condition_limit:
+                self.cond_accumulated = min(max(0, cond), self.condition_limit)
+            else:
+                self.cond_accumulated = min(max(0, cond), self.condition_perfect)
 
         return
 

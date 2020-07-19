@@ -45,23 +45,51 @@ class Task:
         self.trigger_threshold_min = 0
         self.trigger_threshold_max = 10
 
-        self.trigger_comp = 1.1.2
+        self.trigger_comp = '1.1.2'
 
-        # ...
+        # TODO how the package is grouped together
         self.package
         self._impacts_parent
         self._impacts_children = False
 
+        # Consumed per use
+        self.cost = 100
+        self.parts = 'pole' # TODO make this an object
+        self.resources = 'trade'
+        
+        # Time to execute
+        self.state = 'up' # or down
 
         # Log it's use
         self._count_checked
         self._count_triggered
         self._count_completed
 
-    def is_triggered()
+    def is_triggered(self):
 
-class Replace(Task):
+        return
+
+
+    def reset(self):
+        self.triggered = False
+
+    #TODO add methods for cost, resources and 
+
+
+class Replace(Task): #TODO currenlty set up as emergency replacement
 
     def __init__(self):
         super().__init__()
         self.activity = 'replace'
+        self.trigger = 
+
+    def check_trigger(self, parent):
+        """
+        """
+        
+        if parent._failed == True
+            self.triggered = True
+        
+        return self.triggered
+
+    

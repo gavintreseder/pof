@@ -37,6 +37,8 @@ class FailureMode: #Maybe rename to failure mode
 
         # Failure information
         self.t_fm = 0
+        self.t_uptime = 0
+        self.t_downtime = 0
         self.cof = Consequence() #TODO change to a consequence model
         self.pof = None #TODO
 
@@ -52,6 +54,8 @@ class FailureMode: #Maybe rename to failure mode
         self.termites_detected = False
 
         # Tasks
+        self.task_order = [1,2,3,4] # 'inspect', 'replace', repair'
+
 
         # Prepare the failure mode
         self.calc_init_dist()
@@ -98,7 +102,7 @@ class FailureMode: #Maybe rename to failure mode
         return 
 
 
-    def get_expected_condition(self, t_min, t_max):
+    def get_expected_condition(self, t_min, t_max): #TODO retire?
         
         """t_forecast = np.linspace(t_min, t_max, t_max-t_min+1, dtype = int)
 
@@ -247,7 +251,7 @@ class FailureMode: #Maybe rename to failure mode
         # Simple method -> increment the condition
         return self.degradation.sim(t_step)
 
-    def sim_failure(self, t_step):
+    def sim_failure(self, t_step): #TODO failure doesn't need time
 
         # TODO add for loop and check all methods
         self._failed = self.degradation.limit_reached() #TODO or sytmpom or safety factor failure?
@@ -256,8 +260,26 @@ class FailureMode: #Maybe rename to failure mode
 
     def sim_tasks(self, t_step):
 
-        # Check if task is triggered
-        # Implement action
+        # Check time triggers, check condition triggers
+
+        # Check time triggers
+        for task in self.tasks:
+
+            if task.trigger_type = 'time':
+                
+                # Check if the time has been triggered
+                task.check_time(self.t_fm + t_step)
+
+
+
+        # Check on condition triggers
+        for task in self.tasks:
+            
+            task.check_trigger(self.t_fm + t_step)
+
+        # Check value? triggers
+        
+
         return
 
 
