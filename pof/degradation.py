@@ -25,12 +25,15 @@ class Degradation():
 
                 p_detection : float
                     Probability that the 
+
+                increasing : bool
+                    Either increasing or decreasing
                 
     """
     def __init__(self, perfect=100, limit=0, cond_profile_type = 'linear', cond_profile_params = [-10]):
 
         # Degradation details
-        self.cond_type = 'loss' #TODO not used
+        self.increasing = True #TODO not used
         self.cond_profile_type = cond_profile_type
         self.cond_profile_params = cond_profile_params
         self.pf_interval = 5
@@ -44,8 +47,13 @@ class Degradation():
         self.condition_perfect = perfect
         self.condition_accumulated = 0
         self.condition = 0 
-        self.condition_threshold = limit
         self.condition_limit = limit
+
+
+        # Condition detection and limits
+        self.threshold_detection = perfect
+        self.threshold_intervention = limit
+        self.threshold_failure = limit
         self.condition_profile = None
 
         # Methods 
@@ -60,6 +68,17 @@ class Degradation():
         
         return out
 
+
+    def validate(self):
+        """
+        Check the parameters provided are valid
+        """
+        if self.cond_type = 'increasing':
+            if self.condition_perfect <= self.condition
+                return "condition_perfect must be less than condition"
+            if self.condition_pe
+
+        return NotImplemented
 
     def set_condition(self, new_condition = None): # Rewrite
 
@@ -177,6 +196,21 @@ class Degradation():
 
         return measurement
     
+    def detectable(self):
+        #TODO rewrite to include the measurement
+
+        if self.condition_perfect < self.condition_limit:
+
+            if self.current() >= self.condition_detectable:
+                return True
+            
+        if self.condition_perfect > self.condition_limit:
+
+            if self.current() <= self.condition_detectable:
+                return True
+
+        return False
+
     # *************** Reset **********************
 
     def reset(self):
@@ -198,15 +232,11 @@ class Degradation():
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
-        
 
+        new = target
+        current = self.current()
 
-        if method == 'reset':
-            new = target
-        else:
-
-
-        elif method == 'reduction_factor':
+        if method == 'reduction_factor':
             new = current * reduction_factor
 
         elif method == 'reverse':
@@ -215,14 +245,14 @@ class Degradation():
         # Calculate the accumulated degradation
         if axis == 'time':
 
-            self.t_accumulated = int(min(max(0, current), self.t_max))
+            self.t_accumulated = int(min(max(0, new), self.t_max))
 
-        elif axis == 'condition'
+        elif axis == 'condition':
 
             if self.condition_perfect < self.condition_limit:
-                self.cond_accumulated = min(max(0, cond), self.condition_limit)
+                self.cond_accumulated = min(max(0, new), self.condition_limit)
             else:
-                self.cond_accumulated = min(max(0, cond), self.condition_perfect)
+                self.cond_accumulated = min(max(0, new), self.condition_perfect)
 
         return
 

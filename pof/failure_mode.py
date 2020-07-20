@@ -14,6 +14,7 @@ from random import random, seed
 from pof.degradation import Degradation
 from pof.distribution import Distribution
 from pof.consequence import Consequence
+from pof.task import Inspection
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -55,6 +56,9 @@ class FailureMode: #Maybe rename to failure mode
 
         # Tasks
         self.task_order = [1,2,3,4] # 'inspect', 'replace', repair'
+        
+        self.inspection = Inspection()
+
 
 
         # Prepare the failure mode
@@ -218,8 +222,7 @@ class FailureMode: #Maybe rename to failure mode
                 self.corrective_maintenance()
 
         # Check for detection TODO is this just a task
-        
-        #self.sim_detection(t_step)
+        self.sim_detection(t_step)
 
         # Check for tasks
             # Replace
@@ -258,11 +261,20 @@ class FailureMode: #Maybe rename to failure mode
 
         return self._failed
 
+    def sim_detection(self, t_step):
+
+        det = self.inspection.sim_inspect(t_step, self.degradation)
+
+        if det == True:
+            self._detected = True
+          
+
     def sim_tasks(self, t_step):
 
         # Check time triggers, check condition triggers
 
-        # Check time triggers
+        
+        """# Check time triggers
         for task in self.tasks:
 
             if task.trigger_type = 'time':
@@ -277,10 +289,8 @@ class FailureMode: #Maybe rename to failure mode
             
             task.check_trigger(self.t_fm + t_step)
 
-        # Check value? triggers
-        
-
-        return
+        # Check value? trigger"""
+        return True
 
 
     def sim_history(self):
