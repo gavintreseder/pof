@@ -15,7 +15,7 @@ from pof.distribution import Distribution
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 
-class Degradation():
+class Degradation(): #Maybe change this to ConditionMeasure?
 
     """
     Parameters: pf_curve : str
@@ -30,13 +30,13 @@ class Degradation():
                     Either increasing or decreasing
                 
     """
-    def __init__(self, perfect=100, limit=0, cond_profile_type = 'linear', cond_profile_params = [-10]):
+    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10]):
 
         # Degradation details
-        self.increasing = True #TODO not used
-        self.cond_profile_type = cond_profile_type
-        self.cond_profile_params = cond_profile_params
-        self.pf_interval = 5
+        self.pf_curve = pf_curve
+        self.pf_curve_params = pf_curve_params
+        self.decreasing = True
+        self.pf_interval = 5 #TODO not sure we need this
 
         # Time
         self.t_condition = 0
@@ -47,23 +47,21 @@ class Degradation():
         self.condition_perfect = perfect
         self.condition_accumulated = 0
         self.condition = 0 
-        self.condition_limit = limit
-
+        self.condition_failed = failed
 
         # Condition detection and limits
         self.threshold_detection = perfect
-        self.threshold_intervention = limit
-        self.threshold_failure = limit
+        self.threshold_failure = failed
+        
+        # Condition Profile 
         self.condition_profile = None
-
-        # Methods 
         self.set_condition_profile()
 
         return
     
     def __str__(self):
 
-        out = "Curve: %s\n" %(self.cond_profile_type)
+        out = "Curve: %s\n" %(self.pf_curve)
         out = out + "PF Interval %s\n: " %(self.pf_interval)
         
         return out
@@ -73,12 +71,18 @@ class Degradation():
         """
         Check the parameters provided are valid
         """
-        if self.cond_type = 'increasing':
-            if self.condition_perfect <= self.condition
-                return "condition_perfect must be less than condition"
-            if self.condition_pe
+        
+        # Check the thresholds are valid
+        thresholds = [self.condition_perfect, self.threshold_detection, self.threshold_failure, self.condition_failed]
 
-        return NotImplemented
+        if self.decreasing == True:
+            if np.all(np.diff(thresholds) >= 0):
+                return False
+        else:
+            if np.all(np.diff(thresholds) <= 0):
+                return False
+
+        return True
 
     def set_condition(self, new_condition = None): # Rewrite
 
@@ -86,8 +90,11 @@ class Degradation():
             self.condition = self.condition_perfect
         else:
             self.condition = new_condition
-            self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
-
+            
+            if self.decreasing == True:
+                self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
+            else:
+                self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
         return
 
     def set_t_condition(self, t_condition):
@@ -103,8 +110,8 @@ class Degradation():
         # Change to another function swtich type TODO https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python 
 
         # Get the condition profile
-        if self.cond_profile_type == 'linear':
-            m = self.cond_profile_params[0]
+        if self.pf_curve == 'linear':
+            m = self.pf_curve_params[0]
             b = self.condition_perfect
 
             y = m * x + b
@@ -115,19 +122,19 @@ class Degradation():
         y = y[self.t_accumulated:]
 
         # Add the accumulated condition
-        if self.condition_perfect < self.condition_limit:
-
-            y = y + self.condition_accumulated
-            self.t_max = np.argmax(y >= self.condition_limit)
-            y = y[:self.t_max + 1]
-            y[y > self.condition_limit] = self.condition_limit
-
-        else:
+        if self.decreasing:
 
             y = y - self.condition_accumulated
             self.t_max = np.argmax(y <= self.condition_limit)
             y = y[:self.t_max + 1]
             y[y < self.condition_limit] = self.condition_limit
+
+        else:
+            y = y + self.condition_accumulated
+            self.t_max = np.argmax(y >= self.condition_limit)
+            y = y[:self.t_max + 1]
+            y[y > self.condition_limit] = self.condition_limit
+
 
         self.condition_profile = y
 

@@ -45,6 +45,38 @@ class TestDegradation(unittest.TestCase):
         self.assertEqual(d.current(), 0)
 
 
+    # ********** Test set_condition ****************
+
+    def test_set_condition_pf_decreasing_above_limit(self):
+        c = Degradation(100,50,'linear',[-10])
+        c.set_condtiion(150)
+        self.assertEqual(c.t_condition, 0)
+
+    def test_set_condition_pf_decreasing_in_limit(self):
+        c = Degradation(100,50,'linear',[-10])
+        c.set_condtiion(70)
+        self.assertEqual(c.t_condition, 2)
+
+    def test_set_condition_pf_decreasing_below_limit(self):
+        c = Degradation(100,50,'linear',[-10])
+        c.set_condtiion(0)
+        self.assertEqual(c.t_condition, 4)
+
+    def test_set_condition_pf_increasing_above_limit(self):
+        c = Degradation(50,100,'linear',[10])
+        c.set_condtiion(150)
+        self.assertEqual(c.t_condition, 4)
+
+    def test_set_condition_pf_increasing_in_limit(self):
+        c = Degradation(50,100,'linear',[10])
+        c.set_condtiion(70)
+        self.assertEqual(c.t_condition, 2)
+
+    def test_set_condition_pf_increasing_below_limit(self):
+        c = Degradation(50,100,'linear',[10])
+        c.set_condtiion(0)
+        self.assertEqual(c.t_condition, 0)
+
     # **************** Test the measuring functions
 
     def test_detectable_condition_starts_zero_current_above_detection_threshold_zero(self):
