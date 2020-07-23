@@ -15,12 +15,18 @@ from pof.distribution import Distribution
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 
-class Degradation(): #Maybe change this to ConditionMeasure?
+# Overloadthis for timber deay
+
+# Simple _Sytmpom
+
+class Condition(): 
 
     """
     Parameters: pf_curve : str
                     step, exponential, linear, normal
                 
+                pf_curve
+
                 pf_interval : float
 
                 p_detection : float
@@ -30,13 +36,15 @@ class Degradation(): #Maybe change this to ConditionMeasure?
                     Either increasing or decreasing
                 
     """
-    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10]):
+    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True):
 
         # Degradation details
         self.pf_curve = pf_curve
         self.pf_curve_params = pf_curve_params
-        self.decreasing = True
-        self.pf_interval = 5 #TODO not sure we need this
+        self.decreasing = decreasing
+        self.pf_interval = NotImplemented
+        self.pf_std = NotImplemented
+        self.detection_probability = NotImplemented #TODO this has been moved to the inspection
 
         # Time
         self.t_condition = 0
@@ -91,20 +99,24 @@ class Degradation(): #Maybe change this to ConditionMeasure?
         else:
             self.condition = new_condition
             
-            if self.decreasing == True:
-                self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
-            else:
-                self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
+            self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
+
         return
 
-    def set_t_condition(self, t_condition):
-        self.t_condition = t_condition
+    def set_t_condition(self, t_condition): # TODO test time is within limits
+        if t_condition < 0:
+            self.t_condtiion = 0
+        elif t_condition > self.t_max:
+            self.t_condition = self.t_max
+        else:
+            self.t_condition = t_condition
 
     def set_condition_profile(self, t_min=0, t_max=100): # Change limits for time to match max degradation profile
         """
         Sets a condition profile based on the input parameters
         """
 
+        # Calculte max t TODO
         x = np.linspace(0, t_max - t_min, t_max - t_min + 1)
 
         # Change to another function swtich type TODO https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python 
@@ -125,15 +137,15 @@ class Degradation(): #Maybe change this to ConditionMeasure?
         if self.decreasing:
 
             y = y - self.condition_accumulated
-            self.t_max = np.argmax(y <= self.condition_limit)
+            self.t_max = np.argmax(y <= self.threshold_failure)
             y = y[:self.t_max + 1]
-            y[y < self.condition_limit] = self.condition_limit
+            y[y < self.threshold_failure] = self.threshold_failure
 
         else:
             y = y + self.condition_accumulated
-            self.t_max = np.argmax(y >= self.condition_limit)
+            self.t_max = np.argmax(y >= self.threshold_failure)
             y = y[:self.t_max + 1]
-            y[y > self.condition_limit] = self.condition_limit
+            y[y > self.threshold_failure] = self.threshold_failure
 
 
         self.condition_profile = y
@@ -206,14 +218,14 @@ class Degradation(): #Maybe change this to ConditionMeasure?
     def detectable(self):
         #TODO rewrite to include the measurement
 
-        if self.condition_perfect < self.condition_limit:
+        if self.condition_perfect < self.threshold_failure:
 
-            if self.current() >= self.condition_detectable:
+            if self.current() >= self.threshold_detection:
                 return True
             
-        if self.condition_perfect > self.condition_limit:
+        if self.condition_perfect > self.threshold_failure:
 
-            if self.current() <= self.condition_detectable:
+            if self.current() <= self.threshold_detection:
                 return True
 
         return False
@@ -256,11 +268,10 @@ class Degradation(): #Maybe change this to ConditionMeasure?
 
         elif axis == 'condition':
 
-            if self.condition_perfect < self.condition_limit:
-                self.cond_accumulated = min(max(0, new), self.condition_limit)
-            else:
+            if self.decreasing:
                 self.cond_accumulated = min(max(0, new), self.condition_perfect)
-
+            else:
+                self.cond_accumulated = min(max(0, new), self.condition_limit)
         return
 
     def plot_condition_profile(self):
@@ -270,7 +281,6 @@ class Degradation(): #Maybe change this to ConditionMeasure?
         
 
 class Symptom():
-
 
     # TODO consider combining symptom and degradation?
     def __init__(self):

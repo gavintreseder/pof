@@ -11,7 +11,7 @@ from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from random import random, seed
 
-from pof.degradation import Degradation
+from pof.condition import Condition
 from pof.distribution import Distribution
 from pof.consequence import Consequence
 from pof.task import Inspection

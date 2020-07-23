@@ -2,15 +2,16 @@
 
 import unittest
 
-from pof.degradation import Degradation
+from pof.condition import Condition
 
-class TestDegradation(unittest.TestCase):
+class TestCondition(unittest.TestCase):
 
-    def test_package_imports_correctly(self):
+    def test_class_imports_correctly(self):
         self.assertTrue(True)
 
-    def test_instantiate(self):
-        d = Degradation()
+    def test_class_instantiate(self):
+        c = Condition()
+        c.__dict__
         self.assertTrue(True)
         
     # Check whole degradation
@@ -23,6 +24,7 @@ class TestDegradation(unittest.TestCase):
 
     # test_perfect_prior_to_start
     # test_partial_prior_to_start
+
 
 
     # *********** Test the condition limits ******************
@@ -45,37 +47,55 @@ class TestDegradation(unittest.TestCase):
         self.assertEqual(d.current(), 0)
 
 
-    # ********** Test set_condition ****************
+    # ********** Test set_condition **************** TODO add condition checks as well as time
 
     def test_set_condition_pf_decreasing_above_limit(self):
-        c = Degradation(100,50,'linear',[-10])
-        c.set_condtiion(150)
+        c = Condition(100,50,'linear',[-10])
+        c.set_condition(150)
         self.assertEqual(c.t_condition, 0)
-
-    def test_set_condition_pf_decreasing_in_limit(self):
-        c = Degradation(100,50,'linear',[-10])
-        c.set_condtiion(70)
-        self.assertEqual(c.t_condition, 2)
 
     def test_set_condition_pf_decreasing_below_limit(self):
-        c = Degradation(100,50,'linear',[-10])
-        c.set_condtiion(0)
-        self.assertEqual(c.t_condition, 4)
+        c = Condition(100,50,'linear',[-10])
+        c.set_condition(0)
+        self.assertEqual(c.t_condition, 5)
+
+    def test_set_condition_pf_decreasing_in_limit(self):
+        c = Condition(100,50,'linear',[-10])
+        c.set_condition(70)
+        self.assertEqual(c.t_condition, 3)
 
     def test_set_condition_pf_increasing_above_limit(self):
-        c = Degradation(50,100,'linear',[10])
-        c.set_condtiion(150)
-        self.assertEqual(c.t_condition, 4)
-
-    def test_set_condition_pf_increasing_in_limit(self):
-        c = Degradation(50,100,'linear',[10])
-        c.set_condtiion(70)
-        self.assertEqual(c.t_condition, 2)
+        c = Condition(50,100,'linear',[10], decreasing = False)
+        c.set_condition(150)
+        self.assertEqual(c.t_condition, 5)
 
     def test_set_condition_pf_increasing_below_limit(self):
-        c = Degradation(50,100,'linear',[10])
-        c.set_condtiion(0)
+        c = Condition(50,100,'linear',[10], decreasing = False)
+        c.set_condition(0)
         self.assertEqual(c.t_condition, 0)
+
+    def test_set_condition_pf_increasing_in_limit(self):
+        c = Condition(50,100,'linear',[10], decreasing = False)
+        c.set_condition(70)
+        self.assertEqual(c.t_condition, 2)
+
+
+    # **************** Test set_t_condition ***************
+
+    def test_set_t_condition_above_limit(self):
+        c = Condition(100,0,'linear', [-10])
+        c.set_t_condition(150)
+        self.assertEqual(c.t_condition, 10)
+
+    def test_set_t_condition_below_limit(self):
+        c = Condition(100,0,'linear', [-10])
+        c.set_t_condition(-10)
+        self.assertEqual(c.t_condition, 0)
+
+    def test_set_t_condition_in_limit(self):
+        c = Condition(100,0,'linear', [-10])
+        c.set_t_condition(5)
+        self.assertEqual(c.t_condition, 5)
 
     # **************** Test the measuring functions
 
