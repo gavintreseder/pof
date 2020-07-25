@@ -45,6 +45,10 @@ class Distribution:
 
         return P
 
+    def sample(self, size=1):
+        return ss.weibull_min.rvs(self.beta, scale=self.alpha, loc=self.gamma, size=size)
+
+
     def likelihood(self, x=None): # TODO not sure if we need this
 
         if x is None:

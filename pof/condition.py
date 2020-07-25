@@ -39,6 +39,7 @@ class Condition():
     def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True):
 
         # Degradation details
+        self.name = 'wall_thickness'
         self.pf_curve = pf_curve
         self.pf_curve_params = pf_curve_params
         self.decreasing = decreasing
@@ -54,7 +55,7 @@ class Condition():
         # Condition
         self.condition_perfect = perfect
         self.condition_accumulated = 0
-        self.condition = 0 
+        self.condition = perfect
         self.condition_failed = failed
 
         # Condition detection and limits
@@ -128,6 +129,10 @@ class Condition():
 
             y = m * x + b
 
+        elif self.pf_curve == 'step':
+            y = NotImplemented
+
+
         # Add the accumulated time
         cond_lost = y[self.t_accumulated] - self.condition_perfect
         y = y + cond_lost
@@ -162,12 +167,12 @@ class Condition():
 
     # ************** Check Failure *********************
 
-    def limit_reached(self):
+    def is_failed(self):
         
-        if self.cond_type == 'loss' and self.condition_profile[self.t_condition] <= self.condition_threshold:
+        if self.decreasing == True and self.condition_profile[self.t_condition] <= self.threshold_failure:
             return True
         
-        if self.cond_type != 'loss' and self.condition_profile[self.t_condition] >= self.condition_threshold:
+        if self.decreasing == False and self.condition_profile[self.t_condition] >= self.threshold_failure:
             return True
 
         return False
@@ -197,6 +202,43 @@ class Condition():
 
         return cond
 
+    # **************** Event series **********
+
+    def get_condition_profile(self, t_stop = None, t_start = 0): #TODO this probably needs a delay?
+        """
+        
+        """
+        
+        if t_stop == None:
+            t_stop = self.t_max
+
+        cp = self.condition_profile[np.arange(0, min(t_stop, self.t_max) + 1, 1)]
+
+        # Fill the start with the current condition
+        if t_start > 0:
+            cp = np.append(np.full(t_start, self.condition), cp)
+        
+        # Fill the end with the failed condition
+        if t_stop - t_start > self.t_max:
+            cp = np.append(cp, np.full(t_stop - t_start - self.t_max, self.condition_failed))
+
+        return cp
+
+    def check_failure_event(self, t_stop = None, t_start = 0): #TODO this probably needs a delay? and can combine with condtion profile to make it simpler
+        """
+        Return the failure event series for a condition
+        """
+
+        cp = self.get_condition_profile(t_stop, t_start)
+
+        if self.decreasing == True:
+            e_f = (cp <= self.threshold_failure)
+        else:
+            e_f = (cp >= self.threshold_failure)
+
+        return cp
+
+
     # *************** Measure Condition ****************
 
     def measure(self):
@@ -215,17 +257,17 @@ class Condition():
 
         return measurement
     
-    def detectable(self):
+    def is_detectable(self):
         #TODO rewrite to include the measurement
 
-        if self.condition_perfect < self.threshold_failure:
-
-            if self.current() >= self.threshold_detection:
-                return True
-            
-        if self.condition_perfect > self.threshold_failure:
+        if self.decreasing == True:
 
             if self.current() <= self.threshold_detection:
+                return True
+            
+        if self.decreasing == False:
+
+            if self.current() >= self.threshold_detection:
                 return True
 
         return False
@@ -240,14 +282,18 @@ class Condition():
         self.t_max = None
 
         # Reset the condition
-        self.condition = 0 
+        self.condition = self.condition_perfect
         self.condition_accumulated = 0
 
         # Reset the condition profile 
         self.set_condition_profile()
 
+    def restore(self):
 
-    def reset_degradation(self, target=0, reduction_factor=1, reverse=0, method='reset', axis='time'):
+        return 0
+
+
+    def reset_condition(self, target=0, reduction_factor=1, reverse=0, method='reset', axis='time'):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
@@ -261,7 +307,7 @@ class Condition():
         elif method == 'reverse':
             new = current - reverse
 
-        # Calculate the accumulated degradation
+        # Calculate the accumulated condition
         if axis == 'time':
 
             self.t_accumulated = int(min(max(0, new), self.t_max))
@@ -269,9 +315,12 @@ class Condition():
         elif axis == 'condition':
 
             if self.decreasing:
-                self.cond_accumulated = min(max(0, new), self.condition_perfect)
+                self.condition_accumulated = min(max(self.condition_failed, new), self.condition_perfect)
             else:
-                self.cond_accumulated = min(max(0, new), self.condition_limit)
+                self.condition_accumulated = max(min(self.condition_failed, new), self.condition_perfect)
+
+        self.set_condition_profile()
+        
         return
 
     def plot_condition_profile(self):
@@ -286,3 +335,5 @@ class Symptom():
     def __init__(self):
         
         self.time_to_failure = 5 #TODO update
+
+

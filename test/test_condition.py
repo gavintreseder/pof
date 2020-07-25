@@ -1,10 +1,15 @@
 
 
 import unittest
+import numpy as np
 
 from pof.condition import Condition
 
 class TestCondition(unittest.TestCase):
+
+    def setUp(self):
+        self.cld = Condition(100,0,'linear', [-10])
+        self.cli = Condition(0,100,'linear', [10])
 
     def test_class_imports_correctly(self):
         self.assertTrue(True)
@@ -46,6 +51,68 @@ class TestCondition(unittest.TestCase):
         d.sim(100)
         self.assertEqual(d.current(), 0)
 
+
+    # ********** Test get_condition_profile **********
+
+    # early start
+
+    def test_get_condition_profile_early_start_early_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(10,100), np.linspace(100,90,11)))
+        cp = c.get_condition_profile(t_start=-10, t_stop=10)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_early_start_late_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(10,100), np.linspace(100,50,51), np.full(50,50)))
+        cp = c.get_condition_profile(t_start=-10, t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_early_start_no_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(10,100), np.linspace(100,50,51)))
+        cp = c.get_condition_profile(t_start=-10)
+        np.testing.assert_array_equal(cp, expected)
+
+    # late start
+
+    def test_get_condition_profile_late_start_early_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(5,100), np.linspace(100,95,11)))
+        cp = c.get_condition_profile(t_start=5, t_stop=10)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_late_start_late_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(5,100), np.linspace(100,50,51), np.full(50,50)))
+        cp = c.get_condition_profile(t_start=5, t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_late_start_no_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(5,100), np.linspace(100,50,51)))
+        cp = c.get_condition_profile(t_start=5)
+        np.testing.assert_array_equal(cp, expected)
+
+    # no start
+
+    def test_get_condition_profile_no_start_early_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.linspace(100,90,11)
+        cp = c.get_condition_profile(t_stop=10)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_no_start_late_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.linspace(100,50,51), np.full(50,50)))
+        cp = c.get_condition_profile( t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_no_start_no_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.linspace(100,50,51)
+        cp = c.get_condition_profile()
+        np.testing.assert_array_equal(cp, expected)        
 
     # ********** Test set_condition **************** TODO add condition checks as well as time
 
@@ -96,6 +163,44 @@ class TestCondition(unittest.TestCase):
         c = Condition(100,0,'linear', [-10])
         c.set_t_condition(5)
         self.assertEqual(c.t_condition, 5)
+
+    # **************** Test limit_reached *****************
+
+    def test_is_failed_pf_decreasing_at_threshold (self):
+        c = Condition(100,0,'linear', [-10])
+        c.threshold_failure = 50
+        c.set_condition(50)
+        self.assertTrue(c.is_failed())
+
+    def test_is_failed_pf_decreasing_exceeds_threshold (self):
+        c = Condition(100,0,'linear', [-10])
+        c.threshold_failure = 50
+        c.set_condition(30)
+        self.assertTrue(c.is_failed())
+
+    def test_is_failed_pf_decreasing_within_threshold (self):
+        c = Condition(100,0,'linear', [-10])
+        c.threshold_failure = 50
+        c.set_condition(70)
+        self.assertFalse(c.is_failed())
+    
+    def test_is_failed_pf_increasing_at_threshold (self):
+        c = Condition(0,100,'linear', [10], decreasing = False)
+        c.threshold_failure = 50
+        c.set_condition(50)
+        self.assertTrue(c.is_failed())
+
+    def test_is_failed_pf_increasing_exceeds_threshold (self):
+        c = Condition(0,100,'linear', [10], decreasing = False)
+        c.threshold_failure = 50
+        c.set_condition(70)
+        self.assertTrue(c.is_failed())
+
+    def test_is_failed_pf_increasing_within_threshold (self):
+        c = Condition(0,100,'linear', [10], decreasing = False)
+        c.threshold_failure = 50
+        c.set_condition(30)
+        self.assertFalse(c.is_failed())
 
     # **************** Test the measuring functions
 
