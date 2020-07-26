@@ -34,9 +34,9 @@ class FailureMode: #Maybe rename to failure mode
 
         self.pf_interval = 5 #TODO
 
-        self.condition = dict(
-            wall_thickness = Condition(100, 0, 'linear', [-5]),
-        )
+        self.conditions = [
+            Condition(100, 0, 'linear', [-5]),
+        ]
 
         # Failure information
         self.t_fm = 0
@@ -52,22 +52,16 @@ class FailureMode: #Maybe rename to failure mode
 
         self.t_initiated = False #TODO
 
-        # Symptoms TODO Change to dict or array of symptoms
-        self.termites_present = False
-        self.termites_detected = False
-
         # Tasks
-        self.task_order = [1,2,3,4] # 'inspect', 'replace', repair'
+        self.task_order = [1,2,3,4] # 'inspect', 'replace', repair' # todo
         
-        self.tasks = dict(
-            inspection = Inspection(),
-            replace = Replace(trigger = 'condition')
-        )
+        self.tasks = [
+            Replace(trigger = 'condition'),
+            Inspection(trigger = 'time'),
+        ]
 
-        self.inspection = Inspection()
+        self.inspection = Inspection(trigger='time')
         self.corrective_maintenance = Replace()
-
-
 
         # Prepare the failure mode
         self.calc_init_dist()
@@ -200,7 +194,7 @@ class FailureMode: #Maybe rename to failure mode
 
     def sim_timeline(self, t_end, t_start=0):
 
-        events = dict()
+        timeline = dict()
 
         # Get intiaition
         if self._initiated:
@@ -238,8 +232,8 @@ class FailureMode: #Maybe rename to failure mode
             tl_f = np.full(t_end, 1)
         else:
             
-            for condition in self.conditions
-            tl_f = self.condition.check_failure_event(t_end)
+            for condition in self.conditions:
+                tl_f = self.condition.check_failure_event(t_end)
 
         timeline['failure'] = tl_f
 

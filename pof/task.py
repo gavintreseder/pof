@@ -6,6 +6,7 @@ Author: Gavin Treseder
 # ************ Packages ********************
 import numpy as np
 import pandas as pd
+import math
 import scipy.stats as ss
 from scipy.linalg import circulant
 from random import random, seed
@@ -80,6 +81,12 @@ class Task:
 
 
         
+    """def sim_timeline(self, t_end, t_start = 0): # TODO Stubbed out to only work for trigger time and simple tile
+
+        n_tiles = int((t_end - t_start) / self.t_interval)
+
+        return np.tile(np.linspace(self.t_interval, 1, self.t_interval), n_tiles)"""
+
 
 
 
@@ -93,8 +100,8 @@ class Task:
 
 class Replace(Task): #TODO currenlty set up as emergency replacement
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, trigger = None):
+        super().__init__(trigger=trigger)
         self.activity = 'replace' #TODO placeholder
         self.trigger = 'time' #TODO placeholder
 
@@ -117,6 +124,9 @@ class Replace(Task): #TODO currenlty set up as emergency replacement
         
         return self.triggered
 
+    def sim_timeline(self, t_end, t_start = 0):
+
+        return NotImplemented
 
 
 class Repair(Task):
@@ -142,7 +152,9 @@ class Repair(Task):
 
         return NotImplemented
         
+    def sim_timeline(self, t_end, t_start = 0):
 
+        return NotImplemented
 
 
 
@@ -151,9 +163,9 @@ class Inspection(Task):
     Takes a condition (#TODO Symptoms) and determines if the failure has been detected
     """
 
-    def __init__(self):
-        super().__init__()
-        self.activty = 'inspection'
+    def __init__(self, trigger=None):
+        super().__init__(trigger=trigger)
+        self.activity = 'inspection'
         self.t_last_inspection = 0
         self.t_start_inspections = 0 #TODO add this feature
         self.p_detection = 0.9
@@ -168,7 +180,7 @@ class Inspection(Task):
         self.triggers=dict(
             wall_thickness = dict(
                 lower = 0,
-                uppwer = 90,
+                upper = 90,
             ),
         )
 
@@ -186,27 +198,33 @@ class Inspection(Task):
         
         return False
 
-    def event_schedule(self, t_end, t_start = 0): # TODO Stubbed out to only work for trigger time and simple tile
+    def sim_timeline(self, t_stop, t_delay=0, t_start = 0): # TODO Stubbed out to only work for trigger time and simple tile 
+        #TODO make it work like arange (start, stop, delay)
+        schedule = np.tile(np.linspace(self.t_interval - 1, 0, self.t_interval), math.ceil((t_stop - t_delay) / self.t_interval))
 
-        n_tiles = int((t_end - t_start) / self.t_interval)
+        if t_delay > 0:
+            sched_start = np.linspace(t_delay, 0, t_delay + 1)
+            schedule = np.concatenate((sched_start, schedule))
 
-        return np.tile(np.linspace(self.t_interval, 1, self.t_interval), n_tiles)
+        return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
 
-    def event_detection(self, t_end, events, current_detection = False):
+    def sim_completion(self, t_end, events, current_detection = False):
         
         if current_detection == True:
-            det = np.full(t_end, True)
+            det = np.full(t_end + 1, True)
         else:
-            det = np.full(t_end,False)
+            det = np.full(t_end + 1, False)
 
             # Check if any conditions are within detection threshold
             for trigger, threshold in self.triggers.items():
 
-                det = det | ((events[trigger] > threshold['lower']) & (trigger < threshold['upper']))
+                det = det | ((events[trigger] > threshold['lower']) & (events[trigger] < threshold['upper']))
 
             # Check if any inspections happened
-
             det = (events['inspection'] == 0) & (det)
+
+            # Once it has been detected once, the failure mode remains detected
+            det = det.cumsum().astype(np.bool)
 
         return det
 

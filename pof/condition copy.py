@@ -10,7 +10,7 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 from random import random
 
-from pof.distribution import Distribution
+from pof.condition import Condition
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -19,7 +19,7 @@ from pof.distribution import Distribution
 
 # Simple _Sytmpom
 
-class Condition(): 
+class ConditionContainer(Condition): 
 
     """
     Parameters: pf_curve : str
@@ -36,64 +36,16 @@ class Condition():
                     Either increasing or decreasing
                 
     """
-    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True):
+    def __init__(self, dict_conditions):
 
-        # Degradation details
-        self.name = 'wall_thickness'
-        self.pf_curve = pf_curve
-        self.pf_curve_params = pf_curve_params
-        self.decreasing = decreasing
-        self.pf_interval = NotImplemented
-        self.pf_std = NotImplemented
-        self.detection_probability = NotImplemented #TODO this has been moved to the inspection
-
-        # Time
-        self.t_condition = 0
-        self.t_max = 0 # TODO calculate this
-        self.t_accumulated = 0
-
-        # Condition
-        self.condition_perfect = perfect
-        self.condition_accumulated = 0
-        self.condition = perfect
-        self.condition_failed = failed
-
-        # Condition detection and limits
-        self.threshold_detection = perfect
-        self.threshold_failure = failed
-        
-        # Condition Profile 
-        self.condition_profile = None
-        self.set_condition_profile()
-
-        # Condition States #TODO?
-        self.detected = NotImplemented
-        self.initiated = NotImplemented
-
-        return
-    
-    def __str__(self):
-
-        out = "Curve: %s\n" %(self.pf_curve)
-        out = out + "PF Interval %s\n: " %(self.pf_interval)
-        
-        return out
+        self.dict_conditions = dict_conditions
 
 
     def validate(self):
         """
         Check the parameters provided are valid
         """
-        
-        # Check the thresholds are valid
-        thresholds = [self.condition_perfect, self.threshold_detection, self.threshold_failure, self.condition_failed]
-
-        if self.decreasing == True:
-            if np.all(np.diff(thresholds) >= 0):
-                return False
-        else:
-            if np.all(np.diff(thresholds) <= 0):
-                return False
+        for 
 
         return True
 
@@ -216,31 +168,31 @@ class Condition():
         if t_stop == None:
             t_stop = self.t_max
 
-        cp = self.condition_profile[np.arange(max(0,min(t_start, self.t_max)), min(t_stop, self.t_max) + 1, 1)]
+        cp = self.condition_profile[np.arange(0, min(t_stop, self.t_max) + 1, 1)]
 
-        # Fill the start with the current condtiion
-        if t_start < 0:
-            cp = np.append(np.full(-t_start, self.condition), cp)
-
+        # Fill the start with the current condition
+        if t_start > 0:
+            cp = np.append(np.full(t_start, self.condition), cp)
+        
         # Fill the end with the failed condition
         if t_stop - t_start > self.t_max:
             cp = np.append(cp, np.full(t_stop - t_start - self.t_max, self.condition_failed))
 
-        return 
+        return cp
 
-    def sim_failure_timeline(self, t_stop = None, t_start = 0): #TODO this probably needs a delay? and can combine with condtion profile to make it simpler
+    def check_failure_event(self, t_stop = None, t_start = 0): #TODO this probably needs a delay? and can combine with condtion profile to make it simpler
         """
-        Return a sample failure schedule for the condition
+        Return the failure event series for a condition
         """
 
         cp = self.get_condition_profile(t_stop, t_start)
 
         if self.decreasing == True:
-            tl_f = (cp <= self.threshold_failure)
+            e_f = (cp <= self.threshold_failure)
         else:
-            tl_f = (cp >= self.threshold_failure)
+            e_f = (cp >= self.threshold_failure)
 
-        return tl_f
+        return cp
 
 
     # *************** Measure Condition ****************
