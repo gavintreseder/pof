@@ -193,49 +193,43 @@ class FailureMode: #Maybe rename to failure mode
     # ****************** Timeline ******************
 
     def sim_timeline(self, t_end, t_start=0):
-
+        """
+        Simulates a single timeline to determine the state, condition and tasks
+        """
         timeline = dict()
 
         # Get intiaition
-        if self._initiated:
-            tl_i = np.full(t_end, 1)
-        else:
-            tl_i = np.full(t_end, self._initiated)
-            t_initiate = int(self.init_dist.sample())
-            tl_i[:t_initiate] = 1
+        tl_i = np.full(t_end + 1, self._initiated)
+        t_initiate = 0
+        if not self._initiated:
+            t_initiate = min(t_end, int(self.init_dist.sample()))
+            tl_i[t_initiate:] = 1
 
         timeline ['initiated'] = tl_i
 
         # Get condtiion
-        tl_c = self.condition.get_condition_profile(t_start=t_start, t_stop=t_end)
-
-        timeline [self.condition.name] = tl_c
+        for condition in self.conditions: 
+            timeline[condition.name] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
 
         # Check time based tasks
-        for task_name, task in self.tasks.items():
+        for task in self.tasks:
 
             if task.trigger == 'time': 
-                tl_tt = task.event_schedule(t_end)
-                events[task.activity] = tl_tt
-        
-        # Check detection
-        if self._detected == True:
-            tl_d = np.full(t_end, 1)
-        else:
-            tl_d = self.inspection.event_detection(t_end, timeline)
+                tl_tt = task.sim_timeline(t_end)
+                timeline[task.activity] = tl_tt
 
-        timeline['detection'] = tl_d
+        # Check detection
+        if self._detected:
+            timeline['detection'] = np.full(t_end + 1, True)
+        else:
+            timeline['detection'] = self.inspection.sim_completion(t_end, timeline)
 
         # Check failure
-
-        if self._failed == True:
-            tl_f = np.full(t_end, 1)
-        else:
-            
+        timeline['failure'] = np.full(t_end + 1, self._failed)
+        if not self._failed:
             for condition in self.conditions:
-                tl_f = self.condition.check_failure_event(t_end)
-
-        timeline['failure'] = tl_f
+                tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
+                timeline['failure'] = (timeline['failure']) | (tl_f)
 
 
         return timeline
