@@ -78,19 +78,19 @@ class TestCondition(unittest.TestCase):
 
     def test_get_condition_profile_late_start_early_stop(self):
         c = Condition(100,50,'linear',[-1])
-        expected = np.concatenate((np.full(5,100), np.linspace(100,95,11)))
+        expected = np.linspace(95,90,6)
         cp = c.get_condition_profile(t_start=5, t_stop=10)
         np.testing.assert_array_equal(cp, expected)
 
     def test_get_condition_profile_late_start_late_stop(self):
         c = Condition(100,50,'linear',[-1])
-        expected = np.concatenate((np.full(5,100), np.linspace(100,50,51), np.full(50,50)))
+        expected = np.concatenate((np.linspace(95,50,46), np.full(50, 50)))
         cp = c.get_condition_profile(t_start=5, t_stop=100)
         np.testing.assert_array_equal(cp, expected)
 
     def test_get_condition_profile_late_start_no_stop(self):
         c = Condition(100,50,'linear',[-1])
-        expected = np.concatenate((np.full(5,100), np.linspace(100,50,51)))
+        expected = np.linspace(95,50,46)
         cp = c.get_condition_profile(t_start=5)
         np.testing.assert_array_equal(cp, expected)
 

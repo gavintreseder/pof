@@ -216,7 +216,10 @@ class Condition():
         if t_stop == None:
             t_stop = self.t_max
 
-        cp = self.condition_profile[np.arange(max(0,min(t_start, self.t_max)), min(t_stop, self.t_max) + 1, 1)]
+        cp = self.condition_profile[np.arange(
+            max(0,min(t_start, self.t_max)),
+            min(t_stop, self.t_max) + 1, 1
+            )]
 
         # Fill the start with the current condtiion
         if t_start < 0:
@@ -224,9 +227,10 @@ class Condition():
 
         # Fill the end with the failed condition
         if t_stop - t_start > self.t_max:
-            cp = np.append(cp, np.full(t_stop - t_start - self.t_max, self.condition_failed))
+            
+            cp = np.append(cp, np.full(t_stop - self.t_max, self.condition_failed))
 
-        return 
+        return cp
 
     def sim_failure_timeline(self, t_stop = None, t_start = 0): #TODO this probably needs a delay? and can combine with condtion profile to make it simpler
         """
