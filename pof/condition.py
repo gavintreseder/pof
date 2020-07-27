@@ -216,6 +216,9 @@ class Condition():
         if t_stop == None:
             t_stop = self.t_max
 
+        if t_start > t_stop:
+            t_start = t_stop
+
         cp = self.condition_profile[np.arange(
             max(0,min(t_start, self.t_max)),
             min(t_stop, self.t_max) + 1, 1
@@ -228,7 +231,7 @@ class Condition():
         # Fill the end with the failed condition
         if t_stop - t_start > self.t_max:
             
-            cp = np.append(cp, np.full(t_stop - self.t_max, self.condition_failed))
+            cp = np.append(cp, np.full(max(0, t_stop - self.t_max), self.condition_failed))
 
         return cp
 

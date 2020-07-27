@@ -114,6 +114,46 @@ class TestCondition(unittest.TestCase):
         cp = c.get_condition_profile()
         np.testing.assert_array_equal(cp, expected)        
 
+    # very early start
+
+    def test_get_condition_profile_v_early_start_early_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(100,100), np.linspace(100,90,11)))
+        cp = c.get_condition_profile(t_start=-100, t_stop=10)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_v_early_start_late_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(100,100), np.linspace(100,50,51), np.full(50,50)))
+        cp = c.get_condition_profile(t_start=-100, t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_v_early_start_no_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = np.concatenate((np.full(100,100), np.linspace(100,50,51)))
+        cp = c.get_condition_profile(t_start=-100)
+        np.testing.assert_array_equal(cp, expected)
+
+    # very late start
+
+    def test_get_condition_profile_v_late_start_early_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = [90]
+        cp = c.get_condition_profile(t_start=20, t_stop=10)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_v_late_start_late_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = [50]
+        cp = c.get_condition_profile(t_start=110, t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_v_late_start_no_stop(self):
+        c = Condition(100,50,'linear',[-1])
+        expected = [50]
+        cp = c.get_condition_profile(t_start=60)
+        np.testing.assert_array_equal(cp, expected)
+
     # ********** Test set_condition **************** TODO add condition checks as well as time
 
     def test_set_condition_pf_decreasing_above_limit(self):
