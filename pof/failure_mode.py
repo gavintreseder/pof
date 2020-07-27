@@ -23,10 +23,10 @@ seed(1)
 
 class FailureMode: #Maybe rename to failure mode
 
-    def __init__(self, alpha, beta, gamma):
+    def __init__(self, alpha, beta, gamma, scenario='default'):
 
         # Failure behaviour
-        self.failure_dist = Distribution(alpha=50, beta=1.5, gamma=10)
+        self.failure_dist = None
         self.init_dist = None
 
         # Set the time period of interested # TODO Make this an input
@@ -34,9 +34,7 @@ class FailureMode: #Maybe rename to failure mode
 
         self.pf_interval = 5 #TODO
 
-        self.conditions = [
-            Condition(100, 0, 'linear', [-5]),
-        ]
+        self.conditions = dict()
 
         # Failure information
         self.t_fm = 0
@@ -55,10 +53,7 @@ class FailureMode: #Maybe rename to failure mode
         # Tasks
         self.task_order = [1,2,3,4] # 'inspect', 'replace', repair' # todo
         
-        self.tasks = [
-            Replace(trigger = 'condition'),
-            Inspection(trigger = 'time'),
-        ]
+        self.tasks = dict()
 
         self.inspection = Inspection(trigger='time')
         self.corrective_maintenance = Replace()
@@ -82,8 +77,56 @@ class FailureMode: #Maybe rename to failure mode
         # Cost and Value of current task? #TODO
         self.value = None #TODO
 
+        if scenario == 'default':
+            self.set_default()
+
         return
     
+    # ************** Set Functions *****************
+
+    def set_default(self):
+
+        self.set_failure_dist(
+            Distribution(alpha=50, beta=1.5, gamma=10)
+        )
+
+        self.set_conditions(dict(
+            wall_thickness = Condition(100, 0, 'linear', [-5], name = 'wall_thickness'),
+            external_diameter = Condition(100, 0, 'linear', [-2], name = 'external_diameter'),
+        ))
+
+        self.tasks = [
+            Replace(trigger = 'condition'),
+            Inspection(trigger = 'time'),
+        ]
+    
+        return True
+
+    def set_failure_dist(self, failure_dist):
+        self.failure_dist = failure_dist
+
+    def set_tasks(self, tasks):
+        """
+        Takes a dictionary of tasks and sets the failure mode tasks
+        """
+
+        for task_name, task in tasks.items():
+            self.tasks[task_name] = task
+
+        return True
+
+    def set_conditions(self, conditions):
+        """
+        Takes a dictionary of conditions and sets the failure mode conditions
+        """
+
+        for cond_name, condition in conditions.items():
+            self.conditions[cond_name] = condition
+
+        return True
+
+    # ******
+
     def calc_init_dist(self): #TODO needs to get passed a condition and a pof
         """
         Convert the probability of failure into a probability of initiation
@@ -208,7 +251,7 @@ class FailureMode: #Maybe rename to failure mode
         timeline ['initiated'] = tl_i
 
         # Get condtiion
-        for condition in self.conditions: 
+        for condition in self.conditions.values(): 
             timeline[condition.name] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
 
         # Check time based tasks
@@ -227,7 +270,7 @@ class FailureMode: #Maybe rename to failure mode
         # Check failure
         timeline['failure'] = np.full(t_end + 1, self._failed)
         if not self._failed:
-            for condition in self.conditions:
+            for condition in self.conditions.values():
                 tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
                 timeline['failure'] = (timeline['failure']) | (tl_f)
 

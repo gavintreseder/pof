@@ -36,10 +36,10 @@ class Condition():
                     Either increasing or decreasing
                 
     """
-    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True):
+    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True, name = 'default'):
 
         # Degradation details
-        self.name = 'wall_thickness'
+        self.name = name
         self.pf_curve = pf_curve
         self.pf_curve_params = pf_curve_params
         self.decreasing = decreasing
