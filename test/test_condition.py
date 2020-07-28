@@ -34,20 +34,20 @@ class TestCondition(unittest.TestCase):
 
     # *********** Test the condition limits ******************
     def test_condition_starts_zero(self):
-        d = Degradation(perfect=0, limit=100, cond_profile_type='linear', cond_profile_params =[10])
+        d = Condition(perfect=0, limit=100, pf='linear', cond_profile_params =[10])
         self.assertEqual(d.current(), 0)
 
     def test_condition_starts_zero_does_not_breach_limit(self):
-        d = Degradation(perfect=0, limit=100, cond_profile_type='linear', cond_profile_params =[10])
+        d = Condition(perfect=0, limit=100, cond_profile_type='linear', cond_profile_params =[10])
         d.sim(100)
         self.assertEqual(d.current(), 100)
 
     def test_condition_starts_positive(self):
-        d = Degradation(perfect=100, limit=0, cond_profile_type='linear', cond_profile_params =[-10])
+        d = Condition(perfect=100, limit=0, cond_profile_type='linear', cond_profile_params =[-10])
         self.assertEqual(d.current(), 100)
 
     def test_condition_starts_positive_does_not_breach_limit(self):
-        d = Degradation(perfect=100, limit=0, cond_profile_type='linear', cond_profile_params =[-10])
+        d = Condition(perfect=100, limit=0, cond_profile_type='linear', cond_profile_params =[-10])
         d.sim(100)
         self.assertEqual(d.current(), 0)
 

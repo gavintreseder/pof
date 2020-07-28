@@ -299,12 +299,24 @@ class Condition():
         # Reset the condition profile 
         self.set_condition_profile()
 
-    def restore(self):
 
-        return 0
+    def reset_time(self, target = None, reduction_factor = None):
 
+        return NotImplemented
 
-    def reset_condition(self, target=0, reduction_factor=1, reverse=0, method='reset', axis='time'):
+    def reset_condition(self, target = None, reduction_factor = None):
+        
+        return NotImplemented
+
+    def restore_time(self):
+
+        return NotImplemented
+
+    def restore_condition(self, reduction_factor):
+
+        return NotImplemented
+
+    def reset_any(self, target=0, reduction_factor=1, reverse=0, method='reset', axis='time'):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """

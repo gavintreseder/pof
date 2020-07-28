@@ -138,25 +138,91 @@ class Repair(Task):
         super().__init__(trigger=trigger)
 
         self.activty = 'repair'
-
-        self.t_last_inspection = 0
-        self.t_inspection_interval = 5
-        self.t_start_inspections = 0 #TODO add this feature
-        self.p_detection = 0.9
-
-        # Repair Specific
-
-        self.reduction_factor = 0.5
-    
-    def repair(self, condition):
-
-        return NotImplemented
         
-    def sim_timeline(self, t_end, t_start = 0):
+        
+        # Repair Specific
+        self.reduction_factor = 0.5
 
-        return NotImplemented
+        self.time_triggers = dict() #TODO maybe implement in task?
+        self.state_triggers = dict()
+        self.condition_triggers = dict()
 
+        self.time_imapcts = dict() #TODO maybe implement in task?
+        self.state_impacts = dict()
+        self.condition_impacts = dict()
+    
 
+    def set_default(self):
+
+        self.state_triggers = dict(
+            detected = True,
+        )
+
+        self.condition_triggers = dict(
+            wall_thickness = dict(
+                lower = 50,
+                upper = 70,
+            ),
+
+            external_diamter = dict(
+                lower = 0,
+                upper = 100,
+            ),
+        )
+
+        self.state_impacts = dict( #True, False or N/C
+            initiated = False,
+            detected = False,
+        )
+
+        self.condition_impacts = dict(
+            wall_thickness = dict(
+                reduction_factor = 0.5,
+                method = 'restore',
+                axis = 'condition',
+            )
+        )
+
+    def sim_completion(self, states, conditions):
+        """
+        Takes a dictionary of states and dictionary of condition objects and returns the 
+        """
+
+        for condition_impact in self.condition_impacts.values():
+            conditions[condition_impact].reset_condition(
+                reduction_factor = condition_impact['reduction_factor'],
+                axis = condition_impact['axis'],
+                method = condition_impact['method']
+            )
+
+        self.count_completed = self.count_completed + 1
+
+        return self.state_impacts
+        
+    def
+    
+    def sim_timeline(self, t_end, t_start = 0, t_delay = 0, conditions = dict(), states= dict()): # TODO change to trigger
+        """
+        If state tirgger met and condition trigger met then 
+        """
+        
+        timeline = np.full(t_end - t_start + 1, True)
+        try:
+            # Check the state triggers have been met
+            for state, trigger in self.state_triggers.items():
+                timeline = (timeline) & (states[state])
+        except KeyError:
+            print("%s not found" %(state))
+        
+        try:
+            # Check the condition triggers have been met
+            for condition, trigger in self.condition_triggers.items():
+                timeline = (timeline) & (conditions[condition] < trigger['upper']) & (conditions[condition] > trigger['lower'])
+        except KeyError:
+            print ("%s not found" %(condition))
+        
+            
+        return timeline
 
 class Inspection(Task):
     """

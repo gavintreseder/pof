@@ -59,8 +59,7 @@ class FailureMode: #Maybe rename to failure mode
         self.corrective_maintenance = Replace()
 
         # Prepare the failure mode
-        self.calc_init_dist()
-
+        #self.calc_init_dist() TODO make this method based on a flag
 
         # State History
         self._history = dict(
@@ -95,10 +94,13 @@ class FailureMode: #Maybe rename to failure mode
             external_diameter = Condition(100, 0, 'linear', [-2], name = 'external_diameter'),
         ))
 
-        self.tasks = [
-            Replace(trigger = 'condition'),
-            Inspection(trigger = 'time'),
-        ]
+        self.tasks = dict(
+            replace = Replace(trigger = 'condition'),
+            inspection = Inspection(trigger = 'time'),
+        )
+
+        # Prepare the failure mode
+        self.calc_init_dist()
     
         return True
 
@@ -211,7 +213,7 @@ class FailureMode: #Maybe rename to failure mode
             p_i = self.init_dist.conditional_f(self.t_fm, self.t_fm + t_step)
 
 
-    # *************** Condition Loss ***************
+    # *************** Condition Loss *************** # TODO not updated to new method
 
     def measure_condition_loss(self):
 
@@ -233,6 +235,17 @@ class FailureMode: #Maybe rename to failure mode
         return p_i
     
     
+    def nnewnenw (self):
+
+        # Find first task to be actioned
+
+        # Complete task triggers
+
+        # Refresh the timeline where maintenance or intervention
+
+        # Increment maint
+
+
     # ****************** Timeline ******************
 
     def sim_timeline(self, t_end, t_start=0):
@@ -254,8 +267,8 @@ class FailureMode: #Maybe rename to failure mode
         for condition in self.conditions.values(): 
             timeline[condition.name] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
 
-        # Check time based tasks
-        for task in self.tasks:
+        # Check tasks with time based trigger
+        for task in self.tasks.values():
 
             if task.trigger == 'time': 
                 tl_tt = task.sim_timeline(t_end)
@@ -274,9 +287,26 @@ class FailureMode: #Maybe rename to failure mode
                 tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
                 timeline['failure'] = (timeline['failure']) | (tl_f)
 
+        # Check tasks with condition based trigger
+        for tasks in self.tasks:
+
+            if task.tigger = 'condition':
+                tl_ct = task.sim_timeline(t_end, self.conditions, self.states):
 
         return timeline
     
+
+    def update_timeline(self, t_end, t_start=0):
+        """
+        Takes a timeline and updates tasks that are impacted
+        """
+
+        return NotImplemented
+
+
+    def next_task(self):
+
+        
 
 
     # ****************** Simulate *******************

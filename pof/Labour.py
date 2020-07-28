@@ -1,7 +1,7 @@
 
 
 
-class Resoruce():
+class Resource():
 
     def __init__(self):
 
@@ -21,7 +21,7 @@ class Resoruce():
         return self.cost_rate
 
 
-class LabourResource():
+class LabourResource(Resource):
 
     def __init__(self):
         self.status = NotImplemented
