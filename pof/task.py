@@ -107,29 +107,18 @@ class Replace(Task): #TODO currenlty set up as emergency replacement
 
 
     def is_triggered(self, failure_mode):
-        """
-
-        trigger types
-        
-        by state
-        by time
-        by condition
-        by task group
-
-        """
-
 
         if failure_mode.is_failed() == True:
             self.triggered = True
         
-        return self.triggered
+        return Notself.triggered
 
     def sim_timeline(self, t_end, t_start = 0):
 
         return NotImplemented
 
 
-class Repair(Task):
+class OnConditionRestoration(Task):
     """
     Takes a condition (#TODO Symptoms) and determines if the failure has been detected
     """
@@ -138,8 +127,7 @@ class Repair(Task):
         super().__init__(trigger=trigger)
 
         self.activty = 'repair'
-        
-        
+        self.name = 'ocr'
         # Repair Specific
         self.reduction_factor = 0.5
 
@@ -151,11 +139,12 @@ class Repair(Task):
         self.state_impacts = dict()
         self.condition_impacts = dict()
     
+        self.set_default()
 
     def set_default(self):
 
         self.state_triggers = dict(
-            detected = True,
+            detection = True,
         )
 
         self.condition_triggers = dict(
@@ -164,19 +153,20 @@ class Repair(Task):
                 upper = 70,
             ),
 
-            external_diamter = dict(
+            external_diameter = dict(
                 lower = 0,
                 upper = 100,
             ),
         )
 
         self.state_impacts = dict( #True, False or N/C
-            initiated = False,
-            detected = False,
+            initiation = False,
+            detection = False,
         )
 
         self.condition_impacts = dict(
             wall_thickness = dict(
+                target = None,
                 reduction_factor = 0.5,
                 method = 'restore',
                 axis = 'condition',
@@ -189,40 +179,49 @@ class Repair(Task):
         """
 
         for condition_impact in self.condition_impacts.values():
-            conditions[condition_impact].reset_condition(
+            conditions[condition_impact].reset_any(
+                target = condition_impact['target'],
                 reduction_factor = condition_impact['reduction_factor'],
                 axis = condition_impact['axis'],
-                method = condition_impact['method']
+                method = condition_impact['method'],
             )
 
         self.count_completed = self.count_completed + 1
 
         return self.state_impacts
         
-    def
-    
-    def sim_timeline(self, t_end, t_start = 0, t_delay = 0, conditions = dict(), states= dict()): # TODO change to trigger
+    def sim_timeline(self, t_end, timeline, t_start = 0, t_delay = 0): # TODO change to trigger
         """
         If state tirgger met and condition trigger met then 
         """
         
-        timeline = np.full(t_end - t_start + 1, True)
+        tl_ct = np.full(t_end - t_start + 1, True)
+
         try:
             # Check the state triggers have been met
             for state, trigger in self.state_triggers.items():
-                timeline = (timeline) & (states[state])
+                tl_ct  = (tl_ct ) & (timeline[state])
         except KeyError:
             print("%s not found" %(state))
         
         try:
             # Check the condition triggers have been met
             for condition, trigger in self.condition_triggers.items():
-                timeline = (timeline) & (conditions[condition] < trigger['upper']) & (conditions[condition] > trigger['lower'])
+                tl_ct  = (tl_ct) & (timeline[condition] < trigger['upper']) & (timeline[condition] > trigger['lower'])
         except KeyError:
             print ("%s not found" %(condition))
         
+        # Change to days until format #Adjust 
+        """t_lower = np.argmax(tl_ct == True)
+        t_upper = t_lower + np.argmax(tl_ct[t_lower:] == False)
+
+        tl_ct = np.concatenate((
+            (~tl_ct[:t_lower]).cumsum()[::-1],
+            ~tl_ct[t_lower:t_upper],
+            (~tl_ct[t_upper:]).cumsum(),
+            ))"""
             
-        return timeline
+        return ~tl_ct
 
 class Inspection(Task):
     """

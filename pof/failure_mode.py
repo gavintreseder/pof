@@ -14,7 +14,7 @@ from random import random, seed
 from pof.condition import Condition
 from pof.distribution import Distribution
 from pof.consequence import Consequence
-from pof.task import Inspection, Replace, Repair
+from pof.task import Inspection, OnConditionRestoration, Replace
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -44,9 +44,12 @@ class FailureMode: #Maybe rename to failure mode
         self.pof = None #TODO
 
         # Failre Mode state
+        self.states = dict() # TODO not used
         self._initiated = False
         self._detected = False
         self._failed = False
+
+        #TODO maybe turn this into a class
 
         self.t_initiated = False #TODO
 
@@ -60,17 +63,6 @@ class FailureMode: #Maybe rename to failure mode
 
         # Prepare the failure mode
         #self.calc_init_dist() TODO make this method based on a flag
-
-        # State History
-        self._history = dict(
-            t_fm = [],
-            _initiated = [],
-            _detected = [],
-            _failed = [],
-            condition = [],
-        
-        ) #TODO fix this ugly beast up
-
 
         # kpis? #TODO
         # Cost and Value of current task? #TODO
@@ -95,7 +87,7 @@ class FailureMode: #Maybe rename to failure mode
         ))
 
         self.tasks = dict(
-            replace = Replace(trigger = 'condition'),
+            ocr = OnConditionRestoration(trigger = 'condition'),
             inspection = Inspection(trigger = 'time'),
         )
 
@@ -127,6 +119,17 @@ class FailureMode: #Maybe rename to failure mode
 
         return True
 
+    # ************** Get Functions *****************
+
+    def get_states(self):
+
+        states = dict(
+            initiation = self._initiated,
+            failure = self._failed,
+            detection = self._detected,
+        )
+    
+        return states
     # ******
 
     def calc_init_dist(self): #TODO needs to get passed a condition and a pof
@@ -142,15 +145,6 @@ class FailureMode: #Maybe rename to failure mode
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
 
         return
-
-    def calc_condition_loss(self, t_min, t_max):
-        """
-
-        """
-
-        self.condition_loss = 1 - self.get_expected_condition(t_min, t_max)
-
-        return 
 
 
     def get_expected_condition(self, t_min, t_max): #TODO retire?
@@ -183,36 +177,6 @@ class FailureMode: #Maybe rename to failure mode
         # Need to consider condition that has a probability of outcomes ()
 
 
-    def get_probabilities(self, t_step):
-        """
-        Calculate the probabilities of being in a state after an interval
-        """
-
-        # Probability failure is initated
-        p_i = self.get_p_initiation(t_step)
-        
-        # Probability of condition loss
-
-        # Probability symptom is initiated # TODO
-
-        # Probability failure is detected
-
-        return p_i
-        
-
-    def is_initiated(self, t_step=None):
-        """
-        Return p
-        """
-        
-        if self._initiated == True:
-            return True
-
-        else:
-
-            p_i = self.init_dist.conditional_f(self.t_fm, self.t_fm + t_step)
-
-
     # *************** Condition Loss *************** # TODO not updated to new method
 
     def measure_condition_loss(self):
@@ -235,7 +199,7 @@ class FailureMode: #Maybe rename to failure mode
         return p_i
     
     
-    def nnewnenw (self):
+    def sim_event (self):
 
         # Find first task to be actioned
 
@@ -245,6 +209,7 @@ class FailureMode: #Maybe rename to failure mode
 
         # Increment maint
 
+        return NotImplemented
 
     # ****************** Timeline ******************
 
@@ -252,16 +217,16 @@ class FailureMode: #Maybe rename to failure mode
         """
         Simulates a single timeline to determine the state, condition and tasks
         """
-        timeline = dict()
+        timeline = dict(
+            time = np.linspace(t_start, t_end, t_end-t_start + 1, dtype=int)
+        )
 
         # Get intiaition
-        tl_i = np.full(t_end + 1, self._initiated)
+        timeline['initiation'] = np.full(t_end + 1, self._initiated)
         t_initiate = 0
         if not self._initiated:
             t_initiate = min(t_end, int(self.init_dist.sample()))
-            tl_i[t_initiate:] = 1
-
-        timeline ['initiated'] = tl_i
+            timeline['initiation'][t_initiate:] = 1
 
         # Get condtiion
         for condition in self.conditions.values(): 
@@ -271,8 +236,7 @@ class FailureMode: #Maybe rename to failure mode
         for task in self.tasks.values():
 
             if task.trigger == 'time': 
-                tl_tt = task.sim_timeline(t_end)
-                timeline[task.activity] = tl_tt
+                timeline[task.activity] = task.sim_timeline(t_end)
 
         # Check detection
         if self._detected:
@@ -288,26 +252,132 @@ class FailureMode: #Maybe rename to failure mode
                 timeline['failure'] = (timeline['failure']) | (tl_f)
 
         # Check tasks with condition based trigger
-        for tasks in self.tasks:
+        for task in self.tasks.values():
 
-            if task.tigger = 'condition':
-                tl_ct = task.sim_timeline(t_end, self.conditions, self.states):
+            if task.trigger == 'condition':
+                timeline[task.name] = task.sim_timeline(t_end, timeline)
+
+        self.timeline = timeline
 
         return timeline
     
+    def init_timeline(self, t_end, t_start = 0):
 
-    def update_timeline(self, t_end, t_start=0):
-        """
-        Takes a timeline and updates tasks that are impacted
-        """
-
+        # Initiate times
+        # 
         return NotImplemented
 
 
-    def next_task(self):
+    def update_timeline(self, condtions_to_update = dict(), states_to_update = dict(), tasks_to_update = dict(), t_end, t_start=0):
+        """
+        Takes a timeline and updates tasks that are impacted
+        """
+        # Initiation -> Condition -> time_tasks -> states -> tasks
 
+        # Check for initiation changes
+        if 'intiation' in states:
+            timeline['initiation'][t_start:t_end] = np.full(t_end - t_start + 1, states['initiation'])
+            t_initiate = t_start
+            if state['initiation'] == False:
+                t_initiate = min(t_end, int(self.init_dist.sample()))
+                timeline['initiation'][t_initiate:] = 1
+
+        # Check for condition changes
+        for condition in conditions.values():
+            timeline[condition.name][t_start:t_end] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
+
+        # Check for detection changes
+        if 'detection' in states:
+            timeline['detection'][t_start:t_end] = np.full(t_end - t_start + 1, states['detection'])
+
+        # Check for failure changes
+        if 'failure' in states:
+            timeline['failure'] = np.full(t_end - t_start + 1, states['failed'])
+            if states['failed'] == False:
+                for condition in self.conditions.values():
+                    tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
+                    timeline['failure'] = (timeline['failure']) | (tl_f)
+
+        # Check tasks with time based trigger #TODO Add variable for checking if time based tasks are reset?
+        for task in self.tasks.values():
+    
+            if task.trigger == 'time' and task.name in tasks_to_update: 
+                timeline[task.name] = task.sim_timeline(s_tart=t_start, t_end=t_end)
+
+        # Check tasks with condition based trigger
+        for task in self.tasks.values():
+
+            if task.trigger == 'condition' and task.name in tasks_to_update:
+                timeline[task.name] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=timeline)
+
+        self.timeline = timeline
+
+        return timeline
+
+
+    def next_tasks(self, timeline, t_end = None):
+        """
+        Takes a timeline and returns the next time, and next task that will be completed
+        """
+        if t_end is None:
+            t_end = timeline['time'][-1]
+
+        next_tasks = None
+        next_time = t_end
+
+        for task in self.tasks: # TODO make this more efficient by using a task array rather than a for loop
+
+            t_task = min(timeline['time'][timeline[task] == 0])
+
+            if t_task < next_time:
+                next_tasks = [task]
+                next_time = t_task
+            elif t_task == next_time:
+                next_tasks = np.append(next_tasks, task)
+
+        return next_time, next_tasks
+
+    def simulate(self, t_end = 100):
+
+        t_now = 0
+
+        while t_now < t_end:
+
+            timeline = self.sim_timeline(t_start=t_now, t_end=t_end)
+            t_now, tasks = self.next_tasks(timeline, t_end)
+
+            for task in tasks:
+
+                # Execute the task
+                states, conditions = self.tasks[task].sim_completion()
+
+            
+
+                # TODO replaced this with a loop to only update the ones that have changed.
+
+    # ****************** Simple outputs  ************
+
+    def plot_timeline(self):
+
+        fig, (ax_state, ax_cond, ax_task) = plt.subplots(1, 3)
+
+        fig.set_figheight (4)
+        fig.set_figwidth (24)
+
+        ax_cond.set_title('Condition')
+        ax_state.set_title('State')
+        ax_task.set_title('Task')
         
+        for condition in self.conditions:
+            ax_cond.plot(self.timeline['time'], self.timeline[condition])
 
+        for state in self.get_states():
+            ax_state.plot(self.timeline['time'], self.timeline[state])
+
+        for task in self.tasks:
+            ax_task.plot(self.timeline['time'], self.timeline[task])
+
+        plt.show()
 
     # ****************** Simulate *******************
 
@@ -454,39 +524,3 @@ class FailureMode: #Maybe rename to failure mode
         # Plot outputs
 
         # Return optimal strategy
-
-    def record_history(self):
-
-
-        #for var in vars_record:
-        #    self._history[var].append(self.)
-        
-        self._history['t_fm'].append(self.t_fm)
-        self._history['_initiated'].append(self._initiated)
-        self._history['_detected'].append(self._detected)
-        self._history['_failed'].append(self._failed)
-        self._history['condition'].append(self.condition.current())
-
-
-    """
-
-        # simple implementation first
-
-            # Check for
-
-
-        Check tasks are triggered
-
-        Check tasks are executed
-
-        Check tasks are in progress
-
-
-
-        ** Check task groups
-
-        ** Check value
-
-        Execute tasks
-
-    """

@@ -19,6 +19,8 @@ from pof.distribution import Distribution
 
 # Simple _Sytmpom
 
+#TODO potentially change where t_accumulated and condition_accumulated gets calculated to improve the speed
+
 class Condition(): 
 
     """
@@ -220,8 +222,8 @@ class Condition():
             t_start = t_stop
 
         cp = self.condition_profile[np.arange(
-            max(0,min(t_start, self.t_max)),
-            min(t_stop, self.t_max) + 1, 1
+            max(self.t_condition, min(t_start, self.t_max)),
+            min(t_stop + self.t_condition, self.t_max) + 1, 1
             )]
 
         # Fill the start with the current condtiion
@@ -229,9 +231,9 @@ class Condition():
             cp = np.append(np.full(-t_start, self.condition), cp)
 
         # Fill the end with the failed condition
-        if t_stop - t_start > self.t_max:
+        if t_stop - t_start - self.t_condition > self.t_max:
             
-            cp = np.append(cp, np.full(max(0, t_stop - self.t_max), self.condition_failed))
+            cp = np.append(cp, np.full(max(0, t_stop + self.t_condition - self.t_max), self.condition_failed))
 
         return cp
 
@@ -313,6 +315,10 @@ class Condition():
         return NotImplemented
 
     def restore_condition(self, reduction_factor):
+
+        return NotImplemented
+
+    def restore(self, reduction_factor):
 
         return NotImplemented
 

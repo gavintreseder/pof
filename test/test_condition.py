@@ -74,6 +74,29 @@ class TestCondition(unittest.TestCase):
         cp = c.get_condition_profile(t_start=-10)
         np.testing.assert_array_equal(cp, expected)
 
+    # existing condition
+
+    def test_get_condition_profile_existing_condition_early_start_early_stop(self):
+        expected = np.concatenate((np.full(10,90), np.linspace(90,70,21)))
+        c = Condition(100,50,'linear',[-1])
+        c.set_condition(90)
+        cp = c.get_condition_profile(t_start=-10, t_stop = 20)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_existing_condition_early_start_late_stop(self):
+        expected = np.concatenate((np.full(10,90), np.linspace(90,50,41), np.full(60,50)))
+        c = Condition(100,50,'linear',[-1])
+        c.set_condition(90)
+        cp = c.get_condition_profile(t_start=-10, t_stop = 100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_existing_condition_early_start_no_stop(self):
+        expected = np.concatenate((np.full(10,90), np.linspace(90,50,41)))
+        c = Condition(100,50,'linear',[-1])
+        c.set_condition(90)
+        cp = c.get_condition_profile(t_start=-10)
+        np.testing.assert_array_equal(cp, expected)
+
     # late start
 
     def test_get_condition_profile_late_start_early_stop(self):
@@ -113,6 +136,7 @@ class TestCondition(unittest.TestCase):
         expected = np.linspace(100,50,51)
         cp = c.get_condition_profile()
         np.testing.assert_array_equal(cp, expected)        
+
 
     # very early start
 
