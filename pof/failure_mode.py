@@ -88,7 +88,7 @@ class FailureMode: #Maybe rename to failure mode
 
         self.tasks = dict(
             ocr = OnConditionRestoration(trigger = 'condition'),
-            inspection = Inspection(trigger = 'time'),
+            #inspection = Inspection(trigger = 'time'),
         )
 
         # Prepare the failure mode
@@ -268,38 +268,58 @@ class FailureMode: #Maybe rename to failure mode
         return NotImplemented
 
 
-    def update_timeline(self, condtions_to_update = dict(), states_to_update = dict(), tasks_to_update = dict(), t_end, t_start=0):
+    def methodTOODO(self):
+
+        # Init timeline
+
+        # Get next_task
+
+        # While still tasks before t_end
+
+            # Execute Task
+
+            # Update timeline for things that need updating ()
+
+            # Get next task
+
+
+    def update_timeline(self,t_end)
+
+
+    def update_timeline_legacy(self, t_end, t_start=0, conditions_to_update = dict(), states_to_update = dict(), reset_tasks = False):
         """
         Takes a timeline and updates tasks that are impacted
         """
         # Initiation -> Condition -> time_tasks -> states -> tasks
-
+        
+        timeline = self.timeline 
         # Check for initiation changes
-        if 'intiation' in states:
-            timeline['initiation'][t_start:t_end] = np.full(t_end - t_start + 1, states['initiation'])
+        if 'intiation' in states_to_update:
+            timeline['initiation'][t_start:t_end] = np.full(t_end - t_start + 1, states_to_update['initiation'])
             t_initiate = t_start
-            if state['initiation'] == False:
+            if states_to_update['initiation'] == False:
                 t_initiate = min(t_end, int(self.init_dist.sample()))
                 timeline['initiation'][t_initiate:] = 1
 
         # Check for condition changes
-        for condition in conditions.values():
-            timeline[condition.name][t_start:t_end] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
+        for condition in self.conditions.values():
+            if condition.name in conditions_to_update:
+                timeline[condition.name][t_start:t_end] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
 
         # Check for detection changes
-        if 'detection' in states:
-            timeline['detection'][t_start:t_end] = np.full(t_end - t_start + 1, states['detection'])
+        if 'detection' in states_to_update:
+            timeline['detection'][t_start:t_end] = np.full(t_end - t_start + 1, states_to_update['detection'])
 
         # Check for failure changes
-        if 'failure' in states:
-            timeline['failure'] = np.full(t_end - t_start + 1, states['failed'])
-            if states['failed'] == False:
+        if 'failure' in states_to_update:
+            timeline['failure'] = np.full(t_end - t_start + 1, states_to_update['failed'])
+            if states_to_update['failed'] == False:
                 for condition in self.conditions.values():
                     tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
                     timeline['failure'] = (timeline['failure']) | (tl_f)
 
         # Check tasks with time based trigger #TODO Add variable for checking if time based tasks are reset?
-        for task in self.tasks.values():
+        """for task in self.tasks.values():
     
             if task.trigger == 'time' and task.name in tasks_to_update: 
                 timeline[task.name] = task.sim_timeline(s_tart=t_start, t_end=t_end)
@@ -308,7 +328,7 @@ class FailureMode: #Maybe rename to failure mode
         for task in self.tasks.values():
 
             if task.trigger == 'condition' and task.name in tasks_to_update:
-                timeline[task.name] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=timeline)
+                timeline[task.name] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=timeline)"""
 
         self.timeline = timeline
 
@@ -322,18 +342,19 @@ class FailureMode: #Maybe rename to failure mode
         if t_end is None:
             t_end = timeline['time'][-1]
 
-        next_tasks = None
+        next_tasks = []
         next_time = t_end
 
         for task in self.tasks: # TODO make this more efficient by using a task array rather than a for loop
 
-            t_task = min(timeline['time'][timeline[task] == 0])
+            if 0 in timeline[task]:
+                t_task = timeline['time'][np.argmax(timeline[task])]
 
-            if t_task < next_time:
-                next_tasks = [task]
-                next_time = t_task
-            elif t_task == next_time:
-                next_tasks = np.append(next_tasks, task)
+                if t_task < next_time:
+                    next_tasks = [task]
+                    next_time = t_task
+                elif t_task == next_time:
+                    next_tasks = np.append(next_tasks, task)
 
         return next_time, next_tasks
 

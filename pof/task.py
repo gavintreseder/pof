@@ -65,6 +65,7 @@ class Task:
         self.state = 'up' # or down
 
         # Log it's use
+        self._timeline = NotImplemented
         self._count_checked = NotImplemented
         self._count_triggered = NotImplemented
         self._count_completed = NotImplemented
@@ -111,12 +112,61 @@ class Replace(Task): #TODO currenlty set up as emergency replacement
         if failure_mode.is_failed() == True:
             self.triggered = True
         
-        return Notself.triggered
+        return self.triggered
 
     def sim_timeline(self, t_end, t_start = 0):
 
         return NotImplemented
 
+
+class CorrectiveMaintenance(Task):
+    
+    def __init__(self, trigger = None):
+        super().__init__(trigger='state')
+
+        self.activty = 'replace'
+        self.name = 'corrective_maintenance'
+
+    def set_default(self):
+
+        self.state_triggers = dict(
+            failure = True,
+        )
+
+        self.impacts = dict(
+            condition = dict(
+                wall_thickness = dict(
+                    target = None,
+                    reduction_factor = 1,
+                    method = 'restore',
+                    axis = 'condition',
+                ),
+            ),
+
+            state = dict(
+                initiation = False,
+                detection = False,
+                failure = False,
+            ),
+
+
+
+        self.state_impacts = dict( #True, False or N/C
+            initiation = False,
+            detection = False,
+            failure = False,
+        )
+
+        self.condition_impacts = dict(
+            wall_thickness = dict(
+                target = None,
+                reduction_factor = 1,
+                method = 'restore',
+                axis = 'condition',
+            )
+        )
+
+        self.task_impacts
 
 class OnConditionRestoration(Task):
     """
@@ -158,6 +208,7 @@ class OnConditionRestoration(Task):
                 upper = 100,
             ),
         )
+
 
         self.state_impacts = dict( #True, False or N/C
             initiation = False,
@@ -211,17 +262,16 @@ class OnConditionRestoration(Task):
         except KeyError:
             print ("%s not found" %(condition))
         
-        # Change to days until format #Adjust 
-        """t_lower = np.argmax(tl_ct == True)
-        t_upper = t_lower + np.argmax(tl_ct[t_lower:] == False)
 
-        tl_ct = np.concatenate((
-            (~tl_ct[:t_lower]).cumsum()[::-1],
-            ~tl_ct[t_lower:t_upper],
-            (~tl_ct[t_upper:]).cumsum(),
-            ))"""
+        # Change to days until format #Adjust 
+        tl_ct = tl_ct.astype(int)
+        t_lower = np.argmax(tl_ct == 1)
+        t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
+
+        tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
+        tl_ct[tl_ct == False] = -1
             
-        return ~tl_ct
+        return tl_ct
 
 class Inspection(Task):
     """
@@ -273,7 +323,7 @@ class Inspection(Task):
 
         return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
 
-    def sim_completion(self, t_end, events, current_detection = False):
+    def sim_completion(self, t_end, timeline, current_detection = False):
         
         if current_detection == True:
             det = np.full(t_end + 1, True)
@@ -283,10 +333,10 @@ class Inspection(Task):
             # Check if any conditions are within detection threshold
             for trigger, threshold in self.triggers.items():
 
-                det = det | ((events[trigger] > threshold['lower']) & (events[trigger] < threshold['upper']))
+                det = det | ((timeline[trigger] > threshold['lower']) & (timeline[trigger] < threshold['upper']))
 
             # Check if any inspections happened
-            det = (events['inspection'] == 0) & (det)
+            det = (timeline['inspection'] == 0) & (det)
 
             # Once it has been detected once, the failure mode remains detected
             det = det.cumsum().astype(np.bool)
