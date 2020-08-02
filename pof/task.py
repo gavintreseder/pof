@@ -20,6 +20,48 @@ from pof.consequence import Consequence
 
 seed(1)
 
+"""
+Task
+    - sim_timeline return a timeline of when the task is scheduled
+    - sim_execution
+
+    time based triggers
+        - time
+    condition based triggers
+        - condition
+    
+    execution
+        - states
+
+"""
+
+"""
+
+RCM strategies
+
+On Condition Maintenace -> reset initiation
+On Condition Replacement -> reset
+
+
+Predictive maintenance tasks,
+Preventive Restoration or Preventive Replacement maintenance tasks,
+Detective maintenance tasks,
+Run-to-Failure, and
+One-time changes to the "system"
+
+"""
+
+"""
+Task
+    Scheduled
+        Inspection - Change detection
+        Repair - Change detection and initiation
+        Restoration - Change detection, initiation, failure and condition
+        Replacement - Change everything
+    OnCondition
+"""
+
+
 class Task:
     """
     Parameters:
@@ -40,9 +82,9 @@ class Task:
             - reset everything
 
     """
-    def __init__(self, trigger = 'time'):
+    def __init__(self, trigger = 'any', activity = 'any'):
 
-        self.activity = 'any'
+        self.activity = activity
         self.trigger = trigger
         self.trigger_threshold_min = 0
         self.trigger_threshold_max = 10
@@ -70,26 +112,15 @@ class Task:
         self._count_triggered = NotImplemented
         self._count_completed = NotImplemented
 
-    def is_triggered(self):
 
-        return
-
-    def get_event_secheudle(self):
-
-        # Check when it is triggered
+    def sim_timeline(self, t_end, t_start = 0):
+        
+        if self.trigger == 'time':
+            self.sim_scheduled_timeline()
+        elif self.trigger == 'condition':
+            self.sim_condition_timeline()
 
         return NotImplemented
-
-
-        
-    """def sim_timeline(self, t_end, t_start = 0): # TODO Stubbed out to only work for trigger time and simple tile
-
-        n_tiles = int((t_end - t_start) / self.t_interval)
-
-        return np.tile(np.linspace(self.t_interval, 1, self.t_interval), n_tiles)"""
-
-
-
 
 
     def reset(self):
@@ -97,29 +128,68 @@ class Task:
 
     #TODO add methods for cost, resources and 
 
+class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
+
+    def __init__(self, t_interval, t_delay = 0):
+        super().__init__()
+
+        self.trigger = 'time'
+
+        self.t_delay = t_delay
+        self.t_interval = t_interval
 
 
-class Replace(Task): #TODO currenlty set up as emergency replacement
+    def sim_timeline(self, t_end, t_delay=0, t_start = 0, timeline = NotImplemented): # TODO Stubbed out to only work for trigger time and simple tile 
+        #TODO make it work like arange (start, stop, delay)
+        schedule = np.tile(np.linspace(self.t_interval - 1, 0, self.t_interval), math.ceil((t_stop - t_delay) / self.t_interval))
+
+        if t_delay > 0:
+            sched_start = np.linspace(t_delay, 0, t_delay + 1)
+            schedule = np.concatenate((sched_start, schedule))
+
+        return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
+
+
+class OnConditionTask(Task):
 
     def __init__(self, trigger = None):
         super().__init__(trigger=trigger)
         self.activity = 'replace' #TODO placeholder
         self.trigger = 'time' #TODO placeholder
 
-
-    def is_triggered(self, failure_mode):
-
-        if failure_mode.is_failed() == True:
-            self.triggered = True
+    def sim_timeline(self, t_end, timeline, t_start = 0, t_delay = 0): # TODO change to trigger
+        """
+        If state tirgger met and condition trigger met then 
+        """
         
-        return self.triggered
+        tl_ct = np.full(t_end - t_start + 1, True)
 
-    def sim_timeline(self, t_end, t_start = 0):
+        try:
+            # Check the state triggers have been met
+            for state, trigger in self.state_triggers.items():
+                tl_ct  = (tl_ct ) & (timeline[state])
+        except KeyError:
+            print("%s not found" %(state))
+        
+        try:
+            # Check the condition triggers have been met
+            for condition, trigger in self.condition_triggers.items():
+                tl_ct  = (tl_ct) & (timeline[condition] < trigger['upper']) & (timeline[condition] > trigger['lower'])
+        except KeyError:
+            print ("%s not found" %(condition))
+        
 
-        return NotImplemented
+        # Change to days until format #Adjust 
+        tl_ct = tl_ct.astype(int)
+        t_lower = np.argmax(tl_ct == 1)
+        t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
 
+        tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
+        tl_ct[tl_ct == False] = -1
+            
+        return tl_ct
 
-class CorrectiveMaintenance(Task):
+class ScheduledReplacement(ScheduledTask):
     
     def __init__(self, trigger = None):
         super().__init__(trigger='state')
@@ -148,6 +218,7 @@ class CorrectiveMaintenance(Task):
                 detection = False,
                 failure = False,
             ),
+        )
 
 
 
@@ -166,7 +237,7 @@ class CorrectiveMaintenance(Task):
             )
         )
 
-        self.task_impacts
+
 
 class OnConditionRestoration(Task):
     """
@@ -224,7 +295,11 @@ class OnConditionRestoration(Task):
             )
         )
 
-    def sim_completion(self, states, conditions):
+    def sim_completion_timeline(self, timeline= None, states = None, conditions = None):
+
+        return NotImplemented
+
+    def sim_completion(self, timeline= None, states = None, conditions = None): #TODO maybe split into states 
         """
         Takes a dictionary of states and dictionary of condition objects and returns the 
         """
@@ -323,8 +398,10 @@ class Inspection(Task):
 
         return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
 
-    def sim_completion(self, t_end, timeline, current_detection = False):
-        
+    def sim_completion(self, t_end = None, timeline= None, states = None, conditions = None, current_detection = False):
+        """
+        Return the expected states as a result of this task
+        """
         if current_detection == True:
             det = np.full(t_end + 1, True)
         else:
@@ -340,8 +417,12 @@ class Inspection(Task):
 
             # Once it has been detected once, the failure mode remains detected
             det = det.cumsum().astype(np.bool)
+        
+        state = dict(
+            detection = det
+        )
 
-        return det
+        return state
 
         
 
