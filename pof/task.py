@@ -59,8 +59,46 @@ Task
         Restoration - Change detection, initiation, failure and condition
         Replacement - Change everything
     OnCondition
-"""
+        Repair - Change detection and initiation
+        Restoration ...
+        Repalcement
 
+
+    -timeline when task can bet completed
+    -timeline of dependent tasks???
+
+
+
+    Functions for all of them
+        sim_timeline() return the timeline between t_start and t_end with days remaining until task
+            sim_ttr()
+            sim_conditions_met()
+        sim_completion() return the new states
+            update conditions 
+            return states after completion t=0
+
+        sim_states() 
+            update the states
+
+    fm.update_timeline
+
+        after completion return the timeline of state changes?
+        inspection 
+            -> change detection
+        repair
+            -> change detection (current, need new inspection to change)
+            -> change failure (current, need new initiation and condition to change)
+            -> change condition
+        restore
+            -> change detection
+            -> change failure
+            -> change condition
+        replace
+        
+
+    scheduled -> condition
+
+"""
 
 class Task:
     """
@@ -86,13 +124,11 @@ class Task:
 
         self.activity = activity
         self.trigger = trigger
-        self.trigger_threshold_min = 0
-        self.trigger_threshold_max = 10
 
-        self.trigger_comp = '1.1.2'
+        self.trigger_comp = '1.1.2' #Notimplemented
 
         # TODO how the package is grouped together
-        self.package = NotImplemented
+        self._package = NotImplemented
         self._impacts_parent = NotImplemented
         self._impacts_children = False
 
@@ -103,6 +139,12 @@ class Task:
         self.equipment = 'ewp'
         self.consequence = Consequence()
         
+        # Triggers - set in child classes
+
+        # Impacts
+        self.state_impacts = dict()
+        self.condition_impacts = dict()
+
         # Time to execute
         self.state = 'up' # or down
 
@@ -114,7 +156,9 @@ class Task:
 
 
     def sim_timeline(self, t_end, t_start = 0):
-        
+        """
+        A function that calls an overloaded function from inherited 
+        """
         if self.trigger == 'time':
             self.sim_scheduled_timeline()
         elif self.trigger == 'condition':
@@ -122,6 +166,23 @@ class Task:
 
         return NotImplemented
 
+    def sim_completion(self, timeline= None, states = dict(), conditions = dict()): #TODO maybe split into states 
+        """
+        Takes a dictionary of states and dictionary of condition objects and returns the states that have been changed
+        """
+
+        # Update any conditions that need to be udpated
+        for condition_impact in self.condition_impacts.values():
+            conditions[condition_impact].reset_any(
+                target = condition_impact['target'],
+                reduction_factor = condition_impact['reduction_factor'],
+                axis = condition_impact['axis'],
+                method = condition_impact['method'],
+            )
+
+        self.count_completed = self.count_completed + 1
+
+        return self.state_impacts
 
     def reset(self):
         self.triggered = False
@@ -139,7 +200,7 @@ class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
         self.t_interval = t_interval
 
 
-    def sim_timeline(self, t_end, t_delay=0, t_start = 0, timeline = NotImplemented): # TODO Stubbed out to only work for trigger time and simple tile 
+    def sim_timeline(self, t_stop, t_delay=0, t_start = 0, timeline = NotImplemented): # TODO Stubbed out to only work for trigger time and simple tile 
         #TODO make it work like arange (start, stop, delay)
         schedule = np.tile(np.linspace(self.t_interval - 1, 0, self.t_interval), math.ceil((t_stop - t_delay) / self.t_interval))
 
@@ -150,6 +211,29 @@ class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
         return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
 
 
+    def sim_completion(self):
+
+        if current_detection == True:
+            det = np.full(t_end + 1, True)
+        else:
+            det = np.full(t_end + 1, False)
+
+            # Check if any conditions are within detection threshold
+            for trigger, threshold in self.triggers.items():
+
+                det = det | ((timeline[trigger] > threshold['lower']) & (timeline[trigger] < threshold['upper']))
+
+            # Check if any inspections happened
+            det = (timeline['inspection'] == 0) & (det)
+
+            # Once it has been detected once, the failure mode remains detected
+            det = det.cumsum().astype(np.bool)
+        
+        state = dict(
+            detection = det
+        )
+        return self.state_impacts
+
 class OnConditionTask(Task):
 
     def __init__(self, trigger = None):
@@ -157,9 +241,12 @@ class OnConditionTask(Task):
         self.activity = 'replace' #TODO placeholder
         self.trigger = 'time' #TODO placeholder
 
+        self.state_triggers = dict()
+        self.condition_triggers = dict()
+
     def sim_timeline(self, t_end, timeline, t_start = 0, t_delay = 0): # TODO change to trigger
         """
-        If state tirgger met and condition trigger met then 
+        If state and condition triggers are met return the timeline met then 
         """
         
         tl_ct = np.full(t_end - t_start + 1, True)
@@ -189,6 +276,7 @@ class OnConditionTask(Task):
             
         return tl_ct
 
+    
 class ScheduledReplacement(ScheduledTask):
     
     def __init__(self, trigger = None):
@@ -294,10 +382,6 @@ class OnConditionRestoration(Task):
                 axis = 'condition',
             )
         )
-
-    def sim_completion_timeline(self, timeline= None, states = None, conditions = None):
-
-        return NotImplemented
 
     def sim_completion(self, timeline= None, states = None, conditions = None): #TODO maybe split into states 
         """
