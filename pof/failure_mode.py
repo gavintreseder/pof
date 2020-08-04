@@ -79,15 +79,15 @@ class FailureMode: #Maybe rename to failure mode
         )
 
         self.set_conditions(dict(
-            wall_thickness = Condition(100, 0, 'linear', [-5], name = 'wall_thickness'),
-            external_diameter = Condition(100, 0, 'linear', [-2], name = 'external_diameter'),
+            wall_thickness = Condition(100, 0, 'linear', [-5]),
+            external_diameter = Condition(100, 0, 'linear', [-2]),
         ))
 
         self.set_tasks(dict(
             inspection = Inspection(t_interval=5, t_delay = 10), 
-            ocr = ConditionTask(activity='test_ocr', name='ocr'),
-            #cm = 
-            
+            ocr = ConditionTask(activity='test_ocr'),
+            cm = ImmediateMaintenance(activity='cm')
+        
         ))
 
         self.set_states(dict(
@@ -237,7 +237,7 @@ class FailureMode: #Maybe rename to failure mode
 
     # ****************** Timeline ******************
 
-    def sim_timeline(self, t_end, t_start = 0):
+    def sim_timeline(self, t_end, t_start = 0, verbose=False):
         
         timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
@@ -247,6 +247,8 @@ class FailureMode: #Maybe rename to failure mode
 
             # Check when the next task needs to be executed
             t_now, task_names = self.next_tasks(timeline, t_now, t_end)
+
+            if verbose: print(t_now, task_names)
 
             for task_name in task_names:
                 
@@ -279,8 +281,8 @@ class FailureMode: #Maybe rename to failure mode
             timeline['initiation'][t_initiate:] = 1
 
         # Get condtiion
-        for condition in self.conditions.values(): 
-            timeline[condition.name] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
+        for condition_name, condition in self.conditions.items(): 
+            timeline[condition_name] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
 
         # Check failure
         timeline['failure'] = np.full(t_end + 1, self._failed)
@@ -299,10 +301,10 @@ class FailureMode: #Maybe rename to failure mode
         timeline['detection'] = np.full(t_end - t_start + 1, self._detected)
         
         # Check tasks with condition based trigger
-        for task in self.tasks.values():
+        for task_name, task in self.tasks.items():
 
             if task.trigger == 'condition':
-                timeline[task.name] = task.sim_timeline(t_end, timeline)
+                timeline[task_name] = task.sim_timeline(t_end, timeline)
 
         self.timeline = timeline
 
@@ -324,9 +326,9 @@ class FailureMode: #Maybe rename to failure mode
             self.timeline['initiation'][t_initiate:] = 1
 
         # Check for condition changes
-        for condition in self.conditions.values():
-            if 'initiation' in updates or condition.name in updates:
-                self.timeline[condition.name][t_start:t_end] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
+        for condition_name, condition in self.conditions.items():
+            if 'initiation' in updates or condition_name in updates:
+                self.timeline[condition_name][t_start:t_end] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
 
         # Check for detection changes
         if 'detection' in updates:
@@ -340,14 +342,14 @@ class FailureMode: #Maybe rename to failure mode
                 self.timeline['failure'] = (self.timeline['failure']) | (tl_f)
 
         # Check tasks with time based trigger
-        for task in self.tasks.values():
+        for task_name, task in self.tasks.items():
     
-            if task.trigger == 'time' and task.name in updates: 
-                self.timeline[task.name] = task.sim_timeline(s_tart=t_start, t_end=t_end, timeline=self.timeline)
+            if task.trigger == 'time' and task_name in updates: 
+                self.timeline[task_name] = task.sim_timeline(s_tart=t_start, t_end=t_end, timeline=self.timeline)
 
             # Update condition based tasks if the failure mode initiation has changed
             if 'initiation' in updates and task.trigger == 'condition':
-                self.timeline[task.name] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=self.timeline)
+                self.timeline[task_name] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=self.timeline)
 
         return self.timeline
 

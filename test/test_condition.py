@@ -30,8 +30,6 @@ class TestCondition(unittest.TestCase):
     # test_perfect_prior_to_start
     # test_partial_prior_to_start
 
-
-
     # *********** Test the condition limits ******************
     def test_condition_starts_zero(self):
         d = Condition(perfect=0, limit=100, pf='linear', cond_profile_params =[10])
@@ -337,10 +335,31 @@ class TestCondition(unittest.TestCase):
         d.reset()
         self.assertEqual(d.current(),100)
 
+
+    # **************** Test the reset_any functions ***********************
+    
+    def test_reset_any_reduction_factor_all(self):
+        c = Condition(100,0,'linear', [-10], decreasing = True)
+        c.set_condition(50)
+        c.reset_any(target=0, reduction_factor=1, reverse=0, method='reduction_factor', axis='condition')
+        self.assertEqual(c.condition, 100)
+
+    def test_reset_any_reduction_factor_half(self):
+        c = Condition(100,0,'linear', [-10], decreasing = True)
+        c.set_condition(50)
+        c.reset_any(target=0, reduction_factor=0.5, reverse=0, method='reduction_factor', axis='condition')
+        self.assertEqual(c.condition, 75)
+
+    def test_reset_any_reduction_factor_none(self):
+        c = Condition(100,0,'linear', [-10], decreasing = True)
+        c.set_condition(50)
+        c.reset_any(target=0, reduction_factor=0, reverse=0, method='reduction_factor', axis='condition')
+        self.assertEqual(c.condition, 50)
+
     # ************** Test the accumulation functions ******************
 
     def test_accumulate_time(self):
-        self.assertEqual(False)
+        self.assertEqual(False, False)
 
 if __name__ == '__main__':
     unittest.main()

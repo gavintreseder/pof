@@ -47,7 +47,6 @@ class Condition():
         self.decreasing = decreasing
         self.pf_interval = NotImplemented
         self.pf_std = NotImplemented
-        self.detection_probability = NotImplemented #TODO this has been moved to the inspection
 
         # Time
         self.t_condition = 0
@@ -108,6 +107,7 @@ class Condition():
             
             self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
 
+
         return
 
     def set_t_condition(self, t_condition): # TODO test time is within limits
@@ -117,6 +117,8 @@ class Condition():
             self.t_condition = self.t_max
         else:
             self.t_condition = t_condition
+
+        self.condition = self.condition_profile[self.t_condition]
 
     def set_condition_profile(self, t_min=0, t_max=100): # Change limits for time to match max degradation profile
         """
@@ -228,7 +230,7 @@ class Condition():
 
         # Fill the start with the current condtiion
         if t_start < 0:
-            cp = np.append(np.full(-t_start, self.condition), cp)
+            cp = np.append(np.full(t_start * -1, self.condition), cp)
 
         # Fill the end with the failed condition
         if t_stop - t_start - self.t_condition > self.t_max:
@@ -327,28 +329,31 @@ class Condition():
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
 
-        new = target
-        current = self.current()
+        # Error with time reset, different method required.
 
         if method == 'reduction_factor':
-            new = current * reduction_factor
+            accumulated = (self.condition_perfect - self.current()) * (1 - reduction_factor)
 
         elif method == 'reverse':
-            new = current - reverse
+            accumulated = self.current() - reverse
+
+        elif method == 'target':
+            accumulated = target
 
         # Calculate the accumulated condition
         if axis == 'time':
 
-            self.t_accumulated = int(min(max(0, new), self.t_max))
+            self.t_accumulated = int(min(max(0, accumulated), self.t_max))
 
         elif axis == 'condition':
 
             if self.decreasing:
-                self.condition_accumulated = min(max(self.condition_failed, new), self.condition_perfect)
+                self.condition_accumulated = min(max(self.condition_failed, accumulated), self.condition_perfect)
             else:
-                self.condition_accumulated = max(min(self.condition_failed, new), self.condition_perfect)
+                self.condition_accumulated = max(min(self.condition_failed, accumulated), self.condition_perfect)
 
         self.set_condition_profile()
+        self.set_t_condition(0)
         
         return
 
