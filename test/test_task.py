@@ -29,28 +29,14 @@ class TestInspection(unittest.TestCase):
 
         self.assertTrue(True)
 
-    def test_sim_inspect_with_p_detection_1_t_in_window(self):
+    """Tests to complete
 
-        self.insp.p_detection = 1
-        self.insp.t_last_inspection = 0
-        self.insp.t_last_inspection = 5
-        self.insp.t_inspection_interval = 5
 
-        t_step = 2
+    inspection before conditions not met
+    inspection with one condition met
+    inspection with all conditions met
 
-        self.d.condition_detectable = 0
-        
-        # Check the time
-        for i in range(0, self.n_sims):
-
-            if self.insp.sim_inspect(t_step, self.d):
-                
-                self.n_detect = self.n_detect + 1
-        
-        p_detect = self.n_detect / self.n_sims
-
-        self.assertAlmostEqual(p_detect, 1, places=2)
-
+    """
     #def test_sim_inspect_with_p_detection_1_before_t_inspection(self):
 
         
