@@ -377,6 +377,8 @@ class TestCondition(unittest.TestCase):
         c.reset_any(target=0, reduction_factor=0, reverse=0, method='reduction_factor', axis='condition')
         self.assertEqual(c.condition, 50)
 
+    
+
     # ************** Test the accumulation functions ******************
 
     def test_accumulate_time(self):

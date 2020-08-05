@@ -196,6 +196,8 @@ class Task:
             for condition_name, impact in self.condition_impacts.items():
                 if verbose: print("updating condition - %s" %(condition_name))
 
+                conditions[condition_name].set_condition(timeline[condition_name][t_now])
+
                 conditions[condition_name].reset_any(
                     target = impact['target'],
                     reduction_factor = impact['reduction_factor'],
@@ -370,9 +372,9 @@ class OnConditionRepair(ConditionTask):
         self.condition_impacts = dict(
             wall_thickness = dict(
                 target = None,
-                reduction_factor = 1,
+                reduction_factor = 0,
                 method = 'reduction_factor',
-                axis = 'time',
+                axis = 'condition',
              ),
         )
 
@@ -439,10 +441,14 @@ class Inspection(ScheduledTask):
         else:
             det = False
 
+            for trigger, threshold in self.state_triggers.items():
+                det = det or timeline[trigger][t_now] == threshold
+                
             # Check if any conditions are within detection threshold
-            for trigger, threshold in self.condition_triggers.items():
+            if det == True:
+                for trigger, threshold in self.condition_triggers.items():
 
-                det = det | ((timeline[trigger][t_now] >= threshold['lower']) & (timeline[trigger][t_now] <= threshold['upper']))
+                    det = det | ((timeline[trigger][t_now] >= threshold['lower']) & (timeline[trigger][t_now] <= threshold['upper']))
                 
         return det
 
