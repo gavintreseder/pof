@@ -65,6 +65,8 @@ class FailureMode: #Maybe rename to failure mode
         # Cost and Value of current task? #TODO
         self.value = None #TODO
 
+        self._sim_counter = 0
+
         if scenario == 'test':
             self.set_test()
 
@@ -85,8 +87,8 @@ class FailureMode: #Maybe rename to failure mode
 
         self.set_tasks(dict(
             inspection = Inspection(t_interval=5, t_delay = 10), 
-            ocr = ConditionTask(activity='test_ocr'),
-            cm = ImmediateMaintenance(activity='cm')
+            #termite_powder = OnConditionRepair(activity='on_condition_repair').set_default(),
+            cm = ImmediateMaintenance(activity='cm').set_default(),
         
         ))
 
@@ -248,19 +250,19 @@ class FailureMode: #Maybe rename to failure mode
             # Check when the next task needs to be executed
             t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
-            if verbose: print(t_now, task_names)
-
             for task_name in task_names:
-                
+                if verbose: print(t_now, task_names)
                 # Complete the tasks
-                states = self.tasks[task_name].sim_completion(t_now, timeline=self.timeline, states=self.get_states(), conditions=self.conditions)
+                states = self.tasks[task_name].sim_completion(t_now, timeline=self.timeline, states=self.get_states(), conditions=self.conditions, verbose=verbose)
 
                 # Update timeline
                 self.set_states(states) # Change this to update timeline based on states that have changed
-                self.update_timeline(t_now, t_end, states)
+                self.update_timeline(t_now + 1, t_end, states, verbose=verbose)
             
             t_now = t_now + 1
         
+        self._sim_counter = self._sim_counter + 1
+
         return self.timeline
 
     def init_timeline(self, t_end, t_start=0):
@@ -310,46 +312,50 @@ class FailureMode: #Maybe rename to failure mode
 
         return timeline
         
-    def update_timeline(self, t_start, t_end, updates = dict(), reset_tasks = False):
+    def update_timeline(self, t_start, t_end, updates = dict(), reset_tasks = False, verbose=False):
         """
         Takes a timeline and updates tasks that are impacted
         """
         # Initiation -> Condition -> time_tasks -> states -> tasks
+        if t_start < t_end:
+
+            if 'time' in updates:
+                self.timeline['time'] = np.linspace(t_start, t_end, t_end-t_start + 1, dtype=int)
+
+            # Check for initiation changes
+            if 'initiation' in updates:
+                t_initiate = min(t_end, t_start + int(self.init_dist.sample())) # TODO make this conditional 
+                self.timeline['initiation'][t_start:t_initiate] = 0
+                self.timeline['initiation'][t_initiate:] = 1
+            else:
+                t_initiate = np.argmax(self.timeline['initiation'][t_start:t_end] > 0)
+
+            # Check for condition changes
+            for condition_name, condition in self.conditions.items():
+                if 'initiation' in updates or condition_name in updates:
+                    if verbose: print('condition %s, start %s, initiate %s, end %s' %(condition_name, t_start, t_initiate, t_end))
+                    self.timeline[condition_name][t_start:t_end] = condition.get_condition_profile(t_start= -t_initiate, t_stop=t_end - t_initiate - t_start - 1)
+
+            # Check for detection changes
+            if 'detection' in updates:
+                self.timeline['detection'][t_start:t_end + 1] = updates['detection']
+
+            # Check for failure changes
+            if 'failure' in updates:
+                self.timeline['failure'][t_start:t_end] = updates['failure']
+                for condition in self.conditions.values():
+                    tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_start - t_initiate)
+                    self.timeline['failure'][t_start:] = (self.timeline['failure'][t_start:]) | (tl_f)
+
+            # Check tasks with time based trigger
+            for task_name, task in self.tasks.items():
         
-        if 'time' in updates:
-            self.timeline['time'] = np.linspace(t_start, t_end, t_end-t_start + 1, dtype=int)
+                if task.trigger == 'time' and task_name in updates: 
+                    self.timeline[task_name][t_start:] = task.sim_timeline(s_tart=t_start, t_end=t_end, timeline=self.timeline)
 
-        # Check for initiation changes
-        if 'intiation' in updates:
-            t_initiate = min(t_end, int(self.init_dist.sample())) # TODO make this conditional 
-            self.timeline['initiation'][t_start:t_initiate] = 0
-            self.timeline['initiation'][t_initiate:] = 1
-
-        # Check for condition changes
-        for condition_name, condition in self.conditions.items():
-            if 'initiation' in updates or condition_name in updates:
-                self.timeline[condition_name][t_start:t_end] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
-
-        # Check for detection changes
-        if 'detection' in updates:
-            self.timeline['detection'][t_start:t_end + 1] = updates['detection']
-
-        # Check for failure changes
-        if 'failure' in updates:
-            self.timeline['failure'][t_start:t_end] = updates['failure']
-            for condition in self.conditions.values():
-                tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
-                self.timeline['failure'] = (self.timeline['failure']) | (tl_f)
-
-        # Check tasks with time based trigger
-        for task_name, task in self.tasks.items():
-    
-            if task.trigger == 'time' and task_name in updates: 
-                self.timeline[task_name] = task.sim_timeline(s_tart=t_start, t_end=t_end, timeline=self.timeline)
-
-            # Update condition based tasks if the failure mode initiation has changed
-            if 'initiation' in updates and task.trigger == 'condition':
-                self.timeline[task_name] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=self.timeline)
+                # Update condition based tasks if the failure mode initiation has changed
+                if 'initiation' in updates and task.trigger == 'condition':
+                    self.timeline[task_name][t_start:] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=self.timeline)
 
         return self.timeline
 
@@ -396,6 +402,18 @@ class FailureMode: #Maybe rename to failure mode
                 # TODO replaced this with a loop to only update the ones that have changed.
 
     # ****************** Simple outputs  ************
+
+    def expected_cost(self):
+
+        tc = dict()
+
+        for task in self.tasks.values():
+
+            tc['time'], tc['quantity'] = np.unique(task.t_completion, return_counts=True)
+            tc['cost'] = tc['quantity'] * task.cost
+
+        return tc
+    
 
     def plot_timeline(self):
 

@@ -33,9 +33,13 @@ class Distribution:
     def conditional_f(self, x_min, x_max):
         P_min = ss.weibull_min.sf(x_min, self.beta, scale=self.alpha, loc=self.gamma)
         P_max = ss.weibull_min.sf(x_max, self.beta, scale=self.alpha, loc=self.gamma)
-        P = 1- P_max / P_min
+        P = 1 - P_max / P_min
 
         return P
+
+    def sim_conditional_f(self, x_min, x_max):
+
+        
 
     def conditional_sf(self, x_min, x_max): # TODO Occa should this be total failure rate (cdf) or conditional failure
 

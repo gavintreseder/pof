@@ -36,6 +36,19 @@ class Condition():
 
                 increasing : bool
                     Either increasing or decreasing
+
+                condition : int
+                    the current condition of the asset 
+
+                condition_perfect : int
+                    the condition of an asset when new
+                
+                condition_accumulated : int
+                    the condition loss that has accumulated and cannot be restored through 
+
+                condtion_failure : int
+                    the condition of an asset at failure
+            
                 
     """
     def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True, name = 'default'):
@@ -222,6 +235,10 @@ class Condition():
 
         if t_start > t_stop:
             t_start = t_stop
+
+        if t_stop < 0:
+            t_start = t_start - t_stop
+            t_stop = 0
 
         cp = self.condition_profile[np.arange(
             max(self.t_condition, min(t_start, self.t_max)),

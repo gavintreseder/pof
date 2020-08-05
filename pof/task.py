@@ -164,6 +164,7 @@ class Task:
         self.state = 'up' # or down
 
         # Log it's use
+        self.t_completion = []
         self._timeline = NotImplemented
         self._count_checked = NotImplemented
         self._count_triggered = NotImplemented
@@ -188,26 +189,28 @@ class Task:
 
     def is_effective(self, t_now=None, timeline=None):
 
-        return random() < self.p_effective
+        return random() <= self.p_effective
 
-    def sim_completion(self, t_now, timeline= None, states = dict(), conditions = dict()): #TODO maybe split into states 
+    def sim_completion(self, t_now, timeline= None, states = dict(), conditions = dict(), verbose = False): #TODO maybe split into states 
         """
         Takes a dictionary of states and dictionary of condition objects and returns the states that have been changed
         """
 
         # Incur the cost of the task
-        self._count_completed = self._count_completed + 1
+        self.t_completion.append(t_now)
 
         # Update the condition if it was effective
         if self.is_effective(t_now, timeline):
 
             # Update any conditions that need to be udpated
-            for condition_impact in self.condition_impacts.values():
-                conditions[condition_impact].reset_any(
-                    target = condition_impact['target'],
-                    reduction_factor = condition_impact['reduction_factor'],
-                    axis = condition_impact['axis'],
-                    method = condition_impact['method'],
+            for condition_name, impact in self.condition_impacts.items():
+                if verbose: print("updating condition - %s" %(condition_name))
+
+                conditions[condition_name].reset_any(
+                    target = impact['target'],
+                    reduction_factor = impact['reduction_factor'],
+                    axis = impact['axis'],
+                    method = impact['method'],
                 )
 
             return self.state_impacts
@@ -254,8 +257,6 @@ class ConditionTask(Task):
 
         self.task_type = 'immediate'
 
-        self.set_default()
-
     def set_default(self):
         self.state_impacts = dict( #True, False or N/C
             initiation = False,
@@ -266,8 +267,14 @@ class ConditionTask(Task):
         self.condition_impacts = dict(
             wall_thickness = dict(
                 target = None,
-                reduction_factor = 1,
-                method = 'restore',
+                reduction_factor = 0.5,
+                method = 'reduction_factor',
+                axis = 'condition',
+            ),
+            external_diameter = dict(
+                target = None,
+                reduction_factor = 0.5,
+                method = 'reduction_factor',
                 axis = 'condition',
             )
         )
@@ -281,25 +288,28 @@ class ConditionTask(Task):
             )
         ))
 
+        return self
+
 
     def sim_timeline(self, t_end, timeline, t_start = 0, t_delay = NotImplemented):
         """
         If state and condition triggers are met return the timeline met then 
         """
         
-        tl_ct = np.full(t_end - t_start + 1, True)
+        t_end = t_end + 1
+        tl_ct = np.full(t_end - t_start, True)
 
         try:
             # Check the state triggers have been met
             for state, trigger in self.state_triggers.items():
-                tl_ct  = (tl_ct ) & (timeline[state])
+                tl_ct  = (tl_ct ) & (timeline[state][t_start:t_end] )
         except KeyError:
             print("%s not found" %(state))
         
         try:
             # Check the condition triggers have been met
             for condition, trigger in self.condition_triggers.items():
-                tl_ct  = (tl_ct) & (timeline[condition] < trigger['upper']) & (timeline[condition] > trigger['lower'])
+                tl_ct  = (tl_ct) & (timeline[condition][t_start:t_end] < trigger['upper']) & (timeline[condition][t_start:t_end] > trigger['lower'])
         except KeyError:
             print ("%s not found" %(condition))
         
@@ -348,6 +358,37 @@ class ScheduledReplacement(ScheduledTask): #Not implemented
             ),
         )
 
+        self.cost = 1000
+
+        return self
+
+class OnConditionRepair(ConditionTask):
+
+    def __init__(self, activity = 'on_condition_repair'):
+        super().__init__(self)
+
+        self.activity = activity
+
+    def set_default(self):
+
+        self.state_impacts = dict(
+            initiation = False,
+            detection = False,
+            failure = False,
+        )
+
+        self.set_triggers(dict(
+            condition= dict(
+                wall_thickness = dict(
+                    lower = 50,
+                    upper = 70,
+                )
+            )
+        ))
+
+        return self
+
+
 
 class Inspection(ScheduledTask):
 
@@ -356,9 +397,10 @@ class Inspection(ScheduledTask):
 
         self.activity = 'inspection'
 
-        self.set_default()
 
     def set_default(self):
+
+        self.cost = 50
 
         self.t_interval = 5
         self.t_delay = 10
@@ -375,6 +417,8 @@ class Inspection(ScheduledTask):
         self.state_impacts = dict( #True, False or N/C
             detection = True,
         )
+
+        return self
 
     def is_effective(self, t_now, timeline=None):
         """
@@ -400,7 +444,6 @@ class ImmediateMaintenance(ConditionTask):
         super().__init__(self)
 
         self.activity = activity
-        self.set_default()
     
     def set_default(self):
 
@@ -408,28 +451,30 @@ class ImmediateMaintenance(ConditionTask):
             failure = True,
         )
 
-        self.impacts = dict(
-            condition = dict(
-                wall_thickness = dict(
-                    target = None,
-                    reduction_factor = 1,
-                    method = 'restore',
-                    axis = 'condition',
-                ),
-                external_diameter = dict(
-                    target = None,
-                    reduction_factor = 1,
-                    method = 'restore',
-                    axis = 'condition',
-                ),
+        self.condition_impacts = dict(
+            wall_thickness = dict(
+                target = None,
+                reduction_factor = 1,
+                method = 'reduction_factor',
+                axis = 'condition',
             ),
-
-            state = dict(
-                initiation = False,
-                detection = False,
-                failure = False,
+            external_diameter = dict(
+                target = None,
+                reduction_factor = 1,
+                method = 'reduction_factor',
+                axis = 'condition',
             ),
         )
+
+        self.state_impacts = dict(
+            initiation = False,
+            detection = False,
+            failure = False,
+        )
+
+        self.cost = 5000
+
+        return self
 
 
 
