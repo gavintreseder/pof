@@ -86,7 +86,7 @@ class FailureMode: #Maybe rename to failure mode
         ))
 
         self.set_tasks(dict(
-            inspection = Inspection(t_interval=5, t_delay = 10), 
+            inspection = Inspection(t_interval=5, t_delay = 10).set_default(), 
             #termite_powder = OnConditionRepair(activity='on_condition_repair').set_default(),
             cm = ImmediateMaintenance(activity='cm').set_default(),
         
@@ -284,13 +284,13 @@ class FailureMode: #Maybe rename to failure mode
 
         # Get condtiion
         for condition_name, condition in self.conditions.items(): 
-            timeline[condition_name] = condition.get_condition_profile(t_start=-t_initiate, t_stop=t_end - t_initiate)
+            timeline[condition_name] = condition.get_condition_profile(t_start= t_start - t_initiate, t_stop=t_end - t_initiate)
 
         # Check failure
         timeline['failure'] = np.full(t_end + 1, self._failed)
         if not self._failed:
             for condition in self.conditions.values():
-                tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_initiate)
+                tl_f = condition.sim_failure_timeline(t_start= t_start - t_initiate, t_stop=t_end - t_initiate)
                 timeline['failure'] = (timeline['failure']) | (tl_f)
 
         # Check tasks with time based trigger
@@ -328,13 +328,13 @@ class FailureMode: #Maybe rename to failure mode
                 self.timeline['initiation'][t_start:t_initiate] = 0
                 self.timeline['initiation'][t_initiate:] = 1
             else:
-                t_initiate = np.argmax(self.timeline['initiation'][t_start:t_end] > 0)
+                t_initiate = np.argmax(self.timeline['initiation'][t_start:] > 0)
 
             # Check for condition changes
             for condition_name, condition in self.conditions.items():
                 if 'initiation' in updates or condition_name in updates:
                     if verbose: print('condition %s, start %s, initiate %s, end %s' %(condition_name, t_start, t_initiate, t_end))
-                    self.timeline[condition_name][t_start:t_end] = condition.get_condition_profile(t_start= -t_initiate, t_stop=t_end - t_initiate - t_start - 1)
+                    self.timeline[condition_name][t_start:] = condition.get_condition_profile(t_start= t_start - t_initiate, t_stop=t_end - t_initiate)
 
             # Check for detection changes
             if 'detection' in updates:
@@ -344,7 +344,7 @@ class FailureMode: #Maybe rename to failure mode
             if 'failure' in updates:
                 self.timeline['failure'][t_start:t_end] = updates['failure']
                 for condition in self.conditions.values():
-                    tl_f = condition.sim_failure_timeline(t_start = - t_initiate, t_stop = t_end - t_start - t_initiate)
+                    tl_f = condition.sim_failure_timeline(t_start = t_start- t_initiate, t_stop = t_end - t_initiate)
                     self.timeline['failure'][t_start:] = (self.timeline['failure'][t_start:]) | (tl_f)
 
             # Check tasks with time based trigger

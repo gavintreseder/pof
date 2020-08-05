@@ -157,7 +157,7 @@ class TestCondition(unittest.TestCase):
         np.testing.assert_array_equal(cp, expected)
 
     def test_get_condition_profile_v_early_start_v_early_stop(self):
-        expected = np.full(100,90)
+        expected = np.full(91,100)
         c = Condition(100,50,'linear',[-1])
         cp = c.get_condition_profile(t_start=-100, t_stop=-10)
         np.testing.assert_array_equal(cp, expected)
