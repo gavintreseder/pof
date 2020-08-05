@@ -20,85 +20,6 @@ from pof.consequence import Consequence
 
 seed(1)
 
-"""
-Task
-    - sim_timeline return a timeline of when the task is scheduled
-    - sim_execution
-
-    time based triggers
-        - time
-    condition based triggers
-        - condition
-    
-    execution
-        - states
-
-"""
-
-"""
-
-RCM strategies
-
-On Condition Maintenace -> reset initiation
-On Condition Replacement -> reset
-
-
-Predictive maintenance tasks,
-Preventive Restoration or Preventive Replacement maintenance tasks,
-Detective maintenance tasks,
-Run-to-Failure, and
-One-time changes to the "system"
-
-"""
-
-"""
-Task
-    Scheduled
-        Inspection - Change detection
-        Repair - Change detection and initiation
-        Restoration - Change detection, initiation, failure and condition
-        Replacement - Change everything
-    OnCondition
-        Repair - Change detection and initiation
-        Restoration ...
-        Repalcement
-
-
-    -timeline when task can bet completed
-    -timeline of dependent tasks???
-
-
-
-    Functions for all of them
-        sim_timeline() return the timeline between t_start and t_end with days remaining until task
-            sim_ttr()
-            sim_conditions_met()
-        sim_completion() return the new states
-            update conditions 
-            return states after completion t=0
-
-        sim_states() 
-            update the states
-
-    fm.update_timeline
-
-        after completion return the timeline of state changes?
-        inspection 
-            -> change detection 
-        repair
-            -> change detection (current, need new inspection to change)
-            -> change failure (current, need new initiation and condition to change)
-            -> change condition
-        restore
-            -> change detection
-            -> change failure
-            -> change condition
-        replace
-        
-
-    scheduled -> condition
-
-"""
 
 class Task:
     """
@@ -214,7 +135,10 @@ class Task:
         
 
     def reset(self):
-        self.triggered = False
+        """
+        Resets the logs for a task
+        """
+        self.t_completion = []
 
     #TODO add methods for cost, resources and 
 
@@ -443,7 +367,7 @@ class Inspection(ScheduledTask):
 
             for trigger, threshold in self.state_triggers.items():
                 det = det or timeline[trigger][t_now] == threshold
-                
+
             # Check if any conditions are within detection threshold
             if det == True:
                 for trigger, threshold in self.condition_triggers.items():
@@ -512,4 +436,86 @@ class ImmediateMaintenance(ConditionTask):
     repair -> remove failure initiation (Failure Modes that only reset)
     restore -> remove failure initaition and restore some condition
     replace -> reset component
+"""
+
+
+
+"""
+Task
+    - sim_timeline return a timeline of when the task is scheduled
+    - sim_execution
+
+    time based triggers
+        - time
+    condition based triggers
+        - condition
+    
+    execution
+        - states
+
+"""
+
+"""
+
+RCM strategies
+
+On Condition Maintenace -> reset initiation
+On Condition Replacement -> reset
+
+
+Predictive maintenance tasks,
+Preventive Restoration or Preventive Replacement maintenance tasks,
+Detective maintenance tasks,
+Run-to-Failure, and
+One-time changes to the "system"
+
+"""
+
+"""
+Task
+    Scheduled
+        Inspection - Change detection
+        Repair - Change detection and initiation
+        Restoration - Change detection, initiation, failure and condition
+        Replacement - Change everything
+    OnCondition
+        Repair - Change detection and initiation
+        Restoration ...
+        Repalcement
+
+
+    -timeline when task can bet completed
+    -timeline of dependent tasks???
+
+
+
+    Functions for all of them
+        sim_timeline() return the timeline between t_start and t_end with days remaining until task
+            sim_ttr()
+            sim_conditions_met()
+        sim_completion() return the new states
+            update conditions 
+            return states after completion t=0
+
+        sim_states() 
+            update the states
+
+    fm.update_timeline
+
+        after completion return the timeline of state changes?
+        inspection 
+            -> change detection 
+        repair
+            -> change detection (current, need new inspection to change)
+            -> change failure (current, need new initiation and condition to change)
+            -> change condition
+        restore
+            -> change detection
+            -> change failure
+            -> change condition
+        replace
+        
+
+    scheduled -> condition
+
 """

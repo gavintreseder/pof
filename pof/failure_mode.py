@@ -240,7 +240,7 @@ class FailureMode: #Maybe rename to failure mode
     # ****************** Timeline ******************
 
     def sim_timeline(self, t_end, t_start = 0, verbose=False):
-        
+
         timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
         t_now = t_start
@@ -262,6 +262,8 @@ class FailureMode: #Maybe rename to failure mode
             t_now = t_now + 1
         
         self._sim_counter = self._sim_counter + 1
+        self._timelines = self.timeline
+        self.reset_for_next_sim()
 
         return self.timeline
 
@@ -406,15 +408,47 @@ class FailureMode: #Maybe rename to failure mode
 
     def expected_cost(self):
 
-        tc = dict()
+        d_tc = dict()
 
-        for task in self.tasks.values():
+        for task_name, task in self.tasks.items():
 
-            tc['time'], tc['quantity'] = np.unique(task.t_completion, return_counts=True)
-            tc['cost'] = tc['quantity'] * task.cost
+            time, quantity= np.unique(task.t_completion, return_counts=True)
+            cost = quantity * task.cost
 
-        return tc
+            d_tc[task_name] = dict(
+                time = time,
+                cost = cost,
+            )
+
+        return d_tc
     
+    def expected_cost_df(self):
+
+        df_tasks = pd.DataFrame()
+        new_index = pd.Index(np.arange(0,200,1), name="time")
+
+
+        for task_name, task in self.tasks.items():
+
+            time, quantity= np.unique(task.t_completion, return_counts=True)
+            cost = quantity * task.cost / self._sim_counter
+            cost_cumulative = cost.cumsum()
+
+            df = pd.DataFrame(dict(
+                task = task_name,
+                time = time,
+                cost = cost,
+                cost_cumulative = cost_cumulative
+            ))
+
+            df = df.set_index('time').reindex(new_index).reset_index()
+            df.loc[0,:] = 0
+            df.loc[0,'task'] = task_name
+            df = df.fillna(method='ffill')
+            
+            df_tasks = pd.concat([df_tasks, df])
+
+        return df_tasks
 
     def plot_timeline(self):
 
@@ -561,6 +595,27 @@ class FailureMode: #Maybe rename to failure mode
             ax[row].set_ylabel(field)
             
             row = row + 1
+
+    # ****************** Reset Routines **************
+
+    def reset_for_next_sim(self):
+
+        # Reset conditions
+        for condition in self.conditions.values():
+            condition.reset()
+
+    def reset(self):
+
+        # Reset tasks
+        for task in self.tasks.values():
+            task.reset()
+
+        # Reset conditions
+        for condition in self.conditions.values():
+            condition.reset()
+
+        # Reset counters
+        self._sim_counter = 0
 
     # ****************** Optimise routines ***********
 
