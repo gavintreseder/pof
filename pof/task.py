@@ -372,7 +372,7 @@ class Inspection(ScheduledTask):
             ),
         )
 
-        self.state_impacts = dict( #True, False or N/C
+        self.state_impacts = dict( 
             detection = True,
         )
 
