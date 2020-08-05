@@ -140,10 +140,6 @@ class Task:
         self.consequence = Consequence()
         
         # Triggers - set in child classes
-
-        # Impacts
-        self.state_impacts = dict()
-        self.condition_impacts = dict()
         self.p_effective = 1
 
         self.time_triggers = dict() #TODO maybe implement in task?
@@ -372,19 +368,19 @@ class OnConditionRepair(ConditionTask):
         )
 
         self.condition_impacts = dict(
-                wall_thickness = dict(
-                    target = None,
-                    reduction_factor = 0,
-                    method = 'reduction_fa',
-                    axis = 'condition',
-                ),
-            ),
+            wall_thickness = dict(
+                target = None,
+                reduction_factor = 1,
+                method = 'reduction_factor',
+                axis = 'time',
+             ),
+        )
 
         self.set_triggers(dict(
             condition= dict(
                 wall_thickness = dict(
-                    lower = 50,
-                    upper = 70,
+                    lower = 20,
+                    upper = 80,
                 )
             ),
             state = dict(

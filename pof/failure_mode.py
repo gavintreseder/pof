@@ -87,8 +87,8 @@ class FailureMode: #Maybe rename to failure mode
 
         self.set_tasks(dict(
             inspection = Inspection(t_interval=5, t_delay = 10).set_default(), 
-            #ocr = OnConditionRepair(activity='on_condition_repair').set_default(),
-            cm = ImmediateMaintenance(activity='cm').set_default(),
+            ocr = OnConditionRepair(activity='on_condition_repair').set_default(),
+            #cm = ImmediateMaintenance(activity='cm').set_default(),
         
         ))
 
@@ -355,7 +355,7 @@ class FailureMode: #Maybe rename to failure mode
                     self.timeline[task_name][t_start:] = task.sim_timeline(s_tart=t_start, t_end=t_end, timeline=self.timeline)
 
                 # Update condition based tasks if the failure mode initiation has changed
-                if 'initiation' in updates and task.trigger == 'condition':
+                if task.trigger == 'condition':
                     self.timeline[task_name][t_start:] = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=self.timeline)
 
         return self.timeline
