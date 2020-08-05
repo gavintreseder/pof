@@ -327,6 +327,30 @@ class Inspection(ScheduledTask):
 
         self.activity = 'inspection'
 
+    def set_params(self, t_interval=None, t_delay=None, p_effective=None,state_triggers=dict(), condition_triggers=dict(), state_impacts = dict(), condition_impacts = dict()):
+        
+        if t_interval is not None:
+            self.t_interval = t_interval
+        
+        if t_delay is not None:
+            self.t_delay = t_delay
+        
+        if p_effective is not None:
+            self.p_effective = p_effective
+        
+        if not state_triggers:
+            self.state_triggers = state_triggers
+        
+        if not condition_triggers:
+            self.condition_triggers = condition_triggers
+        
+        if not state_impacts:
+            self.state_impacts = state_impacts
+
+        if not condition_impacts:
+            self.condition_impacts = condition_impacts
+
+        return self
 
     def set_default(self):
 

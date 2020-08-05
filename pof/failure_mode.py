@@ -10,6 +10,7 @@ import scipy.stats as ss
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from random import random, seed
+from tqdm import tqdm
 
 from pof.condition import Condition
 from pof.distribution import Distribution
@@ -63,6 +64,8 @@ class FailureMode: #Maybe rename to failure mode
 
         # kpis? #TODO
         # Cost and Value of current task? #TODO
+
+        self._timelines = dict()
         self.value = None #TODO
 
         self._sim_counter = 0
@@ -88,7 +91,7 @@ class FailureMode: #Maybe rename to failure mode
         self.set_tasks(dict(
             inspection = Inspection(t_interval=5, t_delay = 10).set_default(), 
             ocr = OnConditionRepair(activity='on_condition_repair').set_default(),
-            #cm = ImmediateMaintenance(activity='cm').set_default(),
+            cm = ImmediateMaintenance(activity='cm').set_default(),
         
         ))
 
@@ -239,6 +242,11 @@ class FailureMode: #Maybe rename to failure mode
 
     # ****************** Timeline ******************
 
+    def mc_timeline(self, t_end, t_start=0, n_iterations=100):
+
+        for i in tqdm(range(n_iterations)):
+            self._timelines[i] = self.sim_timeline(t_end=t_end, t_start=t_start)
+
     def sim_timeline(self, t_end, t_start = 0, verbose=False):
 
         timeline = self.init_timeline(t_start=t_start, t_end=t_end)
@@ -262,7 +270,6 @@ class FailureMode: #Maybe rename to failure mode
             t_now = t_now + 1
         
         self._sim_counter = self._sim_counter + 1
-        self._timelines = self.timeline
         self.reset_for_next_sim()
 
         return self.timeline
@@ -406,7 +413,7 @@ class FailureMode: #Maybe rename to failure mode
 
     # ****************** Simple outputs  ************
 
-    def expected_cost(self):
+    def expected_cost_dict(self): # TODO legacy
 
         d_tc = dict()
 
@@ -421,7 +428,68 @@ class FailureMode: #Maybe rename to failure mode
             )
 
         return d_tc
+
+    def expected_costs(self):
+
+        cost = dict()
+
+        for task_name, task in self.tasks.items():
+            cost[task_name] = len(task.t_completion) * task.cost / self._sim_counter
+
+        t_failures = []
+        for timeline in self._timelines.values():
+            t_failures = np.append(t_failures, np.argmax(timeline['failure']))
+
+        # Arange into failures and censored data
+        failures = t_failures[t_failures > 0]
+
+        cost['risk'] = len(failures) * self.cof.risk_cost_total  / self._sim_counter
+
+        return cost
+            
     
+    def mc_failures_df(self):
+
+        t_failures = []
+        for timeline in self._timelines.values():
+            t_failures = np.append(t_failures, np.argmax(timeline['failure']))
+
+        # Arange into failures and censored data
+        failures = t_failures[t_failures > 0]
+        censored = np.full(sum(t_failures==0), 200)
+
+        return failures
+
+    def mc_risk_df(self):
+
+        t_failures = []
+        for timeline in self._timelines.values():
+            t_failures = np.append(t_failures, np.argmax(timeline['failure']))
+
+        # Arange into failures and censored data
+        failures = t_failures[t_failures > 0]
+        
+        time, quantity = np.unique(failures, return_counts=True)
+        cost = quantity * self.cof.risk_cost_total / self._sim_counter
+        cost_cumulative = cost.cumsum()
+
+        df = pd.DataFrame(dict(
+            cost_type = 'risk',
+            time = time,
+            quantity = quantity, 
+            cost = cost,
+            cost_cumulative = cost_cumulative,
+        ))
+
+        new_index = pd.Index(np.arange(0,200,1), name="time")
+
+        df = df.set_index('time').reindex(new_index).reset_index()
+        df.loc[0,:] = 0
+        df.loc[0,'cost_type'] = 'risk'
+        df = df.fillna(method='ffill')
+
+        return df
+
     def expected_cost_df(self):
 
         df_tasks = pd.DataFrame()
@@ -450,7 +518,10 @@ class FailureMode: #Maybe rename to failure mode
 
         return df_tasks
 
-    def plot_timeline(self):
+    def plot_timeline(self, timeline = None):
+
+        if timeline is None:
+            timeline = self.timeline
 
         fig, (ax_state, ax_cond, ax_task) = plt.subplots(1, 3)
 
@@ -462,15 +533,15 @@ class FailureMode: #Maybe rename to failure mode
         ax_task.set_title('Task')
         
         for condition in self.conditions:
-            ax_cond.plot(self.timeline['time'], self.timeline[condition], label=condition)
+            ax_cond.plot(timeline['time'], timeline[condition], label=condition)
             ax_cond.legend()
 
         for state in self.get_states():
-            ax_state.plot(self.timeline['time'], self.timeline[state], label=state)
+            ax_state.plot(timeline['time'], timeline[state], label=state)
             ax_state.legend()
 
         for task in self.tasks:
-            ax_task.plot(self.timeline['time'], self.timeline[task], label=task)
+            ax_task.plot(timeline['time'], timeline[task], label=task)
             ax_task.legend()
 
         plt.show()
@@ -613,6 +684,9 @@ class FailureMode: #Maybe rename to failure mode
         # Reset conditions
         for condition in self.conditions.values():
             condition.reset()
+
+        # Reset timelines
+        self._timelines = dict()
 
         # Reset counters
         self._sim_counter = 0

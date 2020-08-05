@@ -5,7 +5,13 @@ class Consequence():
 
     def __init__(self):
 
-        self.cost_total = 10000
+        self.risk_cost_total = 50000
 
-    def Cost(self):
-        return self.cost_total
+    def set_risk_cost_total(self, cost):
+
+        self.risk_cost_total = cost
+
+        return self
+
+    def get_cost(self):
+        return self.risk_cost_total
