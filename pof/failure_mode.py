@@ -87,7 +87,7 @@ class FailureMode: #Maybe rename to failure mode
 
         self.set_tasks(dict(
             inspection = Inspection(t_interval=5, t_delay = 10).set_default(), 
-            #termite_powder = OnConditionRepair(activity='on_condition_repair').set_default(),
+            #ocr = OnConditionRepair(activity='on_condition_repair').set_default(),
             cm = ImmediateMaintenance(activity='cm').set_default(),
         
         ))
@@ -312,7 +312,7 @@ class FailureMode: #Maybe rename to failure mode
 
         return timeline
         
-    def update_timeline(self, t_start, t_end, updates = dict(), reset_tasks = False, verbose=False):
+    def update_timeline(self, t_start, t_end, updates = dict(), verbose=False):
         """
         Takes a timeline and updates tasks that are impacted
         """
@@ -325,8 +325,8 @@ class FailureMode: #Maybe rename to failure mode
             # Check for initiation changes
             if 'initiation' in updates:
                 t_initiate = min(t_end, t_start + int(self.init_dist.sample())) # TODO make this conditional 
-                self.timeline['initiation'][t_start:t_initiate] = 0
-                self.timeline['initiation'][t_initiate:] = 1
+                self.timeline['initiation'][t_start:t_initiate] = updates['initiation']
+                self.timeline['initiation'][t_initiate:] = True
             else:
                 t_initiate = np.argmax(self.timeline['initiation'][t_start:] > 0)
 
@@ -334,15 +334,16 @@ class FailureMode: #Maybe rename to failure mode
             for condition_name, condition in self.conditions.items():
                 if 'initiation' in updates or condition_name in updates:
                     if verbose: print('condition %s, start %s, initiate %s, end %s' %(condition_name, t_start, t_initiate, t_end))
+                    #self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start]) #TODO this should be set earlier using a a better method
                     self.timeline[condition_name][t_start:] = condition.get_condition_profile(t_start= t_start - t_initiate, t_stop=t_end - t_initiate)
 
             # Check for detection changes
             if 'detection' in updates:
-                self.timeline['detection'][t_start:t_end + 1] = updates['detection']
+                self.timeline['detection'][t_start:] = updates['detection']
 
             # Check for failure changes
             if 'failure' in updates:
-                self.timeline['failure'][t_start:t_end] = updates['failure']
+                self.timeline['failure'][t_start:] = updates['failure']
                 for condition in self.conditions.values():
                     tl_f = condition.sim_failure_timeline(t_start = t_start- t_initiate, t_stop = t_end - t_initiate)
                     self.timeline['failure'][t_start:] = (self.timeline['failure'][t_start:]) | (tl_f)
@@ -372,7 +373,7 @@ class FailureMode: #Maybe rename to failure mode
 
         for task in self.tasks: # TODO make this more efficient by using a task array rather than a for loop
 
-            if 0 in timeline[task][t_start:t_end]:
+            if 0 in timeline[task][t_start:]:
                 t_task = timeline['time'][np.argmax(timeline[task][t_start:]==0)] + t_start
 
                 if t_task < next_time:

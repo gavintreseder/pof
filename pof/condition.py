@@ -231,7 +231,7 @@ class Condition():
         """
         
         if t_stop == None:
-            t_stop = self.t_max
+            t_stop = self.t_max - self.t_condition
 
         if t_start > t_stop:
             t_start = t_stop
@@ -250,9 +250,10 @@ class Condition():
             cp = np.append(np.full(t_start * -1, self.condition), cp)
 
         # Fill the end with the failed condition
-        if t_stop - t_start - self.t_condition > self.t_max:
+        n_after_failure = t_stop - t_start - len(cp) + 1
+        if n_after_failure > 0:
             
-            cp = np.append(cp, np.full(max(0, t_stop + self.t_condition - self.t_max), self.condition_failed))
+            cp = np.append(cp, np.full(max(0, n_after_failure), self.condition_failed))
 
         return cp
 
@@ -388,3 +389,5 @@ class Symptom():
         self.time_to_failure = 5 #TODO update
 
 
+if __name__ == '__main__':
+    print("hello")

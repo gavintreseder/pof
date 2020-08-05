@@ -146,12 +146,6 @@ class Task:
         self.condition_impacts = dict()
         self.p_effective = 1
 
-        self.triggers = dict(
-            time = dict(),
-            state = dict(),
-            condition = dict(),
-        )
-
         self.time_triggers = dict() #TODO maybe implement in task?
         self.state_triggers = dict()
         self.condition_triggers = dict()
@@ -377,14 +371,28 @@ class OnConditionRepair(ConditionTask):
             failure = False,
         )
 
+        self.condition_impacts = dict(
+                wall_thickness = dict(
+                    target = None,
+                    reduction_factor = 0,
+                    method = 'reduction_fa',
+                    axis = 'condition',
+                ),
+            ),
+
         self.set_triggers(dict(
             condition= dict(
                 wall_thickness = dict(
                     lower = 50,
                     upper = 70,
                 )
+            ),
+            state = dict(
+                detection = True
             )
         ))
+
+        self.p_effective = 1
 
         return self
 
@@ -406,6 +414,10 @@ class Inspection(ScheduledTask):
         self.t_delay = 10
 
         self.p_effective = 0.9
+
+        self.state_triggers = dict(
+            initiation = True
+        )
 
         self.condition_triggers=dict(
             wall_thickness = dict(

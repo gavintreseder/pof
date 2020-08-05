@@ -95,6 +95,20 @@ class TestCondition(unittest.TestCase):
         cp = c.get_condition_profile(t_start=-10)
         np.testing.assert_array_equal(cp, expected)
 
+    def test_get_condition_profile_existing_condition_v_early_start_v_late_stop(self):
+        expected = np.concatenate((np.full(10, 90), np.linspace(90,50,41), np.full(60,50)))
+        c = Condition(100,50,'linear',[-1]) 
+        c.set_condition(90)
+        cp = c.get_condition_profile(t_start=-10, t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
+    def test_get_condition_profile_existing_condition_v_late_start_v_late_stop(self):
+        expected = np.full(41,50)
+        c = Condition(100,50,'linear',[-1]) 
+        c.set_condition(50)
+        cp = c.get_condition_profile(t_start=60, t_stop=100)
+        np.testing.assert_array_equal(cp, expected)
+
     # late start
 
     def test_get_condition_profile_late_start_early_stop(self):
@@ -181,6 +195,7 @@ class TestCondition(unittest.TestCase):
         expected = [50]
         cp = c.get_condition_profile(t_start=60)
         np.testing.assert_array_equal(cp, expected)
+
 
     # ********** Test set_condition **************** TODO add condition checks as well as time
 
