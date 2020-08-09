@@ -486,12 +486,12 @@ RCM strategies
 On Condition Maintenace -> reset initiation
 On Condition Replacement -> reset
 
-
-Predictive maintenance tasks,
-Preventive Restoration or Preventive Replacement maintenance tasks,
-Detective maintenance tasks,
-Run-to-Failure, and
-One-time changes to the "system"
+RCM Strat
+    Predictive maintenance tasks,
+    Preventive Restoration or Preventive Replacement maintenance tasks,
+    Detective maintenance tasks,
+    Run-to-Failure, and
+    One-time changes to the "system"
 
 """
 
@@ -503,6 +503,7 @@ Task
         Restoration - Change detection, initiation, failure and condition
         Replacement - Change everything
     OnCondition
+        Inspection - Not Implemented
         Repair - Change detection and initiation
         Restoration ...
         Repalcement
