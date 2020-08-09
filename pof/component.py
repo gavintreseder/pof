@@ -41,7 +41,6 @@ class Component():
             fast_aging = FailureMode(alpha=50, beta=2, gamma=20),
             slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20),
             random = FailureMode(alpha=1000, beta=1, gamma=0)
-
         )
     
     def load(self):

@@ -30,9 +30,6 @@ class FailureMode: #Maybe rename to failure mode
         self.failure_dist = None
         self.init_dist = None
 
-        # Set the time period of interested # TODO Make this an input
-        self.t = np.arange(0,101,1)
-
         self.pf_interval = 5 #TODO
 
         self.conditions = dict()

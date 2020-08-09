@@ -143,7 +143,9 @@ class Task:
     #TODO add methods for cost, resources and 
 
 class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
-
+    """
+    Parent class for creating scheduled tasks
+    """
     def __init__(self, t_interval, t_delay = 0):
         super().__init__()
 
@@ -152,6 +154,30 @@ class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
         self.t_delay = t_delay
         self.t_interval = t_interval
 
+    def set_params(self, t_interval=None, t_delay=None, p_effective=None,state_triggers=dict(), condition_triggers=dict(), state_impacts = dict(), condition_impacts = dict()):
+        
+        if t_interval is not None:
+            self.t_interval = t_interval
+        
+        if t_delay is not None:
+            self.t_delay = t_delay
+        
+        if p_effective is not None:
+            self.p_effective = p_effective
+        
+        if not state_triggers:
+            self.state_triggers = state_triggers
+        
+        if not condition_triggers:
+            self.condition_triggers = condition_triggers
+        
+        if not state_impacts:
+            self.state_impacts = state_impacts
+
+        if not condition_impacts:
+            self.condition_impacts = condition_impacts
+
+        return self
 
     def sim_timeline(self, t_stop, t_delay=0, t_start = 0, timeline = NotImplemented): # TODO Stubbed out to only work for trigger time and simple tile 
         #TODO make it work like arange (start, stop, delay)
@@ -164,7 +190,9 @@ class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
         return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
 
 class ConditionTask(Task):
-
+    """
+    Parent class for creating condition tasks
+    """
     def __init__(self, activity='ConditionTask'):
         super().__init__()
 
@@ -318,7 +346,45 @@ class OnConditionRepair(ConditionTask):
 
         return self
 
+class OnConditionReplace(ConditionTask):
 
+    def __init__(self, activity = 'on_condition_repair'):
+        super().__init__(self)
+
+        self.activity = activity
+
+    def set_default(self):
+
+        self.state_impacts = dict(
+            initiation = False,
+            detection = False,
+            failure = False,
+        )
+
+        self.condition_impacts = dict(
+            wall_thickness = dict(
+                target = None,
+                reduction_factor = 0,
+                method = 'reduction_factor',
+                axis = 'condition',
+             ),
+        )
+
+        self.set_triggers(dict(
+            condition= dict(
+                wall_thickness = dict(
+                    lower = 20,
+                    upper = 80,
+                )
+            ),
+            state = dict(
+                detection = True
+            )
+        ))
+
+        self.p_effective = 1
+
+        return self
 
 class Inspection(ScheduledTask):
 
@@ -327,30 +393,6 @@ class Inspection(ScheduledTask):
 
         self.activity = 'inspection'
 
-    def set_params(self, t_interval=None, t_delay=None, p_effective=None,state_triggers=dict(), condition_triggers=dict(), state_impacts = dict(), condition_impacts = dict()):
-        
-        if t_interval is not None:
-            self.t_interval = t_interval
-        
-        if t_delay is not None:
-            self.t_delay = t_delay
-        
-        if p_effective is not None:
-            self.p_effective = p_effective
-        
-        if not state_triggers:
-            self.state_triggers = state_triggers
-        
-        if not condition_triggers:
-            self.condition_triggers = condition_triggers
-        
-        if not state_impacts:
-            self.state_impacts = state_impacts
-
-        if not condition_impacts:
-            self.condition_impacts = condition_impacts
-
-        return self
 
     def set_default(self):
 
