@@ -8,6 +8,8 @@
 
 import numpy as np
 
+from pof.trigger import Trigger
+
 """
 
 Examples - inspection - (initiated and outage) and (within any conditions)
