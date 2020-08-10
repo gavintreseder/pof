@@ -4,13 +4,15 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
+
+
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
 from matplotlib import pyplot as plt
 from random import random
 
-from pof.distribution import Distribution
+from distribution import Distribution
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -379,15 +381,8 @@ class Condition():
         plt.plot(self.condition_profile)
         plt.plot(self.t_condition, self.current(), 'rd')
         plt.show()
-        
-
-class Symptom():
-
-    # TODO consider combining symptom and degradation?
-    def __init__(self):
-        
-        self.time_to_failure = 5 #TODO update
 
 
 if __name__ == '__main__':
-    print("hello")
+    condition = Condition()
+    print("Condition - Ok")
