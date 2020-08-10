@@ -3,10 +3,6 @@
 Author: Gavin Treseder
 """
 
-# Add root folder to python path TODO figure out how to get rid of this
-import sys, os
-sys.path.append(os.path.dirname(os.getcwd()) + '/pof/')
-
 # ************ Packages ********************
 
 import numpy as np
@@ -15,7 +11,7 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 from random import random
 
-from pof.distribution import Distribution
+from distribution import Distribution
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python

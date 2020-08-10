@@ -6,11 +6,16 @@ class Distribution:
 
     # TODO Extend so that it works for all the common distributions
 
+    # Default Values
+    _ALPHA = 100
+    _BETA = 1.5
+    _GAMMA = 10
+
     def __init__(self, alpha=None, beta=None, gamma = None):
 
-        self.alpha = alpha if alpha is not None else 100
-        self.beta = beta if beta is not None else 1.5
-        self.gamma = gamma if gamma is not None else 10
+        self.alpha = alpha if alpha is not None else Distribution._ALPHA
+        self.beta = beta if beta is not None else Distribution._BETA
+        self.gamma = gamma if gamma is not None else Distribution._GAMMA
 
         X = np.arange(0,100,1)
 

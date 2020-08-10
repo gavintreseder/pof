@@ -12,10 +12,10 @@ from matplotlib import pyplot as plt
 from random import random, seed
 from tqdm import tqdm
 
-from pof.condition import Condition
-from pof.distribution import Distribution
-from pof.consequence import Consequence
-from pof.task import *
+from condition import Condition
+from distribution import Distribution
+from consequence import Consequence
+from task import Inspection, OnConditionRepair, ImmediateMaintenance
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -24,10 +24,10 @@ seed(1)
 
 class FailureMode: #Maybe rename to failure mode
 
-    def __init__(self, alpha, beta, gamma, scenario='test'):
+    def __init__(self, alpha=None, beta=None, gamma=None):
 
         # Failure behaviour
-        self.failure_dist = None
+        self.failure_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
         self.init_dist = None
 
         self.pf_interval = 5 #TODO
@@ -67,14 +67,11 @@ class FailureMode: #Maybe rename to failure mode
 
         self._sim_counter = 0
 
-        if scenario == 'test':
-            self.set_test()
-
         return
     
     # ************** Set Functions *****************
 
-    def set_test(self):
+    def set_default(self):
 
         self.set_failure_dist(
             Distribution(alpha=50, beta=1.5, gamma=10)
@@ -101,7 +98,7 @@ class FailureMode: #Maybe rename to failure mode
         # Prepare the failure mode
         self.calc_init_dist()
     
-        return True
+        return self
 
     def set_failure_dist(self, failure_dist):
         self.failure_dist = failure_dist
@@ -712,3 +709,7 @@ class FailureMode: #Maybe rename to failure mode
         # Plot outputs
 
         # Return optimal strategy
+
+if __name__ == '__main__':
+    failure_mode = FailureMode()
+    print("FailureMode - Ok")

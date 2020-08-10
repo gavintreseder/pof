@@ -1,10 +1,7 @@
 
-
-# Add root folder to python path TODO figure out how to get rid of this
-import sys, os
-sys.path.append(os.path.dirname(os.getcwd()) + '/pof/')
-
 import unittest
+
+import utils
 
 from pof.distribution import Distribution
 
@@ -19,8 +16,7 @@ class TestDistribution(unittest.TestCase):
         self.dist = Distribution(alpha=50, beta=1.5, gamma=10)
 
     def test_instantiate(self):
-        dist = Distribution(alpha=50, beta=1.5, gamma=10)
-
+        dist = Distribution()
         self.assertTrue(True)
         
 

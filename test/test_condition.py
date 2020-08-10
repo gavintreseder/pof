@@ -1,9 +1,8 @@
-# Add root folder to python path TODO figure out how to get rid of this
-import sys, os
-sys.path.append(os.path.dirname(os.getcwd()) + '/pof/')
 
 import unittest
 import numpy as np
+
+import utils
 
 from pof.condition import Condition
 
