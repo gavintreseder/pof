@@ -1,9 +1,13 @@
 
 
+# Add root folder to python path TODO figure out how to get rid of this
+import sys, os
+sys.path.append(os.path.dirname(os.getcwd()) + '/pof/')
+
 import unittest
 
 from pof.task import Task, Inspection
-from pof.degradation import Degradation
+from pof.condition import Condition
 
 class TestTask(unittest.TestCase):
 
@@ -17,8 +21,8 @@ class TestTask(unittest.TestCase):
 class TestInspection(unittest.TestCase):
 
     def setUp(self):
-        self.insp = Inspection()
-        self.d = Degradation(perfect=100, limit=0, cond_profile_type = 'linear', cond_profile_params = [-10])
+        self.insp = Inspection(t_interval=5)
+        self.c = Condition(perfect=100, limit=0, cond_profile_type = 'linear', cond_profile_params = [-10])
 
         # Counters
         self.n_sims = 1000

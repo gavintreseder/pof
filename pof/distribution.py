@@ -6,11 +6,11 @@ class Distribution:
 
     # TODO Extend so that it works for all the common distributions
 
-    def __init__(self, alpha, beta, gamma = None):
+    def __init__(self, alpha=None, beta=None, gamma = None):
 
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
+        self.alpha = alpha if alpha is not None else 100
+        self.beta = beta if beta is not None else 1.5
+        self.gamma = gamma if gamma is not None else 10
 
         X = np.arange(0,100,1)
 
@@ -59,4 +59,5 @@ class Distribution:
             return 0
 
 if __name__ == '__main__':
-    print("hello")
+    distribution = Distribution()
+    print("Distribution - Ok")

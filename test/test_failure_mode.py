@@ -1,5 +1,9 @@
 
 
+# Add root folder to python path TODO figure out how to get rid of this
+import sys, os
+sys.path.append(os.path.dirname(os.getcwd()) + '/pof/')
+
 import unittest
 
 from pof.failure_mode import FailureMode
@@ -26,7 +30,6 @@ class TestFailureMode(unittest.TestCase):
 
         fm = FailureMode(alpha=50, beta=1.5, gamma=10)
         fm.sim_timeline(200)
-        fm.plot_timeline()
 
 
 if __name__ == '__main__':

@@ -4,6 +4,10 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
+# Add root folder to python path TODO figure out how to get rid of this
+import sys, os
+sys.path.append(os.path.dirname(os.getcwd()) + '/pof/')
+
 import numpy as np
 import pandas as pd
 import math
@@ -12,8 +16,9 @@ from scipy.linalg import circulant
 from random import random, seed
 
 from pof.condition import Condition
-from pof.distribution import Distribution
 from pof.consequence import Consequence
+from pof.distribution import Distribution
+
 
 #TODO move t somewhere else
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -586,3 +591,7 @@ Task
     scheduled -> condition
 
 """
+
+if __name__ == '__main__':
+    task = Task()
+    print("Task - Ok")
