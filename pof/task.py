@@ -47,6 +47,7 @@ class Task:
 
         self.activity = activity
         self.trigger = trigger
+        self.active = True
 
         self.trigger_comp = '1.1.2' #Notimplemented
 
@@ -134,8 +135,6 @@ class Task:
 
             return dict()
 
-        
-
     def reset(self):
         """
         Resets the logs for a task
@@ -183,13 +182,19 @@ class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
 
     def sim_timeline(self, t_stop, t_delay=0, t_start = 0, timeline = NotImplemented): # TODO Stubbed out to only work for trigger time and simple tile 
         #TODO make it work like arange (start, stop, delay)
-        schedule = np.tile(np.linspace(self.t_interval - 1, 0, self.t_interval), math.ceil((t_stop - t_delay) / self.t_interval))
 
-        if t_delay > 0:
-            sched_start = np.linspace(t_delay, 0, t_delay + 1)
-            schedule = np.concatenate((sched_start, schedule))
+        if self.active:
+            schedule = np.tile(np.linspace(self.t_interval - 1, 0, self.t_interval), math.ceil((t_stop - t_delay) / self.t_interval))
 
-        return np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
+            if t_delay > 0:
+                sched_start = np.linspace(t_delay, 0, t_delay + 1)
+                schedule = np.concatenate((sched_start, schedule))
+        
+            schedule = np.concatenate(([schedule[0]+1], schedule))[t_start:t_stop+1]
+        else:
+            schedule = np.full(t_stop - t_start + 1, -1)
+
+        return scheudle
 
 class ConditionTask(Task):
     """
@@ -242,36 +247,41 @@ class ConditionTask(Task):
         If state and condition triggers are met return the timeline met then 
         """
         
-        t_end = t_end + 1
-        tl_ct = np.full(t_end - t_start, True)
+        if self.active:
 
-        try:
-            # Check the state triggers have been met
-            for state, trigger in self.state_triggers.items():
-                tl_ct  = (tl_ct ) & (timeline[state][t_start:t_end] )
-        except KeyError:
-            print("%s not found" %(state))
-        
-        try:
-            # Check the condition triggers have been met
-            for condition, trigger in self.condition_triggers.items():
-                tl_ct  = (tl_ct) & (timeline[condition][t_start:t_end] < trigger['upper']) & (timeline[condition][t_start:t_end] > trigger['lower'])
-        except KeyError:
-            print ("%s not found" %(condition))
-        
-        tl_ct = tl_ct.astype(int)
+            t_end = t_end + 1
+            tl_ct = np.full(t_end - t_start, True)
 
-        if self.task_type == 'next_maintenance':
-            # Change to days until format #Adjust 
-            t_lower = np.argmax(tl_ct == 1)
-            t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
-
-            tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
-            tl_ct[tl_ct == False] = -1
-        
-        elif self.task_type == 'immediate':
-            tl_ct = tl_ct - 1
+            try:
+                # Check the state triggers have been met
+                for state, trigger in self.state_triggers.items():
+                    tl_ct  = (tl_ct ) & (timeline[state][t_start:t_end] )
+            except KeyError:
+                print("%s not found" %(state))
             
+            try:
+                # Check the condition triggers have been met
+                for condition, trigger in self.condition_triggers.items():
+                    tl_ct  = (tl_ct) & (timeline[condition][t_start:t_end] < trigger['upper']) & (timeline[condition][t_start:t_end] > trigger['lower'])
+            except KeyError:
+                print ("%s not found" %(condition))
+            
+            tl_ct = tl_ct.astype(int)
+
+            if self.task_type == 'next_maintenance':
+                # Change to days until format #Adjust 
+                t_lower = np.argmax(tl_ct == 1)
+                t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
+
+                tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
+                tl_ct[tl_ct == False] = -1
+            
+            elif self.task_type == 'immediate':
+                tl_ct = tl_ct - 1
+        
+        else:
+            tl_ct = np.full(t_end - t_start, -1 )
+
         return tl_ct
 
 class ScheduledReplacement(ScheduledTask): #Not implemented
