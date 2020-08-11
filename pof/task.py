@@ -12,9 +12,9 @@ import scipy.stats as ss
 from scipy.linalg import circulant
 from random import random, seed
 
-from pof.condition import Condition
-from pof.consequence import Consequence
-from pof.distribution import Distribution
+from condition import Condition
+from consequence import Consequence
+from distribution import Distribution
 
 
 #TODO move t somewhere else
@@ -433,14 +433,16 @@ class Inspection(ScheduledTask):
         else:
             det = False
 
-            for trigger, threshold in self.state_triggers.items():
-                det = det or timeline[trigger][t_now] == threshold
+            if random() <= self.p_effective:
+                
+                for trigger, threshold in self.state_triggers.items():
+                    det = det or timeline[trigger][t_now] == threshold
 
-            # Check if any conditions are within detection threshold
-            if det == True:
-                for trigger, threshold in self.condition_triggers.items():
+                # Check if any conditions are within detection threshold
+                if det == True:
+                    for trigger, threshold in self.condition_triggers.items():
 
-                    det = det | ((timeline[trigger][t_now] >= threshold['lower']) & (timeline[trigger][t_now] <= threshold['upper']))
+                        det = det | ((timeline[trigger][t_now] >= threshold['lower']) & (timeline[trigger][t_now] <= threshold['upper']))
                 
         return det
 

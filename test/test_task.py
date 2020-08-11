@@ -9,7 +9,6 @@ class TestTask(unittest.TestCase):
 
     def test_instantiate(self):
         task = Task()
-
         self.assertTrue(True)
 
 

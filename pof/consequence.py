@@ -15,3 +15,7 @@ class Consequence():
 
     def get_cost(self):
         return self.risk_cost_total
+
+if __name__ == '__main__':
+    consequence = Consequence()
+    print("Consequence - Ok")

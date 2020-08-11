@@ -57,7 +57,7 @@ class FailureMode: #Maybe rename to failure mode
         self.tasks = dict()
 
         # Prepare the failure mode
-        #self.calc_init_dist() #TODO make this method based on a flag
+        self.calc_init_dist() #TODO make this method based on a flag
 
         # kpis? #TODO
         # Cost and Value of current task? #TODO
@@ -237,6 +237,8 @@ class FailureMode: #Maybe rename to failure mode
     # ****************** Timeline ******************
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=100):
+
+        self.reset()
 
         for i in tqdm(range(n_iterations)):
             self._timelines[i] = self.sim_timeline(t_end=t_end, t_start=t_start)
