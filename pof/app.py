@@ -43,7 +43,7 @@ app.layout = html.Div(children=[
     ),
     dcc.Graph(id='maintenance_strategy'),
     dcc.Checklist(
-        id='task_checklist'
+        id='task_checklist',
         options=[{'label':task, 'value' : task} for task in fm.tasks],
         labelStyle={'display': 'inline-block'}
     ),
@@ -52,33 +52,24 @@ app.layout = html.Div(children=[
     html.Div(id='failure_mode_dict')
 ])
 
-
-
 @app.callback(
     Output(component_id='maintenance_strategy', component_property='figure'),
-    [Input(component_id='p_effective', component_property='value')]
+    [Input(component_id='p_effective', component_property='value'),
+    Input(component_id='task_checklist', component_property='value')]
 )
-def update_maintenance_strategy(p_effective):
+
+def update_maintenance_strategy(p_effective, tasks):
 
     p_effective = p_effective if p_effective is not None else 0
 
-    fm.reset()
-    #fm.conditions['wall_thickness'] = Condition(100, 0, 'linear', [-5])
-    fm.tasks['inspection'].p_effective = p_effective / 100
-    fm.mc_timeline(t_end=200, n_iterations=100)
-    df = fm.expected_cost_df()
-
-    fig = px.area(df, x="time", y="cost_cumulative", color="task", title='Maintenance Strategy Costs')
-
-    return fig
-
-@app.callback(
-    Output(component_id='maintenance_strategy', component_property='figure'),
-    [Input(component_id='task_checklist', component_property='value')]
-)
-def update_maintenance_strategy(p_effective):
-
-    
+    if tasks is None:
+        tasks = []
+        
+    for task_name, task in fm.tasks.items():
+        if task_name in tasks:
+            task.active = True
+        else:
+            task.active = False
 
     fm.reset()
     #fm.conditions['wall_thickness'] = Condition(100, 0, 'linear', [-5])
@@ -89,6 +80,9 @@ def update_maintenance_strategy(p_effective):
     fig = px.area(df, x="time", y="cost_cumulative", color="task", title='Maintenance Strategy Costs')
 
     return fig
+
+
+
 
 """@app.callback(
     Output(component_id='failure_mode_dict', component_property='children'),

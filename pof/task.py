@@ -194,7 +194,7 @@ class ScheduledTask(Task): #TODO currenlty set up as emergency replacement
         else:
             schedule = np.full(t_stop - t_start + 1, -1)
 
-        return scheudle
+        return schedule
 
 class ConditionTask(Task):
     """
