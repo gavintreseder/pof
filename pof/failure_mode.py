@@ -74,7 +74,7 @@ class FailureMode: #Maybe rename to failure mode
     def set_default(self):
 
         self.set_failure_dist(
-            Distribution(alpha=50, beta=1.5, gamma=10)
+            Distribution(alpha=50, beta=10, gamma=10)
         )
 
         self.set_conditions(dict(
@@ -238,7 +238,7 @@ class FailureMode: #Maybe rename to failure mode
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=100):
 
-        self.reset()
+        self.reset() #TODO ditch this
 
         for i in tqdm(range(n_iterations)):
             self._timelines[i] = self.sim_timeline(t_end=t_end, t_start=t_start)
@@ -460,7 +460,7 @@ class FailureMode: #Maybe rename to failure mode
 
         t_failures = []
         for timeline in self._timelines.values():
-            t_failures = np.append(t_failures, np.argmax(timeline['failure']))
+            t_failures = np.append(t_failures, timeline['time'][np.argmax(timeline['failure'])])
 
         # Arange into failures and censored data
         failures = t_failures[t_failures > 0]
@@ -481,7 +481,7 @@ class FailureMode: #Maybe rename to failure mode
 
         df = df.set_index('time').reindex(new_index).reset_index()
         df.loc[0,:] = 0
-        df.loc[0,'cost_type'] = 'risk'
+        df.loc[0,'task'] = 'risk'
         df = df.fillna(method='ffill')
 
         return df
@@ -490,7 +490,6 @@ class FailureMode: #Maybe rename to failure mode
 
         df_tasks = pd.DataFrame()
         new_index = pd.Index(np.arange(0,200,1), name="time")
-
 
         for task_name, task in self.tasks.items():
 
@@ -511,6 +510,8 @@ class FailureMode: #Maybe rename to failure mode
             df = df.fillna(method='ffill')
             
             df_tasks = pd.concat([df_tasks, df])
+
+        df_tasks = pd.concat((df_tasks, self.mc_risk_df()))
 
         return df_tasks
 
