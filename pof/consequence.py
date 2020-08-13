@@ -1,8 +1,4 @@
-
-
-
-class Consequence():
-
+class Consequence:
     def __init__(self):
 
         self.risk_cost_total = 50000
@@ -16,6 +12,7 @@ class Consequence():
     def get_cost(self):
         return self.risk_cost_total
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     consequence = Consequence()
     print("Consequence - Ok")

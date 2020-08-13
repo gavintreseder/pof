@@ -1,13 +1,8 @@
-
-
-
-class Resource():
-
+class Resource:
     def __init__(self):
 
-
         self.cost_rate = 100
-        
+
         # Fields from Isograph
         self.id = NotImplemented
         self.type = NotImplemented
@@ -22,6 +17,5 @@ class Resource():
 
 
 class LabourResource(Resource):
-
     def __init__(self):
         self.status = NotImplemented

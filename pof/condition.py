@@ -13,16 +13,17 @@ from random import random
 
 from distribution import Distribution
 
-#TODO move t somewhere else
-#TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
+# TODO move t somewhere else
+# TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 
 # Overloadthis for timber deay
 
 # Simple _Sytmpom
 
-#TODO potentially change where t_accumulated and condition_accumulated gets calculated to improve the speed
+# TODO potentially change where t_accumulated and condition_accumulated gets calculated to improve the speed
 
-class Condition(): 
+
+class Condition:
 
     """
     Parameters: pf_curve : str
@@ -52,7 +53,16 @@ class Condition():
             
                 
     """
-    def __init__(self, perfect=100, failed=0, pf_curve = 'linear', pf_curve_params = [-10], decreasing=True, name = 'default'):
+
+    def __init__(
+        self,
+        perfect=100,
+        failed=0,
+        pf_curve="linear",
+        pf_curve_params=[-10],
+        decreasing=True,
+        name="default",
+    ):
 
         # Degradation details
         self.name = name
@@ -64,7 +74,7 @@ class Condition():
 
         # Time
         self.t_condition = 0
-        self.t_max = 0 # TODO calculate this
+        self.t_max = 0  # TODO calculate this
         self.t_accumulated = 0
 
         # Condition
@@ -76,8 +86,8 @@ class Condition():
         # Condition detection and limits
         self.threshold_detection = perfect
         self.threshold_failure = failed
-        
-        # Condition Profile 
+
+        # Condition Profile
         self.condition_profile = None
         self.set_condition_profile()
 
@@ -86,22 +96,26 @@ class Condition():
         self.initiated = NotImplemented
 
         return
-    
+
     def __str__(self):
 
-        out = "Curve: %s\n" %(self.pf_curve)
-        out = out + "PF Interval %s\n: " %(self.pf_interval)
-        
-        return out
+        out = "Curve: %s\n" % (self.pf_curve)
+        out = out + "PF Interval %s\n: " % (self.pf_interval)
 
+        return out
 
     def validate(self):
         """
         Check the parameters provided are valid
         """
-        
+
         # Check the thresholds are valid
-        thresholds = [self.condition_perfect, self.threshold_detection, self.threshold_failure, self.condition_failed]
+        thresholds = [
+            self.condition_perfect,
+            self.threshold_detection,
+            self.threshold_failure,
+            self.condition_failed,
+        ]
 
         if self.decreasing == True:
             if np.all(np.diff(thresholds) >= 0):
@@ -112,19 +126,18 @@ class Condition():
 
         return True
 
-    def set_condition(self, new_condition = None): # Rewrite
+    def set_condition(self, new_condition=None):  # Rewrite
 
         if new_condition is None:
             self.condition = self.condition_perfect
         else:
             self.condition = new_condition
-            
-            self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
 
+            self.t_condition = np.argmin(np.abs(self.condition_profile - new_condition))
 
         return
 
-    def set_t_condition(self, t_condition): # TODO test time is within limits
+    def set_t_condition(self, t_condition):  # TODO test time is within limits
         if t_condition < 0:
             self.t_condtiion = 0
         elif t_condition > self.t_max:
@@ -134,7 +147,9 @@ class Condition():
 
         self.condition = self.condition_profile[self.t_condition]
 
-    def set_condition_profile(self, t_min=0, t_max=100): # Change limits for time to match max degradation profile
+    def set_condition_profile(
+        self, t_min=0, t_max=100
+    ):  # Change limits for time to match max degradation profile
         """
         Sets a condition profile based on the input parameters
         """
@@ -142,38 +157,36 @@ class Condition():
         # Calculte max t TODO
         x = np.linspace(0, t_max - t_min, t_max - t_min + 1)
 
-        # Change to another function swtich type TODO https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python 
+        # Change to another function swtich type TODO https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 
         # Get the condition profile
-        if self.pf_curve == 'linear':
+        if self.pf_curve == "linear":
             m = self.pf_curve_params[0]
             b = self.condition_perfect
 
             y = m * x + b
 
-        elif self.pf_curve == 'step':
+        elif self.pf_curve == "step":
             y = NotImplemented
-
 
         # Add the accumulated time
         cond_lost = y[self.t_accumulated] - self.condition_perfect
         y = y + cond_lost
-        y = y[self.t_accumulated:]
+        y = y[self.t_accumulated :]
 
         # Add the accumulated condition
         if self.decreasing:
 
             y = y - self.condition_accumulated
             self.t_max = np.argmax(y <= self.threshold_failure)
-            y = y[:self.t_max + 1]
+            y = y[: self.t_max + 1]
             y[y < self.threshold_failure] = self.threshold_failure
 
         else:
             y = y + self.condition_accumulated
             self.t_max = np.argmax(y >= self.threshold_failure)
-            y = y[:self.t_max + 1]
+            y = y[: self.t_max + 1]
             y[y > self.threshold_failure] = self.threshold_failure
-
 
         self.condition_profile = y
 
@@ -183,18 +196,24 @@ class Condition():
         """
         Increment the current time by t and return the new condition
         """
-        self.t_condition = min(t + self.t_condition,self.t_max)
-        
+        self.t_condition = min(t + self.t_condition, self.t_max)
+
         return self.current()
 
     # ************** Check Failure *********************
 
     def is_failed(self):
-        
-        if self.decreasing == True and self.condition_profile[self.t_condition] <= self.threshold_failure:
+
+        if (
+            self.decreasing == True
+            and self.condition_profile[self.t_condition] <= self.threshold_failure
+        ):
             return True
-        
-        if self.decreasing == False and self.condition_profile[self.t_condition] >= self.threshold_failure:
+
+        if (
+            self.decreasing == False
+            and self.condition_profile[self.t_condition] >= self.threshold_failure
+        ):
             return True
 
         return False
@@ -226,11 +245,13 @@ class Condition():
 
     # **************** Event series **********
 
-    def get_condition_profile(self, t_stop = None, t_start = 0): #TODO this probably needs a delay?
+    def get_condition_profile(
+        self, t_stop=None, t_start=0
+    ):  # TODO this probably needs a delay?
         """
         
         """
-        
+
         if t_stop == None:
             t_stop = self.t_max - self.t_condition
 
@@ -241,10 +262,13 @@ class Condition():
             t_start = t_start - t_stop
             t_stop = 0
 
-        cp = self.condition_profile[np.arange(
-            max(self.t_condition, min(t_start, self.t_max)),
-            min(t_stop + self.t_condition, self.t_max) + 1, 1
-            )]
+        cp = self.condition_profile[
+            np.arange(
+                max(self.t_condition, min(t_start, self.t_max)),
+                min(t_stop + self.t_condition, self.t_max) + 1,
+                1,
+            )
+        ]
 
         # Fill the start with the current condtiion
         if t_start < 0:
@@ -253,12 +277,14 @@ class Condition():
         # Fill the end with the failed condition
         n_after_failure = t_stop - t_start - len(cp) + 1
         if n_after_failure > 0:
-            
+
             cp = np.append(cp, np.full(max(0, n_after_failure), self.condition_failed))
 
         return cp
 
-    def sim_failure_timeline(self, t_stop = None, t_start = 0): #TODO this probably needs a delay? and can combine with condtion profile to make it simpler
+    def sim_failure_timeline(
+        self, t_stop=None, t_start=0
+    ):  # TODO this probably needs a delay? and can combine with condtion profile to make it simpler
         """
         Return a sample failure schedule for the condition
         """
@@ -266,12 +292,11 @@ class Condition():
         cp = self.get_condition_profile(t_stop, t_start)
 
         if self.decreasing == True:
-            tl_f = (cp <= self.threshold_failure)
+            tl_f = cp <= self.threshold_failure
         else:
-            tl_f = (cp >= self.threshold_failure)
+            tl_f = cp >= self.threshold_failure
 
         return tl_f
-
 
     # *************** Measure Condition ****************
 
@@ -285,20 +310,20 @@ class Condition():
         # TODO make sure it works for positive and negative
 
         m_mean = self.current()
-        m_sigma = (m_mean - self.condition_perfect)/6
+        m_sigma = (m_mean - self.condition_perfect) / 6
 
         measurement = ss.norm.ppf(random(), loc=m_mean, scale=m_sigma)
 
         return measurement
-    
+
     def is_detectable(self):
-        #TODO rewrite to include the measurement
+        # TODO rewrite to include the measurement
 
         if self.decreasing == True:
 
             if self.current() <= self.threshold_detection:
                 return True
-            
+
         if self.decreasing == False:
 
             if self.current() >= self.threshold_detection:
@@ -309,7 +334,7 @@ class Condition():
     # *************** Reset **********************
 
     def reset(self):
-        
+
         # Reset the time
         self.t_condition = 0
         self.t_accumulated = 0
@@ -319,16 +344,15 @@ class Condition():
         self.condition = self.condition_perfect
         self.condition_accumulated = 0
 
-        # Reset the condition profile 
+        # Reset the condition profile
         self.set_condition_profile()
 
-
-    def reset_time(self, target = None, reduction_factor = None):
+    def reset_time(self, target=None, reduction_factor=None):
 
         return NotImplemented
 
-    def reset_condition(self, target = None, reduction_factor = None):
-        
+    def reset_condition(self, target=None, reduction_factor=None):
+
         return NotImplemented
 
     def restore_time(self):
@@ -343,45 +367,53 @@ class Condition():
 
         return NotImplemented
 
-    def reset_any(self, target=0, reduction_factor=1, reverse=0, method='reset', axis='time'):
+    def reset_any(
+        self, target=0, reduction_factor=1, reverse=0, method="reset", axis="time"
+    ):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
 
         # Error with time reset, different method required.
 
-        if method == 'reduction_factor':
-            accumulated = (self.condition_perfect - self.current()) * (1 - reduction_factor)
+        if method == "reduction_factor":
+            accumulated = (self.condition_perfect - self.current()) * (
+                1 - reduction_factor
+            )
 
-        elif method == 'reverse':
+        elif method == "reverse":
             accumulated = self.current() - reverse
 
-        elif method == 'target':
+        elif method == "target":
             accumulated = target
 
         # Calculate the accumulated condition
-        if axis == 'time':
+        if axis == "time":
 
             self.t_accumulated = int(min(max(0, accumulated), self.t_max))
 
-        elif axis == 'condition':
+        elif axis == "condition":
 
             if self.decreasing:
-                self.condition_accumulated = min(max(self.condition_failed, accumulated), self.condition_perfect)
+                self.condition_accumulated = min(
+                    max(self.condition_failed, accumulated), self.condition_perfect
+                )
             else:
-                self.condition_accumulated = max(min(self.condition_failed, accumulated), self.condition_perfect)
+                self.condition_accumulated = max(
+                    min(self.condition_failed, accumulated), self.condition_perfect
+                )
 
         self.set_condition_profile()
         self.set_t_condition(0)
-        
+
         return
 
     def plot_condition_profile(self):
         plt.plot(self.condition_profile)
-        plt.plot(self.t_condition, self.current(), 'rd')
+        plt.plot(self.t_condition, self.current(), "rd")
         plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     condition = Condition()
     print("Condition - Ok")
