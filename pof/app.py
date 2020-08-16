@@ -4,6 +4,7 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -13,6 +14,7 @@ import pandas as pd
 import pprint
 import copy
 
+from interface.layouts import generate_dist_form, generate_task_form, generate_impact_form, make_impact_condition_form
 from failure_mode import FailureMode
 from condition import Condition
 from distribution import Distribution
@@ -21,8 +23,7 @@ from task import Inspection, OnConditionRepair, ImmediateMaintenance
 
 # from layouts import generate_task_layout
 
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # Simple failure mode demo
@@ -32,21 +33,15 @@ app.layout = html.Div(
     children=[
         html.H1(children="Probability of Failure"),
         html.Div(
-            children="""
-        Probability Inspection effective
-    """
+            children="Probability Inspection effective"
         ),
         dcc.Input(id="p_effective", type="number", value=50, debounce=True,),
         html.Div(
-            children="""
-        Consequence
-    """
+            children="Consequence"
         ),
         dcc.Input(id="consequence", type="number", value=50000, debounce=True,),
         html.Div(
-            children="""
-        Inspection Interval
-    """
+            children="Inspection Interval"
         ),
         dcc.Input(id="inspection_interval", type="number", value=5, debounce=True,),
         dcc.Graph(id="maintenance_strategy"),
@@ -55,15 +50,14 @@ app.layout = html.Div(
             options=[{"label": task, "value": task} for task in fm.tasks],
             value=[task_name for task_name, task in fm.tasks.items() if task.active],
         ),
-        html.Div(
-            children="""
-        Graph y_limit
-    """
-        ),
+        html.Div(children="Graph y_limit"),
         dcc.Input(id="graph_y_limit", type="number", value=20000, debounce=True,),
+
+        generate_dist_form(fm.failure_dist),
+        generate_task_form(fm.tasks),
+        generate_impact_form(fm.tasks['ocr'].impacts()),
     ]
 )
-
 
 @app.callback(
     Output(component_id="maintenance_strategy", component_property="figure"),

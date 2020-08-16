@@ -44,8 +44,13 @@ class Task:
 
     """
 
-    def __init__(self, trigger="unknown", activity="unknown"):
+    CONDITION_IMPACT_AXIS = ['condition', 'time']
+    CONDITION_IMPACT_METHODS = ['reduction_factor', "tbc"]
 
+
+    def __init__(self, trigger="unknown", activity="unknown", name="unknown"):
+
+        self.name = name
         self.activity = activity
         self.trigger = trigger
         self.active = True
@@ -71,7 +76,7 @@ class Task:
         self.state_triggers = dict()
         self.condition_triggers = dict()
 
-        self.time_imapcts = dict()  # TODO maybe implement in task?
+        self.time_impacts = dict()  # TODO maybe implement in task?
         self.state_impacts = dict()
         self.condition_impacts = dict()
 
@@ -102,6 +107,16 @@ class Task:
         else:
             self.condition_triggers = dict()
 
+    def impacts(self):
+        """Return an impact dictionary"""
+        
+        impacts = dict(
+            state = self.state_impacts,
+            condition = self.condition_impacts,
+            time = self.time_impacts,
+        )
+        return impacts
+
     def is_effective(self, t_now=None, timeline=None):
 
         return random() <= self.p_effective
@@ -130,7 +145,6 @@ class Task:
 
                 conditions[condition_name].reset_any(
                     target=impact["target"],
-                    reduction_factor=impact["reduction_factor"],
                     axis=impact["axis"],
                     method=impact["method"],
                 )
@@ -241,14 +255,12 @@ class ConditionTask(Task):
 
         self.condition_impacts = dict(
             wall_thickness=dict(
-                target=None,
-                reduction_factor=0.5,
+                target=0.5,
                 method="reduction_factor",
                 axis="condition",
             ),
             external_diameter=dict(
-                target=None,
-                reduction_factor=0.5,
+                target=0.5,
                 method="reduction_factor",
                 axis="condition",
             ),
@@ -320,7 +332,7 @@ class ScheduledReplacement(ScheduledTask):  # Not implemented
         self.impacts = dict(
             condition=dict(
                 wall_thickness=dict(
-                    target=None, reduction_factor=1, method="restore", axis="condition",
+                    target=1, method="restore", axis="condition",
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
@@ -343,8 +355,7 @@ class OnConditionRepair(ConditionTask):
 
         self.condition_impacts = dict(
             wall_thickness=dict(
-                target=None,
-                reduction_factor=0,
+                target=0,
                 method="reduction_factor",
                 axis="condition",
             ),
@@ -374,8 +385,7 @@ class OnConditionReplace(ConditionTask):
 
         self.condition_impacts = dict(
             wall_thickness=dict(
-                target=None,
-                reduction_factor=0,
+                target=0,
                 method="reduction_factor",
                 axis="condition",
             ),
@@ -456,14 +466,12 @@ class ImmediateMaintenance(ConditionTask):
 
         self.condition_impacts = dict(
             wall_thickness=dict(
-                target=None,
-                reduction_factor=1,
+                target=1,
                 method="reduction_factor",
                 axis="condition",
             ),
             external_diameter=dict(
-                target=None,
-                reduction_factor=1,
+                target=1,
                 method="reduction_factor",
                 axis="condition",
             ),

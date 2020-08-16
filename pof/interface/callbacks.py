@@ -4,14 +4,11 @@ from app import app
 
 
 @app.callback(
-    Output("app-1-display-value", "children"), [Input("app-1-dropdown", "value")]
+    Output("collapse", "is_open"),
+    [Input("collapse-button", "n_clicks")],
+    [State("collapse", "is_open")],
 )
-def display_value(value):
-    return 'You have selected "{}"'.format(value)
-
-
-@app.callback(
-    Output("app-2-display-value", "children"), [Input("app-2-dropdown", "value")]
-)
-def display_value(value):
-    return 'You have selected "{}"'.format(value)
+def toggle_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open

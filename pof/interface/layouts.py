@@ -1,33 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
-layout1 = html.Div([
-    html.H3('App 1'),
-    dcc.Dropdown(
-        id='app-1-dropdown',
-        options=[
-            {'label': 'App 1 - {}'.format(i), 'value': i} for i in [
-                'NYC', 'MTL', 'LA'
-            ]
-        ]
-    ),
-    html.Div(id='app-1-display-value'),
-    dcc.Link('Go to App 2', href='/apps/app2')
-])
-
-layout2 = html.Div([
-    html.H3('App 2'),
-    dcc.Dropdown(
-        id='app-2-dropdown',
-        options=[
-            {'label': 'App 2 - {}'.format(i), 'value': i} for i in [
-                'NYC', 'MTL', 'LA'
-            ]
-        ]
-    ),
-    html.Div(id='app-2-display-value'),
-    dcc.Link('Go to App 1', href='/apps/app1')
-])
 
 # Asset
 
@@ -57,32 +31,75 @@ def generate_failure_mode_layout(fm):
                 ],
                 style = {}
 
-            ])
+            )
         ])
     ])
 
     return layout
 
-def generate_task_layout(task, detail='simple'):
 
-    layout = html.Div([
-        html.Details([              # Distribution
-            html.Summary(task._name),
-            html.Div([
-                html.Div('The current parameters for failure mode'),
-                html.Details([
-                    html.Div([
+def generate_dist_form(distribution):
+    """
+    Takes a Distribution and generates the html form inputs
+    """
 
-                    ])
-                ])
-            ])
-        ])
-    ])
+    #TODO only works for a Weibull, doesn't take prefix a
+    prefix = ""
 
+    param_values = dict(
+        alpha = 1,
+        beta = 1,
+        gamma = 1,
+    )
 
-def generate_task_layout(task, detail='simple'):
+    form = generate_horizontal_form(param_values=param_values, prefix=prefix)
 
-    form = dbc.Row(
+    return form
+
+def generate_task_layout(task, prefix=""):
+    """
+
+    """
+    task_form = generate_task_form(task=task, prefix=prefix)
+
+    task_layout = dbc.InputGroup(
+        [
+            dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
+
+            dbc.Button(
+                "Task Names",
+                color="link",
+                id="collapse-button",
+            ),
+            dbc.Col(
+                [
+                    #dbc.Label("Details...", className="mr-2"),
+                    task_form,
+                    dbc.Collapse(
+                        dbc.Card(dbc.CardBody(
+                            [
+                                dbc.Col(dbc.Card(dbc.CardBody())),
+                                #trigger_card, 
+                                dbc.Col(dbc.Card(dbc.CardBody())),
+                            ]
+                        )),
+                        id="collapse",
+                        is_open=True
+                    ),
+                ]
+            )
+
+        ]
+    )
+
+    return task_layout
+
+def generate_task_form(task, prefix="", detail='simple'):
+    """
+    Takes a Task and generates the html form inputs
+    """
+
+    form = dbc.Form(
         [
             dbc.Col(
                 dbc.FormGroup(
@@ -90,11 +107,10 @@ def generate_task_layout(task, detail='simple'):
                         dbc.Label("Probability Effective", html_for="p_effective"),
                         dbc.Input(
                             type="number",
-                            id= task.name + "_p_effective",
+                            id= prefix + "_p_effective",
                         ),
-                    ]
+                    ],
                 ),
-                width=6,
             ),
             dbc.Col(
                 dbc.FormGroup(
@@ -102,11 +118,10 @@ def generate_task_layout(task, detail='simple'):
                         dbc.Label("Cost", html_for="cost"),
                         dbc.Input(
                             type="number",
-                            id= task.name + "_cost",
+                            id= prefix + "_cost",
                         ),
-                    ]
+                    ],
                 ),
-                width=6,
             ),
             dbc.Col(
                 dbc.FormGroup(
@@ -114,18 +129,110 @@ def generate_task_layout(task, detail='simple'):
                         dbc.Label("Consequence", html_for="consequence"),
                         dbc.Input(
                             type="number",
-                            id= task.name + "_consequence",
+                            id= prefix + "_consequence",
                         ),
-                    ]
+                    ],
                 ),
-                width=6,
             ),
 
         ],
-        form=True,
+        inline=True,
     )
 
-    return layout
+    return form
+
+
+def generate_task_trigger_form(trigger):
+    """
+    Takes a Trigger and generates the html form inputs
+    """
+
+    form = NotImplemented
+
+    return form
+
+
+def generate_task_impact_form(impacts, prefix=""):
+    """Takes a the impacts from a Trigger object and generates the html form inputs
+    # TODO Implement times
+    """
+
+    forms = []
+    # Conditions
+
+    """for condition, impact in impacts['condition'].items():
+        condition_prefix = "%s_%s_" %(prefix, condition)
+
+        condition_form = make_impact_condition_form(impact, prefix=condition_prefix)
+        forms = forms + [condition_form]
+
+    # States"""
+    state_form = generate_horizontal_form(impacts['state'], prefix=prefix)
+
+    forms = forms + [state_form]
+
+    form = dbc.Form(forms)
+
+    return form
+
+def make_impact_state_form(impact, prefix="", detail='simple'):
+
+
+    return NotImplemented
+
+def make_impact_condition_form(impact, prefix = "", detail='simple'):
+    """Create a form for impact condition with method, axis and target
+    """
+    
+    c_name = dbc.InputGroup(
+        [
+            dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
+            dbc.Label("Cond Name", className="mr-2"),
+
+        ]
+    )
+
+    target = dbc.FormGroup(
+        [
+            dbc.Label("Target", className="mr-2"),
+            dbc.Input(
+                type="number",
+                id= prefix + "target",
+                value=impact['target'],
+            ),
+        ],
+        className="mr-3",
+    )
+
+    method = dbc.FormGroup(
+        [
+            dbc.Label("Method", className="mr-2"),
+            dbc.Select(
+                id=prefix + "method_dropdown",
+                options=[{'label' : method, 'value' : method} for method in ['reduction_factor', 'tbc']],
+                value=impact['method'],
+            ),
+        ],
+        className="mr-3",
+    )
+
+    axis = dbc.FormGroup(
+        [
+            dbc.Label("Axis", className="mr-2"),
+            dbc.Select(
+                id=prefix + "axis_dropdown",
+                options=[{'label' : axis, 'value' : axis} for axis in ['condition', 'time']],
+                value=impact['axis'],
+            ),
+        ],
+        className="mr-3",
+    )
+
+    form = dbc.Form([c_name, target, method, axis], inline=True, className="dash-bootstrap")
+
+    return form
+
+
     # Task
 
     # Probability Effective
@@ -161,14 +268,33 @@ def generate_task_layout(task, detail='simple'):
                 # axis
                 # reduction_factor / target
 
+def generate_horizontal_form(param_values, prefix=""):
+    """ Generate a html form for fields with a given prefix
+    """
 
-            'wall_thickness': {'target': None,
-   'reduction_factor': 0,
-   'method': 'reduction_factor',
-   'axis': 'condition'}},
+    param_inputs = []
 
-   
-   html.Div [
+    for param, value in param_values.items():
+        param_input = dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label(param.capitalize(), className="mr-2"),
+                    dbc.Input(
+                        type="number",
+                        id= prefix + param,
+                        value=value,
+                    ),
+                ],
+                className='mr-3',
+            ),
+        )
+        param_inputs.append(param_input)
+
+    form = dbc.Form(children=param_inputs, inline=True)
+
+    return form
 
 
-   ]
+
+if __name__ == "__main__":
+    print("layout methods - Ok")

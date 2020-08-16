@@ -347,11 +347,11 @@ class Condition:
         # Reset the condition profile
         self.set_condition_profile()
 
-    def reset_time(self, target=None, reduction_factor=None):
+    def reset_time(self, target=None):
 
         return NotImplemented
 
-    def reset_condition(self, target=None, reduction_factor=None):
+    def reset_condition(self, target=None):
 
         return NotImplemented
 
@@ -359,16 +359,16 @@ class Condition:
 
         return NotImplemented
 
-    def restore_condition(self, reduction_factor):
+    def restore_condition(self, target):
 
         return NotImplemented
 
-    def restore(self, reduction_factor):
+    def restore(self, target):
 
         return NotImplemented
 
     def reset_any(
-        self, target=0, reduction_factor=1, reverse=0, method="reset", axis="time"
+        self, target=0, method="reset", axis="time"
     ):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
@@ -378,13 +378,14 @@ class Condition:
 
         if method == "reduction_factor":
             accumulated = (self.condition_perfect - self.current()) * (
-                1 - reduction_factor
+                1 - target
             )
 
         elif method == "reverse":
-            accumulated = self.current() - reverse
+            
+            accumulated = self.current() - target
 
-        elif method == "target":
+        elif method == "set":
             accumulated = target
 
         # Calculate the accumulated condition
