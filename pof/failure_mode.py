@@ -35,6 +35,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.conditions = dict()
 
         # Failure information
+        self.name = str('fm')
         self.t_fm = 0
         self.t_uptime = 0
         self.t_downtime = 0

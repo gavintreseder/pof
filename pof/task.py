@@ -117,6 +117,16 @@ class Task:
         )
         return impacts
 
+    def triggers(self):
+        """ Return a trigger dictionary""" #TODO maybe change to object type
+
+        triggers = dict(
+            state = self.state_triggers,
+            condition = self.condition_triggers,
+            time = self.time_triggers,
+        )
+        return triggers
+
     def is_effective(self, t_now=None, timeline=None):
 
         return random() <= self.p_effective

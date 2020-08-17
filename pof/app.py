@@ -14,7 +14,7 @@ import pandas as pd
 import pprint
 import copy
 
-from interface.layouts import generate_dist_form, generate_task_form, generate_impact_form, make_impact_condition_form
+#from interface.layouts import generate_dist_form, generate_task_form, generate_impact_form, make_impact_condition_form
 from failure_mode import FailureMode
 from condition import Condition
 from distribution import Distribution
@@ -53,9 +53,9 @@ app.layout = html.Div(
         html.Div(children="Graph y_limit"),
         dcc.Input(id="graph_y_limit", type="number", value=20000, debounce=True,),
 
-        generate_dist_form(fm.failure_dist),
-        generate_task_form(fm.tasks),
-        generate_impact_form(fm.tasks['ocr'].impacts()),
+        #generate_dist_form(fm.failure_dist),
+        #generate_task_form(fm.tasks),
+        #generate_impact_form(fm.tasks['ocr'].impacts()),
     ]
 )
 

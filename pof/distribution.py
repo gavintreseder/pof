@@ -31,6 +31,14 @@ class Distribution:
 
         return out
 
+    def params(self):
+        params = dict(
+            alpha = self.alpha,
+            beta = self.beta,
+            gamma = self.gamma,
+        )
+        return params
+
     def set_time_range(self):
 
         return
