@@ -93,6 +93,7 @@ def update_maintenance_strategy(
     fm_local.tasks["inspection"].p_effective = p_effective / 100
     fm_local.cof.risk_cost_total = consequence
     fm_local.tasks["inspection"].t_interval = inspection_interval
+    
     fm_local.mc_timeline(t_end=200, n_iterations=100)
     df = fm_local.expected_cost_df()
 

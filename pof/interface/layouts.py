@@ -2,6 +2,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
+#from settings import Settings
+
+IS_OPEN = False
 
 # Asset
 
@@ -66,17 +69,6 @@ def generate_failure_mode_layout(fm):
     return layout
 
 
-def make_dist_layout(dist, prefix=""):
-    """
-    Takes a Distribution and generates the html form inputs
-    """
-
-    #TODO only works for a Weibull, doesn't take prefix a
-    prefix = ""
-
-    form = generate_horizontal_form(params=dist.params(), prefix=prefix)
-
-    return form
 
 def make_failure_mode_layout(failure_mode, prefix=""):
     """
@@ -109,7 +101,7 @@ def make_failure_mode_layout(failure_mode, prefix=""):
                                 tasks_layout
                         )),
                         id = prefix + "-collapse",
-                        is_open=True
+                        is_open=IS_OPEN
                     ),
                 ]
             )
@@ -119,7 +111,38 @@ def make_failure_mode_layout(failure_mode, prefix=""):
 
     return layout
 
-def make_tasks(tasks, prefix=""):
+def make_dist_layout(dist, prefix=""):
+    """
+    Takes a Distribution and generates the html form inputs
+    """
+
+    #TODO only works for a Weibull, doesn't take prefix a
+    prefix = ""
+
+    param_inputs = []
+
+    for param, value in dist.params().items():
+        param_input = dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label(param.capitalize(), className="mr-2"),
+                    dbc.Input(
+                        type="number",
+                        id= prefix + param,
+                        value=value,
+                    ),
+                ],
+                className='mr-3',
+            ),
+        )
+        param_inputs.append(param_input)
+
+    form = dbc.Form(children=param_inputs, inline=True)
+
+    return form
+
+
+def make_tasks_layout(tasks, prefix=""):
 
     return NotImplemented
 
@@ -134,7 +157,6 @@ def make_task_layout(task, task_name="task", prefix=""):
     task_layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
-
             dbc.Button(
                 task_name,
                 color="link",
@@ -151,11 +173,10 @@ def make_task_layout(task, task_name="task", prefix=""):
                             ]
                         )),
                         id = prefix + "-collapse",
-                        is_open=False
+                        is_open=IS_OPEN
                     ),
                 ]
             )
-
         ]
     )
 
@@ -175,6 +196,7 @@ def make_task_form(task, prefix="", detail='simple'):
                         dbc.Input(
                             type="number",
                             id= prefix + "_p_effective",
+                            value = task.p_effective * 100,
                         ),
                     ],
                 ),
@@ -186,6 +208,7 @@ def make_task_form(task, prefix="", detail='simple'):
                         dbc.Input(
                             type="number",
                             id= prefix + "_cost",
+                            value= task.cost,
                         ),
                     ],
                 ),
@@ -197,6 +220,7 @@ def make_task_form(task, prefix="", detail='simple'):
                         dbc.Input(
                             type="number",
                             id= prefix + "_consequence",
+                            value="Not Implemented",
                         ),
                     ],
                 ),
@@ -420,32 +444,6 @@ def make_condition_impact_form(impact, prefix="", detail='simple'):
 
     return form
 
-
-def generate_horizontal_form(params, prefix=""):
-    """ Generate a html form for fields with a given prefix
-    """
-
-    param_inputs = []
-
-    for param, value in params.items():
-        param_input = dbc.Col(
-            dbc.FormGroup(
-                [
-                    dbc.Label(param.capitalize(), className="mr-2"),
-                    dbc.Input(
-                        type="number",
-                        id= prefix + param,
-                        value=value,
-                    ),
-                ],
-                className='mr-3',
-            ),
-        )
-        param_inputs.append(param_input)
-
-    form = dbc.Form(children=param_inputs, inline=True)
-
-    return form
 
 """
                 dbc.FormGroup(

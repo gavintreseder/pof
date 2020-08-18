@@ -625,6 +625,43 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Return optimal strategy
 
+    # ****************** Interface methods ***********
+
+    def dash_update(self, dash_id, value):
+        """Updates a the failure mode object using the dash componenet ID"""
+
+        try:
+            
+            next_id = dash_id.split('_')[0]
+        
+            # Check if the next component is a param of 
+            if next_id in self.__dict__:
+                if next_id == 'failure_dist':
+                    dash_id = dash_id.partition(next_id)[2]
+                    self.failure_dist.dash_update(dash_id, value)
+                elif next_id == 'task':
+                    # Do something with tasksfm.tasks[]
+                    NotImplemented
+
+        except:
+
+            print("Invalid dash component %s" %(dash_id))
+
+        return True
+
+    def get_dash_ids(self):
+        """ Return a list of dash ids for values that can be changed"""
+
+        dash_ids = []
+
+        # Failure Dist
+        fd_ids = self.failure_dist.get_dash_id()
+        fd_ids = ["failure_dist-" + fd for fd in fd_ids]
+
+
+        dash_ids = dash_ids + fd_ids
+
+        return dash_ids
 
 if __name__ == "__main__":
     failure_mode = FailureMode()
