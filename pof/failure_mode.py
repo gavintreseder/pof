@@ -632,12 +632,12 @@ class FailureMode:  # Maybe rename to failure mode
 
         try:
             
-            next_id = dash_id.split('_')[0]
+            next_id = dash_id.split('-')[0]
         
             # Check if the next component is a param of 
             if next_id in self.__dict__:
                 if next_id == 'failure_dist':
-                    dash_id = dash_id.partition(next_id)[2]
+                    dash_id = dash_id.replace(next_id + '-', "")
                     self.failure_dist.dash_update(dash_id, value)
                 elif next_id == 'task':
                     # Do something with tasksfm.tasks[]

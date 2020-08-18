@@ -75,12 +75,13 @@ def make_failure_mode_layout(failure_mode, prefix=""):
     """
     
     # Get failure mode form
-    dist_layout = make_dist_layout(failure_mode.failure_dist, prefix=prefix)
+    fd_prefix = prefix + "-failure_dist"
+    dist_layout = make_dist_layout(failure_mode.failure_dist, prefix=fd_prefix)
 
     # Get tasks layout
     tasks_layout = []
     for task_name, task in failure_mode.tasks.items():
-        task_prefix = prefix + '-' + task_name
+        task_prefix = prefix + '-task-' + task_name
         tasks_layout = tasks_layout + [make_task_layout(task, task_name, task_prefix)]
 
     # Make the layout
@@ -115,10 +116,6 @@ def make_dist_layout(dist, prefix=""):
     """
     Takes a Distribution and generates the html form inputs
     """
-
-    #TODO only works for a Weibull, doesn't take prefix a
-    prefix = ""
-
     param_inputs = []
 
     for param, value in dist.params().items():
@@ -128,8 +125,9 @@ def make_dist_layout(dist, prefix=""):
                     dbc.Label(param.capitalize(), className="mr-2"),
                     dbc.Input(
                         type="number",
-                        id= prefix + param,
+                        id= prefix + "-" + param,
                         value=value,
+                        debounce=True,
                     ),
                 ],
                 className='mr-3',
@@ -197,6 +195,7 @@ def make_task_form(task, prefix="", detail='simple'):
                             type="number",
                             id= prefix + "_p_effective",
                             value = task.p_effective * 100,
+                            debounce=True,
                         ),
                     ],
                 ),
@@ -209,6 +208,7 @@ def make_task_form(task, prefix="", detail='simple'):
                             type="number",
                             id= prefix + "_cost",
                             value= task.cost,
+                            debounce=True,
                         ),
                     ],
                 ),
@@ -221,6 +221,7 @@ def make_task_form(task, prefix="", detail='simple'):
                             type="number",
                             id= prefix + "_consequence",
                             value="Not Implemented",
+                            debounce=True,
                         ),
                     ],
                 ),
@@ -281,11 +282,13 @@ def make_condition_trigger_layout(triggers, prefix=""): # TODO make these slider
                             type="number",
                             id= condition_prefix + "range-slider-lower",
                             value=threshold['lower'],
+                            debounce=True,
                         ),
                         dbc.Input(
                             type="number",
                             id= condition_prefix + "range-slider-upper",
                             value=threshold['upper'],
+                            debounce=True,
                         ),
                     ],
                     inline=True
@@ -411,6 +414,7 @@ def make_condition_impact_form(impact, prefix="", detail='simple'):
                 type="number",
                 id= prefix + "target",
                 value=impact['target'],
+                debounce=True,
             ),
         ],
         className="mr-3",

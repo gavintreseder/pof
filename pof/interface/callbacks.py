@@ -18,26 +18,10 @@ def update_maintenance_strategy(
     graph_y_limit, p_effective, tasks, consequence, inspection_interval
 ):
 
+
     fm_local = copy.deepcopy(fm)
+    fm_local.dash_update(dash_id)
 
-    p_effective = p_effective if p_effective is not None else 0
-    consequence = consequence if consequence is not None else 0
-    inspection_interval = inspection_interval if inspection_interval is not None else 0
-    graph_y_limit = graph_y_limit if graph_y_limit is not None else 10000
-
-    if tasks is None:
-        tasks = []
-
-    for task_name, task in fm_local.tasks.items():
-        if task_name in tasks:
-            task.active = True
-        else:
-            task.active = False
-
-    # fm.conditions['wall_thickness'] = Condition(100, 0, 'linear', [-5])
-    fm_local.tasks["inspection"].p_effective = p_effective / 100
-    fm_local.cof.risk_cost_total = consequence
-    fm_local.tasks["inspection"].t_interval = inspection_interval
     fm_local.mc_timeline(t_end=200, n_iterations=100)
     df = fm_local.expected_cost_df()
 

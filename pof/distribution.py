@@ -83,14 +83,12 @@ class Distribution:
         """Updates a the distribution object using the dash component ID"""
 
         try:
-            
-            next_id = dash_id.split('_')[0]
+
+            next_id = dash_id.split('-')[0]
             self.__dict__[next_id] = value
 
         except:
             print("Invalid dash component %s" %(dash_id))
-
-        return True
 
 if __name__ == "__main__":
     distribution = Distribution()
