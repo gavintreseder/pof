@@ -12,6 +12,12 @@ class TestTask(unittest.TestCase):
         self.assertTrue(True)
 
 
+    def test_dash_update(self):
+
+        # Test all the options
+
+        self.AssertTrue(True)
+
 
 class TestInspection(unittest.TestCase):
 

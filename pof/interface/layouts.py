@@ -70,19 +70,19 @@ def generate_failure_mode_layout(fm):
 
 
 
-def make_failure_mode_layout(failure_mode, prefix=""):
+def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
     """
     """
     
     # Get failure mode form
-    fd_prefix = prefix + "-failure_dist"
-    dist_layout = make_dist_layout(failure_mode.failure_dist, prefix=fd_prefix)
+    fd_prefix = prefix + "failure_dist" + sep
+    dist_layout = make_dist_layout(failure_mode.failure_dist, prefix=fd_prefix, sep=sep)
 
     # Get tasks layout
     tasks_layout = []
     for task_name, task in failure_mode.tasks.items():
-        task_prefix = prefix + '-task-' + task_name
-        tasks_layout = tasks_layout + [make_task_layout(task, task_name, task_prefix)]
+        task_prefix = prefix + 'task' + sep + task_name + sep
+        tasks_layout = tasks_layout + [make_task_layout(task, task_name, prefix=task_prefix, sep=sep)]
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -92,7 +92,7 @@ def make_failure_mode_layout(failure_mode, prefix=""):
             dbc.Button(
                 failure_mode.name,
                 color="link",
-                id = prefix + "-collapse-button",
+                id = prefix + "collapse-button",
             ),
             dbc.Col(
                 [
@@ -101,7 +101,7 @@ def make_failure_mode_layout(failure_mode, prefix=""):
                         dbc.Card(dbc.CardBody(
                                 tasks_layout
                         )),
-                        id = prefix + "-collapse",
+                        id = prefix + "collapse",
                         is_open=IS_OPEN
                     ),
                 ]
@@ -112,7 +112,7 @@ def make_failure_mode_layout(failure_mode, prefix=""):
 
     return layout
 
-def make_dist_layout(dist, prefix=""):
+def make_dist_layout(dist, prefix="", sep='-'):
     """
     Takes a Distribution and generates the html form inputs
     """
@@ -125,7 +125,7 @@ def make_dist_layout(dist, prefix=""):
                     dbc.Label(param.capitalize(), className="mr-2"),
                     dbc.Input(
                         type="number",
-                        id= prefix + "-" + param,
+                        id= prefix + param,
                         value=value,
                         debounce=True,
                     ),
@@ -140,17 +140,13 @@ def make_dist_layout(dist, prefix=""):
     return form
 
 
-def make_tasks_layout(tasks, prefix=""):
-
-    return NotImplemented
-
-def make_task_layout(task, task_name="task", prefix=""):
+def make_task_layout(task, task_name="task", prefix="", sep = '-'):
     """
 
     """
     task_form = make_task_form(task=task, prefix=prefix)
-    trigger_layout = make_task_trigger_layout(task.triggers(), prefix=prefix)
-    impact_layout = make_task_impact_layout(task.impacts(), prefix=prefix)
+    trigger_layout = make_task_trigger_layout(task.triggers, prefix=prefix)
+    impact_layout = make_task_impact_layout(task.impacts, prefix=prefix)
 
     task_layout = dbc.InputGroup(
         [
@@ -158,7 +154,7 @@ def make_task_layout(task, task_name="task", prefix=""):
             dbc.Button(
                 task_name,
                 color="link",
-                id = prefix + "-collapse-button",
+                id = prefix + "collapse-button",
             ),
             dbc.Col(
                 [
@@ -170,7 +166,7 @@ def make_task_layout(task, task_name="task", prefix=""):
                                 dbc.Col(impact_layout),
                             ]
                         )),
-                        id = prefix + "-collapse",
+                        id = prefix + "collapse",
                         is_open=IS_OPEN
                     ),
                 ]
@@ -180,7 +176,7 @@ def make_task_layout(task, task_name="task", prefix=""):
 
     return task_layout
 
-def make_task_form(task, prefix="", detail='simple'):
+def make_task_form(task, prefix="", sep='-'):
     """
     Takes a Task and generates the html form inputs
     """
@@ -193,7 +189,7 @@ def make_task_form(task, prefix="", detail='simple'):
                         dbc.Label("Probability Effective", html_for="p_effective"),
                         dbc.Input(
                             type="number",
-                            id= prefix + "_p_effective",
+                            id= prefix + "p_effective",
                             value = task.p_effective * 100,
                             debounce=True,
                         ),
@@ -206,7 +202,7 @@ def make_task_form(task, prefix="", detail='simple'):
                         dbc.Label("Cost", html_for="cost"),
                         dbc.Input(
                             type="number",
-                            id= prefix + "_cost",
+                            id= prefix + "cost",
                             value= task.cost,
                             debounce=True,
                         ),
@@ -219,7 +215,7 @@ def make_task_form(task, prefix="", detail='simple'):
                         dbc.Label("Consequence", html_for="consequence"),
                         dbc.Input(
                             type="number",
-                            id= prefix + "_consequence",
+                            id= prefix + "consequence",
                             value="Not Implemented",
                             debounce=True,
                         ),
@@ -235,11 +231,11 @@ def make_task_form(task, prefix="", detail='simple'):
 # ******************* Triggers ******************
 
 
-def make_task_trigger_layout(triggers, prefix=""):
+def make_task_trigger_layout(triggers, prefix="", sep='-'):
     """
     Takes a Trigger and generates the html form inputs
     """
-    prefix = prefix + '-trigger'
+    prefix = prefix + 'trigger' + sep
     state_layout = make_state_impact_layout(triggers['state'], prefix=prefix)
     condition_layout = make_condition_trigger_layout(triggers['condition'], prefix=prefix)
 
@@ -258,14 +254,14 @@ def make_task_trigger_layout(triggers, prefix=""):
     return layout
 
 
-def make_condition_trigger_layout(triggers, prefix=""): # TODO make these sliders
+def make_condition_trigger_layout(triggers, prefix="", sep='-'): # TODO make these sliders
     """ R
     """
     condition_inputs = []
 
     for condition, threshold in triggers.items():
         
-        condition_prefix = "%s_%s_" %(prefix, condition)
+        prefix = prefix + 'condition' + sep + condition + sep
         condition_input = dbc.InputGroup(
             [
                 dbc.InputGroupAddon(
@@ -280,13 +276,13 @@ def make_condition_trigger_layout(triggers, prefix=""): # TODO make these slider
                     [
                         dbc.Input(
                             type="number",
-                            id= condition_prefix + "range-slider-lower",
+                            id= prefix + "lower",
                             value=threshold['lower'],
                             debounce=True,
                         ),
                         dbc.Input(
                             type="number",
-                            id= condition_prefix + "range-slider-upper",
+                            id= prefix + "upper",
                             value=threshold['upper'],
                             debounce=True,
                         ),
@@ -301,19 +297,14 @@ def make_condition_trigger_layout(triggers, prefix=""): # TODO make these slider
     
     return layout
 
-def make_condition_trigger_form(prefix=""):
-    form = NotImplemented
-    return form
-
-
 
 # ****************** Impacts *************************
 
-def make_task_impact_layout(impacts, prefix=""):
+def make_task_impact_layout(impacts, prefix="", sep='-'):
     """Takes a the impacts from a Trigger object and generates the html form inputs
     # TODO Implement times
     """
-    prefix = prefix + '-impact'
+    prefix = prefix + 'impact' + sep
     state_layout = make_state_impact_layout(impacts['state'], prefix=prefix)
     condition_layout = make_condition_impact_layout(impacts['condition'], prefix=prefix)
 
@@ -331,13 +322,13 @@ def make_task_impact_layout(impacts, prefix=""):
 
     return layout
 
-def make_state_impact_layout(state_impacts, prefix="", detail='simple'):
+def make_state_impact_layout(state_impacts, prefix="", sep='-'):
     """ Creates an input form the state impacts
     """
 
     #TODO figure out how to take True or False as vlaues
     state_inputs = []
-    prefix = prefix + '-state'
+    prefix = prefix + 'state' + sep
     for state, value in state_impacts.items():
         state_input = dbc.Col(
             dbc.InputGroup(
@@ -363,37 +354,18 @@ def make_state_impact_layout(state_impacts, prefix="", detail='simple'):
 
     return form
 
-def make_state_impact_form(state_impact, prefix=""):# Not use
-    """ Creates a form for a state impact"""
-
-    state = str("not implemented")
-    value = state = str("not implemented")
-    form = dbc.FormGroup(
-        [
-            dbc.Label(state.capitalize(), className="mr-2"),
-            dbc.Select(
-                options=[{'label' : option, 'value' : option} for option in ["True", "False"]],
-                id= prefix + state,
-                value=str(value),
-            ),
-        ],
-        className='mr-3',
-    )
-
-    return NotImplemented #form
-
-def make_condition_impact_layout(impacts, prefix=""):
+def make_condition_impact_layout(impacts, prefix="", sep= '-'):
 
     forms = []
 
     for condition, impact in impacts.items():
-        condition_prefix = "%s_%s_" %(prefix, condition)
+        cond_prefix = prefix + 'condition' + sep + condition + sep
 
         condition_form = dbc.InputGroup(
             [
                 dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
                 dbc.InputGroupAddon(condition, addon_type="prepend"),
-                make_condition_impact_form(impact, prefix=condition_prefix),
+                make_condition_impact_form(impact, prefix=cond_prefix),
             ]
         )
         
@@ -403,7 +375,7 @@ def make_condition_impact_layout(impacts, prefix=""):
 
     return layout
 
-def make_condition_impact_form(impact, prefix="", detail='simple'):
+def make_condition_impact_form(impact, prefix="", sep='-'):
     """Create a form for impact condition with method, axis and target
     """
 
@@ -424,7 +396,7 @@ def make_condition_impact_form(impact, prefix="", detail='simple'):
         [
             dbc.Label("Method", className="mr-2"),
             dbc.Select(
-                id=prefix + "method_dropdown",
+                id=prefix + "method",
                 options=[{'label' : method, 'value' : method} for method in ['reduction_factor', 'tbc']],
                 value=impact['method'],
             ),
@@ -436,7 +408,7 @@ def make_condition_impact_form(impact, prefix="", detail='simple'):
         [
             dbc.Label("Axis", className="mr-2"),
             dbc.Select(
-                id=prefix + "axis_dropdown",
+                id=prefix + "axis",
                 options=[{'label' : axis, 'value' : axis} for axis in ['condition', 'time']],
                 value=impact['axis'],
             ),

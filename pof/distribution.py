@@ -75,9 +75,9 @@ class Distribution:
             return 0
 
 
-    def get_dash_id(self):
+    def get_dash_id(self, prefix=''):
 
-        return ['alpha', 'beta', 'gamma']
+        return [prefix + param for param in ['alpha', 'beta', 'gamma']]
 
     def dash_update(self, dash_id, value):
         """Updates a the distribution object using the dash component ID"""

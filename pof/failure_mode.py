@@ -627,17 +627,17 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ****************** Interface methods ***********
 
-    def dash_update(self, dash_id, value):
+    def dash_update(self, dash_id, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
 
         try:
             
-            next_id = dash_id.split('-')[0]
+            next_id = dash_id.split(sep)[0]
         
             # Check if the next component is a param of 
             if next_id in self.__dict__:
                 if next_id == 'failure_dist':
-                    dash_id = dash_id.replace(next_id + '-', "")
+                    dash_id = dash_id.replace(next_id + sep, "")
                     self.failure_dist.dash_update(dash_id, value)
                 elif next_id == 'task':
                     # Do something with tasksfm.tasks[]
@@ -649,17 +649,20 @@ class FailureMode:  # Maybe rename to failure mode
 
         return True
 
-    def get_dash_ids(self):
+    def get_dash_ids(self, prefix="", sep='-'):
         """ Return a list of dash ids for values that can be changed"""
 
-        dash_ids = []
-
         # Failure Dist
-        fd_ids = self.failure_dist.get_dash_id()
-        fd_ids = ["failure_dist-" + fd for fd in fd_ids]
+        fd_prefix = prefix + 'failure_dist' + sep
+        fd_ids = self.failure_dist.get_dash_id(prefix=fd_prefix)
 
+        # Tasks
+        task_ids = []
+        for task_name, task in self.tasks.items():
+            task_prefix = prefix + 'task' + sep + task_name + sep
+            task_ids = task_ids + task.get_dash_ids(prefix=task_prefix)
 
-        dash_ids = dash_ids + fd_ids
+        dash_ids = fd_ids + task_ids
 
         return dash_ids
 
