@@ -153,32 +153,35 @@ class Task:
         """Update the task object to a value using a dash component id"""
 
         try:
-            print('adsf')
             ids = dash_id.split('-')
 
-            print(dash_id)
-            if ids[0] in ['p_effective', 'cost', 'consequence']:
-                print('1')
-                task.__dict__[ids[0]] = value
+            if ids[0] in ['active', 'p_effective', 'cost', 'consequence']:
+
+                if ids[0] == 'p_effective':
+                    value = value / 100
+
+                self.__dict__[ids[0]] = value
+
             elif ids[0] in ["trigger", "impact"]:
-                print('2')
+
                 if ids[1] == "condition":
-                    print('3')
-                    task.__dict__[ids[0]+'s'][ids[1]][ids[2]][ids[3]] = value
+
+                    self.__dict__[ids[0]+'s'][ids[1]][ids[2]][ids[3]] = value
+                    
                 elif ids[1] == 'state':
-                    print('4')
-                    task.__dict__[ids[0]+'s'][ids[1]][ids[2]] = value
+ 
+                    self.__dict__[ids[0]+'s'][ids[1]][ids[2]] = value
             else:
                 print ("Invalid Dash ID - %s" %(dash_id))
         except:
-            print ("Invalid Dash ID - %s" %(dash_id))
+            print ("Dash ID Error- %s" %(dash_id))
 
         return True
 
     def get_dash_ids(self, prefix='', sep='-'):
 
         # task parameters
-        dash_ids = [prefix + param for param in ['p_effective', 'cost', 'consequence']]
+        dash_ids = [prefix + param for param in ['active', 'p_effective', 'cost', 'consequence']]
 
         # Triggers
         dash_ids = dash_ids + list(flatten(self.triggers, parent_key = prefix + 'trigger', sep=sep))

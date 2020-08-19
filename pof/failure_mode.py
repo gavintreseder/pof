@@ -3,6 +3,8 @@
 Author: Gavin Treseder
 """
 
+#TODO make sure active is working
+
 # ************ Packages ********************
 import numpy as np
 import pandas as pd
@@ -27,6 +29,7 @@ class FailureMode:  # Maybe rename to failure mode
     def __init__(self, alpha=None, beta=None, gamma=None):
 
         # Failure behaviour
+        self.active = True
         self.failure_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
         self.init_dist = None
 
@@ -635,22 +638,32 @@ class FailureMode:  # Maybe rename to failure mode
             next_id = dash_id.split(sep)[0]
         
             # Check if the next component is a param of 
-            if next_id in self.__dict__:
-                if next_id == 'failure_dist':
-                    dash_id = dash_id.replace(next_id + sep, "")
-                    self.failure_dist.dash_update(dash_id, value)
-                elif next_id == 'task':
-                    # Do something with tasksfm.tasks[]
-                    NotImplemented
+            if next_id in ['active']:
+
+                self.active = value
+
+            elif next_id == 'failure_dist':
+
+                dash_id = dash_id.replace(next_id + sep, "")
+                self.failure_dist.dash_update(dash_id, value)
+
+            elif next_id == 'task':
+      
+                dash_id = dash_id.replace(next_id + sep, "")
+                task_name= dash_id.split(sep)[0]
+                dash_id = dash_id.replace(task_name + sep, "")
+                self.tasks[task_name].dash_update(dash_id, value)
 
         except:
 
             print("Invalid dash component %s" %(dash_id))
 
-        return True
 
     def get_dash_ids(self, prefix="", sep='-'):
         """ Return a list of dash ids for values that can be changed"""
+
+        # Failure modes
+        fm_ids = [prefix + param for param in ['active']]
 
         # Failure Dist
         fd_prefix = prefix + 'failure_dist' + sep
@@ -662,7 +675,7 @@ class FailureMode:  # Maybe rename to failure mode
             task_prefix = prefix + 'task' + sep + task_name + sep
             task_ids = task_ids + task.get_dash_ids(prefix=task_prefix)
 
-        dash_ids = fd_ids + task_ids
+        dash_ids = fm_ids + fd_ids + task_ids
 
         return dash_ids
 

@@ -49,25 +49,6 @@ IS_OPEN = False
                         # axis
                         # reduction_factor / target
 
-def generate_failure_mode_layout(fm):
-    layout = html.Div([
-        html.Details([              # Distribution
-            html.Summary(fm._name),
-            html.Div(
-                children=[
-                    html.Div('The current parameters for failure mode'),
-                    html.Details([
-
-                    ])
-                ],
-                style = {}
-
-            )
-        ])
-    ])
-
-    return layout
-
 
 
 def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
@@ -87,7 +68,7 @@ def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
     # Make the layout
     layout = dbc.InputGroup(
         [
-            dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
+            dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
 
             dbc.Button(
                 failure_mode.name,
@@ -150,7 +131,7 @@ def make_task_layout(task, task_name="task", prefix="", sep = '-'):
 
     task_layout = dbc.InputGroup(
         [
-            dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
+            dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
             dbc.Button(
                 task_name,
                 color="link",
@@ -160,12 +141,12 @@ def make_task_layout(task, task_name="task", prefix="", sep = '-'):
                 [
                     task_form,
                     dbc.Collapse(
-                        dbc.Card(dbc.CardBody(
+                        dbc.CardDeck(
                             [
-                                dbc.Col(trigger_layout),
-                                dbc.Col(impact_layout),
+                                trigger_layout,
+                                impact_layout,
                             ]
-                        )),
+                        ),
                         id = prefix + "collapse",
                         is_open=IS_OPEN
                     ),
@@ -184,7 +165,7 @@ def make_task_form(task, prefix="", sep='-'):
     form = dbc.Form(
         [
             dbc.Col(
-                dbc.FormGroup(
+                dbc.InputGroup(
                     [
                         dbc.Label("Probability Effective", html_for="p_effective"),
                         dbc.Input(
@@ -193,6 +174,7 @@ def make_task_form(task, prefix="", sep='-'):
                             value = task.p_effective * 100,
                             debounce=True,
                         ),
+                        dbc.InputGroupAddon("%", addon_type="append"),
                     ],
                 ),
             ),
@@ -266,7 +248,7 @@ def make_condition_trigger_layout(triggers, prefix="", sep='-'): # TODO make the
             [
                 dbc.InputGroupAddon(
                     [
-                        dbc.Checkbox(),
+                        dbc.Checkbox(id=prefix + 'active', checked=True),
                         
                     ],
                     addon_type="prepend"
@@ -335,7 +317,9 @@ def make_state_impact_layout(state_impacts, prefix="", sep='-'):
                 [
                     dbc.InputGroupAddon(
                         [
-                            dbc.Checkbox(),
+                            dbc.Checkbox(
+                                id=prefix + state + sep + 'active',
+                                checked=True),
                             dbc.Label(state.capitalize(), className="mr-2"),
                         ],
                         addon_type="prepend"),
@@ -357,15 +341,15 @@ def make_state_impact_layout(state_impacts, prefix="", sep='-'):
 def make_condition_impact_layout(impacts, prefix="", sep= '-'):
 
     forms = []
-
+    base_prefix = prefix
     for condition, impact in impacts.items():
-        cond_prefix = prefix + 'condition' + sep + condition + sep
+        prefix = base_prefix + 'condition' + sep + condition + sep
 
         condition_form = dbc.InputGroup(
             [
-                dbc.InputGroupAddon(dbc.Checkbox(), addon_type="prepend"),
+                dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
                 dbc.InputGroupAddon(condition, addon_type="prepend"),
-                make_condition_impact_form(impact, prefix=cond_prefix),
+                make_condition_impact_form(impact, prefix=prefix),
             ]
         )
         
@@ -421,37 +405,6 @@ def make_condition_impact_form(impact, prefix="", sep='-'):
     return form
 
 
-"""
-                dbc.FormGroup(
-                    [
-                        dbc.Col(
-                                dbc.Input(
-                                type="number",
-                                id= prefix + "range-slider-lower",
-                                value=value,
-                            ),
-                            width=2
-                        ),
-                        dbc.Col(
-                            dcc.RangeSlider(
-                                id = prefix + 'range-slider',
-                                min=0,
-                                max=100,
-                                step=1,
-                                value =[treshold['lower'], treshold['upper']]
-                            ),
-                            width=8
-                        ),
-                        dbc.Col(
-                            dbc.Input(
-                                type="number",
-                                id= prefix + "range-slider-upper",
-                                value=value,
-                            ),
-                            width=2
-                        ),
-                    ],
-"""
 
 if __name__ == "__main__":
     print("layout methods - Ok")
