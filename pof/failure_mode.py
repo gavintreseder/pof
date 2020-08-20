@@ -17,13 +17,14 @@ from tqdm import tqdm
 from condition import Condition
 from distribution import Distribution
 from consequence import Consequence
-from task import Inspection, OnConditionRepair, ImmediateMaintenance
+from task import Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
+# TODO Change this to update timeline based on states that have changed
+# TODO make it work with non zero start times
 
 seed(1)
-
 
 class FailureMode:  # Maybe rename to failure mode
     def __init__(self, alpha=None, beta=None, gamma=None):
@@ -47,17 +48,9 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Failre Mode state
         self.states = dict()
-        self._initiated = False
-        self._detected = False
-        self._failed = False
-
-        # TODO maybe turn this into a class
-
-        self.t_initiated = False  # TODO
 
         # Tasks
         self.task_order = [1, 2, 3, 4]  # 'inspect', 'replace', repair' # todo
-
         self.tasks = dict()
 
         # Prepare the failure mode
@@ -75,31 +68,36 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ************** Set Functions *****************
 
-    def set_default(self):
+    def set_demo(self):
 
-        self.set_failure_dist(Distribution(alpha=50, beta=10, gamma=10))
+        if self.failure_dist is None:
+            self.set_failure_dist(Distribution(alpha=50, beta=10, gamma=10))
 
-        self.set_conditions(
-            dict(
-                wall_thickness=Condition(100, 0, "linear", [-5]),
-                external_diameter=Condition(100, 0, "linear", [-2]),
+        if not self.conditions:
+            self.set_conditions(
+                dict(
+                    wall_thickness=Condition(100, 0, "linear", [-5]),
+                    external_diameter=Condition(100, 0, "linear", [-2]),
+                )
             )
-        )
 
-        self.set_tasks(
-            dict(
-                inspection=Inspection(t_interval=5, t_delay=10).set_default(),
-                ocr=OnConditionRepair(activity="on_condition_repair").set_default(),
-                cm=ImmediateMaintenance(activity="cm").set_default(),
+        if not self.tasks:
+            self.set_tasks(
+                dict(
+                    inspection=Inspection(t_interval=5, t_delay=10).set_default(),
+                    on_condition_repair=OnConditionRepair(activity="on_condition_repair").set_default(),
+                    cm=ImmediateMaintenance(activity="cm").set_default(),
+                )
             )
-        )
 
-        self.set_states(dict(initiation=False, detection=False, failure=False,))
+        if not self.states:
+            self.set_states(dict(initiation=False, detection=False, failure=False,))
 
         # Prepare the failure mode
         self.calc_init_dist()
 
         return self
+
 
     def set_failure_dist(self, failure_dist):
         self.failure_dist = failure_dist
@@ -134,12 +132,7 @@ class FailureMode:  # Maybe rename to failure mode
     # ************** Get Functions *****************
 
     def get_states(self):
-
-        states = dict(
-            initiation=self._initiated, failure=self._failed, detection=self._detected,
-        )
-
-        return states
+        return self.states
 
     # ************** Is Function *******************
 
@@ -211,7 +204,7 @@ class FailureMode:  # Maybe rename to failure mode
         self, t_step
     ):  # TODO make a robust time step. (t_min, t_max, etc)
 
-        if self._initiated == True:
+        if self.is_initiated() == True:
             p_i = 1
         else:
             p_i = self.init_dist.conditional_f(
@@ -252,23 +245,8 @@ class FailureMode:  # Maybe rename to failure mode
             # Check when the next task needs to be executed
             t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
-            for task_name in task_names:
-                if verbose:
-                    print(t_now, task_names)
-                # Complete the tasks
-                states = self.tasks[task_name].sim_completion(
-                    t_now,
-                    timeline=self.timeline,
-                    states=self.get_states(),
-                    conditions=self.conditions,
-                    verbose=verbose,
-                )
-
-                # Update timeline
-                self.set_states(
-                    states
-                )  # Change this to update timeline based on states that have changed
-                self.update_timeline(t_now + 1, t_end, states, verbose=verbose)
+            # Complete those tasks
+            self.complete_tasks(t_now, task_names, verbose=verbose)
 
             t_now = t_now + 1
 
@@ -276,6 +254,26 @@ class FailureMode:  # Maybe rename to failure mode
         self.reset_for_next_sim()
 
         return self.timeline
+
+    def complete_tasks(self, t_now, task_names, verbose=False):
+        """ Executes the tasks """
+        for task_name in task_names:
+            if verbose:
+                print(t_now, task_names)
+
+            # Complete the tasks
+            states = self.tasks[task_name].sim_completion(
+                t_now,
+                timeline=self.timeline,
+                states=self.get_states(),
+                conditions=self.conditions,
+                verbose=verbose,
+            )
+
+            # Update timeline
+            
+            self.set_states(states)  
+            self.update_timeline(t_now + 1, updates=states, verbose=verbose)
 
     def init_timeline(self, t_end, t_start=0):
         """
@@ -288,9 +286,9 @@ class FailureMode:  # Maybe rename to failure mode
         )
 
         # Get intiaition
-        timeline["initiation"] = np.full(t_end + 1, self._initiated)
+        timeline["initiation"] = np.full(t_end + 1, self.is_initiated())
         t_initiate = 0
-        if not self._initiated:
+        if not self.is_initiated():
             t_initiate = min(t_end, int(self.init_dist.sample()))
             timeline["initiation"][t_initiate:] = 1
 
@@ -301,8 +299,8 @@ class FailureMode:  # Maybe rename to failure mode
             )
 
         # Check failure
-        timeline["failure"] = np.full(t_end + 1, self._failed)
-        if not self._failed:
+        timeline["failure"] = np.full(t_end + 1, self.is_failed())
+        if not self.is_failed():
             for condition in self.conditions.values():
                 tl_f = condition.sim_failure_timeline(
                     t_start=t_start - t_initiate, t_stop=t_end - t_initiate
@@ -316,7 +314,7 @@ class FailureMode:  # Maybe rename to failure mode
                 timeline[task.activity] = task.sim_timeline(t_end)
 
         # Initialised detection
-        timeline["detection"] = np.full(t_end - t_start + 1, self._detected)
+        timeline["detection"] = np.full(t_end - t_start + 1, self.is_detected())
 
         # Check tasks with condition based trigger
         for task_name, task in self.tasks.items():
@@ -328,10 +326,14 @@ class FailureMode:  # Maybe rename to failure mode
 
         return timeline
 
-    def update_timeline(self, t_start, t_end, updates=dict(), verbose=False):
+    def update_timeline(self, t_start, t_end=None, updates=dict(), verbose=False):
         """
         Takes a timeline and updates tasks that are impacted
         """
+
+        if t_end is None:
+            t_end = self.timeline['time'][-1]
+
         # Initiation -> Condition -> time_tasks -> states -> tasks
         if t_start < t_end:
 
@@ -396,10 +398,14 @@ class FailureMode:  # Maybe rename to failure mode
 
         return self.timeline
 
-    def next_tasks(self, timeline, t_start=0, t_end=None):
+    def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """
         Takes a timeline and returns the next time, and next task that will be completed
         """
+
+        if timeline is None:
+            timeline=self.timeline
+
         if t_end is None:
             t_end = timeline["time"][-1]
 
@@ -602,6 +608,13 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Reset counters
         self._sim_counter = 0
+
+    def reset_demo(self):
+        self.failure_dist=None
+        self.conditions=None
+        self.tasks = None
+        self.states = None
+        self.set_demo()
 
     # ****************** Optimise routines ***********
 

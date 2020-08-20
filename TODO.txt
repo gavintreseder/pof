@@ -1,6 +1,8 @@
 
 
+# Improvments
 
+    # Add a method when you don't want to use condition, only failure rates
 
 # Add graphs
 
@@ -12,3 +14,18 @@
 # Get example assets working
 
 # Make the interface prettier
+
+
+
+# Sensitivity Analysis
+
+    # Input to change
+    # Min
+    # Max
+    # n_steps
+
+    # Output Graph type / axis
+
+    #Graph
+        # Fix axis
+        

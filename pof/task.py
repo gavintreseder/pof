@@ -438,7 +438,7 @@ class OnConditionReplace(ConditionTask):
         )
         self.set_triggers(
             dict(
-                condition=dict(wall_thickness=dict(lower=20, upper=80,)),
+                condition=dict(wall_thickness=dict(lower=0, upper=20,)),
                 state=dict(detection=True),
             )
         )
