@@ -73,9 +73,9 @@ class Trigger():
 
     def set_triggers(self, states = None, conditions=None, times=None):
 
-        self.times = times if times not None else dict()
-        self.states = states if states not None else dict()
-        self.conditions = conditions if conditions not None else dict()
+        self.times = times if times is not None else dict()
+        self.states = states if states is not None else dict()
+        self.conditions = conditions if conditions is not None else dict()
         
 
     def check(self, timeline, t_start = 0, t_end = None):

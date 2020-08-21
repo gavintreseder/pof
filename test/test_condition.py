@@ -346,36 +346,29 @@ class TestCondition(unittest.TestCase):
     # **************** Test the reset functions ***********************
 
     def test_reset(self):
-        d = Degradation(perfect=100, limit=0, pf_curve='linear', pf_curve_params =[-10])
-        d.sim(10)
-        d.reset()
-        self.assertEqual(d.current(),100)
-
-    def test_reset_(self):
-        d = Degradation(perfect=100, limit=0, pf_curve='linear', pf_curve_params =[-10])
-        d.sim(10)
-        d.reset()
-        self.assertEqual(d.current(),100)
-
+        c = Condition(100,0,'linear', [-10], decreasing = True)
+        c.sim(10)
+        c.reset()
+        self.assertEqual(c.current(),100)
 
     # **************** Test the reset_any functions ***********************
     
     def test_reset_any_reduction_factor_all(self):
         c = Condition(100,0,'linear', [-10], decreasing = True)
         c.set_condition(50)
-        c.reset_any(target=0, reduction_factor=1, reverse=0, method='reduction_factor', axis='condition')
+        c.reset_any(target=1, method='reduction_factor', axis='condition')
         self.assertEqual(c.condition, 100)
 
     def test_reset_any_reduction_factor_half(self):
         c = Condition(100,0,'linear', [-10], decreasing = True)
         c.set_condition(50)
-        c.reset_any(target=0, reduction_factor=0.5, reverse=0, method='reduction_factor', axis='condition')
+        c.reset_any(target=0.5, method='reduction_factor', axis='condition')
         self.assertEqual(c.condition, 75)
 
     def test_reset_any_reduction_factor_none(self):
         c = Condition(100,0,'linear', [-10], decreasing = True)
         c.set_condition(50)
-        c.reset_any(target=0, reduction_factor=0, reverse=0, method='reduction_factor', axis='condition')
+        c.reset_any(target=0, method='reduction_factor', axis='condition')
         self.assertEqual(c.condition, 50)
 
     

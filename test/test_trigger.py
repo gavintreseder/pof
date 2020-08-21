@@ -1,6 +1,4 @@
-
 """
-
     Filename: test_trigger.py
     Description: Contains the code for testing the trigger class
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au

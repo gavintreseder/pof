@@ -9,7 +9,7 @@ import pandas as pd
 import scipy.stats as ss
 
 from failure_mode import FailureMode
-from distribtuion import Distribution
+from distribution import Distribution
 
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 
@@ -38,19 +38,22 @@ class Component():
     def set_demo(self):
 
         self.fm = dict(
-            fast_aging = FailureMode().set_default().set_failure_dist(Distribtuion(alpha=50, beta=2, gamma=20)),
-            slow_aging = FailureMode().set_default().set_failure_dist(Distribution(alpha=100, beta=1.5, gamma=20)),
-            random = FailureMode().set_default().set_failure_dist(Distribution(alpha=1000, beta=1, gamma=0)),
+            fast_aging = FailureMode(alpha=50, beta=2, gamma=20).set_demo(),
+            slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20).set_demo(),
+            random = FailureMode(alpha=1000, beta=1, gamma=0).set_demo(),
         )
     
         return self
 
+    def init_timeline(self, t_end, t_start=0):
+
+        for fm in self.fm.values():
+            fm.init_timeline(t_start=t_start, t_end=t_end)
     
     def sim_timeline(self, t_end, t_start=0):
 
         # Initialise the failure modes
-        for fm in self.fm:
-            fm.init_timeline(t_start=t_start, t_end=t_end)
+        self.init_timeline(t_start=t_start, t_end = t_end)
 
         t_now = t_start
 
@@ -67,7 +70,9 @@ class Component():
 
 
     def next_tasks(self, t_now):
-
+        """
+        Returns a dictionary with the failure mode triggered
+        """
         # TODO make this more efficent
         # TODO make this work if no tasks returned. Expect an error now
 
@@ -77,18 +82,17 @@ class Component():
             t_now, task_names = fm.next_tasks(t_start=t_now)
 
             if t_now in task_schedule:
-                task_schedule[t_now][fm_name] = task_names
+                task_schedule[t_now][fm_name] = (t_now, task_names)
             else:
-                task_schedule[t_now] = dict(
-                    fm_name = task_names,
-                )
+                task_schedule[t_now] = dict()
+                task_schedule[t_now][fm_name] = (t_now, task_names)
 
         t_now = min(task_schedule.keys())
 
         return task_schedule[t_now]
 
     def complete_tasks(self, t_now, fm_tasks):
-
+        """Complete any tasks in the dictionary fm_tasks at t_now"""
         # TODO add logic around all the different ways of executing
         for fm_name, task_names in fm_tasks.items():
             self.fm[fm_name].complete_tasks(t_now, task_names)

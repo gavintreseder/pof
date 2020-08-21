@@ -16,7 +16,7 @@ from condition import Condition
 from consequence import Consequence
 from distribution import Distribution
 
-from utils import flatten
+from helper import flatten
 
 
 # TODO move t somewhere else
@@ -124,7 +124,7 @@ class Task:
             # Update any conditions that need to be udpated
             for condition_name, impact in self.impacts['condition'].items():
                 if verbose:
-                    print("updating condition - %s" % (condition_name))
+                    print("Updating condition - %s" % (condition_name))
 
                 conditions[condition_name].set_condition(
                     timeline[condition_name][t_now]
@@ -428,6 +428,11 @@ class OnConditionReplace(ConditionTask):
         self.impacts = dict(
             condition = dict(
                 wall_thickness=dict(
+                    target=0,
+                    method="reduction_factor",
+                    axis="condition",
+                ),
+                external_diameter=dict(
                     target=0,
                     method="reduction_factor",
                     axis="condition",
