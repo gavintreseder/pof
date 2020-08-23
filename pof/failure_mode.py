@@ -12,7 +12,9 @@ import scipy.stats as ss
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from random import random, seed
+
 from tqdm import tqdm
+from lifelines import WeibullFitter
 
 from condition import Condition
 from distribution import Distribution
@@ -67,36 +69,6 @@ class FailureMode:  # Maybe rename to failure mode
         return
 
     # ************** Set Functions *****************
-
-    def set_demo(self):
-
-        if self.failure_dist is None:
-            self.set_failure_dist(Distribution(alpha=50, beta=10, gamma=10))
-
-        if not self.conditions:
-            self.set_conditions(
-                dict(
-                    wall_thickness=Condition(100, 0, "linear", [-5]),
-                    external_diameter=Condition(100, 0, "linear", [-2]),
-                )
-            )
-
-        if not self.tasks:
-            self.set_tasks(
-                dict(
-                    inspection=Inspection(t_interval=5, t_delay=10).set_default(),
-                    on_condition_repair=OnConditionRepair(activity="on_condition_repair").set_default(),
-                    cm=ImmediateMaintenance(activity="cm").set_default(),
-                )
-            )
-
-        if not self.states:
-            self.set_states(dict(initiation=False, detection=False, failure=False,))
-
-        # Prepare the failure mode
-        self.calc_init_dist()
-
-        return self
 
 
     def set_failure_dist(self, failure_dist):
@@ -412,11 +384,8 @@ class FailureMode:  # Maybe rename to failure mode
         next_tasks = []
         next_time = t_end
 
-        for (
-            task
-        ) in (
-            self.tasks
-        ):  # TODO make this more efficient by using a task array rather than a for loop
+        # TODO make this more efficient by using a task array rather than a for loop
+        for task in self.tasks: 
 
             if 0 in timeline[task][t_start:]:
                 t_task = (
@@ -431,23 +400,31 @@ class FailureMode:  # Maybe rename to failure mode
 
         return next_time, next_tasks
 
-    def simulate(self, t_end=100):
 
-        t_now = 0
+    # ****************** Expected Methods  ************
 
-        while t_now < t_end:
+    def expected(self):
+        """Returns all expected outcomes"""
+        NotImplemented
 
-            timeline = self.sim_timeline(t_start=t_now, t_end=t_end)
-            t_now, tasks = self.next_tasks(timeline, t_end)
+    def expected_pof(self):
+        
+        
+        NotImplemented
 
-            for task in tasks:
+    def expected_pof_c(self):
+        """ Return the probability """
 
-                # Execute the task
-                states, conditions = self.tasks[task].sim_completion()
+        t_failures = []
+        for timeline in self._timelines.values():
+            t_failures = np.append(t_failures, np.argmax(timeline["failure"]))
 
-                # TODO replaced this with a loop to only update the ones that have changed.
+        # Arange into failures and censored data
+        failures = t_failures[t_failures > 0]
+        censored = np.full(sum(t_failures == 0), 200)
 
-    # ****************** Simple outputs  ************
+        return failures
+
 
     def expected_cost_dict(self):  # TODO legacy
 
@@ -557,34 +534,6 @@ class FailureMode:  # Maybe rename to failure mode
 
         return df_tasks
 
-    def plot_timeline(self, timeline=None):
-
-        if timeline is None:
-            timeline = self.timeline
-
-        fig, (ax_state, ax_cond, ax_task) = plt.subplots(1, 3)
-
-        fig.set_figheight(4)
-        fig.set_figwidth(24)
-
-        ax_cond.set_title("Condition")
-        ax_state.set_title("State")
-        ax_task.set_title("Task")
-
-        for condition in self.conditions:
-            ax_cond.plot(timeline["time"], timeline[condition], label=condition)
-            ax_cond.legend()
-
-        for state in self.get_states():
-            ax_state.plot(timeline["time"], timeline[state], label=state)
-            ax_state.legend()
-
-        for task in self.tasks:
-            ax_task.plot(timeline["time"], timeline[task], label=task)
-            ax_task.legend()
-
-        plt.show()
-
     # ****************** Reset Routines **************
 
     def reset_for_next_sim(self):
@@ -608,13 +557,6 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Reset counters
         self._sim_counter = 0
-
-    def reset_demo(self):
-        self.failure_dist=None
-        self.conditions=None
-        self.tasks = None
-        self.states = None
-        self.set_demo()
 
     # ****************** Optimise routines ***********
 
@@ -642,6 +584,33 @@ class FailureMode:  # Maybe rename to failure mode
         # Return optimal strategy
 
     # ****************** Interface methods ***********
+
+    def plot_timeline(self, timeline=None):
+        if timeline is None:
+            timeline = self.timeline
+
+        fig, (ax_state, ax_cond, ax_task) = plt.subplots(1, 3)
+
+        fig.set_figheight(4)
+        fig.set_figwidth(24)
+
+        ax_cond.set_title("Condition")
+        ax_state.set_title("State")
+        ax_task.set_title("Task")
+
+        for condition in self.conditions:
+            ax_cond.plot(timeline["time"], timeline[condition], label=condition)
+            ax_cond.legend()
+
+        for state in self.get_states():
+            ax_state.plot(timeline["time"], timeline[state], label=state)
+            ax_state.legend()
+
+        for task in self.tasks:
+            ax_task.plot(timeline["time"], timeline[task], label=task)
+            ax_task.legend()
+
+        plt.show()
 
     def dash_update(self, dash_id, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
@@ -691,6 +660,45 @@ class FailureMode:  # Maybe rename to failure mode
         dash_ids = fm_ids + fd_ids + task_ids
 
         return dash_ids
+
+    # ****************** Demonstration ***********
+
+    def reset_demo(self):
+        self.failure_dist=None
+        self.conditions=None
+        self.tasks = None
+        self.states = None
+        self.set_demo()
+
+    def set_demo(self):
+
+        if self.failure_dist is None:
+            self.set_failure_dist(Distribution(alpha=50, beta=3, gamma=10))
+
+        if not self.conditions:
+            self.set_conditions(
+                dict(
+                    wall_thickness=Condition(100, 0, "linear", [-5]),
+                    external_diameter=Condition(100, 0, "linear", [-2]),
+                )
+            )
+
+        if not self.tasks:
+            self.set_tasks(
+                dict(
+                    inspection=Inspection(t_interval=5, t_delay=10).set_default(),
+                    on_condition_repair=OnConditionRepair(activity="on_condition_repair").set_default(),
+                    cm=ImmediateMaintenance(activity="cm").set_default(),
+                )
+            )
+
+        if not self.states:
+            self.set_states(dict(initiation=False, detection=False, failure=False,))
+
+        # Prepare the failure mode
+        self.calc_init_dist()
+
+        return self
 
 if __name__ == "__main__":
     failure_mode = FailureMode()

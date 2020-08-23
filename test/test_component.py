@@ -18,13 +18,13 @@ class TestComponent(unittest.TestCase):
 
     def setUp(self):
         
-        c = Component().set_demo()
+        compo = Component().set_demo()
 
     def test_class_imports_correctly(self):
         self.assertTrue(True)
 
     def test_class_instantiate(self):
-        c = Component()
+        comp = Component()
         self.assertTrue(True)
 
     # *************** Test init_timeline ***********************
@@ -93,16 +93,17 @@ class TestComponent(unittest.TestCase):
             random = (15, ['inspection'])
         )
 
-        expected = {k: v for k, v in test_next_task.items() if v[0] == 5}
+        expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
 
         comp = Component().set_demo()
 
         for fm_name, fm in comp.fm.items():
             fm.next_tasks = MagicMock(return_value = test_next_task[fm_name])
         
-        next_task = comp.next_tasks(t_now)
+        t_next, next_task = comp.next_tasks(t_now)
         
         self.assertEqual(next_task, expected)
+        self.assertEqual(t_next, 5)
 
 
     def test_next_tasks_many_fm_many_task(self):
@@ -121,16 +122,24 @@ class TestComponent(unittest.TestCase):
                 random = (times['random'][i], ['inspection'])
             )
 
-            expected = {k: v for k, v in test_next_task.items() if v[0] == 5}
+            expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
 
             comp = Component().set_demo()
 
             for fm_name, fm in comp.fm.items():
                 fm.next_tasks = MagicMock(return_value = test_next_task[fm_name])
             
-            next_task = comp.next_tasks(t_now)
+            t_next, next_task = comp.next_tasks(t_now)
             
             self.assertEqual(next_task, expected)
+            self.assertEqual(t_next, 5)
+
+    # *************** Test sim_timeline ***********************
+
+    def test_sim_timeline(self):
+        comp = Component().set_demo()
+
+        comp.sim_timeline(200)
 
 if __name__ == '__main__':
     unittest.main()
