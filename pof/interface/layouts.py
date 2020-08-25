@@ -59,7 +59,7 @@ def make_component_layout(component, prefix="", sep='-'):
     fms_layout = []
     for fm_name, fm in component.fm.items():
         fm_prefix = prefix + 'failure_mode' + sep + fm_name + sep
-        fms_layout = fms_layout + [make_failure_mode_layout(fm, prefix=fm_prefix, sep=sep)]
+        fms_layout = fms_layout + [make_failure_mode_layout(fm, fm_name, prefix=fm_prefix, sep=sep)]
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -89,7 +89,7 @@ def make_component_layout(component, prefix="", sep='-'):
     return layout
 
 
-def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
+def make_failure_mode_layout(failure_mode, fm_name, prefix="", sep='-'):
     """
     """
     
@@ -109,7 +109,7 @@ def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
             dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
 
             dbc.Button(
-                failure_mode.name,
+                fm_name,
                 color="link",
                 id = prefix + "collapse-button",
             ),

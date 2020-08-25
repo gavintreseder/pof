@@ -18,8 +18,9 @@ def fill_blanks(row, t_start, t_end):
     n = t_end - t_start + 1
     time = np.linspace(t_start, t_end, n, dtype=int)
     cost = np.full(n, 0)
-
-    cost[row['time']] = row['cost']
+    
+    if row['time'].size:
+        cost[row['time']] = row['cost']
 
     row['time'] = time
     row['cost'] = cost

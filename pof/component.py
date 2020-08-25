@@ -195,7 +195,7 @@ class Component():
         return sf
 
 
-    def expected_risk_cost_df(self):
+    def expected_risk_cost_df(self, t_start = 0, t_end=100):
         """ A wrapper for expected risk cost that returns a dataframe"""
         erc = self.expected_risk_cost()
 
@@ -203,13 +203,13 @@ class Component():
         df.index.name='failure_mode'
         df = df.reset_index().melt(id_vars = 'failure_mode', var_name='task')
         df = pd.concat([df.drop(columns=['value']),df['value'].apply(pd.Series)], axis=1)
-        df = df.apply(fill_blanks, axis=1, args=(0,100))
+        df = df.apply(fill_blanks, axis=1, args=(t_start,t_end))
         df_cost = df.explode('cost')['cost']
         df = df.explode('time')
         df['cost'] = df_cost
 
         # Add a cumulative cost
-        df['cumulative_cost'] = df.groupby(by=['failure_mode', 'task'])['cost'].transform(pd.Series.cumsum)
+        df['cost_cumulative'] = df.groupby(by=['failure_mode', 'task'])['cost'].transform(pd.Series.cumsum)
 
         return df
 
@@ -261,11 +261,11 @@ class Component():
 
                 self.active = value
 
-            elif next_id == 'fm':
+            elif next_id == 'failure_mode':
 
                 dash_id = dash_id.replace(next_id + sep, "")
                 fm_name= dash_id.split(sep)[0]
-                dash_id = dash_id.replace(task_name + sep, "")
+                dash_id = dash_id.replace(fm_name + sep, "")
                 self.fm[fm_name].dash_update(dash_id, value)
 
         except:
@@ -282,7 +282,7 @@ class Component():
         # Tasks
         fm_ids = []
         for fm_name, fm in self.fm.items():
-            fm_prefix = prefix + 'task' + sep + fm_name + sep
+            fm_prefix = prefix + 'failure_mode' + sep + fm_name + sep
             fm_ids = fm_ids + fm.get_dash_ids(prefix=fm_prefix)
 
         dash_ids = comp_ids + fm_ids
