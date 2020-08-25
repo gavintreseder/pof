@@ -238,6 +238,8 @@ class FailureMode:  # Maybe rename to failure mode
             
             self.set_states(states)  
             self.update_timeline(t_now + 1, updates=states, verbose=verbose)
+        
+        
 
     def init_timeline(self, t_end, t_start=0):
         """

@@ -134,8 +134,9 @@ class Component():
         # TODO check task groups
         # TODO check value?
         # TODO add task impacts
+
         for fm_name, task_names in fm_tasks.items():
-            self.fm[fm_name].complete_tasks(t_now, task_names)
+            system_impact = self.fm[fm_name].complete_tasks(t_now, task_names)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1

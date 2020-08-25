@@ -13,7 +13,7 @@ from scipy.linalg import circulant
 from random import random, seed
 
 from condition import Condition
-from consequence import Consequence
+from consequence import Consequences[]
 from distribution import Distribution
 
 from helper import flatten
@@ -416,6 +416,9 @@ class OnConditionRepair(ConditionTask):
                 initiation=False,
                 detection=False,
                 failure=False,
+            ),
+            system = dict(
+                reset_component = False,
             )
         ) 
 
@@ -453,7 +456,11 @@ class OnConditionReplace(ConditionTask):
                     axis="condition",
                 ),
             ),
-            state = dict(initiation=False, detection=False, failure=False,)
+            state = dict(initiation=False, detection=False, failure=False,),
+            
+            system = dict(
+                reset_component = False,
+            )
 
         )
         self.set_triggers(
