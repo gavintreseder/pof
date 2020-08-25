@@ -49,6 +49,44 @@ IS_OPEN = False
                         # axis
                         # reduction_factor / target
 
+# ******************* Component ******************
+
+def make_component_layout(component, prefix="", sep='-'):
+    """
+    """
+    
+    # Get tasks layout
+    fms_layout = []
+    for fm_name, fm in component.fm.items():
+        fm_prefix = prefix + 'failure_mode' + sep + fm_name + sep
+        fms_layout = fms_layout + [make_failure_mode_layout(fm, prefix=fm_prefix, sep=sep)]
+
+    # Make the layout
+    layout = dbc.InputGroup(
+        [
+            dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
+
+            dbc.Button(
+                component.name,
+                color="link",
+                id = prefix + "collapse-button",
+            ),
+            dbc.Col(
+                [
+                    dbc.Collapse(
+                        dbc.Card(dbc.CardBody(
+                                fms_layout
+                        )),
+                        id = prefix + "collapse",
+                        is_open=IS_OPEN
+                    ),
+                ]
+            )
+
+        ]
+    )
+
+    return layout
 
 
 def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
@@ -157,10 +195,42 @@ def make_task_layout(task, task_name="task", prefix="", sep = '-'):
 
     return task_layout
 
-def make_task_form(task, prefix="", sep='-'):
+def make_task_form(task, prefix="", sep='-'): #TODO make this better
     """
     Takes a Task and generates the html form inputs
     """
+
+    if task.trigger == 'time':
+        time_details = [
+            dbc.Col(
+                dbc.FormGroup(
+                    [
+                        dbc.Label("Time Delay"),
+                        dbc.Input(
+                            type="number",
+                            id= prefix + "t_delay",
+                            value = task.t_delay,
+                            debounce=True,
+                        ),
+                    ],
+                ),
+            ),
+            dbc.Col(
+                dbc.FormGroup(
+                    [
+                        dbc.Label("Time Interval"),
+                        dbc.Input(
+                            type="number",
+                            id= prefix + "t_interval",
+                            value = task.t_interval,
+                            debounce=True,
+                        ),
+                    ],
+                ),
+            ),
+        ]
+    else:
+        time_details = []
 
     form = dbc.Form(
         [
@@ -204,7 +274,7 @@ def make_task_form(task, prefix="", sep='-'):
                     ],
                 ),
             ),
-        ],
+        ] + time_details,
         inline=True,
     )
 

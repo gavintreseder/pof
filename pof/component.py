@@ -30,6 +30,9 @@ class Component():
 
     def __init__(self):
         
+        # Object parameters
+        self.active = True
+
         # Initial parameters
         self.age = 0
         self.age_last_insp = 0
@@ -45,7 +48,6 @@ class Component():
 
         # Simulation traking
         self._sim_counter = 0
-        self._timelines = dict()
 
     # ****************** Load data ******************
 
@@ -138,6 +140,12 @@ class Component():
         for fm_name, task_names in fm_tasks.items():
             system_impact = self.fm[fm_name].complete_tasks(t_now, task_names)
 
+            if system_impact != False:
+
+                self.reset_condition()
+                #TODO add impact on other systems for complex systems
+
+
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
 
@@ -217,6 +225,11 @@ class Component():
 
     # ****************** Reset ******************
 
+    def reset_condition(self):
+
+        for fm in self.fm.values():
+            fm.reset_condition()
+
     def reset_for_next_sim(self):
         """ Reset parameters back to the initial state"""
 
@@ -231,14 +244,50 @@ class Component():
         for fm in self.fm.values():
             fm.reset()
 
-        # Reset timelines
-        self._timelines = dict()
-
         # Reset counters
         self._sim_counter = 0
 
     # ****************** Interface ******************
 
+    def dash_update(self, dash_id, value, sep='-'):
+        """Updates a the failure mode object using the dash componenet ID"""
+
+        try:
+            
+            next_id = dash_id.split(sep)[0]
+        
+            # Check if the next component is a param of 
+            if next_id in ['active']:
+
+                self.active = value
+
+            elif next_id == 'fm':
+
+                dash_id = dash_id.replace(next_id + sep, "")
+                fm_name= dash_id.split(sep)[0]
+                dash_id = dash_id.replace(task_name + sep, "")
+                self.fm[fm_name].dash_update(dash_id, value)
+
+        except:
+
+            print("Invalid dash component %s" %(dash_id))
+
+
+    def get_dash_ids(self, prefix="", sep='-'):
+        """ Return a list of dash ids for values that can be changed"""
+
+        # Component
+        comp_ids = [prefix + param for param in ['active']]
+
+        # Tasks
+        fm_ids = []
+        for fm_name, fm in self.fm.items():
+            fm_prefix = prefix + 'task' + sep + fm_name + sep
+            fm_ids = fm_ids + fm.get_dash_ids(prefix=fm_prefix)
+
+        dash_ids = comp_ids + fm_ids
+
+        return dash_ids
 
     # ****************** Demonstration parameters ******************
 

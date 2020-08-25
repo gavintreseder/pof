@@ -13,7 +13,7 @@ from scipy.linalg import circulant
 from random import random, seed
 
 from condition import Condition
-from consequence import Consequences[]
+from consequence import Consequence
 from distribution import Distribution
 
 from helper import flatten
@@ -80,6 +80,8 @@ class Task:
 
         self.impacts = dict(condition=dict(), state=dict(), time=dict())
 
+        self.component_reset = False
+
         # Time to execute
         self.state = "up"  # or down
 
@@ -123,6 +125,8 @@ class Task:
         return dict(time=time, cost=count)
 
 
+    # ********************* timeline methods ******************
+
     def sim_completion(
         self, t_now, timeline=None, states=dict(), conditions=dict(), verbose=False
     ):  # TODO maybe split into states
@@ -157,6 +161,11 @@ class Task:
 
             return dict()
 
+    def system_impact(self):
+        #maybe change to impacts['system']
+        return self.component_reset
+
+
     def reset(self):
         """
         Resets the logs for a task
@@ -170,7 +179,7 @@ class Task:
         try:
             ids = dash_id.split('-')
 
-            if ids[0] in ['active', 'p_effective', 'cost', 'consequence']:
+            if ids[0] in ['active', 'p_effective', 'cost', 'consequence', 't_interval', 't_delay']:
 
                 if ids[0] == 'p_effective':
                     value = value / 100
@@ -196,7 +205,11 @@ class Task:
     def get_dash_ids(self, prefix='', sep='-'):
 
         # task parameters
-        dash_ids = [prefix + param for param in ['active', 'p_effective', 'cost', 'consequence']]
+        param_list = ['active', 'p_effective', 'cost', 'consequence']
+        if self.trigger== "time":
+            param_list = param_list + ['t_interval', 't_delay']
+
+        dash_ids = [prefix + param for param in param_list]
 
         # Triggers
         dash_ids = dash_ids + list(flatten(self.triggers, parent_key = prefix + 'trigger', sep=sep))
@@ -391,6 +404,8 @@ class ScheduledReplacement(ScheduledTask):  # Not implemented
             state=dict(initiation=False, detection=False, failure=False,),
         )
 
+        self.component_reset = True
+
         self.cost = 1000
 
         return self
@@ -417,9 +432,6 @@ class OnConditionRepair(ConditionTask):
                 detection=False,
                 failure=False,
             ),
-            system = dict(
-                reset_component = False,
-            )
         ) 
 
         self.set_triggers(
@@ -457,11 +469,6 @@ class OnConditionReplace(ConditionTask):
                 ),
             ),
             state = dict(initiation=False, detection=False, failure=False,),
-            
-            system = dict(
-                reset_component = False,
-            )
-
         )
         self.set_triggers(
             dict(
@@ -469,6 +476,8 @@ class OnConditionReplace(ConditionTask):
                 state=dict(detection=True),
             )
         )
+
+        self.component_reset = True
 
         self.p_effective = 1
 
@@ -559,6 +568,8 @@ class ImmediateMaintenance(ConditionTask):
             state = dict(initiation=False, detection=False, failure=False,)
         )
         
+        self.component_reset = True
+
         self.cost = 5000
 
         return self

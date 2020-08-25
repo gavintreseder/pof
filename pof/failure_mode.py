@@ -221,6 +221,9 @@ class FailureMode:  # Maybe rename to failure mode
 
     def complete_tasks(self, t_now, task_names, verbose=False):
         """ Executes the tasks """
+
+        system_impacts = []
+
         for task_name in task_names:
             if verbose:
                 print(t_now, task_names)
@@ -235,10 +238,14 @@ class FailureMode:  # Maybe rename to failure mode
             )
 
             # Update timeline
-            
-            self.set_states(states)  
+            self.set_states(states)
             self.update_timeline(t_now + 1, updates=states, verbose=verbose)
-        
+
+            # Check if a system impact is triggered
+            system_impacts.append(self.tasks[task_name].system_impact())
+
+        return system_impacts
+                
         
 
     def init_timeline(self, t_end, t_start=0):
@@ -642,6 +649,12 @@ class FailureMode:  # Maybe rename to failure mode
         return df_tasks
 
     # ****************** Reset Routines **************
+
+    def reset_condition(self):
+
+        # Reset conditions
+        for condition in self.conditions.values():
+            condition.reset()
 
     def reset_for_next_sim(self):
 
