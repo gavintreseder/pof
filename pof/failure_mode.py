@@ -46,13 +46,13 @@ class FailureMode:  # Maybe rename to failure mode
         self.t_uptime = 0
         self.t_downtime = 0
         self.cof = Consequence()  # TODO change to a consequence model
-        self.pof = None  # TODO
+        self.pof = None  
 
         # Failre Mode state
         self.states = dict()
 
         # Tasks
-        self.task_order = [1, 2, 3, 4]  # 'inspect', 'replace', repair' # todo
+        self.task_order = [1, 2, 3, 4]  # 'inspect', 'replace', repair' # TODO
         self.tasks = dict()
 
         # Prepare the failure mode
@@ -61,6 +61,7 @@ class FailureMode:  # Maybe rename to failure mode
         # kpis? #TODO
         # Cost and Value of current task? #TODO
 
+        self.timeline = None
         self._timelines = dict()
         self.value = None  # TODO
 
@@ -105,6 +106,13 @@ class FailureMode:  # Maybe rename to failure mode
 
     def get_states(self):
         return self.states
+
+    def sf(self, t_start, t_end):
+
+        # TODO add other methods here
+        if self.pof is not None:
+            return self.pof.sf(t_start, t_end)
+        
 
     # ************** Is Function *******************
 
@@ -160,6 +168,12 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Need to consider condition that has a probability of outcomes ()
 
+    def get_expected_pof(self):
+
+        # TODO add a check if it has been simulated yet self.pof is None, self._timlines = None
+
+        return self.pof
+
     # *************** Condition Loss *************** # TODO not updated to new method
 
     def measure_condition_loss(self):
@@ -172,30 +186,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         return
 
-    def get_p_initiation(
-        self, t_step
-    ):  # TODO make a robust time step. (t_min, t_max, etc)
 
-        if self.is_initiated() == True:
-            p_i = 1
-        else:
-            p_i = self.init_dist.conditional_f(
-                self.t_fm, self.t_fm + t_step
-            )  # TODO update to actual time
-
-        return p_i
-
-    def sim_event(self):
-
-        # Find first task to be actioned
-
-        # Complete task triggers
-
-        # Refresh the timeline where maintenance or intervention
-
-        # Increment maint
-
-        return NotImplemented
 
     # ****************** Timeline ******************
 
@@ -204,7 +195,8 @@ class FailureMode:  # Maybe rename to failure mode
         self.reset()  # TODO ditch this
 
         for i in tqdm(range(n_iterations)):
-            self._timelines[i] = self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.save_timeline(i)
 
     def sim_timeline(self, t_end, t_start=0, verbose=False):
 
@@ -222,7 +214,7 @@ class FailureMode:  # Maybe rename to failure mode
 
             t_now = t_now + 1
 
-        self._sim_counter = self._sim_counter + 1
+        self.increment_counter()
         self.reset_for_next_sim()
 
         return self.timeline
@@ -400,30 +392,90 @@ class FailureMode:  # Maybe rename to failure mode
 
         return next_time, next_tasks
 
+    def save_timeline(self, i):
+        self._timelines[i] = self.timeline
+    
+    def increment_counter(self):
+        self._sim_counter = self._sim_counter + 1
 
     # ****************** Expected Methods  ************
 
-    def expected(self):
-        """Returns all expected outcomes"""
-        NotImplemented
+    def expected_simple(self):
+        """Returns all expected outcomes using a simple average formula"""
+
+        #TODO strip out the values that don't matter
+
+        self.expected = dict()
+        self.uncertainty = dict()
+        self.lower = dict()
+        self.upper = dict()
+
+
+        for key in self._timelines[0]:
+
+            all_values = np.array([self._timelines[d][key] for d in self._timelines])
+
+            self.expected[key] = all_values.mean(axis=0)
+            self.uncertainty[key] = all_values.std(axis=0)
+            self.lower[key] = np.percentile(all_values, 10, axis=0)
+            self.upper[key] = np.percentile(all_values, 90, axis=0)
+        
+        return self.expected
 
     def expected_pof(self):
-        
-        
-        NotImplemented
-
-    def expected_pof_c(self):
-        """ Return the probability """
-
+        #TODO general into expected event = 'failure', cumulative = True/False method
         t_failures = []
+
+        t_min = self._timelines[0]['time'][0]
+        t_max = self._timelines[0]['time'][-1] + 1
+
+        # Get the time of first failure or age at failure
         for timeline in self._timelines.values():
-            t_failures = np.append(t_failures, np.argmax(timeline["failure"]))
+            if timeline['failure'].any():
+                t_failures.append(timeline['time'][timeline['failure']][0])
+            else:
+                t_failures.append(t_max)
 
-        # Arange into failures and censored data
-        failures = t_failures[t_failures > 0]
-        censored = np.full(sum(t_failures == 0), 200)
+        # Fit the weibull
+        wbf = WeibullFitter()
 
-        return failures
+        event_observed = (t_failures != t_max)
+
+        wbf.fit(durations=t_failures, event_observed=event_observed)
+        
+        self.pof = Distribution(
+            alpha = wbf.lambda_,
+            beta = wbf.rho_,
+        )
+
+        return self.pof
+
+    def _expected(self, timeline_key, first_event=True):
+        #TODO general into expected event = 'failure', cumulative = True/False method
+        t_events = []
+
+        t_min = self._timelines[0]['time'][0]
+        t_max = self._timelines[0]['time'][-1] + 1
+
+        # Get the time of first failure or age at failure
+        for timeline in self._timelines.values():
+            if timeline['failure'].any():
+                t_event = timeline['time'][timeline['failure']]
+                if first_event:
+                    t_events.append(t_event[0])
+                else:
+                    t_events.append(np.diff(np.append(t_min, t_event)))
+            else:
+                t_events.append(t_max)
+
+        # Fit the weibull
+        wbf = WeibullFitter()
+
+        event_observed = (t_failures != t_max)
+
+        wbf.fit(durations=t_failures, event_observed=event_observed)
+        
+        self.wbf = wbf
 
 
     def expected_cost_dict(self):  # TODO legacy
@@ -439,23 +491,76 @@ class FailureMode:  # Maybe rename to failure mode
 
         return d_tc
 
-    def expected_costs(self):
 
-        cost = dict()
+    def expected_risk_cost_df(self):
 
+        rc = self.expected_risk_cost()
+
+        df = pd.DataFrame.from_dict(rc, orient='index').apply(pd.Series.explode)
+        df.index.name = 'task'
+
+        # Fill in the blanks
+        new_index = pd.Index(np.arange(0, 200, 1), name="time")
+
+        """Alternative 1
+        df = pd.DataFrame.from_dict(rc)
+        df.index.name = 'Time'
+        df = df.reset_index().melt(id_vars = 'Time', var_name='Task', value_name= 'Cost')"""
+
+        """ Alternative 2
+        tc = dict(task=[], time=[], cost=[])
+
+        for k, v in ec.items():
+            tc['task'] = np.append(tc['task'], np.full(len(v['time']), k))
+            for m in ['time', 'cost']:
+                tc[m] = np.append(tc[m], v[m])
+        """
+
+        return df
+
+
+    def expected_risk_cost(self, scaling=1):
+
+        scaling = self._sim_counter
+
+        profile = self.expected_cost(scaling=scaling)
+        profile['risk'] = self.expected_risk(scaling=scaling)
+
+        return profile
+
+    def expected_cost(self, scaling=1):
+
+        task_cost = dict()
+        
+        # Get the costs causes by tasks
         for task_name, task in self.tasks.items():
-            cost[task_name] = len(task.t_completion) * task.cost / self._sim_counter
+        
+            task_cost[task_name] = task.expected_costs(scaling)
+
+        return task_cost
+
+    def expected_risk(self, scaling=1): # TODO expected risk with or without replacement
 
         t_failures = []
         for timeline in self._timelines.values():
-            t_failures = np.append(t_failures, np.argmax(timeline["failure"]))
+            if timeline['failure'].any():
+                t_failures.append(np.argmax(timeline["failure"]))
 
-        # Arange into failures and censored data
-        failures = t_failures[t_failures > 0]
+        time, cost = np.unique(t_failures, return_counts = True)
+        cost = cost * self.cof.get_cost() / scaling
 
-        cost["risk"] = len(failures) * self.cof.risk_cost_total / self._sim_counter
+        return dict(time=time, cost=cost)
 
-        return cost
+    def expected_tasks(self):
+
+        task_count = dict()
+
+        for task_name, task in self.tasks.items():
+        
+            task_count[task_name] = task.expected_counts(self._sim_counter)
+
+        return task_count
+
 
     def mc_failures_df(self):
 
@@ -611,6 +716,28 @@ class FailureMode:  # Maybe rename to failure mode
             ax_task.legend()
 
         plt.show()
+
+
+    def plot_expected(self):
+
+        fig, ax = plt.subplots()
+
+        if not self.expected:
+
+            ax.set_title("Expected outcome for %i simulations" %(len(self._timelines)))
+
+            for key in list(self.timeline):
+                ax.plot(self.expected['time'], self.expected[key])
+                ax.fill_between(self.expected['time'], self.lower[key], self.upper[key], alpha=0.2)
+
+        elif not self.timeline:
+
+            self.plot_timeline()
+
+        else:
+
+            print("No timelines have been simulated")
+
 
     def dash_update(self, dash_id, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""

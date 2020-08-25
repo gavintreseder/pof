@@ -1,26 +1,31 @@
 
 
-# Improvments
+# Improvements
 
     # Add a method when you don't want to use condition, only failure rates
 
 # Add graphs
 
     # Expected condition over time
-        # Expected uncertainity over time
+    # Expected uncertainity over time
 
 # Get multiple failure modes working
 
+    # Add functionality to reset failure modes
+        # Task -> CM definitely
+            # Component -> Which failure_modes reset the component
+
+    # Add safety factor
+
+    # Add method to replace on failure?
+
 # Get example assets working
 
+    # Load a pole asset
+
+    # Load indiciative pole details
+
 # Make the interface prettier
-
-
-# Expected
-
-    # PoF
-    # PoT
-    # Cost
 
 # Sensitivity Analysis
 
@@ -33,4 +38,11 @@
 
     #Graph
         # Fix axis
-        
+
+
+# Story
+
+    # Failure rate for whole population
+    # Failure modes
+    # Failure modes with reset
+    # Failure modes with condition

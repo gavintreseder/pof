@@ -13,10 +13,12 @@ from lifelines import WeibullFitter
 
 from failure_mode import FailureMode
 from distribution import Distribution
+from helper import fill_blanks
 
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 #TODO create get, set, del and add methods
 
+DEFAULT_ITERATIONS = 100
 
 class Component():
     """
@@ -37,6 +39,7 @@ class Component():
         self._children_id = NotImplemented
         
         # Parameter
+        self.name = 'comp' # TODO NotImplemented fully
         self.fm = dict()
         self.conditions = dict()
 
@@ -46,22 +49,39 @@ class Component():
 
     # ****************** Load data ******************
 
-        def load(self):
+    def load(self):
         # Load Failure Modes
         # Load asset information
         NotImplemented
 
 
+    # ****************** Set data ******************
+    
+    def set_params(self, name=None):
+
+        self.name = name
+
+        return NotImplemented
+
+    def mc(self, t_end, t_start, n_iterations):
+        """ Complete MC simulation and calculate all the metrics for the component"""
+
+        return NotImplemented
+
     # ****************** Timeline ******************
 
-    def mc_timeline(self, t_end, t_start=0, n_iterations=100):
-
-        self.reset()  # TODO ditch this
+    def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
+        """ Simulate the timeline mutliple times"""
+        self.reset()  # TODO ditch this ... Check why this was in failure mode
 
         for i in tqdm(range(n_iterations)):
-            self._timelines[i] = self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.sim_timeline(t_end=t_end, t_start=t_start)
+
+            for fm in self.fm.values():
+                fm.save_timeline(i)
     
     def sim_timeline(self, t_end, t_start=0):
+        """ Simulates the timelines for all failure modes attached to this copmonent"""
 
         # Initialise the failure modes
         self.init_timeline(t_start=t_start, t_end = t_end)
@@ -76,7 +96,7 @@ class Component():
 
             t_now = t_next + 1
 
-        self._sim_counter = self._sim_counter + 1
+        self.increment_counter()
         self.reset_for_next_sim()
 
     def init_timeline(self, t_end, t_start=0):
@@ -117,15 +137,80 @@ class Component():
         for fm_name, task_names in fm_tasks.items():
             self.fm[fm_name].complete_tasks(t_now, task_names)
 
+    def increment_counter(self):
+        self._sim_counter = self._sim_counter + 1
+
+        for fm in self.fm.values():
+            fm.increment_counter()
+
     # ****************** Expected ******************
+
+    # TODO RUL
+
+    def expected(self):
+
+        # Run expected method on all failure modes
+
+        # Run 
+        NotImplemented
 
     # PoF
 
-    def expected_pof(self):
-        
-        # 
+    def expected_cdf(self, t_start=0, t_end=100):
 
-    # RUL
+        sf = self.expected_sf(t_start, t_end)
+        
+        cdf = dict()
+
+        for fm in sf:
+            cdf[fm] = 1 - sf[fm]
+
+        return cdf
+
+    def expected_sf(self, t_start=0, t_end=100):
+        
+
+        # Calcuate the failure rates for each failure mode
+        sf=dict()
+
+        for fm_name, fm in self.fm.items():
+            pof = fm.expected_pof()
+
+            sf[fm_name] = pof.sf(t_start, t_end)
+
+        # Treat the failure modes as a series and combine together
+        sf['all'] = np.array([fm.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
+
+        # TODO Fit a new Weibull for the new failure rate....
+
+        return sf
+
+
+    def expected_risk_cost_df(self):
+        """ A wrapper for expected risk cost that returns a dataframe"""
+        erc = self.expected_risk_cost()
+
+        df = pd.DataFrame().from_dict(erc, orient='index')
+        df.index.name='failure_mode'
+        df = df.reset_index().melt(id_vars = 'failure_mode', var_name='task')
+        df = pd.concat([df.drop(columns=['value']),df['value'].apply(pd.Series)], axis=1)
+        df = df.apply(fill_blanks, axis=1, args=(0,100))
+        df_cost = df.explode('cost')['cost']
+        df = df.explode('time')
+        df['cost'] = df_cost
+
+        # Add a cumulative cost
+        df['cumulative_cost'] = df.groupby(by=['failure_mode', 'task'])['cost'].transform(pd.Series.cumsum)
+
+        return df
+
+    def expected_risk_cost(self):
+
+        ec = dict()
+        for fm_name, fm in self.fm.items():
+            ec[fm_name] = fm.expected_risk_cost()
+
+        return ec
 
     # Cost
 
@@ -151,16 +236,19 @@ class Component():
         # Reset counters
         self._sim_counter = 0
 
+    # ****************** Interface ******************
+
+
     # ****************** Demonstration parameters ******************
 
     def set_demo(self):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        if not self.fm
+        if not self.fm:
             self.fm = dict(
                 fast_aging = FailureMode(alpha=50, beta=2, gamma=20).set_demo(),
                 slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20).set_demo(),
-                random = FailureMode(alpha=1000, beta=1, gamma=0).set_demo(),
+                random = FailureMode(alpha=500, beta=1, gamma=0).set_demo(),
             )
     
         return self

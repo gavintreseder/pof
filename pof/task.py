@@ -108,6 +108,21 @@ class Task:
 
         return random() <= self.p_effective
 
+    # ********************* expected methods ******************
+
+    def expected_costs(self, scaling=1):
+        """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""
+        time, cost = np.unique(self.t_completion, return_counts=True)
+        cost = cost / scaling * self.cost
+        return dict(time=time, cost=cost)
+
+
+    def expected_counts(self, scaling=1):
+        """ Retuns a dictionary with the number of times a task was completed scaled by a scaling factor"""
+        time, count = np.unique(self.t_completion, return_counts=True)
+        return dict(time=time, cost=count)
+
+
     def sim_completion(
         self, t_now, timeline=None, states=dict(), conditions=dict(), verbose=False
     ):  # TODO maybe split into states

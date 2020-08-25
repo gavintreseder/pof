@@ -1,4 +1,5 @@
 import collections
+import numpy as np
 
 
 def flatten(d, parent_key='', sep='_'):
@@ -10,3 +11,16 @@ def flatten(d, parent_key='', sep='_'):
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+def fill_blanks(row, t_start, t_end):
+
+    n = t_end - t_start + 1
+    time = np.linspace(t_start, t_end, n, dtype=int)
+    cost = np.full(n, 0)
+
+    cost[row['time']] = row['cost']
+
+    row['time'] = time
+    row['cost'] = cost
+    return row

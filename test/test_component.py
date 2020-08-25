@@ -18,7 +18,7 @@ class TestComponent(unittest.TestCase):
 
     def setUp(self):
         
-        compo = Component().set_demo()
+        comp = Component().set_demo()
 
     def test_class_imports_correctly(self):
         self.assertTrue(True)

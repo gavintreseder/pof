@@ -8,8 +8,8 @@ class Distribution:
 
     # Default Values
     _ALPHA = 100
-    _BETA = 1.5
-    _GAMMA = 10
+    _BETA = 1
+    _GAMMA = 0
 
     def __init__(self, alpha=None, beta=None, gamma=None):
 
@@ -19,11 +19,10 @@ class Distribution:
 
         X = np.arange(0, 100, 1)
 
-        self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-        self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-        self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
+        #self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+        #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+        #self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
-        return
 
     def __str__(self):
 
@@ -38,6 +37,10 @@ class Distribution:
             gamma = self.gamma,
         )
         return params
+
+    def sf(self, t_start, t_end):
+        X = np.linspace(t_start, t_end, t_end - t_start + 1)
+        return ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
     def set_time_range(self):
 
