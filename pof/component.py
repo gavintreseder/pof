@@ -140,10 +140,10 @@ class Component():
         for fm_name, task_names in fm_tasks.items():
             system_impact = self.fm[fm_name].complete_tasks(t_now, task_names)
 
-            if system_impact != False:
+            """ if system_impact != False:
 
                 self.reset_condition()
-                #TODO add impact on other systems for complex systems
+                #TODO add impact on other systems for complex systems"""
 
 
     def increment_counter(self):

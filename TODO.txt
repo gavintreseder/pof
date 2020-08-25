@@ -1,6 +1,5 @@
 # morning
 
-    # layout for component
     # connnect active for comp.active and other acitves
     # connect system impact for failure modes
     # Add Condition Graph

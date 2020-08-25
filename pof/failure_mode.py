@@ -61,7 +61,7 @@ class FailureMode:  # Maybe rename to failure mode
         # kpis? #TODO
         # Cost and Value of current task? #TODO
 
-        self.timeline = None
+        self.timeline = dict()
         self._timelines = dict()
         self.value = None  # TODO
 
@@ -199,23 +199,26 @@ class FailureMode:  # Maybe rename to failure mode
             self.save_timeline(i)
 
     def sim_timeline(self, t_end, t_start=0, verbose=False):
+        
 
         timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
-        t_now = t_start
+        if self.active:
 
-        while t_now < t_end:
+            t_now = t_start
 
-            # Check when the next task needs to be executed
-            t_now, task_names = self.next_tasks(timeline, t_now, t_end)
+            while t_now < t_end:
 
-            # Complete those tasks
-            self.complete_tasks(t_now, task_names, verbose=verbose)
+                # Check when the next task needs to be executed
+                t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
-            t_now = t_now + 1
+                # Complete those tasks
+                self.complete_tasks(t_now, task_names, verbose=verbose)
 
-        self.increment_counter()
-        self.reset_for_next_sim()
+                t_now = t_now + 1
+
+            self.increment_counter()
+            self.reset_for_next_sim()
 
         return self.timeline
 
@@ -223,32 +226,47 @@ class FailureMode:  # Maybe rename to failure mode
         """ Executes the tasks """
 
         system_impacts = []
+        if self.active:
+            for task_name in task_names:
+                if verbose:
+                    print(t_now, task_names)
 
-        for task_name in task_names:
-            if verbose:
-                print(t_now, task_names)
+                # Complete the tasks
+                states = self.tasks[task_name].sim_completion(
+                    t_now,
+                    timeline=self.timeline,
+                    states=self.get_states(),
+                    conditions=self.conditions,
+                    verbose=verbose,
+                )
 
-            # Complete the tasks
-            states = self.tasks[task_name].sim_completion(
-                t_now,
-                timeline=self.timeline,
-                states=self.get_states(),
-                conditions=self.conditions,
-                verbose=verbose,
-            )
+                # Update timeline
+                self.set_states(states)
+                self.update_timeline(t_now + 1, updates=states, verbose=verbose)
 
-            # Update timeline
-            self.set_states(states)
-            self.update_timeline(t_now + 1, updates=states, verbose=verbose)
-
-            # Check if a system impact is triggered
-            system_impacts.append(self.tasks[task_name].system_impact())
+                # Check if a system impact is triggered
+                system_impacts.append(self.tasks[task_name].system_impact())
 
         return system_impacts
                 
-        
-
+    
     def init_timeline(self, t_end, t_start=0):
+
+        if self.active:
+            self._init_timeline(t_end, t_start)
+        
+        else:
+            self.timeline=dict(
+                time=np.linspace(t_start, t_end, t_end - t_start + 1, dtype=int),
+                intiation = np.full(t_end + 1, False),
+                dectection = np.full(t_end + 1, False),
+                failure = np.full(t_end + 1, False),
+            )
+    
+        
+        return self.timeline
+
+    def _init_timeline(self, t_end, t_start=0):
         """
         Simulates a single timeline to determine the state, condition and tasks
         """
@@ -386,18 +404,19 @@ class FailureMode:  # Maybe rename to failure mode
         next_time = t_end
 
         # TODO make this more efficient by using a task array rather than a for loop
-        for task in self.tasks: 
+        if self.active:
+            for task in self.tasks: 
 
-            if 0 in timeline[task][t_start:]:
-                t_task = (
-                    timeline["time"][np.argmax(timeline[task][t_start:] == 0)] + t_start
-                )
+                if 0 in timeline[task][t_start:]:
+                    t_task = (
+                        timeline["time"][np.argmax(timeline[task][t_start:] == 0)] + t_start
+                    )
 
-                if t_task < next_time:
-                    next_tasks = [task]
-                    next_time = t_task
-                elif t_task == next_time:
-                    next_tasks = np.append(next_tasks, task)
+                    if t_task < next_time:
+                        next_tasks = [task]
+                        next_time = t_task
+                    elif t_task == next_time:
+                        next_tasks = np.append(next_tasks, task)
 
         return next_time, next_tasks
 
@@ -674,6 +693,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Reset timelines
         self._timelines = dict()
+        self.timeline = dict()
 
         # Reset counters
         self._sim_counter = 0
