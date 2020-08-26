@@ -29,14 +29,21 @@ from task import Inspection, OnConditionRepair, OnConditionReplace, ImmediateMai
 seed(1)
 
 class FailureMode:  # Maybe rename to failure mode
-    def __init__(self, alpha=None, beta=None, gamma=None):
+
+
+    PF_CURVE = ['linear', 'pf_linear'] #TODO add the rest
+
+
+    def __init__(self, alpha=None, beta=None, gamma=None, pf_curve='pf_linear', pf_interval=20, pf_std=0):
 
         # Failure behaviour
         self.active = True
         self.failure_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
         self.init_dist = None
 
-        self.pf_interval = 5  # TODO
+        self.pf_curve = pf_curve
+        self.pf_interval = pf_interval
+        self.pf_std = pf_std
 
         self.conditions = dict()
 
@@ -125,7 +132,9 @@ class FailureMode:  # Maybe rename to failure mode
     def is_detected(self):
         return self.states["detection"]
 
-    # ******
+    # *************** Get methods *******************
+
+
 
     def calc_init_dist(self):  # TODO needs to get passed a condition and a pof
         """
@@ -135,7 +144,7 @@ class FailureMode:  # Maybe rename to failure mode
         # Super simple placeholder # TODO add other methods
         alpha = self.failure_dist.alpha
         beta = self.failure_dist.beta
-        gamma = self.failure_dist.gamma - self.pf_interval
+        gamma = max(0, self.failure_dist.gamma - self.pf_interval)
 
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
 
@@ -507,20 +516,37 @@ class FailureMode:  # Maybe rename to failure mode
         
         self.wbf = wbf
 
+    def expected_condition(self):
+        """Get the expected condition for a failure mode"""
+        expected = dict()
+        for cond_name in self.conditions.values():
+            expected[cond_name] = np.array([self._timelines[x][cond_name] for x in self._timelines]).mean(axis=0)
 
-    def expected_cost_dict(self):  # TODO legacy
+        return expected
 
-        d_tc = dict()
+    def expected_condition_loss(self, stdev = 1):
+        """Get the expected condition for a failure mode"""
+        expected = dict()
+        for cond_name, condition in self.conditions.items():
+  
+            ec = np.array([self._timelines[x][cond_name] for x in self._timelines])
 
-        for task_name, task in self.tasks.items():
+            mean = condition.perfect - ec.mean(axis=0)
+            sd = ec.std(axis=0)
+            upper = mean + sd*stdev
+            lower = mean - sd*stdev
 
-            time, quantity = np.unique(task.t_completion, return_counts=True)
-            cost = quantity * task.cost
+            upper[upper > condition.perfect] = condition.perfect
+            lower[lower < condition.failed] = condition.failed
 
-            d_tc[task_name] = dict(time=time, cost=cost,)
+            expected[cond_name] = dict(
+                lower=lower,
+                mean=mean,
+                upper=upper,
+                sd=sd,
+            )
 
-        return d_tc
-
+        return expected
 
     def expected_risk_cost_df(self):
 
@@ -548,17 +574,16 @@ class FailureMode:  # Maybe rename to failure mode
 
         return df
 
-
     def expected_risk_cost(self, scaling=1):
 
         scaling = self._sim_counter
 
-        profile = self.expected_cost(scaling=scaling)
-        profile['risk'] = self.expected_risk(scaling=scaling)
+        profile = self._expected_cost(scaling=scaling)
+        profile['risk'] = self._expected_risk(scaling=scaling)
 
         return profile
 
-    def expected_cost(self, scaling=1):
+    def _expected_cost(self, scaling=1):
 
         task_cost = dict()
         
@@ -569,7 +594,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         return task_cost
 
-    def expected_risk(self, scaling=1): # TODO expected risk with or without replacement
+    def _expected_risk(self, scaling=1): # TODO expected risk with or without replacement
 
         t_failures = []
         for timeline in self._timelines.values():
@@ -591,54 +616,8 @@ class FailureMode:  # Maybe rename to failure mode
 
         return task_count
 
-
-    def mc_failures_df(self):
-
-        t_failures = []
-        for timeline in self._timelines.values():
-            t_failures = np.append(t_failures, np.argmax(timeline["failure"]))
-
-        # Arange into failures and censored data
-        failures = t_failures[t_failures > 0]
-        censored = np.full(sum(t_failures == 0), 200)
-
-        return failures
-
-    def mc_risk_df(self):
-
-        t_failures = []
-        for timeline in self._timelines.values():
-            t_failures = np.append(
-                t_failures, timeline["time"][np.argmax(timeline["failure"])]
-            )
-
-        # Arange into failures and censored data
-        failures = t_failures[t_failures > 0]
-
-        time, quantity = np.unique(failures, return_counts=True)
-        cost = quantity * self.cof.risk_cost_total / self._sim_counter
-        cost_cumulative = cost.cumsum()
-
-        df = pd.DataFrame(
-            dict(
-                cost_type="risk",
-                time=time,
-                quantity=quantity,
-                cost=cost,
-                cost_cumulative=cost_cumulative,
-            )
-        )
-
-        new_index = pd.Index(np.arange(0, 200, 1), name="time")
-
-        df = df.set_index("time").reindex(new_index).reset_index()
-        df.loc[0, :] = 0
-        df.loc[0, "task"] = "risk"
-        df = df.fillna(method="ffill")
-
-        return df
-
     def expected_cost_df(self):
+        # TODO I think this is legacy?
 
         df_tasks = pd.DataFrame()
         new_index = pd.Index(np.arange(0, 200, 1), name="time")
@@ -664,8 +643,6 @@ class FailureMode:  # Maybe rename to failure mode
             df = df.fillna(method="ffill")
 
             df_tasks = pd.concat([df_tasks, df])
-
-        df_tasks = pd.concat((df_tasks, self.mc_risk_df()))
 
         return df_tasks
 
@@ -784,9 +761,14 @@ class FailureMode:  # Maybe rename to failure mode
             next_id = dash_id.split(sep)[0]
         
             # Check if the next component is a param of 
-            if next_id in ['active']:
+            if next_id in ['active', 'pf_curve', 'pf_interval', 'pf_std']:
 
-                self.active = value
+                self.__dict__[next_id] = value
+
+                #TODO make this better
+                if next_id in ['pf_curve', 'pf_interval', 'pf_std']:
+                    for condition in self.conditions.values():
+                        condition.dash_update(next_id)
 
             elif next_id == 'failure_dist':
 
@@ -809,7 +791,7 @@ class FailureMode:  # Maybe rename to failure mode
         """ Return a list of dash ids for values that can be changed"""
 
         # Failure modes
-        fm_ids = [prefix + param for param in ['active']]
+        fm_ids = [prefix + param for param in ['active', 'pf_curve', 'pf_interval', 'pf_std']]
 
         # Failure Dist
         fd_prefix = prefix + 'failure_dist' + sep
@@ -836,14 +818,18 @@ class FailureMode:  # Maybe rename to failure mode
 
     def set_demo(self):
 
+        
+
         if self.failure_dist is None:
             self.set_failure_dist(Distribution(alpha=50, beta=3, gamma=10))
+            # Prepare the failure mode
+            self.calc_init_dist()
 
         if not self.conditions:
             self.set_conditions(
                 dict(
-                    wall_thickness=Condition(100, 0, "linear", [-5]),
-                    external_diameter=Condition(100, 0, "linear", [-2]),
+                    wall_thickness=Condition(100, 0, "pf_linear", [-5], pf_interval=self.pf_interval, pf_std = self.pf_std),
+                    external_diameter=Condition(100, 0, "pf_linear", [-2], pf_interval=self.pf_interval * 2, pf_std = self.pf_std),
                 )
             )
 
@@ -859,8 +845,7 @@ class FailureMode:  # Maybe rename to failure mode
         if not self.states:
             self.set_states(dict(initiation=False, detection=False, failure=False,))
 
-        # Prepare the failure mode
-        self.calc_init_dist()
+
 
         return self
 

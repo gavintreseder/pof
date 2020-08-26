@@ -167,7 +167,7 @@ class Component():
 
     # PoF
 
-    def expected_cdf(self, t_start=0, t_end=100):
+    def expected_pof(self, t_start=0, t_end=100):
 
         sf = self.expected_sf(t_start, t_end)
         
@@ -223,7 +223,74 @@ class Component():
 
         return ec
 
+    def expected_condition(self): #TODO make work for all condition levels
+        
+        ec = self.expected_condition_loss()
+        for c in ec:
+            ec[c] = 100 - ec[c]
+
+        return ec
+
+    def expected_condition_loss_legacy(self):
+        """Get the expected condition loss for a component"""
+        expected = dict()
+
+        for fm in self.fm.values():
+            # Get the expected condition loss for the failure mode
+            ec = fm.expected_condition_loss()
+            for c in ec:
+                if c in expected:
+                    expected[c]['mean'] = expected[c]['mean'] + ec[c]['mean']
+                    #TODO change this to a pooled variance method
+                    expected[c]['sd'] = (expected[c]['sd']**2 + ec[c]['sd']**2)**0.5
+                    expected[c]['lower'] = expected[c]['mean'] - expected[c]['sd']
+                    expected[c]['upper'] = expected[c]['mean'] + expected[c]['sd']
+                else:
+                    expected[c] = ec[c]
+
+        return expected
+
+    def expected_condition_loss(self, stdev=1):
+        """Get the expected condition loss for a component"""
+        # TODO move this back out so that condition works as an indpendent class
+        expected = dict()
+
+        for fm in self.fm.values():
+            # Get the expected condition loss for the failure mode
+
+            for cond_name, condition in fm.conditions.items():
+  
+                ec = condition.perfect - np.array([fm._timelines[x][cond_name] for x in fm._timelines])
+
+                if cond_name in expected:
+                    expected[cond_name] = expected[cond_name] + ec
+                else:
+                    expected[cond_name] = ec
+
+        for cond_name, ecl in expected.items():
+            mean = ecl.mean(axis=0)
+            sd = ecl.std(axis=0)
+            upper = mean + sd*stdev
+            lower = mean - sd*stdev
+
+            upper[upper > condition.perfect] = condition.perfect
+            lower[lower < condition.failed] = condition.failed
+
+            expected[cond_name] = dict(
+                lower=lower,
+                mean=mean,
+                upper=upper,
+            )
+
+        return expected
+
     # Cost
+
+    # ****************** Optijmal? ******************
+
+    def expected_inspection_interval(self, x_min, x_max, n_increments = 20):
+
+        return NotImplemented
 
     # ****************** Reset ******************
 

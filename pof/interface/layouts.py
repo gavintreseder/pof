@@ -94,14 +94,19 @@ def make_failure_mode_layout(failure_mode, fm_name, prefix="", sep='-'):
     """
     
     # Get failure mode form
+
+    cond_inputs = make_cond_form_inputs(failure_mode, prefix=prefix, sep=sep)
+
     fd_prefix = prefix + "failure_dist" + sep
-    dist_layout = make_dist_layout(failure_mode.failure_dist, prefix=fd_prefix, sep=sep)
+    dist_inputs = make_dist_form_inputs(failure_mode.failure_dist, prefix=fd_prefix, sep=sep)
+
+    fm_form = dbc.Form(children=dist_inputs + cond_inputs, inline=True)
 
     # Get tasks layout
     tasks_layout = []
     for task_name, task in failure_mode.tasks.items():
         task_prefix = prefix + 'task' + sep + task_name + sep
-        tasks_layout = tasks_layout + [make_task_layout(task, task_name, prefix=task_prefix, sep=sep)]
+        tasks_layout.append(make_task_layout(task, task_name, prefix=task_prefix, sep=sep))
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -115,7 +120,7 @@ def make_failure_mode_layout(failure_mode, fm_name, prefix="", sep='-'):
             ),
             dbc.Col(
                 [
-                    dist_layout,
+                    fm_form,
                     dbc.Collapse(
                         dbc.Card(dbc.CardBody(
                                 tasks_layout
@@ -125,16 +130,16 @@ def make_failure_mode_layout(failure_mode, fm_name, prefix="", sep='-'):
                     ),
                 ]
             )
-
         ]
     )
 
     return layout
 
-def make_dist_layout(dist, prefix="", sep='-'):
+def make_dist_form_inputs(dist, prefix="", sep='-'):
     """
     Takes a Distribution and generates the html form inputs
     """
+
     param_inputs = []
 
     for param, value in dist.params().items():
@@ -154,10 +159,52 @@ def make_dist_layout(dist, prefix="", sep='-'):
         )
         param_inputs.append(param_input)
 
-    form = dbc.Form(children=param_inputs, inline=True)
+    return param_inputs
 
-    return form
 
+def make_cond_form_inputs(condition, prefix="", sep = ''): #Not used
+    """
+    Takes a Condition and generates the form inputs
+    """
+
+    # Dropdown format for pf curve
+    pf_curve = dbc.Col(
+        dbc.FormGroup(
+            [
+                dbc.Label("PF Curve", className="mr-2"),
+                dbc.Select(
+                    options=[{'label' : option, 'value' : option} for option in condition.PF_CURVE],
+                    id= prefix + "pf_curve",
+                    value=str(condition.pf_curve),
+                ),
+            ],
+            className='mr-3',
+        ),
+    )
+
+    # Input format for the others
+    param_inputs = []
+    for param in ['pf_interval', 'pf_std']:
+        param_input = dbc.Col(
+            dbc.FormGroup(
+                [
+                    dbc.Label(param.capitalize(), className="mr-2"),
+                    dbc.Input(
+                        type="number",
+                        id= prefix + param,
+                        value=condition.__dict__[param],
+                        debounce=True,
+                    ),
+                ],
+                className='mr-3',
+            ),
+        )
+        param_inputs.append(param_input)
+
+    param_inputs.insert(0, pf_curve)
+
+    return param_inputs
+    
 
 def make_task_layout(task, task_name="task", prefix="", sep = '-'):
     """
@@ -256,19 +303,6 @@ def make_task_form(task, prefix="", sep='-'): #TODO make this better
                             type="number",
                             id= prefix + "cost",
                             value= task.cost,
-                            debounce=True,
-                        ),
-                    ],
-                ),
-            ),
-            dbc.Col(
-                dbc.FormGroup(
-                    [
-                        dbc.Label("Consequence", html_for="consequence"),
-                        dbc.Input(
-                            type="number",
-                            id= prefix + "consequence",
-                            value="Not Implemented",
                             debounce=True,
                         ),
                     ],

@@ -42,7 +42,7 @@ class Condition:
                 condition : int
                     the current condition of the asset 
 
-                condition_perfect : int
+                perfect : int
                     the condition of an asset when new
                 
                 condition_accumulated : int
@@ -62,6 +62,8 @@ class Condition:
         pf_curve_params=[-10],
         decreasing=True,
         name="default",
+        pf_interval=10,
+        pf_std = 0.5,
     ):
 
         # Degradation details
@@ -69,8 +71,8 @@ class Condition:
         self.pf_curve = pf_curve
         self.pf_curve_params = pf_curve_params
         self.decreasing = decreasing
-        self.pf_interval = NotImplemented
-        self.pf_std = NotImplemented
+        self.pf_interval = pf_interval
+        self.pf_std = pf_std
 
         # Time
         self.t_condition = 0
@@ -78,10 +80,10 @@ class Condition:
         self.t_accumulated = 0
 
         # Condition
-        self.condition_perfect = perfect
+        self.perfect = perfect
         self.condition_accumulated = 0
         self.condition = perfect
-        self.condition_failed = failed
+        self.failed = failed
 
         # Condition detection and limits
         self.threshold_detection = perfect
@@ -111,10 +113,10 @@ class Condition:
 
         # Check the thresholds are valid
         thresholds = [
-            self.condition_perfect,
+            self.perfect,
             self.threshold_detection,
             self.threshold_failure,
-            self.condition_failed,
+            self.failed,
         ]
 
         if self.decreasing == True:
@@ -129,7 +131,7 @@ class Condition:
     def set_condition(self, new_condition=None):  # Rewrite
 
         if new_condition is None:
-            self.condition = self.condition_perfect
+            self.condition = self.perfect
         else:
             self.condition = new_condition
 
@@ -147,9 +149,8 @@ class Condition:
 
         self.condition = self.condition_profile[self.t_condition]
 
-    def set_condition_profile(
-        self, t_min=0, t_max=100
-    ):  # Change limits for time to match max degradation profile
+    def set_condition_profile(self, t_min=0, t_max=100):  
+        # Change limits for time to match max degradation profile
         """
         Sets a condition profile based on the input parameters
         """
@@ -162,15 +163,23 @@ class Condition:
         # Get the condition profile
         if self.pf_curve == "linear":
             m = self.pf_curve_params[0]
-            b = self.condition_perfect
+            b = self.perfect
 
             y = m * x + b
 
         elif self.pf_curve == "step":
             y = NotImplemented
 
+        elif self.pf_curve == 'pf_linear':
+            pf = self.pf_interval + ss.norm.rvs(loc=0, scale=self.pf_std)
+
+            m = (self.failed - self.perfect) / pf
+            b = self.perfect
+            
+            y = m*x + b
+
         # Add the accumulated time
-        cond_lost = y[self.t_accumulated] - self.condition_perfect
+        cond_lost = y[self.t_accumulated] - self.perfect
         y = y + cond_lost
         y = y[self.t_accumulated :]
 
@@ -245,6 +254,7 @@ class Condition:
 
     # **************** Event series **********
 
+
     def get_condition_profile(
         self, t_stop=None, t_start=0
     ):  # TODO this probably needs a delay?
@@ -278,7 +288,7 @@ class Condition:
         n_after_failure = t_stop - t_start - len(cp) + 1
         if n_after_failure > 0:
 
-            cp = np.append(cp, np.full(max(0, n_after_failure), self.condition_failed))
+            cp = np.append(cp, np.full(max(0, n_after_failure), self.failed))
 
         return cp
 
@@ -310,7 +320,7 @@ class Condition:
         # TODO make sure it works for positive and negative
 
         m_mean = self.current()
-        m_sigma = (m_mean - self.condition_perfect) / 6
+        m_sigma = (m_mean - self.perfect) / 6
 
         measurement = ss.norm.ppf(random(), loc=m_mean, scale=m_sigma)
 
@@ -341,7 +351,7 @@ class Condition:
         self.t_max = None
 
         # Reset the condition
-        self.condition = self.condition_perfect
+        self.condition = self.perfect
         self.condition_accumulated = 0
 
         # Reset the condition profile
@@ -377,7 +387,7 @@ class Condition:
         # Error with time reset, different method required.
 
         if method == "reduction_factor":
-            accumulated = (self.condition_perfect - self.current()) * (
+            accumulated = (self.perfect - self.current()) * (
                 1 - target
             )
 
@@ -397,17 +407,35 @@ class Condition:
 
             if self.decreasing:
                 self.condition_accumulated = min(
-                    max(self.condition_failed, accumulated), self.condition_perfect
+                    max(self.failed, accumulated), self.perfect
                 )
             else:
                 self.condition_accumulated = max(
-                    min(self.condition_failed, accumulated), self.condition_perfect
+                    min(self.failed, accumulated), self.perfect
                 )
 
         self.set_condition_profile()
         self.set_t_condition(0)
 
         return
+
+    # ********************** Interface ********************
+
+    def dash_update(self, dash_id, value, sep='-'):
+        """Updates a the condition object using the dash componenet ID"""
+
+        try:
+            
+            next_id = dash_id.split(sep)[0]
+        
+            # Check if the next component is a param of 
+            if next_id in ['pf_curve', 'pf_interval', 'pf_std']:
+
+                self.__dict__[next_id] = value
+
+        except:
+
+            print("Invalid dash component %s" %(dash_id))
 
     def plot_condition_profile(self):
         plt.plot(self.condition_profile)

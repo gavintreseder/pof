@@ -1,56 +1,50 @@
 
 # 26 August
 
-    # Add condition graph
-    # Add pof Graph
+
+Josh’s Graph
+Add condition
+Add Inspection Interval into interface
+Add starting condition
+Load with pole failure modes
+
+
+    # Add Load methods
+        # Load asset Model
+        # Load asset data
+
+    # Add condition graph -> Fix this later
+    # Add Inspection Interval
+        # Generalise to sesnistity
     # Add drop down asset id
+        # Asset in poor health
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# TODO later
+    # Fix error when failure mode is set to inactive tasks are not being executed
+    # move condition from failure mode to component and use pf_interval to create a condition_loss class
+    # Sort out the boundary between failure mode and condition
 
     # connect system impact for failure modes
     # Add Condition Graph
     # Add PoF
     # Add task table
+    # Share condition
+
+    # Investigate why the change to condition made everything slower
+
 
 
 
 # Improvements
 
+    # Move to celery and redis
+
     # Add a method when you don't want to use condition, only failure rates
+    # Get 'step' condition working
 
-# Add graphs
-
-    # Expected condition over time
-    # Expected uncertainity over time
 
 # Get multiple failure modes working
 
