@@ -179,7 +179,7 @@ class Task:
         try:
             ids = dash_id.split('-')
 
-            if ids[0] in ['active', 'p_effective', 'cost', 'consequence', 't_interval', 't_delay']:
+            if ids[0] in ['active', 'p_effective', 'cost', 't_interval', 't_delay']:
 
                 if ids[0] == 'p_effective':
                     value = value / 100
@@ -205,7 +205,7 @@ class Task:
     def get_dash_ids(self, prefix='', sep='-'):
 
         # task parameters
-        param_list = ['active', 'p_effective', 'cost', 'consequence']
+        param_list = ['active', 'p_effective', 'cost']
         if self.trigger== "time":
             param_list = param_list + ['t_interval', 't_delay']
 
