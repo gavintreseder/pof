@@ -1,6 +1,41 @@
-# morning
 
-    # connnect active for comp.active and other acitves
+# 26 August
+
+    # Add condition graph
+    # Add pof Graph
+    # Add drop down asset id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # connect system impact for failure modes
     # Add Condition Graph
     # Add PoF

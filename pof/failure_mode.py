@@ -276,6 +276,8 @@ class FailureMode:  # Maybe rename to failure mode
             time=np.linspace(t_start, t_end, t_end - t_start + 1, dtype=int)
         )
 
+        self.calc_init_dist()
+
         # Get intiaition
         timeline["initiation"] = np.full(t_end + 1, self.is_initiated())
         t_initiate = 0

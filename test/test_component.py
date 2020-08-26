@@ -136,10 +136,17 @@ class TestComponent(unittest.TestCase):
 
     # *************** Test sim_timeline ***********************
 
-    def test_sim_timeline(self):
+    def test_sim_timeline_active_all(self):
         comp = Component().set_demo()
 
         comp.sim_timeline(200)
+
+    def test_sim_timline_active_one(self):
+        comp = Component().set_demo()
+        
+        comp.fm[list(comp.fm)[1]].active=False
+        comp.sim_timeline(200)
+
 
 if __name__ == '__main__':
     unittest.main()

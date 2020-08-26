@@ -15,6 +15,8 @@ from failure_mode import FailureMode
 from distribution import Distribution
 from helper import fill_blanks
 
+from condition import Condition
+
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 #TODO create get, set, del and add methods
 
@@ -296,9 +298,15 @@ class Component():
 
         if not self.fm:
             self.fm = dict(
-                fast_aging = FailureMode(alpha=50, beta=2, gamma=20).set_demo(),
-                slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20).set_demo(),
                 random = FailureMode(alpha=500, beta=1, gamma=0).set_demo(),
+                slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20).set_demo(),
+                fast_aging = FailureMode(alpha=50, beta=2, gamma=20).set_demo(),
+            )
+        
+            self.fm['random'].set_conditions(
+                dict(
+                    wall_thickness=Condition(100, 0, "linear", [-100]),
+                )
             )
     
         return self
