@@ -27,9 +27,10 @@ class TestFailureMode(unittest.TestCase):
     
     def test_sim_timeline(self):
 
-        fm = FailureMode(alpha=50, beta=1.5, gamma=10)
+        fm = FailureMode(alpha=50, beta=1.5, gamma=)
         fm.sim_timeline(200)
 
+    def test_sim_timeline
 
 if __name__ == '__main__':
     unittest.main()

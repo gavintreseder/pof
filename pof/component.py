@@ -83,6 +83,8 @@ class Component():
 
             for fm in self.fm.values():
                 fm.save_timeline(i)
+
+            self._sim_counter = self._sim_counter + 1
     
     def sim_timeline(self, t_end, t_start=0):
         """ Simulates the timelines for all failure modes attached to this copmonent"""
@@ -217,11 +219,19 @@ class Component():
 
     def expected_risk_cost(self):
 
+        # Add scaling
+    
         ec = dict()
         for fm_name, fm in self.fm.items():
             ec[fm_name] = fm.expected_risk_cost()
 
         return ec
+
+    def erc(self):
+
+        di = dict()
+        for fm_name in self.fm.items()
+            di[fm_name]
 
     def expected_condition(self): #TODO make work for all condition levels
         

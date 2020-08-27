@@ -62,8 +62,8 @@ class Condition:
         pf_curve_params=[-10],
         decreasing=True,
         name="default",
-        pf_interval=10,
-        pf_std = 0.5,
+        pf_interval=None,
+        pf_std = 0,
     ):
 
         # Degradation details

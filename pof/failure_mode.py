@@ -644,6 +644,27 @@ class FailureMode:  # Maybe rename to failure mode
 
             df_tasks = pd.concat([df_tasks, df])
 
+
+        t_failures = []
+        for timeline in self._timelines.values():
+            if timeline['failure'].any():
+                t_failures.append(np.argmax(timeline["failure"]))
+
+        time, cost = np.unique(t_failures, return_counts = True)
+        cost = cost * self.cof.get_cost()
+        cost_cumulative = cost.cumsum()
+
+        df = pd.DataFrame(
+            dict(
+                task='risk',
+                time=time,
+                cost=cost,
+                cost_cumulative=cost_cumulative,
+            )
+        )
+
+        df_tasks = pd.concat([df_tasks, df])
+
         return df_tasks
 
     # ****************** Reset Routines **************
