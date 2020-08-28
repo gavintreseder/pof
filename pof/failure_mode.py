@@ -20,6 +20,7 @@ from condition import Condition
 from distribution import Distribution
 from consequence import Consequence
 from task import Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+from helper import fill_blanks
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -34,7 +35,7 @@ class FailureMode:  # Maybe rename to failure mode
     PF_CURVE = ['linear', 'pf_linear'] #TODO add the rest
 
 
-    def __init__(self, alpha=None, beta=None, gamma=None, pf_curve='pf_linear', pf_interval=20, pf_std=0):
+    def __init__(self, alpha=None, beta=None, gamma=None, pf_curve='pf_linear', pf_interval=20, pf_std=0, name='fm'):
 
         # Failure behaviour
         self.active = True
@@ -48,7 +49,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.conditions = dict()
 
         # Failure information
-        self.name = str('fm')
+        self.name = name
         self.t_fm = 0
         self.t_uptime = 0
         self.t_downtime = 0
@@ -549,30 +550,19 @@ class FailureMode:  # Maybe rename to failure mode
         return expected
 
     def expected_risk_cost_df(self):
-
+        """ A wrapper to turn risk cost into a df for plotting"""
         rc = self.expected_risk_cost()
 
-        df = pd.DataFrame.from_dict(rc, orient='index').apply(pd.Series.explode)
+        df = pd.DataFrame(rc).T.apply(fill_blanks, axis = 1, args = (0, 200))
         df.index.name = 'task'
+        df_cost = df.explode('cost')['cost']
+        df = df.explode('time')
+        df['cost'] = df_cost
 
-        # Fill in the blanks
-        new_index = pd.Index(np.arange(0, 200, 1), name="time")
+        # Add a cumulative cost
+        df['cost_cumulative'] = df.groupby(by=['task'])['cost'].transform(pd.Series.cumsum)
 
-        """Alternative 1
-        df = pd.DataFrame.from_dict(rc)
-        df.index.name = 'Time'
-        df = df.reset_index().melt(id_vars = 'Time', var_name='Task', value_name= 'Cost')"""
-
-        """ Alternative 2
-        tc = dict(task=[], time=[], cost=[])
-
-        for k, v in ec.items():
-            tc['task'] = np.append(tc['task'], np.full(len(v['time']), k))
-            for m in ['time', 'cost']:
-                tc[m] = np.append(tc[m], v[m])
-        """
-
-        return df
+        return df.reset_index()
 
     def expected_risk_cost(self, scaling=1):
 
@@ -778,7 +768,7 @@ class FailureMode:  # Maybe rename to failure mode
         """Updates a the failure mode object using the dash componenet ID"""
 
         try:
-            
+
             next_id = dash_id.split(sep)[0]
         
             # Check if the next component is a param of 
@@ -827,6 +817,16 @@ class FailureMode:  # Maybe rename to failure mode
         dash_ids = fm_ids + fd_ids + task_ids
 
         return dash_ids
+
+
+    def get_objects(self,prefix="", sep = "-"):
+
+        objects = [prefix + self.name]
+
+        prefix = prefix + self.name + sep + 'task' + sep
+        objects = objects + [prefix + task for task in self.tasks]
+
+        return objects
 
     # ****************** Demonstration ***********
 

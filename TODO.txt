@@ -9,6 +9,8 @@ Add starting condition
 Load with pole failure modes
 
 
+    # TODO make layout into a class 
+
     # Add Load methods
         # Load asset Model
         # Load asset data
@@ -83,3 +85,21 @@ Load with pole failure modes
     # Failure modes
     # Failure modes with reset
     # Failure modes with condition
+
+
+
+
+
+
+    # Dash ID
+        type-name
+
+    # collapse id
+        type-name-collapse
+
+    #dash-update
+
+        type-name
+
+        Check type and name match
+        strip and then match

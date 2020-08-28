@@ -227,12 +227,6 @@ class Component():
 
         return ec
 
-    def erc(self):
-
-        di = dict()
-        for fm_name in self.fm.items()
-            di[fm_name]
-
     def expected_condition(self): #TODO make work for all condition levels
         
         ec = self.expected_condition_loss()
@@ -368,6 +362,17 @@ class Component():
 
         return dash_ids
 
+    def get_objects(self,prefix="", sep = "-"):
+
+        objects = [prefix + self.name]
+
+        prefix = prefix + self.name + sep + 'failure_mode' + sep
+
+        for fms in self.fm.values():
+            objects = objects + fms.get_objects(prefix = prefix)
+
+        return objects
+
     # ****************** Demonstration parameters ******************
 
     def set_demo(self):
@@ -375,9 +380,9 @@ class Component():
 
         if not self.fm:
             self.fm = dict(
-                random = FailureMode(alpha=500, beta=1, gamma=0).set_demo(),
-                slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20).set_demo(),
-                fast_aging = FailureMode(alpha=50, beta=2, gamma=20).set_demo(),
+                random = FailureMode(alpha=500, beta=1, gamma=0, name='random').set_demo(),
+                slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20, name='slow_aging').set_demo(),
+                fast_aging = FailureMode(alpha=50, beta=2, gamma=20, name='fast_aging').set_demo(),
             )
         
             self.fm['random'].set_conditions(
