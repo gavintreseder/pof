@@ -148,5 +148,24 @@ class TestComponent(unittest.TestCase):
         comp.sim_timeline(200)
 
 
+    # ************ Test update methods *****************
+
+    def test_update(self):
+
+        expected_list = [True]
+
+        comp = Component().set_demo()
+        dash_ids = comp.get_dash_ids()
+
+        for dash_id in dash_ids:
+
+            for expected in expected_list:
+        
+                comp.update(dash_id, expected)
+
+                val = utils.get_dash_id_value(comp, dash_id)
+
+                self.assertEqual(val, expected, msg = "Error: dash_id %s" %(dash_id))
+
 if __name__ == '__main__':
     unittest.main()

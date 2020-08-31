@@ -19,8 +19,9 @@ from lifelines import WeibullFitter
 from condition import Condition
 from distribution import Distribution
 from consequence import Consequence
-from task import Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
-from helper import fill_blanks
+from task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+
+from helper import fill_blanks, id_update
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -39,7 +40,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Failure behaviour
         self.active = True
-        self.failure_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
+        self.untreated = Distribution(alpha=alpha, beta=beta, gamma=gamma, name='untreated')
         self.init_dist = None
 
         self.pf_curve = pf_curve
@@ -50,9 +51,6 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Failure information
         self.name = name
-        self.t_fm = 0
-        self.t_uptime = 0
-        self.t_downtime = 0
         self.cof = Consequence()  # TODO change to a consequence model
         self.pof = None  
 
@@ -69,6 +67,7 @@ class FailureMode:  # Maybe rename to failure mode
         # kpis? #TODO
         # Cost and Value of current task? #TODO
 
+        self.t_end = None
         self.timeline = dict()
         self._timelines = dict()
         self.value = None  # TODO
@@ -77,11 +76,18 @@ class FailureMode:  # Maybe rename to failure mode
 
         return
 
+
+    # ************** Load Functions *****************
+
+    def load(self, **kwargs):
+        
+        NotImplemented
+
     # ************** Set Functions *****************
 
 
-    def set_failure_dist(self, failure_dist):
-        self.failure_dist = failure_dist
+    def set_untreated(self, untreated):
+        self.untreated = untreated
 
     def set_tasks(self, tasks):
         """
@@ -143,11 +149,11 @@ class FailureMode:  # Maybe rename to failure mode
         """
 
         # Super simple placeholder # TODO add other methods
-        alpha = self.failure_dist.alpha
-        beta = self.failure_dist.beta
-        gamma = max(0, self.failure_dist.gamma - self.pf_interval)
+        alpha = self.untreated.alpha
+        beta = self.untreated.beta
+        gamma = max(0, self.untreated.gamma - self.pf_interval)
 
-        self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma)
+        self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name ='init')
 
         return
 
@@ -549,11 +555,17 @@ class FailureMode:  # Maybe rename to failure mode
 
         return expected
 
-    def expected_risk_cost_df(self):
+    def expected_risk_cost_df(self, t_start=0, t_end=None):
         """ A wrapper to turn risk cost into a df for plotting"""
-        rc = self.expected_risk_cost()
+        erc = self.expected_risk_cost()
 
-        df = pd.DataFrame(rc).T.apply(fill_blanks, axis = 1, args = (0, 200))
+        # Set the end to the largest time if no time is given
+        if t_end is None:
+            t_end = t_start
+            for details in erc.values():
+                t_end = max(max(details['time']), t_end)
+
+        df = pd.DataFrame(erc).T.apply(fill_blanks, axis = 1, args = (t_start, t_end))
         df.index.name = 'task'
         df_cost = df.explode('cost')['cost']
         df = df.explode('time')
@@ -764,55 +776,35 @@ class FailureMode:  # Maybe rename to failure mode
             print("No timelines have been simulated")
 
 
-    def dash_update(self, dash_id, value, sep='-'):
+    def update(self, dash_id, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
 
         try:
 
-            next_id = dash_id.split(sep)[0]
-        
-            # Check if the next component is a param of 
-            if next_id in ['active', 'pf_curve', 'pf_interval', 'pf_std']:
-
-                self.__dict__[next_id] = value
-
-                #TODO make this better
-                if next_id in ['pf_curve', 'pf_interval', 'pf_std']:
-                    for condition in self.conditions.values():
-                        condition.dash_update(next_id)
-
-            elif next_id == 'failure_dist':
-
-                dash_id = dash_id.replace(next_id + sep, "")
-                self.failure_dist.dash_update(dash_id, value)
-
-            elif next_id == 'task':
-      
-                dash_id = dash_id.replace(next_id + sep, "")
-                task_name= dash_id.split(sep)[0]
-                dash_id = dash_id.replace(task_name + sep, "")
-                self.tasks[task_name].dash_update(dash_id, value)
+            containers = dict(
+                Condtion = 'conditions',
+                Task = 'tasks',
+            )
+            id_update(self, id_str=dash_id, value=value, sep=sep, children=[Condition, Distribution, Task], containers=containers)
 
         except:
-
-            print("Invalid dash component %s" %(dash_id))
-
+            print('Invalid ID')
 
     def get_dash_ids(self, prefix="", sep='-'):
         """ Return a list of dash ids for values that can be changed"""
+
+        prefix = prefix + "FailureMode" + sep + self.name + sep
 
         # Failure modes
         fm_ids = [prefix + param for param in ['active', 'pf_curve', 'pf_interval', 'pf_std']]
 
         # Failure Dist
-        fd_prefix = prefix + 'failure_dist' + sep
-        fd_ids = self.failure_dist.get_dash_id(prefix=fd_prefix)
+        fd_ids = self.untreated.get_dash_ids(prefix=prefix)
 
         # Tasks
         task_ids = []
-        for task_name, task in self.tasks.items():
-            task_prefix = prefix + 'task' + sep + task_name + sep
-            task_ids = task_ids + task.get_dash_ids(prefix=task_prefix)
+        for task in self.tasks.values():
+            task_ids = task_ids + task.get_dash_ids(prefix=prefix)
 
         dash_ids = fm_ids + fd_ids + task_ids
 
@@ -821,17 +813,20 @@ class FailureMode:  # Maybe rename to failure mode
 
     def get_objects(self,prefix="", sep = "-"):
 
+        # Failure mode object
+        prefix = prefix + 'FailureMode' + sep
         objects = [prefix + self.name]
 
-        prefix = prefix + self.name + sep + 'task' + sep
-        objects = objects + [prefix + task for task in self.tasks]
+        # Tasks objects
+        prefix = prefix + self.name + sep
+        objects = objects + [prefix + 'Task' + sep + task for task in self.tasks]
 
         return objects
 
     # ****************** Demonstration ***********
 
     def reset_demo(self):
-        self.failure_dist=None
+        self.untreated=None
         self.conditions=None
         self.tasks = None
         self.states = None
@@ -841,8 +836,8 @@ class FailureMode:  # Maybe rename to failure mode
 
         
 
-        if self.failure_dist is None:
-            self.set_failure_dist(Distribution(alpha=50, beta=3, gamma=10))
+        if self.untreated is None:
+            self.set_untreated(Distribution(alpha=50, beta=3, gamma=10, name='untreated'))
             # Prepare the failure mode
             self.calc_init_dist()
 
@@ -857,9 +852,9 @@ class FailureMode:  # Maybe rename to failure mode
         if not self.tasks:
             self.set_tasks(
                 dict(
-                    inspection=Inspection(t_interval=5, t_delay=10).set_default(),
-                    on_condition_repair=OnConditionRepair(activity="on_condition_repair").set_default(),
-                    cm=ImmediateMaintenance(activity="cm").set_default(),
+                    inspection=Inspection(t_interval=5, t_delay=10, name='inspection').set_default(),
+                    on_condition_repair=OnConditionRepair(activity="on_condition_repair", name = 'on_condition_repair').set_default(),
+                    cm=ImmediateMaintenance(activity="cm", name = 'cm').set_default(),
                 )
             )
 

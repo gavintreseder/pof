@@ -4,7 +4,55 @@ from task import Inspection
 from distribution import Distribution
 
 
+# TODO make this a class
+
+
+# dict of variables
+# dict of other classes
+# variables
+# other classes
+
+
+# Check if it is a class
+
+# Failure Modes
+
+
+
+slow_aging = dict(
+    Distribution = dict(
+        name = "slow_aging",
+        alpha = 100,
+        beta = 2,
+        gamma = 10,
+    ),
+    conditions = dict(
+        Condition = wall_thickness
+    )
+)
+
+slow_aging = dict(
+    Distribution = dict(
+        untreated= dict(
+            slow_aging
+        )
+    )
+)
+
+
+# Conditions
+
+wall_thickness = dict(
+
+)
+
 # Dists
+
+slow_aging = dict(
+    alpha= 100,
+    beta = 2,
+    gamma = 10,
+)
 
 # Impacts
 

@@ -13,7 +13,7 @@ from lifelines import WeibullFitter
 
 from failure_mode import FailureMode
 from distribution import Distribution
-from helper import fill_blanks
+from helper import fill_blanks, id_update
 
 from condition import Condition
 
@@ -199,9 +199,14 @@ class Component():
         return sf
 
 
-    def expected_risk_cost_df(self, t_start = 0, t_end=100):
+    def expected_risk_cost_df(self, t_start = 0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
         erc = self.expected_risk_cost()
+
+        if t_end == None:
+            t_end = t_start
+            for details in erc.values():
+                t_end = max(max(details['time']), t_end)
 
         df = pd.DataFrame().from_dict(erc, orient='index')
         df.index.name='failure_mode'
@@ -322,41 +327,27 @@ class Component():
 
     # ****************** Interface ******************
 
-    def dash_update(self, dash_id, value, sep='-'):
-        """Updates a the failure mode object using the dash componenet ID"""
+    def update(self, dash_id, value, sep='-'):
+        """Updates the component class using the dash componenet ID"""
 
         try:
-            
-            next_id = dash_id.split(sep)[0]
-        
-            # Check if the next component is a param of 
-            if next_id in ['active']:
-
-                self.active = value
-
-            elif next_id == 'failure_mode':
-
-                dash_id = dash_id.replace(next_id + sep, "")
-                fm_name= dash_id.split(sep)[0]
-                dash_id = dash_id.replace(fm_name + sep, "")
-                self.fm[fm_name].dash_update(dash_id, value)
+           id_update(self, id_str=dash_id, value=value, sep=sep, children=[FailureMode])
 
         except:
-
-            print("Invalid dash component %s" %(dash_id))
+            print('Invalid ID')
 
 
     def get_dash_ids(self, prefix="", sep='-'):
         """ Return a list of dash ids for values that can be changed"""
 
         # Component
+        prefix = prefix + 'Component' + sep + self.name + sep
         comp_ids = [prefix + param for param in ['active']]
 
         # Tasks
         fm_ids = []
-        for fm_name, fm in self.fm.items():
-            fm_prefix = prefix + 'failure_mode' + sep + fm_name + sep
-            fm_ids = fm_ids + fm.get_dash_ids(prefix=fm_prefix)
+        for fm in self.fm.values():
+            fm_ids = fm_ids + fm.get_dash_ids(prefix=prefix)
 
         dash_ids = comp_ids + fm_ids
 
@@ -364,9 +355,10 @@ class Component():
 
     def get_objects(self,prefix="", sep = "-"):
 
+        prefix = prefix + "Component" + sep
         objects = [prefix + self.name]
 
-        prefix = prefix + self.name + sep + 'failure_mode' + sep
+        prefix = prefix + self.name + sep
 
         for fms in self.fm.values():
             objects = objects + fms.get_objects(prefix = prefix)

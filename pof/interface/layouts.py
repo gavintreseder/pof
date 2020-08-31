@@ -55,13 +55,12 @@ def make_component_layout(component, prefix="", sep='-'):
     """
     """
     
-    prefix = prefix + 'comp' + sep + component.name + sep
+    prefix = prefix + 'Component' + sep + component.name + sep
 
     # Get tasks layout
     fms_layout = []
-    for fm_name, fm in component.fm.items():
-        fm_prefix = prefix + 'failure_mode' + sep + fm_name + sep
-        fms_layout = fms_layout + [make_failure_mode_layout(fm, prefix=fm_prefix, sep=sep)]
+    for fm in component.fm.values():
+        fms_layout = fms_layout + [make_failure_mode_layout(fm, prefix=prefix, sep=sep)]
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -91,25 +90,23 @@ def make_component_layout(component, prefix="", sep='-'):
     return layout
 
 
-def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
+def make_failure_mode_layout(fm, prefix="", sep='-'):
     """
     """
     
-    prefix = prefix + 'failure_mode' + sep + failure_mode.name + sep
+    prefix = prefix + 'FailureMode' + sep + fm.name + sep
 
     # Get failure mode form
-    cond_inputs = make_cond_form_inputs(failure_mode, prefix=prefix, sep=sep)
+    cond_inputs = make_cond_form_inputs(fm, prefix=prefix, sep=sep)
 
-    fd_prefix = prefix + "failure_dist" + sep
-    dist_inputs = make_dist_form_inputs(failure_mode.failure_dist, prefix=fd_prefix, sep=sep)
+    dist_inputs = make_dist_form_inputs(fm.untreated, prefix=prefix, sep=sep)
 
     fm_form = dbc.Form(children=dist_inputs + cond_inputs, inline=True)
 
     # Get tasks layout
     tasks_layout = []
-    for task_name, task in failure_mode.tasks.items():
-        task_prefix = prefix + 'task' + sep + task_name + sep
-        tasks_layout.append(make_task_layout(task, task_name, prefix=task_prefix, sep=sep))
+    for task in fm.tasks.values():
+        tasks_layout.append(make_task_layout(task, prefix=prefix, sep=sep))
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -117,7 +114,7 @@ def make_failure_mode_layout(failure_mode, prefix="", sep='-'):
             dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
 
             dbc.Button(
-                failure_mode.name,
+                fm.name,
                 color="link",
                 id = prefix + "collapse-button",
             ),
@@ -142,6 +139,8 @@ def make_dist_form_inputs(dist, prefix="", sep='-'):
     """
     Takes a Distribution and generates the html form inputs
     """
+
+    prefix = prefix + 'Distribution' + sep + dist.name + sep #TODO generalise to all dist
 
     param_inputs = []
 
@@ -169,6 +168,8 @@ def make_cond_form_inputs(condition, prefix="", sep = ''): #Not used
     """
     Takes a Condition and generates the form inputs
     """
+
+    prefix = prefix + 'Condition' + sep + condition.name + sep
 
     # Dropdown format for pf curve
     pf_curve = dbc.Col(
@@ -209,10 +210,12 @@ def make_cond_form_inputs(condition, prefix="", sep = ''): #Not used
     return param_inputs
     
 
-def make_task_layout(task, task_name="task", prefix="", sep = '-'):
+def make_task_layout(task, prefix="", sep = '-'):
     """
 
     """
+    prefix = prefix + 'Task' + sep + task.name + sep
+
     task_form = make_task_form(task=task, prefix=prefix)
     trigger_layout = make_task_trigger_layout(task.triggers, prefix=prefix)
     impact_layout = make_task_impact_layout(task.impacts, prefix=prefix)
@@ -221,7 +224,7 @@ def make_task_layout(task, task_name="task", prefix="", sep = '-'):
         [
             dbc.InputGroupAddon(dbc.Checkbox(id=prefix + 'active', checked=True), addon_type="prepend"),
             dbc.Button(
-                task_name,
+                task.name,
                 color="link",
                 id = prefix + "collapse-button",
             ),

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as ss
 
+from helper import id_update
 
 class Distribution:
 
@@ -11,8 +12,9 @@ class Distribution:
     _BETA = 1
     _GAMMA = 0
 
-    def __init__(self, alpha=None, beta=None, gamma=None):
+    def __init__(self, alpha=None, beta=None, gamma=None, name='dist'):
 
+        self.name = name
         self.alpha = alpha if alpha is not None else Distribution._ALPHA
         self.beta = beta if beta is not None else Distribution._BETA
         self.gamma = gamma if gamma is not None else Distribution._GAMMA
@@ -23,12 +25,19 @@ class Distribution:
         #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
-
     def __str__(self):
 
         out = "Alpha = %s, Beta = %s, Gamma = %s" % (self.alpha, self.beta, self.gamma)
 
         return out
+
+    def load(self, name = 'dist', **kwargs):
+        self.last_name = name
+        self.alpha = kwargs.get('alpha')
+        self.beta = kwargs.get('beta')
+        self.gamma = kwargs.get('gamma')
+
+        return self
 
     def params(self):
         params = dict(
@@ -78,20 +87,36 @@ class Distribution:
             return 0
 
 
-    def get_dash_id(self, prefix=''):
+    def get_dash_ids(self, prefix='', sep='-'):
 
+        prefix = prefix + 'Distribution' + sep + self.name + sep
         return [prefix + param for param in ['alpha', 'beta', 'gamma']]
 
-    def dash_update(self, dash_id, value):
-        """Updates a the distribution object using the dash component ID"""
+
+    def update(self, dash_id, value, sep='-'):
+        """Updates a the distrubtion object using the dash componenet ID"""
 
         try:
-
-            next_id = dash_id.split('-')[0]
-            self.__dict__[next_id] = value
+    
+            id_update(self, id_str=dash_id, value=value, sep=sep)
 
         except:
-            print("Invalid dash component %s" %(dash_id))
+            print('Invalid ID')
+
+
+    def load_demo(self, scenario=None):
+        
+        if scenario is None:
+
+            data = dict(
+                name = "slow_aging",
+                alpha = 100,
+                beta = 2,
+                gamma = 10,
+            )
+
+        self.load(data)
+
 
 if __name__ == "__main__":
     distribution = Distribution()

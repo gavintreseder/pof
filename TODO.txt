@@ -1,5 +1,8 @@
 
-# 26 August
+# 31 August
+    
+    # Task for dash id update
+    # 
 
 
 Josh’s Graph
@@ -7,7 +10,6 @@ Add condition
 Add Inspection Interval into interface
 Add starting condition
 Load with pole failure modes
-
 
     # TODO make layout into a class 
 

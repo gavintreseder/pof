@@ -52,7 +52,7 @@ class Task:
     CONDITION_IMPACT_METHODS = ['reduction_factor', "tbc"]
 
 
-    def __init__(self, trigger="unknown", activity="unknown", name="unknown"):
+    def __init__(self, trigger="unknown", activity="unknown", name="task"):
 
         self.name = name
         self.activity = activity
@@ -173,10 +173,13 @@ class Task:
         self.t_completion = []
 
 
-    def dash_update(self, dash_id, value):
+    def update(self, dash_id, value, sep='-'):
         """Update the task object to a value using a dash component id"""
 
         try:
+
+            dash_id = dash_id.replace('Task' + sep, "").replace(self.name + sep, '')
+
             ids = dash_id.split('-')
 
             if ids[0] in ['active', 'p_effective', 'cost', 't_interval', 't_delay']:
@@ -204,6 +207,8 @@ class Task:
 
     def get_dash_ids(self, prefix='', sep='-'):
 
+        prefix = prefix + 'Task' + sep + self.name + sep
+
         # task parameters
         param_list = ['active', 'p_effective', 'cost']
         if self.trigger== "time":
@@ -227,9 +232,10 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    def __init__(self, t_interval, t_delay=0):
+    def __init__(self, t_interval, t_delay=0, name = 'scheduled_task'):
         super().__init__()
 
+        self.name = name
         self.trigger = "time"
 
         self.t_delay = t_delay
@@ -298,9 +304,10 @@ class ConditionTask(Task):
     Parent class for creating condition tasks
     """
 
-    def __init__(self, activity="ConditionTask"):
+    def __init__(self, activity="ConditionTask", name='condition_task'):
         super().__init__()
 
+        self.name=name
         self.trigger = "condition"
         self.activity = activity
 
@@ -383,9 +390,10 @@ class ConditionTask(Task):
 
 
 class ScheduledReplacement(ScheduledTask):  # Not implemented
-    def __init__(self, t_interval, t_delay=0):
+    def __init__(self, t_interval, t_delay=0, name = 'scheduled_replacement'):
         super().__init__(t_interval=t_interval, t_delay=t_delay)
 
+        self.name = name
         self.activty = "replace"
 
     def set_default(self):
@@ -412,9 +420,10 @@ class ScheduledReplacement(ScheduledTask):  # Not implemented
 
 
 class OnConditionRepair(ConditionTask):
-    def __init__(self, activity="on_condition_repair"):
+    def __init__(self, activity="on_condition_repair", name = 'on_condition_repair'):
         super().__init__(self)
 
+        self.name=name
         self.activity = activity
 
     def set_default(self):
@@ -447,9 +456,10 @@ class OnConditionRepair(ConditionTask):
 
 
 class OnConditionReplace(ConditionTask):
-    def __init__(self, activity="on_condition_repair"):
+    def __init__(self, activity="on_condition_replace", name ='on_condition_replace'):
         super().__init__(self)
 
+        self.name = name
         self.activity = activity
 
     def set_default(self):
@@ -485,9 +495,10 @@ class OnConditionReplace(ConditionTask):
 
 
 class Inspection(ScheduledTask):
-    def __init__(self, t_interval, t_delay=0):
+    def __init__(self, t_interval, t_delay=0, name='inspection'):
         super().__init__(t_interval=t_interval, t_delay=t_delay)
 
+        self.name = name
         self.activity = "inspection"
 
     def set_default(self):
@@ -540,9 +551,10 @@ class Inspection(ScheduledTask):
 
 
 class ImmediateMaintenance(ConditionTask):
-    def __init__(self, activity="immediate_maintenance"):
+    def __init__(self, activity="immediate_maintenance", name='immediate_maintenance'):
         super().__init__(self)
 
+        self.name = name
         self.activity = activity
 
     def set_default(self):
