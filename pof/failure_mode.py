@@ -17,9 +17,9 @@ from tqdm import tqdm
 from lifelines import WeibullFitter
 
 from condition import Condition
-from distribution import Distribution
-from consequence import Consequence
-from task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+from pof.distribution import Distribution
+from pof.consequence import Consequence
+from pof.task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
 
 from helper import fill_blanks, id_update
 
@@ -780,12 +780,7 @@ class FailureMode:  # Maybe rename to failure mode
         """Updates a the failure mode object using the dash componenet ID"""
 
         try:
-
-            containers = dict(
-                Condtion = 'conditions',
-                Task = 'tasks',
-            )
-            id_update(self, id_str=dash_id, value=value, sep=sep, children=[Condition, Distribution, Task], containers=containers)
+            id_update(self, id_str=dash_id, value=value, sep=sep, children=(Condition, Distribution, Task))
 
         except:
             print('Invalid ID')
@@ -804,7 +799,7 @@ class FailureMode:  # Maybe rename to failure mode
         # Tasks
         task_ids = []
         for task in self.tasks.values():
-            task_ids = task_ids + task.get_dash_ids(prefix=prefix)
+            task_ids = task_ids + task.get_dash_ids(prefix=prefix + 'tasks' + sep)
 
         dash_ids = fm_ids + fd_ids + task_ids
 

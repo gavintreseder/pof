@@ -32,20 +32,13 @@ def get_dash_id_value(instance, dash_id, prefix='', sep = "-"):
         else:
             val = instance.__dict__[var]
 
-    elif var in [child.__name__ for child in VALID_CHILDREN]:
-        
-        key = dash_id.split(sep)[1]
-        # Check if the variable is in a container
-        if key in instance.__dict__:
-            val = get_dash_id_value(instance.__dict__[key], dash_id)
-
-        elif var in containers:
-            container = containers[var]
-            val = get_dash_id_value(instance.__dict__[container][key], dash_id)
-        else:
-            print("Invalid id \"%s\" %s not in class" %(dash_id, var))
-
     else:
-        val = ("Invalid id \"%s\" %s not in class" %(dash_id, var))
-    
+        
+        var = dash_id.split(sep)[1]
+
+        if var in instance.__dict__ and isinstance(instance.__dict__[var], VALID_CHILDREN):
+            val = get_dash_id_value(instance.__dict__[var], dash_id)
+        else:
+            val = ("Invalid id \"%s\" %s not in class" %(dash_id, var))
+
     return val

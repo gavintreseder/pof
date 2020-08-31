@@ -347,7 +347,7 @@ class Component():
         # Tasks
         fm_ids = []
         for fm in self.fm.values():
-            fm_ids = fm_ids + fm.get_dash_ids(prefix=prefix)
+            fm_ids = fm_ids + fm.get_dash_ids(prefix=prefix + 'fms' + sep)
 
         dash_ids = comp_ids + fm_ids
 

@@ -29,7 +29,7 @@ def fill_blanks(row, t_start, t_end):
     return row
 
 
-def id_update(instance, id_str, value, sep='-', children=None, containers = None):
+def id_update(instance, id_str, value, sep='-', children=None):
     """Updates an object using an id"""
 
     # Remove the class type and class name from the dash_id
@@ -52,22 +52,15 @@ def id_update(instance, id_str, value, sep='-', children=None, containers = None
             instance.__dict__[var] = value
 
     # Check if the variable is a class instance
-    elif var in [child.__name__ for child in children]:
-        
-        key = id_str.split(sep)[1]
-        # Check if the variable is in a container
-        if key in instance.__dict__:
-            instance.__dict__[key].update(id_str, value, sep)
+    else:
 
-        elif var in containers:
-            container = containers[var]
-            instance.__dict__[container][key].update(id_str, value, sep)
+        var = id_str.split(sep)[1]
+
+        if var in instance.__dict__ and isinstance(instance.__dict__[var], children):
+            instance.__dict__[var].update(id_str, value, sep)
         else:
             print("Invalid id \"%s\" %s not in class" %(id_str, var))
 
-    else:
-
-        print("Invalid id \"%s\" %s not in class" %(id_str, var))
 
 
 
