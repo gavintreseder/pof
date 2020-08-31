@@ -15,8 +15,11 @@ from failure_mode import FailureMode
 from distribution import Distribution
 from helper import fill_blanks, id_update
 
-from condition import Condition
-
+if __package__ is None or __package__ == '':
+    from condition import Condition
+else:
+    from pof.condition import Condition
+    
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 #TODO create get, set, del and add methods
 

@@ -11,8 +11,10 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 from random import random
 
-from distribution import Distribution
-
+if __package__ is None or __package__ == '':
+    from distribution import Distribution
+else:
+    from pof.distribution import Distribution
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 

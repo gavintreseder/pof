@@ -6,15 +6,27 @@
  
 """
 
-from pof.task import Task
+if __package__ is None or __package__ == '':
+    from distribution import Distribution
+else:
+    from pofpof.distribution import Distribution
 
-class TaskGroup(self):
+
+
+#from pof.task import Task
+
+class TaskGroup():
     """
             Methods:
                 Che
     """
     
-    def __init__():
+    def __init__(self):
 
         self.tasks = None
-        self.triggered
+        self.triggered = None
+
+
+if __name__ == "__main__":
+    TaskGroup = TaskGroup()
+    print("TaskGroup - OK")

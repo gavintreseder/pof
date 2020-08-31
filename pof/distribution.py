@@ -1,7 +1,12 @@
 import numpy as np
 import scipy.stats as ss
 
-from helper import id_update
+
+if __package__ is None or __package__ == '':
+    from helper import id_update
+else:
+    from pof.helper import id_update
+
 
 class Distribution:
 
@@ -18,8 +23,6 @@ class Distribution:
         self.alpha = alpha if alpha is not None else Distribution._ALPHA
         self.beta = beta if beta is not None else Distribution._BETA
         self.gamma = gamma if gamma is not None else Distribution._GAMMA
-
-        X = np.arange(0, 100, 1)
 
         #self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
@@ -119,5 +122,16 @@ class Distribution:
 
 
 if __name__ == "__main__":
+    import os
+    import sys
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+
+
     distribution = Distribution()
+    print(sys.path[0])
     print("Distribution - Ok")
+
+    os.chdir(sys.path[0])
+

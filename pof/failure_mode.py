@@ -16,12 +16,19 @@ from random import random, seed
 from tqdm import tqdm
 from lifelines import WeibullFitter
 
-from condition import Condition
-from pof.distribution import Distribution
-from pof.consequence import Consequence
-from pof.task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+if __package__ is None or __package__ == '':
+    from helper import fill_blanks, id_update
+    from condition import Condition
+    from distribution import Distribution
+    from consequence import Consequence
+    from task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+else:
+    from pof.helper import fill_blanks, id_update
+    from pof.condition import Condition
+    from pof.distribution import Distribution
+    from pof.consequence import Consequence
+    from pof.task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
 
-from helper import fill_blanks, id_update
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
