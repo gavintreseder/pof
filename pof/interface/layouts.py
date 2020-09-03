@@ -2,9 +2,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-#from settings import Settings
+from pof.interface.settings import Settings as s
 
-IS_OPEN = False
+IS_OPEN = s.is_open
+SCALING = s.scaling
 
 # Asset
 
@@ -60,7 +61,7 @@ def make_component_layout(component, prefix="", sep='-'):
     # Get tasks layout
     fms_layout = []
     for fm in component.fm.values():
-        fms_layout = fms_layout + [make_failure_mode_layout(fm, prefix=prefix, sep=sep)]
+        fms_layout = fms_layout + [make_failure_mode_layout(fm, prefix=prefix + 'fm' + sep, sep=sep)]
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -106,7 +107,7 @@ def make_failure_mode_layout(fm, prefix="", sep='-'):
     # Get tasks layout
     tasks_layout = []
     for task in fm.tasks.values():
-        tasks_layout.append(make_task_layout(task, prefix=prefix, sep=sep))
+        tasks_layout.append(make_task_layout(task, prefix=prefix + 'tasks' + sep, sep=sep))
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -168,8 +169,9 @@ def make_cond_form_inputs(condition, prefix="", sep = ''): #Not used
     """
     Takes a Condition and generates the form inputs
     """
-
-    prefix = prefix + 'Condition' + sep + condition.name + sep
+    # TODO fix this up when condition is rewritten
+    prefix = prefix
+    #prefix = prefix + 'Condition' + sep + condition.name + sep
 
     # Dropdown format for pf curve
     pf_curve = dbc.Col(
@@ -294,7 +296,7 @@ def make_task_form(task, prefix="", sep='-'): #TODO make this better
                         dbc.Input(
                             type="number",
                             id= prefix + "p_effective",
-                            value = task.p_effective * 100,
+                            value = task.p_effective * SCALING['p_effective'],
                             debounce=True,
                         ),
                         dbc.InputGroupAddon("%", addon_type="append"),
@@ -353,12 +355,12 @@ def make_condition_trigger_layout(triggers, prefix="", sep='-'): # TODO make the
 
     for condition, threshold in triggers.items():
         
-        prefix = prefix + 'condition' + sep + condition + sep
+        cond_prefix = prefix + 'condition' + sep + condition + sep
         condition_input = dbc.InputGroup(
             [
                 dbc.InputGroupAddon(
                     [
-                        dbc.Checkbox(id=prefix + 'active', checked=True),
+                        dbc.Checkbox(id=cond_prefix + 'active', checked=True),
                         
                     ],
                     addon_type="prepend"
@@ -368,13 +370,13 @@ def make_condition_trigger_layout(triggers, prefix="", sep='-'): # TODO make the
                     [
                         dbc.Input(
                             type="number",
-                            id= prefix + "lower",
+                            id= cond_prefix + "lower",
                             value=threshold['lower'],
                             debounce=True,
                         ),
                         dbc.Input(
                             type="number",
-                            id= prefix + "upper",
+                            id= cond_prefix + "upper",
                             value=threshold['upper'],
                             debounce=True,
                         ),

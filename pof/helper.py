@@ -33,7 +33,7 @@ def id_update(instance, id_str, value, sep='-', children=None):
     """Updates an object using an id"""
 
     # Remove the class type and class name from the dash_id
-    id_str = id_str.replace(instance.__class__.__name__ + sep, '').replace(instance.name + sep, '')
+    id_str = id_str.split(instance.name + sep, 1)[1]
     var = id_str.split(sep)[0]
 
     # Check if the variable is an attribute of the class
@@ -41,13 +41,15 @@ def id_update(instance, id_str, value, sep='-', children=None):
 
         # Check if the variable is a dictionary
         if isinstance(instance.__dict__[var], dict): 
-            key = id_str.split(sep)[1]
+            
+            var_2 = id_str.split(sep)[1]
 
             # Check if the variable is a class with its own update methods
-            if isinstance(instance.__dict__[var][key], children):
-                    instance.__dict__[var][key].update(id_str, value, sep)
+            if var_2 in [child.__name__ for child in children]: #isinstance(instance.__dict__[var][var_2], children):
+                var_3 = id_str.split(sep)[2]
+                instance.__dict__[var][var_3].update(id_str, value, sep)
             else:
-                instance.__dict__[var][key] = value
+                instance.__dict__[var][var_2] = value
         else:
             instance.__dict__[var] = value
 

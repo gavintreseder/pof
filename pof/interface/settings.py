@@ -1,8 +1,13 @@
 
 
 
+
 class Settings():
 
-    def __init__(self):
+    is_open = False
+    scaling = dict(
+        p_effective = 100,
+    )
 
-        self.is_open = False
+    def __init__(self):
+        NotImplemented

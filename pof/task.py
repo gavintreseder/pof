@@ -182,14 +182,11 @@ class Task:
 
         try:
 
-            dash_id = dash_id.replace('Task' + sep, "").replace(self.name + sep, '')
+            dash_id = dash_id.split(self.name + sep, 1)[1]
 
-            ids = dash_id.split('-')
+            ids = dash_id.split(sep)
 
             if ids[0] in ['active', 'p_effective', 'cost', 't_interval', 't_delay']:
-
-                if ids[0] == 'p_effective':
-                    value = value / 100
 
                 self.__dict__[ids[0]] = value
 
@@ -207,7 +204,33 @@ class Task:
         except:
             print ("Dash ID Error- %s" %(dash_id))
 
-        return True
+    def get_by_id(self, dash_id, value, sep='-'): # TODO fix this later
+        """Update the task object to a value using a dash component id"""
+
+        try:
+
+            dash_id = dash_id.split(self.name + sep, 1)[1]
+
+            ids = dash_id.split(sep)
+
+            if ids[0] in ['active', 'p_effective', 'cost', 't_interval', 't_delay']:
+
+                self.__dict__[ids[0]] = value
+
+            elif ids[0] in ["trigger", "impact"]:
+
+                if ids[1] == "condition":
+
+                    self.__dict__[ids[0]+'s'][ids[1]][ids[2]][ids[3]] = value
+                    
+                elif ids[1] == 'state':
+ 
+                    self.__dict__[ids[0]+'s'][ids[1]][ids[2]] = value
+            else:
+                print ("Invalid Dash ID - %s" %(dash_id))
+        except:
+            print ("Dash ID Error- %s" %(dash_id))
+
 
     def get_dash_ids(self, prefix='', sep='-'):
 
@@ -459,7 +482,7 @@ class OnConditionRepair(ConditionTask):
         return self
 
 
-class OnConditionReplace(ConditionTask):
+class OnConditionReplacement(ConditionTask):
     def __init__(self, activity="on_condition_replace", name ='on_condition_replace'):
         super().__init__(self)
 
@@ -486,7 +509,7 @@ class OnConditionReplace(ConditionTask):
         )
         self.set_triggers(
             dict(
-                condition=dict(wall_thickness=dict(lower=0, upper=20,)),
+                condition=dict(wall_thickness=dict(lower=0, upper=20,), external_diameter=dict(lower=0, upper=20,)),
                 state=dict(detection=True),
             )
         )
@@ -647,14 +670,34 @@ RCM Strat
 Task
     Scheduled
         Inspection - Change detection
-        Repair - Change detection and initiation
-        Restoration - Change detection, initiation, failure and condition
+        Repair - Change detection and initiation (as bad as old)
+        Restoration - Change detection, initiation, failure and condition (RF 0 < 1)
         Replacement - Change everything
     OnCondition
         Inspection - Not Implemented
         Repair - Change detection and initiation
         Restoration ...
-        Repalcement
+        Replacement
+
+
+    # Trigger
+    # Impact
+    # Schedule -> can it be completed now, next maintenane or does it need an immediate action
+        # Planned
+        # Reactive
+    # Level of Failure
+        
+
+    # Trigger
+        # Time
+        # State
+        # Condition
+    # Impact
+        # Time
+        # State
+        # Condition
+    # System
+        # Does it impact the component
 
 
     -timeline when task can bet completed
@@ -692,6 +735,10 @@ Task
     scheduled -> condition
 
 """
+
+
+
+
 
 if __name__ == "__main__":
     task = Task()

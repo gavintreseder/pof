@@ -121,17 +121,51 @@ class Distribution:
         self.load(data)
 
 
-if __name__ == "__main__":
-    import os
-    import sys
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir(dname)
+"""class Dataset:
 
+    self.early_life = dict(
+        name = "infant_mortality",
+        alpha = 10000,
+        beta = 0.5,
+        gamma = 0,
+    )
+
+    self.random = dict(
+        name = "random",
+        alpha = 100,
+        beta = 1,
+        gamma = 0,
+    )
+
+    self.slow_aging = dict(
+        name = "slow_aging",
+        alpha = 100,
+        beta = 2,
+        gamma = 10,
+    )
+
+    self.fast_aging = dict(
+        name = "fast_aging",
+        alpha = 100,
+        beta = 3.5,
+        gamma = 10,
+    )
+
+
+    def distribution(self, scenario):
+
+        return Distribtuion(cls.__dict__[scenario])
+
+class Demo:
+
+    early_life = Distribution(Dataset.early_life)
+    random = Distribution(Dataset.random)
+    slow_aging = Distribution(Dataset.slow_aging)
+    fast_aging = Distribution(Dataset.fast_aging)"""
+
+if __name__ == "__main__":
 
     distribution = Distribution()
-    print(sys.path[0])
-    print("Distribution - Ok")
 
-    os.chdir(sys.path[0])
+    print("Distribution - Ok")
 

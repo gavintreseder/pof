@@ -21,13 +21,13 @@ if __package__ is None or __package__ == '':
     from condition import Condition
     from distribution import Distribution
     from consequence import Consequence
-    from task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+    from task import Task, Inspection, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
 else:
     from pof.helper import fill_blanks, id_update
     from pof.condition import Condition
     from pof.distribution import Distribution
     from pof.consequence import Consequence
-    from pof.task import Task, Inspection, OnConditionRepair, OnConditionReplace, ImmediateMaintenance
+    from pof.task import Task, Inspection, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
 
 
 # TODO move t somewhere else
@@ -45,40 +45,36 @@ class FailureMode:  # Maybe rename to failure mode
 
     def __init__(self, alpha=None, beta=None, gamma=None, pf_curve='pf_linear', pf_interval=20, pf_std=0, name='fm'):
 
-        # Failure behaviour
-        self.active = True
-        self.untreated = Distribution(alpha=alpha, beta=beta, gamma=gamma, name='untreated')
-        self.init_dist = None
-
+       # Failure Information
+        self.name = name
+        self.active = active
         self.pf_curve = pf_curve
         self.pf_interval = pf_interval
         self.pf_std = pf_std
 
-        self.conditions = dict()
-
-        # Failure information
-        self.name = name
-        self.cof = Consequence()  # TODO change to a consequence model
+        # Failure Distributions
+        self.untreated = Distribution(alpha=alpha, beta=beta, gamma=gamma, name='untreated') #TODO drop this out and replace with something else for default
+        self.init_dist = None
         self.pof = None  
 
+        # Faiure Condition
+        self.conditions = self.set_conditions(conditions)
+        
+        # Consequene of failure
+        self.cof = Consequence()
+
         # Failre Mode state
-        self.states = dict()
+        self.states = self.set_states(states)
 
         # Tasks
-        self.task_order = [1, 2, 3, 4]  # 'inspect', 'replace', repair' # TODO
-        self.tasks = dict()
+        self.tasks = self.set_tasks(tasks)
 
         # Prepare the failure mode
         self.calc_init_dist()  # TODO make this method based on a flag
 
-        # kpis? #TODO
-        # Cost and Value of current task? #TODO
-
-        self.t_end = None
+        # Simulation details
         self.timeline = dict()
         self._timelines = dict()
-        self.value = None  # TODO
-
         self._sim_counter = 0
 
         return
@@ -86,15 +82,54 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ************** Load Functions *****************
 
-    def load(self, **kwargs):
+    def load(self,
+        active=True,
+        untreated=dict(),
+        pf_curve='pf_linear',
+        pf_interval=20,
+        pf_std=0,
+        name='fm', 
+    ):
+
+       # Failure Information
+        self.name = name
+        self.active = active
+        self.pf_curve = pf_curve
+        self.pf_interval = pf_interval
+        self.pf_std = pf_std
+
+        # Failure Distributions
+        self.untreated = Distribution(untreated)
+        self.init_dist = None
+        self.pof = None  
+
+        # Faiure Condition
+        self.conditions = self.set_conditions(conditions)
         
-        NotImplemented
+        # Consequene of failure
+        self.cof = Consequence()
+
+        # Failre Mode state
+        self.states = self.set_states(states)
+
+        # Tasks
+        self.tasks = self.set_tasks(tasks)
+
+        # Prepare the failure mode
+        self.calc_init_dist()  # TODO make this method based on a flag
+
+        # Simulation details
+        self.timeline = dict()
+        self._timelines = dict()
+        self._sim_counter = 0
 
     # ************** Set Functions *****************
 
 
+
     def set_untreated(self, untreated):
         self.untreated = untreated
+        self.calc_init_dist()
 
     def set_tasks(self, tasks):
         """
@@ -155,6 +190,7 @@ class FailureMode:  # Maybe rename to failure mode
         Convert the probability of failure into a probability of initiation
         """
 
+        print("cacl init dist")
         # Super simple placeholder # TODO add other methods
         alpha = self.untreated.alpha
         beta = self.untreated.beta
@@ -162,7 +198,6 @@ class FailureMode:  # Maybe rename to failure mode
 
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name ='init')
 
-        return
 
     def get_expected_condition(self, t_min, t_max):  # TODO retire?
 
@@ -298,8 +333,6 @@ class FailureMode:  # Maybe rename to failure mode
         timeline = dict(
             time=np.linspace(t_start, t_end, t_end - t_start + 1, dtype=int)
         )
-
-        self.calc_init_dist()
 
         # Get intiaition
         timeline["initiation"] = np.full(t_end + 1, self.is_initiated())
@@ -567,10 +600,11 @@ class FailureMode:  # Maybe rename to failure mode
         erc = self.expected_risk_cost()
 
         # Set the end to the largest time if no time is given
-        if t_end is None:
+        if t_end == None:
             t_end = t_start
             for details in erc.values():
-                t_end = max(max(details['time']), t_end)
+                for task in details.values():
+                    t_end = max(max(task['time'], default=t_start), t_end)
 
         df = pd.DataFrame(erc).T.apply(fill_blanks, axis = 1, args = (t_start, t_end))
         df.index.name = 'task'
@@ -598,8 +632,8 @@ class FailureMode:  # Maybe rename to failure mode
         
         # Get the costs causes by tasks
         for task_name, task in self.tasks.items():
-        
-            task_cost[task_name] = task.expected_costs(scaling)
+            if task.active:
+                task_cost[task_name] = task.expected_costs(scaling)
 
         return task_cost
 
@@ -620,12 +654,12 @@ class FailureMode:  # Maybe rename to failure mode
         task_count = dict()
 
         for task_name, task in self.tasks.items():
-        
-            task_count[task_name] = task.expected_counts(self._sim_counter)
+            if task.active:
+                task_count[task_name] = task.expected_counts(self._sim_counter)
 
         return task_count
 
-    def expected_cost_df(self):
+    def expected_cost_df(self): # TODO delete. Backup only
         # TODO I think this is legacy?
 
         df_tasks = pd.DataFrame()
@@ -660,7 +694,7 @@ class FailureMode:  # Maybe rename to failure mode
                 t_failures.append(np.argmax(timeline["failure"]))
 
         time, cost = np.unique(t_failures, return_counts = True)
-        cost = cost * self.cof.get_cost()
+        cost = cost * self.cof.get_cost() / self._sim_counter
         cost_cumulative = cost.cumsum()
 
         df = pd.DataFrame(
@@ -788,6 +822,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         try:
             id_update(self, id_str=dash_id, value=value, sep=sep, children=(Condition, Distribution, Task))
+            self.calc_init_dist()
 
         except:
             print('Invalid ID')
@@ -821,7 +856,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Tasks objects
         prefix = prefix + self.name + sep
-        objects = objects + [prefix + 'Task' + sep + task for task in self.tasks]
+        objects = objects + [prefix + 'tasks' + sep + 'Task' + sep + task for task in self.tasks]
 
         return objects
 
@@ -856,7 +891,8 @@ class FailureMode:  # Maybe rename to failure mode
                 dict(
                     inspection=Inspection(t_interval=5, t_delay=10, name='inspection').set_default(),
                     on_condition_repair=OnConditionRepair(activity="on_condition_repair", name = 'on_condition_repair').set_default(),
-                    cm=ImmediateMaintenance(activity="cm", name = 'cm').set_default(),
+                    on_condition_replacement=OnConditionReplacement(activity="on_condition_replacement", name = 'on_condition_replacement').set_default(),
+                    immediate_replacement=ImmediateMaintenance(activity="immediate_replacement", name = 'immediate_replacement').set_default(),
                 )
             )
 

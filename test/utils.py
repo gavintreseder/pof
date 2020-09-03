@@ -14,7 +14,7 @@ VALID_CHILDREN = (Component, Condition, FailureMode, Task, Distribution, Consequ
 def get_dash_id_value(instance, dash_id, prefix='', sep = "-"):
 
     # Remove the class type and class name from the dash_id
-    dash_id = dash_id.replace(instance.__class__.__name__ + sep, '').replace(instance.name + sep, '')
+    dash_id = dash_id.split(instance.name + sep, 1)[1]
     var = dash_id.split(sep)[0]
 
     # Check if the variable is an attribute of the class
@@ -22,13 +22,14 @@ def get_dash_id_value(instance, dash_id, prefix='', sep = "-"):
 
         # Check if the variable is a dictionary
         if isinstance(instance.__dict__[var], dict): 
-            key = dash_id.split(sep)[1]
+            var_2 = dash_id.split(sep)[1]
 
-            # Check if the variable is a class with its own dash methods
-            if isinstance(instance.__dict__[var][key], VALID_CHILDREN):
-                    val = get_dash_id_value(instance.__dict__[var][key], dash_id)
+            # Check if the variable is a class with its own update methods
+            if var_2 in [child.__name__ for child in VALID_CHILDREN]: #isinstance(instance.__dict__[var][var_2], children):
+                var_3 = dash_id.split(sep)[2]
+                val = get_dash_id_value(instance.__dict__[var][var_3], dash_id)
             else:
-                val = instance.__dict__[var][key]
+                val = get_dash_id_value(instance.__dict__[var][var_2], dash_id)
         else:
             val = instance.__dict__[var]
 

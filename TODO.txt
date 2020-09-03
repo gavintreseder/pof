@@ -90,18 +90,12 @@ Load with pole failure modes
 
 
 
+Condition -> object
+termites - 3 years
+decay - 10 years
+weathering = 50 years
+
+ConditionLoss -> Failure Mode
 
 
-
-    # Dash ID
-        type-name
-
-    # collapse id
-        type-name-collapse
-
-    #dash-update
-
-        type-name
-
-        Check type and name match
-        strip and then match
+# Find out why epected_risk_cost_df needs t_end to work 

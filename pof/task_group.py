@@ -6,12 +6,6 @@
  
 """
 
-if __package__ is None or __package__ == '':
-    from distribution import Distribution
-else:
-    from pofpof.distribution import Distribution
-
-
 
 #from pof.task import Task
 

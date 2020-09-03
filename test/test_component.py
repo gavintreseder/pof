@@ -140,12 +140,14 @@ class TestComponent(unittest.TestCase):
         comp = Component().set_demo()
 
         comp.sim_timeline(200)
+        print(comp)
 
     def test_sim_timline_active_one(self):
         comp = Component().set_demo()
         
-        comp.fm[list(comp.fm)[1]].active=False
+        comp.fm[list(comp.fm)[0]].active=False
         comp.sim_timeline(200)
+        print(comp)
 
 
     # ************ Test update methods *****************

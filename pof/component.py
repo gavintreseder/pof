@@ -11,14 +11,17 @@ import scipy.stats as ss
 from tqdm import tqdm
 from lifelines import WeibullFitter
 
-from failure_mode import FailureMode
-from distribution import Distribution
-from helper import fill_blanks, id_update
-
 if __package__ is None or __package__ == '':
+    from failure_mode import FailureMode
     from condition import Condition
+    from distribution import Distribution
+    from helper import fill_blanks, id_update
+
 else:
+    from pof.failure_mode import FailureMode
     from pof.condition import Condition
+    from pof.distribution import Distribution
+    from pof.helper import fill_blanks, id_update
     
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 #TODO create get, set, del and add methods
@@ -90,7 +93,7 @@ class Component():
             self._sim_counter = self._sim_counter + 1
     
     def sim_timeline(self, t_end, t_start=0):
-        """ Simulates the timelines for all failure modes attached to this copmonent"""
+        """ Simulates the timelines for all failure modes attached to this component"""
 
         # Initialise the failure modes
         self.init_timeline(t_start=t_start, t_end = t_end)
@@ -113,7 +116,7 @@ class Component():
         for fm in self.fm.values():
             fm.init_timeline(t_start=t_start, t_end=t_end)
 
-    def next_tasks(self, t_now):
+    def next_tasks(self, t_start):
         """
         Returns a dictionary with the failure mode triggered
         """
@@ -124,19 +127,19 @@ class Component():
         task_schedule = dict()
         for fm_name, fm in self.fm.items():
 
-            t_now, task_names = fm.next_tasks(t_start=t_now)
+            t_next, task_names = fm.next_tasks(t_start=t_start)
 
-            if t_now in task_schedule:
-                task_schedule[t_now][fm_name] = task_names
+            if t_next in task_schedule:
+                task_schedule[t_next][fm_name] = task_names
             else:
-                task_schedule[t_now] = dict()
-                task_schedule[t_now][fm_name] = task_names
+                task_schedule[t_next] = dict()
+                task_schedule[t_next][fm_name] = task_names
 
-        t_now = min(task_schedule.keys())
+        t_next = min(task_schedule.keys())
 
-        return t_now, task_schedule[t_now]
+        return t_next, task_schedule[t_next]
 
-    def complete_tasks(self, t_now, fm_tasks):
+    def complete_tasks(self, t_next, fm_tasks):
         """Complete any tasks in the dictionary fm_tasks at t_now"""
 
         # TODO add logic around all the different ways of executing
@@ -145,7 +148,7 @@ class Component():
         # TODO add task impacts
 
         for fm_name, task_names in fm_tasks.items():
-            system_impact = self.fm[fm_name].complete_tasks(t_now, task_names)
+            system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
             """ if system_impact != False:
 
@@ -209,7 +212,8 @@ class Component():
         if t_end == None:
             t_end = t_start
             for details in erc.values():
-                t_end = max(max(details['time']), t_end)
+                for task in details.values():
+                    t_end = max(max(task['time'], default=t_start), t_end)
 
         df = pd.DataFrame().from_dict(erc, orient='index')
         df.index.name='failure_mode'
@@ -231,7 +235,8 @@ class Component():
     
         ec = dict()
         for fm_name, fm in self.fm.items():
-            ec[fm_name] = fm.expected_risk_cost()
+            if fm.active:
+                ec[fm_name] = fm.expected_risk_cost()
 
         return ec
 
@@ -270,14 +275,15 @@ class Component():
         for fm in self.fm.values():
             # Get the expected condition loss for the failure mode
 
-            for cond_name, condition in fm.conditions.items():
-  
-                ec = condition.perfect - np.array([fm._timelines[x][cond_name] for x in fm._timelines])
+            if fm.active:
+                for cond_name, condition in fm.conditions.items():
+    
+                    ec = condition.perfect - np.array([fm._timelines[x][cond_name] for x in fm._timelines])
 
-                if cond_name in expected:
-                    expected[cond_name] = expected[cond_name] + ec
-                else:
-                    expected[cond_name] = ec
+                    if cond_name in expected:
+                        expected[cond_name] = expected[cond_name] + ec
+                    else:
+                        expected[cond_name] = ec
 
         for cond_name, ecl in expected.items():
             mean = ecl.mean(axis=0)
@@ -350,7 +356,7 @@ class Component():
         # Tasks
         fm_ids = []
         for fm in self.fm.values():
-            fm_ids = fm_ids + fm.get_dash_ids(prefix=prefix + 'fms' + sep)
+            fm_ids = fm_ids + fm.get_dash_ids(prefix=prefix + 'fm' + sep)
 
         dash_ids = comp_ids + fm_ids
 
@@ -364,7 +370,7 @@ class Component():
         prefix = prefix + self.name + sep
 
         for fms in self.fm.values():
-            objects = objects + fms.get_objects(prefix = prefix)
+            objects = objects + fms.get_objects(prefix = prefix + 'fm' + sep)
 
         return objects
 
