@@ -1,8 +1,25 @@
 
-# 31 August
+# 04 Sep
     
-    # Task for dash id update
-    # 
+    # Detailed Safety factor
+    # Asset Loader
+        # Load Asset Model (no tests)
+        # Load Asset Data
+        # Load Fleet Data
+    # Calibration
+        # Asset details in interface
+
+    # Nice to have
+        # Interface improvements
+            # Condition
+            # PoF
+            # Task Schedule
+            # Cost forecast
+        # Make layout a class
+        # Inpsection interval
+            # Generalise to sensitivity
+
+
 
 
 Josh’s Graph
@@ -11,41 +28,21 @@ Add Inspection Interval into interface
 Add starting condition
 Load with pole failure modes
 
-    # TODO make layout into a class 
-
-    # Add Load methods
-        # Load asset Model
-        # Load asset data
-
-    # Add condition graph -> Fix this later
-    # Add Inspection Interval
-        # Generalise to sesnistity
-    # Add drop down asset id
-        # Asset in poor health
-
-
-
 
 # TODO later
-    # Fix error when failure mode is set to inactive tasks are not being executed
     # move condition from failure mode to component and use pf_interval to create a condition_loss class
     # Sort out the boundary between failure mode and condition
 
     # connect system impact for failure modes
-    # Add Condition Graph
-    # Add PoF
-    # Add task table
-    # Share condition
 
     # Investigate why the change to condition made everything slower
-
-
-
+        # Move condition to component
+        # load using condition loss
+        # simplify calcs
 
 # Improvements
 
     # Move to celery and redis
-
     # Add a method when you don't want to use condition, only failure rates
     # Get 'step' condition working
 

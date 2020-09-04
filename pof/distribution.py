@@ -12,17 +12,12 @@ class Distribution:
 
     # TODO Extend so that it works for all the common distributions
 
-    # Default Values
-    _ALPHA = 100
-    _BETA = 1
-    _GAMMA = 0
-
-    def __init__(self, alpha=None, beta=None, gamma=None, name='dist'):
+    def __init__(self, alpha=100, beta=1, gamma=0, name='dist'):
 
         self.name = name
-        self.alpha = alpha if alpha is not None else Distribution._ALPHA
-        self.beta = beta if beta is not None else Distribution._BETA
-        self.gamma = gamma if gamma is not None else Distribution._GAMMA
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
 
         #self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)

@@ -18,11 +18,13 @@ class TestFailureMode(unittest.TestCase):
 
         self.pf_interval = 5
 
-        self.fm = FailureMode(alpha=self.alpha, beta=self.beta, gamma=self.gamma)
+        """self.fm = FailureMode(
+            untreated = dict(alpha=self.alpha, beta=self.beta, gamma=self.gamma),
+            pf_interval = self.pf_interval
+        )"""
 
     def test_instantiate(self):
-        fm = FailureMode(alpha=self.alpha, beta=self.beta, gamma=self.gamma)
-
+        fm = FailureMode()
         self.assertIsNotNone(fm)
     
     def test_sim_timeline(self):
@@ -30,7 +32,21 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode(alpha=50, beta=1.5, gamma=0)
         fm.sim_timeline(200)
 
+    # ************ Test load ***********************
     
+    def test_load(self):
+        fm = FailureMode()
+        self.assertIsNotNone(fm)
+
+
+    def test_load_demo_no_data(self):
+        fm = FailureMode().set_demo()
+        self.assertIsNotNone(fm)
+
+    def test_load_demo_some_data(self):
+        fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0)).set_demo()
+        self.assertIsNotNone(fm)
+
     # ************ Test Dash ID Value ***********************
 
     def test_get_dash_id_value(self):

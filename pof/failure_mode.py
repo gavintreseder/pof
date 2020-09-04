@@ -43,9 +43,20 @@ class FailureMode:  # Maybe rename to failure mode
     PF_CURVE = ['linear', 'pf_linear'] #TODO add the rest
 
 
-    def __init__(self, alpha=None, beta=None, gamma=None, pf_curve='pf_linear', pf_interval=20, pf_std=0, name='fm'):
+    def __init__(self,
+        name = 'fm',
+        active=True,
+        pf_curve='pf_linear',
+        pf_interval=1,
+        pf_std=0,
+        untreated=dict(),
+        conditions=dict(), #TODO this needs to change for condition loss
+        cof=dict(),
+        states = dict(),
+        tasks = dict(),
+    ):
 
-       # Failure Information
+        # Failure Information
         self.name = name
         self.active = active
         self.pf_curve = pf_curve
@@ -53,45 +64,48 @@ class FailureMode:  # Maybe rename to failure mode
         self.pf_std = pf_std
 
         # Failure Distributions
-        self.untreated = Distribution(alpha=alpha, beta=beta, gamma=gamma, name='untreated') #TODO drop this out and replace with something else for default
+        self.untreated = None
         self.init_dist = None
         self.pof = None  
+        self.set_untreated(untreated)
 
         # Faiure Condition
-        self.conditions = self.set_conditions(conditions)
-        
-        # Consequene of failure
-        self.cof = Consequence()
+        self.conditions = dict()
+        self.set_conditions(conditions)
 
-        # Failre Mode state
-        self.states = self.set_states(states)
+        # Consequene of failure
+        self.cof = None
+        self.set_consequence(cof)
+
+        # Failure Mode state
+        self.states = dict()
+        self.set_states(states)
 
         # Tasks
-        self.tasks = self.set_tasks(tasks)
-
-        # Prepare the failure mode
-        self.calc_init_dist()  # TODO make this method based on a flag
+        self.tasks = dict()
+        self.set_tasks(tasks)
 
         # Simulation details
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-
-        return
-
 
     # ************** Load Functions *****************
 
     def load(self,
+        name = 'fm',
         active=True,
-        untreated=dict(),
         pf_curve='pf_linear',
-        pf_interval=20,
+        pf_interval=1,
         pf_std=0,
-        name='fm', 
+        untreated=dict(),
+        conditions=dict(), #TODO this needs to change for condition loss
+        cof=dict(),
+        states = dict(),
+        tasks = dict(),
     ):
 
-       # Failure Information
+        # Failure Information
         self.name = name
         self.active = active
         self.pf_curve = pf_curve
@@ -99,47 +113,55 @@ class FailureMode:  # Maybe rename to failure mode
         self.pf_std = pf_std
 
         # Failure Distributions
-        self.untreated = Distribution(untreated)
-        self.init_dist = None
-        self.pof = None  
+        self.set_untreated(untreated)
 
         # Faiure Condition
-        self.conditions = self.set_conditions(conditions)
+        self.set_conditions(conditions)
         
         # Consequene of failure
-        self.cof = Consequence()
+        self.set_consequence(cof)
 
         # Failre Mode state
-        self.states = self.set_states(states)
+        self.set_states(states)
 
         # Tasks
-        self.tasks = self.set_tasks(tasks)
+        self.set_tasks(tasks)
 
-        # Prepare the failure mode
-        self.calc_init_dist()  # TODO make this method based on a flag
-
-        # Simulation details
-        self.timeline = dict()
-        self._timelines = dict()
-        self._sim_counter = 0
+        return self
 
     # ************** Set Functions *****************
 
+    def set_consequence(self, consequence):
 
+        self.cof = Consequence()
+
+    def set_conditions(self, conditions):
+        """
+        Takes a dictionary of conditions and sets the failure mode conditions
+        """
+
+        for cond_name, condition in conditions.items():
+        
+            # Load a condition object
+            if isinstance(condition, Condition):
+                self.conditions[cond_name] = condition
+            
+            # Create a condition object
+            elif isinstance(condition, dict):
+                self.conditions[cond_name] = Condition(**condition)
 
     def set_untreated(self, untreated):
-        self.untreated = untreated
-        self.calc_init_dist()
 
-    def set_tasks(self, tasks):
-        """
-        Takes a dictionary of tasks and sets the failure mode tasks
-        """
+        # Load a distribution object
+        if isinstance(untreated, Distribution):
+            self.untreated = untreated
+        
+        elif isinstance(untreated, dict):
+            untreated['name'] = 'untreated'
+            self.untreated = Distribution(**untreated)
 
-        for task_name, task in tasks.items():
-            self.tasks[task_name] = task
-
-        return True
+        # Set the probability of initiation using the untreated parameters
+        self.set_init_dist()
 
     def set_states(self, states):
 
@@ -148,15 +170,19 @@ class FailureMode:  # Maybe rename to failure mode
 
         return True
 
-    def set_conditions(self, conditions):
+    def set_tasks(self, tasks):
         """
-        Takes a dictionary of conditions and sets the failure mode conditions
+        Takes a dictionary of tasks and sets the failure mode tasks
         """
 
-        for cond_name, condition in conditions.items():
-            self.conditions[cond_name] = condition
+        for task_name, task in tasks.items():
+            if isinstance(task, Task):
+                self.tasks[task_name] = task
+            elif isinstance(task, dict):
+                self.tasks[task_name] = Task(**task)
+            else:
+                print('Invalid Task')
 
-        return True
 
     # ************** Get Functions *****************
 
@@ -185,16 +211,18 @@ class FailureMode:  # Maybe rename to failure mode
 
 
 
-    def calc_init_dist(self):  # TODO needs to get passed a condition and a pof
+    def set_init_dist(self):  # TODO needs to get passed a condition and a pof
         """
         Convert the probability of failure into a probability of initiation
         """
 
-        print("cacl init dist")
         # Super simple placeholder # TODO add other methods
         alpha = self.untreated.alpha
         beta = self.untreated.beta
-        gamma = max(0, self.untreated.gamma - self.pf_interval)
+        if self.pf_interval is None:
+            gamma = max(0, self.untreated.gamma) 
+        else:
+            gamma = max(0, self.pf_interval - self.untreated.gamma)
 
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name ='init')
 
@@ -822,8 +850,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         try:
             id_update(self, id_str=dash_id, value=value, sep=sep, children=(Condition, Distribution, Task))
-            self.calc_init_dist()
-
+            self.set_init_dist()
         except:
             print('Invalid ID')
 
@@ -863,20 +890,33 @@ class FailureMode:  # Maybe rename to failure mode
     # ****************** Demonstration ***********
 
     def reset_demo(self):
+        self.name = None
+        self.active = None
+        self.pf_curve = None
+        self.pf_interval = None
+        self.pf_std = None
         self.untreated=None
         self.conditions=None
         self.tasks = None
         self.states = None
         self.set_demo()
 
+
     def set_demo(self):
 
-        
+        if self.name is None:
+            self.name = 'fm' 
+        if self.active is None:
+            self.active = True
+        if self.pf_curve is None:
+            self.pf_curve='pf_linear'
+        if self.pf_interval is None:
+            self.pf_interval=1
+        if self.pf_std is None:
+            self.pf_std=0
 
         if self.untreated is None:
-            self.set_untreated(Distribution(alpha=50, beta=3, gamma=10, name='untreated'))
-            # Prepare the failure mode
-            self.calc_init_dist()
+            self.set_untreated(Distribution(alpha=50, beta=3, gamma=10))
 
         if not self.conditions:
             self.set_conditions(

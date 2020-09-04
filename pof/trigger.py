@@ -2,7 +2,6 @@
     Filename: trigger.py
     Description: Contains the code for implementing a trigger class
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
- 
 """
 
 import numpy as np

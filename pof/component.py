@@ -381,9 +381,9 @@ class Component():
 
         if not self.fm:
             self.fm = dict(
-                random = FailureMode(alpha=500, beta=1, gamma=0, name='random').set_demo(),
-                slow_aging = FailureMode(alpha=100, beta=1.5, gamma=20, name='slow_aging').set_demo(),
-                fast_aging = FailureMode(alpha=50, beta=2, gamma=20, name='fast_aging').set_demo(),
+                random = FailureMode(untreated = dict(alpha=500, beta=1, gamma=0), name='random').set_demo(),
+                slow_aging = FailureMode(untreated = dict(alpha=100, beta=1.5, gamma=20), name='slow_aging').set_demo(),
+                fast_aging = FailureMode(untreated = dict(alpha=50, beta=2, gamma=20), name='fast_aging').set_demo(),
             )
         
             self.fm['random'].set_conditions(
