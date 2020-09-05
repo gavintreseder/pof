@@ -22,7 +22,6 @@
 
 
 
-Josh’s Graph
 Add condition
 Add Inspection Interval into interface
 Add starting condition
@@ -93,6 +92,3 @@ decay - 10 years
 weathering = 50 years
 
 ConditionLoss -> Failure Mode
-
-
-# Find out why epected_risk_cost_df needs t_end to work 
