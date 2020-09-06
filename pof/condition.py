@@ -289,7 +289,6 @@ class Condition:
         # Fill the end with the failed condition
         n_after_failure = t_stop - t_start - len(cp) + 1
         if n_after_failure > 0:
-
             cp = np.append(cp, np.full(max(0, n_after_failure), self.failed))
 
         return cp
