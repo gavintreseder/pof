@@ -1,7 +1,7 @@
 
 # 04 Sep
     
-    # Detailed Safety factor
+    # Standard Safety factor
     # Asset Loader
         # Load Asset Model (no tests)
         # Load Asset Data
@@ -12,14 +12,10 @@
     # Nice to have
         # Interface improvements
             # Condition
-            # PoF
             # Task Schedule
-            # Cost forecast
         # Make layout a class
         # Inpsection interval
             # Generalise to sensitivity
-
-
 
 
 Add condition
@@ -92,3 +88,172 @@ decay - 10 years
 weathering = 50 years
 
 ConditionLoss -> Failure Mode
+
+
+####******************************************
+
+Comp sim_timeline
+
+    sim every timeline
+
+FM sim_timeline
+
+    sim time
+    sim state_initiation
+    sim indicators
+        sim condition loss
+            pass pf_interval
+        sim symptoms
+
+    sim state_failure
+        # sim safety factor
+    sim time tasks
+    sim condition tasks
+
+
+Cond sim?
+
+
+
+
+
+Scenarios
+    # Component
+        # Failure Mode
+
+
+    # Component
+        # Failure Mode
+        # Condition
+
+    # Component
+        # Failure Mode
+        # Failure Mode
+        # Condition
+        # Safety Factor
+
+
+
+Indicators methods
+    # Condition has its own timeline
+
+    # timeline
+        condition_ 
+
+
+Timelines
+    # Condition
+    # Failure Mode
+
+
+
+
+
+Indicator -> Overload for each asset class
+    
+    # check failure
+    
+    # Condition
+        # get condition (all, one)
+        # set condition
+    # Symptom
+        # 
+
+
+
+Transformer
+
+    # Check failure
+        # Bearing noise (limit)
+        # oil reading (limit)
+
+    # Reset condition
+
+
+
+# Comp
+
+    # For every Fm
+
+        # initiation
+        # condition
+
+    # indicators
+
+    # for every FM:
+        # time tasks
+        # failure
+        # condition
+
+
+
+Failure Mode    
+    # initiation
+    # condition -> indicators
+    # time tasks
+    # states (detection, failure)
+    # condition
+
+
+
+
+# Sim timeline
+     
+    # initialise timeline
+
+    # Check for next task
+
+    # Execute next task
+
+
+
+
+Condition
+
+    # Get accumulation
+        # Add t_acumumlation from each failure mode that affects it
+
+    # Get perfect
+
+
+
+    # Get the profile (perfect, failed, pf_interval)
+
+    # Subtract accumulated condition
+
+    # Subtract accumulated time
+
+    # Add free
+
+
+
+wall thickness
+
+
+    starts
+        termites 0
+        decay 20
+
+    termites    0   0   10  20  30
+    decay       20  30  40  50  60
+
+
+    
+
+# Get_condition_loss_timeline (cause = None)
+
+    if is None:
+        add them all up
+    else
+
+
+# Get_condition_timeline
+
+
+Indicator (conditions) safety factor needs all the conditions
+
+    get_condition_timeline (20, 30, 50  70   90) ---> current condition/loss caused by all failure modes
+
+
+
+

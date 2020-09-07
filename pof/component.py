@@ -16,12 +16,14 @@ if __package__ is None or __package__ == '':
     from condition import Condition
     from distribution import Distribution
     from helper import fill_blanks, id_update
+    from indicator import PoleSafetyFactor
 
 else:
     from pof.failure_mode import FailureMode
     from pof.condition import Condition
     from pof.distribution import Distribution
     from pof.helper import fill_blanks, id_update
+    from pof.indicator import PoleSafetyFactor
     
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 #TODO create get, set, del and add methods
@@ -51,19 +53,32 @@ class Component():
         
         # Parameter
         self.name = 'comp' # TODO NotImplemented fully
+        self.indicator = dict()
         self.fm = dict()
-        self.conditions = dict()
+
 
         # Simulation traking
         self._sim_counter = 0
 
     # ****************** Load data ******************
 
-    def load(self):
+    def load(self, **kwargs):
+        # Load Condition
         # Load Failure Modes
-        # Load asset information
+        # Load asset information??
+
         NotImplemented
 
+    def load_asset_data(self, **args):
+
+        self.info = dict(
+            pole_load = 10,
+            pole_strength = 20,
+        )
+
+    def set_failure_mode(self):
+        
+        NotImplemented
 
     # ****************** Set data ******************
     
@@ -175,6 +190,18 @@ class Component():
 
     # PoF
 
+    def expected_untreated(self, t_start=0, t_end=100):
+
+        cdf = dict()
+        
+        for fm in self.fm.values():
+            cdf[fm.name] = fm.untreated.cdf(t_start=t_start,t_end=t_end)
+
+        # Treat the failure modes as a series and combine together
+        cdf['all'] =  1- np.array([fm.untreated.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
+
+        return cdf
+
     def expected_pof(self, t_start=0, t_end=100):
 
         sf = self.expected_sf(t_start, t_end)
@@ -188,17 +215,20 @@ class Component():
 
     def expected_sf(self, t_start=0, t_end=100):
         
-
         # Calcuate the failure rates for each failure mode
-        sf=dict()
-
+        sf=dict(
+            all = np.full((t_end - t_start + 1), 1)
+        )
+   
         for fm_name, fm in self.fm.items():
-            pof = fm.expected_pof()
+            if fm.active:
+                pof = fm.expected_pof()
 
-            sf[fm_name] = pof.sf(t_start, t_end)
+                sf[fm_name] = pof.sf(t_start, t_end)
 
+                sf['all'] = sf['all'] * sf[fm_name]
         # Treat the failure modes as a series and combine together
-        sf['all'] = np.array([fm.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
+        #sf['all'] = np.array([fm.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
 
         # TODO Fit a new Weibull for the new failure rate....
 
@@ -239,6 +269,11 @@ class Component():
                 ec[fm_name] = fm.expected_risk_cost()
 
         return ec
+
+    def expected_indicators(self):
+
+        NotImplemented
+
 
     def expected_condition(self): #TODO make work for all condition levels
         
@@ -304,7 +339,7 @@ class Component():
 
     # Cost
 
-    # ****************** Optijmal? ******************
+    # ****************** Optimal? ******************
 
     def expected_inspection_interval(self, x_min, x_max, n_increments = 20):
 
@@ -392,6 +427,18 @@ class Component():
                 )
             )
     
+            # Trial for indicator
+            self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
+            self.indicator['wall_thickness'] = Condition(100, 0, "pf_linear", [-5], pf_interval=15, pf_std = 1, name='wall_thickness')
+            self.indicator['external_diameter'] = Condition(100, 0, "pf_linear", [-2], pf_interval=30, pf_std = 1, name = 'external_diameter')
+
+            for fm in self.fm.values():
+                fm.set_conditions(dict(
+                    wall_thickness = self.indicator['wall_thickness'],
+                    external_diameter = self.indicator['external_diameter'],
+                ))
+
+
         return self
 
     def reset_demo(self):
@@ -399,6 +446,12 @@ class Component():
         self.fm = dict()
 
         self.set_demo()
+
+
+    def set_pole(self):
+
+        NotImplemented
+
 
 
 if __name__ == "__main__":

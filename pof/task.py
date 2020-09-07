@@ -91,6 +91,7 @@ class Task:
 
         # Log it's use
         self.t_completion = []
+        self.cost_completion = []
         self._timeline = NotImplemented
         self._count_checked = NotImplemented
         self._count_triggered = NotImplemented
@@ -126,6 +127,7 @@ class Task:
     def expected_counts(self, scaling=1):
         """ Retuns a dictionary with the number of times a task was completed scaled by a scaling factor"""
         time, count = np.unique(self.t_completion, return_counts=True)
+        count = count / scaling
         return dict(time=time, cost=count)
 
 
@@ -138,8 +140,7 @@ class Task:
         Takes a dictionary of states and dictionary of condition objects and returns the states that have been changed
         """
 
-        # Incur the cost of the task
-        self.t_completion.append(t_now)
+        self.record(t_now, timeline)
 
         # Update the condition if it was effective
         if self.is_effective(t_now, timeline):
@@ -169,6 +170,19 @@ class Task:
         #maybe change to impacts['system']
         return self.component_reset
 
+
+    def record(self, t_start, timeline):
+        """
+        Record the details foth e
+        """
+        # Time 
+        self.t_completion.append(t_start)
+
+        # Cost TODO make this variable based on time to failure
+        self.cost_completion.append(self.cost)
+
+
+        # TODO add other modules Resource, Labour, availability, 
 
     def reset(self):
         """
@@ -309,7 +323,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         if self.active:
             schedule = np.tile(
-                np.linspace(self.t_interval - 1, 0, self.t_interval),
+                np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
                 math.ceil((t_stop - t_delay) / self.t_interval),
             )
 

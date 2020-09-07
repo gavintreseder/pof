@@ -49,6 +49,10 @@ class Distribution:
         X = np.linspace(t_start, t_end, t_end - t_start + 1)
         return ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
+    def cdf(self, t_start, t_end):
+        X = np.linspace(t_start, t_end, t_end - t_start + 1)
+        return ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+
     def set_time_range(self):
 
         return

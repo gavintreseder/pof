@@ -1,8 +1,8 @@
-from component import Component
-from condition import Condition
-from failure_mode import FailureMode
-from task import *
-from distribution import Distribution
+from pof.component import Component
+from pof.condition import Condition
+from pof.failure_mode import FailureMode
+from pof.task import *
+from pof.distribution import Distribution
 
 
 # TODO make this a class
@@ -140,26 +140,52 @@ condition_data = dict(
     external_diameter = dict(
         perfect = 100,
         failed = 0,
-        curve = 'linear'
+        curve = 'linear',
         pf_interval = 10,
         pf_std = 0.5
     )
 )
 
+# States
+state_data = dict(
+    new = dict(
+        initiation=False,
+        detection=False,
+        failure=False,
+    ),
+    inititated =dict(
+        initiation=True,
+        detection=False,
+        failure=False,
+    ),
+    detected =dict(
+        initiation=True,
+        detection=True,
+        failure=False,
+    ),
+    failed =dict(
+        initiation=True,
+        detection=True,
+        failure=True,
+    ),
+)
 
-data_failure_mode = dict(
+
+failure_mode_data = dict(
     name = 'fm',
     untreated = distribution_data['slow_aging'],
 
     tasks = dict(
         inspection = inspection_data,
 
-
-
-    )
+    ),
+    states = state_data['new']
 
 )
 
+
+
+"""
 class Demo:
 
     early_life = Distribution(data['early_life'])
@@ -258,4 +284,4 @@ if __name__ == "__main__":
     demo = Demo
     data2 = FMData
 
-    print("Demo - Ok")
+    print("Demo - Ok")"""

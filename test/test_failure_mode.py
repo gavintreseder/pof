@@ -7,6 +7,7 @@ import utils
 
 from pof.failure_mode import FailureMode
 from pof.distribution import Distribution
+import pof.demo as demo
 
 class TestFailureMode(unittest.TestCase):
 
@@ -27,6 +28,10 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode()
         self.assertIsNotNone(fm)
     
+    def test_instantiate_with_data(self):
+        fm = FailureMode()
+        self.assertIsNotNone(fm)
+
     def test_sim_timeline(self):
 
         fm = FailureMode(alpha=50, beta=1.5, gamma=0)
@@ -34,10 +39,9 @@ class TestFailureMode(unittest.TestCase):
 
     # ************ Test load ***********************
     
-    def test_load(self):
-        fm = FailureMode()
+    def test_load_data(self):
+        fm = FailureMode().load(demo.failure_mode_data)
         self.assertIsNotNone(fm)
-
 
     def test_load_demo_no_data(self):
         fm = FailureMode().set_demo()
@@ -46,6 +50,8 @@ class TestFailureMode(unittest.TestCase):
     def test_load_demo_some_data(self):
         fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0)).set_demo()
         self.assertIsNotNone(fm)
+
+
 
     # ************ Test Dash ID Value ***********************
 

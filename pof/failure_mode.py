@@ -47,7 +47,7 @@ class FailureMode:  # Maybe rename to failure mode
         name = 'fm',
         active=True,
         pf_curve='pf_linear',
-        pf_interval=1,
+        pf_interval=10,
         pf_std=0,
         untreated=dict(),
         conditions=dict(), #TODO this needs to change for condition loss
@@ -96,7 +96,7 @@ class FailureMode:  # Maybe rename to failure mode
         name = 'fm',
         active=True,
         pf_curve='pf_linear',
-        pf_interval=1,
+        pf_interval=10,
         pf_std=0,
         untreated=dict(),
         conditions=dict(), #TODO this needs to change for condition loss
@@ -226,53 +226,11 @@ class FailureMode:  # Maybe rename to failure mode
 
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name ='init')
 
-
-    def get_expected_condition(self, t_min, t_max):  # TODO retire?
-
-        t_forecast = np.linspace(t_min, t_max, t_max - t_min + 1, dtype=int)
-
-        # Calculate the probability of initiation for the time period
-        prob_initiation = f_ti[t_forecast[1:]]
-
-        # Add the probability after t_max onto the final row with perfect condition
-        prob_not_considered = sf_i[t_max]
-        prob_initiation = np.append(prob_initiation, prob_not_considered)
-
-        # Scale to ignore the probability that occurs before t_min
-        prob_initiation = prob_initiation / prob_initiation.sum()
-
-        # Create a condition matrix of future condition
-        deg_matrix = np.tril(
-            np.full((deg_curve.size, deg_curve.size), 100), -1
-        ) + np.triu(circulant(deg_curve).T)
-
-        condition_outcomes = (deg_matrix.T * prob_initiation).T
-
-        condition_mean = condition_outcomes.sum(axis=0)
-
-        return True
-
-        # Need to consider condition that has a probability of outcomes ()
-
     def get_expected_pof(self):
 
         # TODO add a check if it has been simulated yet self.pof is None, self._timlines = None
 
         return self.pof
-
-    # *************** Condition Loss *************** # TODO not updated to new method
-
-    def measure_condition_loss(self):
-
-        return self.condition.measure()
-
-    def get_cond_loss(self):
-
-        # New Condition at end of t
-
-        return
-
-
 
     # ****************** Timeline ******************
 
@@ -459,9 +417,10 @@ class FailureMode:  # Maybe rename to failure mode
                         self.timeline["failure"][t_start:]
                     ) | (tl_f)
 
-            # Check tasks with time based trigger
+            # Check for new task timelines
             for task_name, task in self.tasks.items():
 
+                # Update time based tasks
                 if task.trigger == "time" and task_name in updates:
                     self.timeline[task_name][t_start:] = task.sim_timeline(
                         s_tart=t_start, t_end=t_end, timeline=self.timeline
@@ -474,6 +433,8 @@ class FailureMode:  # Maybe rename to failure mode
                     )
 
         return self.timeline
+
+    #def _update_indicators(self, t_start, t_end=None):
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """
@@ -845,12 +806,47 @@ class FailureMode:  # Maybe rename to failure mode
             print("No timelines have been simulated")
 
 
-    def update(self, dash_id, value, sep='-'):
+    def update(self, id_str, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
 
         try:
-            id_update(self, id_str=dash_id, value=value, sep=sep, children=(Condition, Distribution, Task))
-            self.set_init_dist()
+
+            # Remove the class type and class name from the dash_id
+            id_str = id_str.split(self.name + sep, 1)[1]
+            var = id_str.split(sep)[0]
+
+            # Check if the variable is an attribute of the class
+            if var in self.__dict__:
+
+                # Check if the variable is a dictionary
+                if isinstance(self.__dict__[var], dict): 
+                    
+                    var_2 = id_str.split(sep)[1]
+
+                    # Check if the variable is a class with its own update methods
+                    if var_2 in ['Condition', 'Task', 'Distribution']:
+                        var_3 = id_str.split(sep)[2]
+                        self.__dict__[var][var_3].update(id_str, value, sep)
+
+                        self.set_init_dist() #TODO Ghetto fix
+                    else:
+                        self.__dict__[var][var_2] = value
+                else:
+                    self.__dict__[var] = value
+                    if var == 'pf_interval': #TODO Ghetto fix
+                        for condition in self.conditions.values():
+                            condition.pf_interval = value
+
+            # Check if the variable is a class instance
+            else:
+
+                var = id_str.split(sep)[1]
+
+                if var in self.__dict__ and isinstance(self.__dict__[var], (Condition, Distribution, Task)):
+                    self.__dict__[var].update(id_str, value, sep)
+                else:
+                    print("Invalid id \"%s\" %s not in class" %(id_str, var))
+            
         except:
             print('Invalid ID')
 

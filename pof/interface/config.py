@@ -2,7 +2,7 @@
 
 
 
-class Settings():
+class Config():
 
     is_open = False
     scaling = dict(

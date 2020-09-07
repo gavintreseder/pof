@@ -2,10 +2,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-from pof.interface.settings import Settings as s
+from pof.interface.config import Config as cf
 
-IS_OPEN = s.is_open
-SCALING = s.scaling
+IS_OPEN = cf.is_open
+SCALING = cf.scaling
 
 # Asset
 
@@ -199,6 +199,7 @@ def make_cond_form_inputs(condition, prefix="", sep = ''): #Not used
                         type="number",
                         id= prefix + param,
                         value=condition.__dict__[param],
+                        min=0,
                         debounce=True,
                     ),
                 ],
@@ -265,6 +266,7 @@ def make_task_form(task, prefix="", sep='-'): #TODO make this better
                             type="number",
                             id= prefix + "t_delay",
                             value = task.t_delay,
+                            min=0,
                             debounce=True,
                         ),
                     ],
@@ -278,6 +280,7 @@ def make_task_form(task, prefix="", sep='-'): #TODO make this better
                             type="number",
                             id= prefix + "t_interval",
                             value = task.t_interval,
+                            min=0,
                             debounce=True,
                         ),
                     ],
@@ -297,6 +300,8 @@ def make_task_form(task, prefix="", sep='-'): #TODO make this better
                             type="number",
                             id= prefix + "p_effective",
                             value = task.p_effective * SCALING['p_effective'],
+                            min=0,
+                            max=100,
                             debounce=True,
                         ),
                         dbc.InputGroupAddon("%", addon_type="append"),
@@ -311,6 +316,7 @@ def make_task_form(task, prefix="", sep='-'): #TODO make this better
                             type="number",
                             id= prefix + "cost",
                             value= task.cost,
+                            min=0,
                             debounce=True,
                         ),
                     ],
@@ -372,12 +378,14 @@ def make_condition_trigger_layout(triggers, prefix="", sep='-'): # TODO make the
                             type="number",
                             id= cond_prefix + "lower",
                             value=threshold['lower'],
+                            min=0,
                             debounce=True,
                         ),
                         dbc.Input(
                             type="number",
                             id= cond_prefix + "upper",
                             value=threshold['upper'],
+                            min=0,
                             debounce=True,
                         ),
                     ],
@@ -482,6 +490,7 @@ def make_condition_impact_form(impact, prefix="", sep='-'):
                 type="number",
                 id= prefix + "target",
                 value=impact['target'],
+                min=0,
                 debounce=True,
             ),
         ],
