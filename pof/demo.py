@@ -1,41 +1,3 @@
-from pof.component import Component
-from pof.condition import Condition
-from pof.failure_mode import FailureMode
-from pof.task import *
-from pof.distribution import Distribution
-
-
-# TODO make this a class
-
-
-# dict of variables
-# dict of other classes
-# variables
-# other classes
-
-"""        if not self.conditions:
-            self.set_conditions(
-                dict(
-                    wall_thickness=Condition(100, 0, "pf_linear", [-5], pf_interval=self.pf_interval, pf_std = self.pf_std),
-                    external_diameter=Condition(100, 0, "pf_linear", [-2], pf_interval=self.pf_interval * 2, pf_std = self.pf_std),
-                )
-            )
-
-        if not self.tasks:
-            self.set_tasks(
-                dict(
-                    inspection=Inspection(t_interval=5, t_delay=10, name='inspection').set_default(),
-                    on_condition_repair=OnConditionRepair(activity="on_condition_repair", name = 'on_condition_repair').set_default(),
-                    cm=ImmediateMaintenance(activity="cm", name = 'cm').set_default(),
-                )
-            )
-
-        if not self.states:
-            self.set_states(dict(initiation=False, detection=False, failure=False,))
-
-"""
-
-
 """
 Usage
 
@@ -45,6 +7,8 @@ demo.slow_aging
 demo.distribution.slow_aging
 """
 
+
+# *********************** distribution data **********************************
 
 distribution_data = dict(
 
@@ -77,76 +41,151 @@ distribution_data = dict(
     ),
 )
 
-inspection_data = dict(
-    name = 'inspection',
-    p_effective = 0.9,
-    cost = 50,
-    t_interval = 5,
-    t_delay = 10,
-
-    triggers = dict(
-        condition = dict(
-            wall_thickness=dict(
-                lower=0,
-                upper=90,
-            ),
-        ),
-        state = dict(
-            initiation=True
-        ),
-    ),
-
-    impacts = dict(
-        condition = dict(),
-        state = dict(detection=True,)
-    ),
-)
-
-inspection_data = dict(
-    name = 'inspection',
-    p_effective = 0.9,
-    cost = 50,
-    t_interval = 5,
-    t_delay = 10,
-
-    triggers = dict(
-        condition = dict(
-            wall_thickness=dict(
-                lower=0,
-                upper=90,
-            ),
-        ),
-        state = dict(
-            initiation=True
-        ),
-    ),
-
-    impacts = dict(
-        condition = dict(),
-        state = dict(detection=True,)
-    ),
-)
-
-# Condition examples
+# *********************** condition data **********************************
 
 condition_data = dict(
-    wall_thickness = dict(
-        perfect = 100,
+    wall__thickness = dict(
+        perfect = 125,
         failed = 0,
-        curve = 'linear',
+        pf_curve = 'linear',
         pf_interval = 10,
         pf_std = 0.5,
     ),
-    external_diameter = dict(
-        perfect = 100,
+    extneral_diameter = dict(
+        perfect = 250,
         failed = 0,
-        curve = 'linear',
+        pf_curve = 'linear',
         pf_interval = 10,
         pf_std = 0.5
+    ),
+    slow_degrading = dict(
+        perfect = 100,
+        failed = 0,
+        pf_curve = 'linear',
+        pf_interval = 20,
+        pf_std = 0.5
+    ),
+    fast_degrading = dict(
+        perfect = 100,
+        failed = 0,
+        pf_curve = 'linear',
+        pf_interval = 10,
+        pf_std = 0.5
+    ),
+    uncertain_degrading = dict(
+        perfect = 100,
+        failed = 0,
+        pf_curve = 'linear',
+        pf_interval = 30,
+        pf_std = 5
+    ),
+    instant = dict(
+        perfect = 1,
+        failed = 0,
+        pf_curve = 'linear', #TODO change to step
+        pf_interval=1,
+        pf_std = 0,
     )
 )
 
-# States
+# *********************** task data **********************************
+
+inspection_data = dict(
+    activity = 'Inspection',
+    name = 'inspection',
+    p_effective = 0.9,
+    cost = 50,
+    t_interval = 5,
+    t_delay = 10,
+
+    triggers = dict(
+        condition = dict(
+            fast_degrading=dict(
+                lower=0,
+                upper=90,
+            ),
+            slow_degrading=dict(
+                lower=0,
+                upper=90,
+            ),
+        ),
+        state = dict(
+            initiation=True
+        ),
+    ),
+
+    impacts = dict(
+        condition = dict(),
+        state = dict(detection=True,)
+    ),
+)
+
+on_condition_repair_data = dict(
+    activity = 'ConditionTask',
+    name = 'on_condition_repair_demo',
+    p_effective = 0.7,
+    cost = 100,
+
+    triggers = dict(
+        condition=dict(
+            fast_degrading=dict(lower=20, upper=90,),
+            slow_degrading=dict(lower=20, upper=90,)
+        ),
+        state=dict(detection=True),
+    ),
+
+    impacts = dict(
+        condition = dict(
+            fast_degrading=dict(
+                target=0.9,
+                method="reduction_factor",
+                axis="condition",
+            ),
+            slow_degrading=dict(
+                target=0,
+                method="reduction_factor",
+                axis="condition",
+            ),
+        ),
+        state = dict(initiation=False, detection=False, failure=False,),
+    ),
+
+)
+
+on_condition_replacement_data = dict(
+    activity = 'ConditionTask',
+    name = 'inspection_demo',
+    p_effective = 1,
+    cost = 5000,
+
+    triggers = dict(
+        condition=dict(
+            fast_degrading=dict(lower=0, upper=20,),
+            slow_degrading=dict(lower=0, upper=20,)
+        ),
+        state=dict(detection=True),
+    ),
+
+    impacts = dict(
+        condition = dict(
+            fast_degrading=dict(
+                target=1,
+                method="reduction_factor",
+                axis="condition",
+            ),
+            slow_degrading=dict(
+                target=1,
+                method="reduction_factor",
+                axis="condition",
+            ),
+        ),
+        state = dict(initiation=False, detection=False, failure=False,),
+    ),
+)
+
+
+# *********************** state data **********************************
+
 state_data = dict(
     new = dict(
         initiation=False,
@@ -170,20 +209,66 @@ state_data = dict(
     ),
 )
 
+# *********************** failure mode data ********************************** #TODO move condition
 
 failure_mode_data = dict(
-    name = 'fm',
-    untreated = distribution_data['slow_aging'],
+    random = dict(
+        name = 'random',
+        untreated = distribution_data['random'],
 
-    tasks = dict(
-        inspection = inspection_data,
+        conditions = dict(
+            instant = condition_data['instant'],
+        ),
 
+        tasks = dict(
+            inspection = inspection_data,
+            on_condition_replacement = on_condition_replacement_data
+        ),
+        states = state_data['new']
     ),
-    states = state_data['new']
+    slow_aging = dict(
+        name = 'slow_aging',
+        untreated = distribution_data['slow_aging'],
 
+        conditions = dict(
+            slow_degrading = condition_data['slow_degrading'],
+            fast_degrading = condition_data['fast_degrading']
+        ),
+
+        tasks = dict(
+            inspection = inspection_data,
+            on_condition_repair = on_condition_repair_data,
+            on_condition_replacement = on_condition_replacement_data
+        ),
+        states = state_data['new']
+    ),
+    fast_aging = dict(
+        name = 'fast_aging',
+        untreated = distribution_data['fast_aging'],
+
+        conditions = dict(
+            slow_degrading = condition_data['slow_degrading'],
+            fast_degrading = condition_data['fast_degrading']
+        ),
+
+        tasks = dict(
+            inspection = inspection_data,
+            on_condition_repair = on_condition_repair_data,
+            on_condition_replacement = on_condition_replacement_data
+        ),
+        states = state_data['new']
+    )
 )
 
+# *********************** component data **********************************
 
+component_data = dict(
+
+    comp = dict(
+
+    )
+
+)
 
 """
 class Demo:
@@ -221,7 +306,7 @@ class FMData:
 
 # Conditions
 
-wall_thickness = dict(
+fast_degrading = dict(
 
 )
 
@@ -239,7 +324,7 @@ scheduled_inspection.set_params(
         state_triggers = dict(),
 
         condition_triggers = dict(
-            wall_thickness = dict(
+            fast_degrading = dict(
                 lower = 0,
                 upper = 90,
             ),
@@ -250,7 +335,7 @@ scheduled_inspection.set_params(
         ),
 
         condition_impacts = dict(
-            wall_thickness = dict(
+            fast_degrading = dict(
                 target = None,
                 reduction_factor = 0,
                 method = 'reduction_factor',
@@ -268,8 +353,8 @@ fast_aging = FailureMode(alpha=50, beta=3, gamma=20)
 fm_demo = slow_aging
 
 fm_demo.set_conditions(dict(
-    wall_thickness = Condition(100, 0, 'linear', [-2]),
-    external_diameter = Condition(100, 0, 'linear', [-5]),
+    fast_degrading = Condition(100, 0, 'linear', [-2]),
+    slow_degrading = Condition(100, 0, 'linear', [-5]),
 ))
 
 fm_demo.set_tasks(dict(
@@ -277,11 +362,8 @@ fm_demo.set_tasks(dict(
     #ocr = OnConditionRepair(activity='on_condition_repair').set_default(),
     cm = ImmediateMaintenance(activity='cm').set_default(),
 ))
-
+"""
 
 if __name__ == "__main__":
-    data = Dataset
-    demo = Demo
-    data2 = FMData
 
-    print("Demo - Ok")"""
+    print("Demo - Ok")

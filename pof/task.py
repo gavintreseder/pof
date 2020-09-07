@@ -17,11 +17,13 @@ if __package__ is None or __package__ == '':
     from condition import Condition
     from consequence import Consequence
     from distribution import Distribution
+    import demo as demo
 else:
     from pof.helper import flatten
     from pof.condition import Condition
     from pof.consequence import Consequence
     from pof.distribution import Distribution
+    import pof.demo as demo
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -56,14 +58,17 @@ class Task:
     CONDITION_IMPACT_METHODS = ['reduction_factor', "tbc"]
 
 
-    def __init__(self, trigger="unknown", activity="unknown", name="task"):
+    def __init__(self,
+        name='task', activity='Task', trigger="unknown", active=True,
+        cost = 0, labour= None, spares=None, equipment=None, consequence=None,
+        p_effective = 1, triggers = dict(), impacts =dict(), component_reset=False,
+        *args, **kwargs
+    ):
 
         self.name = name
         self.activity = activity
         self.trigger = trigger
-        self.active = True
-
-        self.trigger_comp = "1.1.2"  # Notimplemented
+        self.active = active
 
         # TODO how the package is grouped together
         self._package = NotImplemented
@@ -71,35 +76,75 @@ class Task:
         self._impacts_children = False
 
         # Consumed per use
-        self.cost = 100
-        self.labour = "trade"
-        self.spares = "pole"  # TODO make this an object
-        self.equipment = "ewp"
+        self.cost = cost
+        self.labour = NotImplemented # labour TODO
+        self.spares = NotImplemented # spares TODO
+        self.equipment = NotImplemented # equipment TODO
         self.consequence = Consequence()
 
-        # Triggers - set in child classes
-        self.p_effective = 1
+        # Triggers
+        self.p_effective = p_effective
+        self.set_triggers(triggers)
+        self.set_impacts(impacts)
 
-        self.triggers = dict(condition=dict(), state=dict(), time=dict())
-
-        self.impacts = dict(condition=dict(), state=dict(), time=dict())
-
-        self.component_reset = False
+        self.component_reset = component_reset
 
         # Time to execute
-        self.state = "up"  # or down
+        self.state = NotImplemented
 
         # Log it's use
         self.t_completion = []
         self.cost_completion = []
         self._timeline = NotImplemented
-        self._count_checked = NotImplemented
-        self._count_triggered = NotImplemented
-        self._count_completed = 0
 
-    def set_triggers(self, all_triggers):
 
-        self.triggers = all_triggers
+    # ************ Load Methods **********************
+
+    def load(self, kwargs):
+        try:
+            self._load(**kwargs)
+        except:
+            print("Error loading Task data")
+
+    def _load(self, triggers=dict(), impacts=dict()):
+
+        self.set_triggers(triggers)
+        self.set_impacts(impacts)
+
+    # ************ Set Methods **********************
+
+    def set_consequence(self, consequence):
+        """
+        Takes a Consequence object or consequence dict to set a consequence
+        """
+    
+        # Load a condition object
+        if isinstance(consequence, Consequence):
+            self.consequence = consequence
+        
+        # Create a condition object
+        elif isinstance(consequence, dict):
+            self.consequence = Consequence(**consequence)
+        
+        else:
+            print ("Invalid Consequence")
+
+    def set_triggers(self, triggers=dict()):
+
+        for trigger in ['condition', 'state', 'time']:
+            if trigger not in triggers:
+                triggers[trigger] = dict()
+
+        self.triggers = triggers
+
+    def set_impacts(self, impacts=dict()):
+        for impact in ['condition', 'state', 'time']:
+            if impact not in impacts:
+                impacts[impact] = dict()
+
+        self.impacts = impacts
+
+    # ************ Get Methods **********************   
 
     def get_impacts(self):
         """Return an impact dictionary"""
@@ -184,41 +229,17 @@ class Task:
 
         # TODO add other modules Resource, Labour, availability, 
 
+    # ********************* reset methods ******************
+
     def reset(self):
         """
         Resets the logs for a task
         """
         self.t_completion = []
 
+    # ********************* interface methods ******************
 
     def update(self, dash_id, value, sep='-'):
-        """Update the task object to a value using a dash component id"""
-
-        try:
-
-            dash_id = dash_id.split(self.name + sep, 1)[1]
-
-            ids = dash_id.split(sep)
-
-            if ids[0] in ['active', 'p_effective', 'cost', 't_interval', 't_delay']:
-
-                self.__dict__[ids[0]] = value
-
-            elif ids[0] in ["trigger", "impact"]:
-
-                if ids[1] == "condition":
-
-                    self.__dict__[ids[0]+'s'][ids[1]][ids[2]][ids[3]] = value
-                    
-                elif ids[1] == 'state':
- 
-                    self.__dict__[ids[0]+'s'][ids[1]][ids[2]] = value
-            else:
-                print ("Invalid Dash ID - %s" %(dash_id))
-        except:
-            print ("Dash ID Error- %s" %(dash_id))
-
-    def get_by_id(self, dash_id, value, sep='-'): # TODO fix this later
         """Update the task object to a value using a dash component id"""
 
         try:
@@ -273,8 +294,8 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    def __init__(self, t_interval, t_delay=0, name = 'scheduled_task'):
-        super().__init__()
+    def __init__(self, t_interval, t_delay=0, name = 'scheduled_task', *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.name = name
         self.trigger = "time"
@@ -345,8 +366,8 @@ class ConditionTask(Task):
     Parent class for creating condition tasks
     """
 
-    def __init__(self, activity="ConditionTask", name='condition_task'):
-        super().__init__()
+    def __init__(self, activity="ConditionTask", name='condition_task', *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.name=name
         self.trigger = "condition"
@@ -536,11 +557,14 @@ class OnConditionReplacement(ConditionTask):
 
 
 class Inspection(ScheduledTask):
-    def __init__(self, t_interval, t_delay=0, name='inspection'):
-        super().__init__(t_interval=t_interval, t_delay=t_delay)
+
+    def __init__(self, t_interval, t_delay=0, name='inspection',  *args, **kwargs):
+        
+        super().__init__(t_interval=t_interval, t_delay=t_delay, **kwargs)
 
         self.name = name
-        self.activity = "inspection"
+        self.activity = "Inspection"
+
 
     def set_default(self):
 
@@ -710,12 +734,11 @@ Task
         # Time
         # State
         # Condition
-    # System
-        # Does it impact the component
+    # Level of Impact
+        # Nil
+        # Failure Mode
+        # Component
 
-
-    -timeline when task can bet completed
-    -timeline of dependent tasks???
 
 
 

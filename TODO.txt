@@ -18,7 +18,10 @@
             # Generalise to sensitivity
 
 
-Add condition
+    # Replace on failure button
+
+    # Add methods for'max', 'any', 'min', etc
+
 Add Inspection Interval into interface
 Add starting condition
 Load with pole failure modes

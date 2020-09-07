@@ -10,7 +10,7 @@
 
 
 
-class ModelLoader:
+class AssetModelLoader:
     """
     ModelLoader is used to load model parameters from an excel sheet and transform them into a json/dict structure that can be used to load pof objects.
     """
@@ -24,7 +24,9 @@ class ModelLoader:
 
     
     def load_xls(self):
-
+        """
+        Transform a .xlsx file into a dictionary which can be used to create an asset model
+        """
 
         NotImplemented
 

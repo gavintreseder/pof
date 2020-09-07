@@ -24,7 +24,6 @@ else:
 
 # TODO potentially change where t_accumulated and condition_accumulated gets calculated to improve the speed
 
-
 class Condition:
 
     """
@@ -163,7 +162,7 @@ class Condition:
         # Change to another function swtich type TODO https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
 
         # Get the condition profile
-        if self.pf_curve == "linear":
+        if self.pf_curve == "linear-legacy":
             m = self.pf_curve_params[0]
             b = self.perfect
 
@@ -172,7 +171,7 @@ class Condition:
         elif self.pf_curve == "step":
             y = NotImplemented
 
-        elif self.pf_curve == 'pf_linear':
+        elif self.pf_curve == 'linear':
             pf = self.pf_interval + ss.norm.rvs(loc=0, scale=self.pf_std)
 
             m = (self.failed - self.perfect) / pf
@@ -342,6 +341,11 @@ class Condition:
 
         return False
 
+    # *************** Expected *******************
+
+    def expected(self):
+
+        return NotImplemented
     # *************** Reset **********************
 
     def reset(self):

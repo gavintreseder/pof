@@ -2,6 +2,8 @@
 
 
 import unittest
+import unittest.mock
+import io
 
 import utils
 
@@ -29,7 +31,7 @@ class TestFailureMode(unittest.TestCase):
         self.assertIsNotNone(fm)
     
     def test_instantiate_with_data(self):
-        fm = FailureMode()
+        fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0))
         self.assertIsNotNone(fm)
 
     def test_sim_timeline(self):
@@ -39,19 +41,29 @@ class TestFailureMode(unittest.TestCase):
 
     # ************ Test load ***********************
     
-    def test_load_data(self):
-        fm = FailureMode().load(demo.failure_mode_data)
+
+    def test_load_data_demo_data(self):
+        fm = FailureMode().load(demo.failure_mode_data['slow_aging'])
         self.assertIsNotNone(fm)
+
+    """@unittest.mock.patch('sys.stdout', new_callable=io.StringIO)
+    def assert_stdout(self, n, expected_output, mock_stdout):
+        fm = FailureMode().load(demo.failure_mode_data['slow_aging'])
+        self.assertEqual(mock_stdout.getvalue(), expected_output)
+
+    def test_load_data_demo_data_no_errors(self):
+        self.assert_stdout(2, '1\n2\n')"""
+
 
     def test_load_demo_no_data(self):
+        fm = FailureMode().load()
+        self.assertIsNotNone(fm)
+
+
+
+    def test_set_demo_some_data(self):
         fm = FailureMode().set_demo()
         self.assertIsNotNone(fm)
-
-    def test_load_demo_some_data(self):
-        fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0)).set_demo()
-        self.assertIsNotNone(fm)
-
-
 
     # ************ Test Dash ID Value ***********************
 
@@ -80,7 +92,7 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode().set_demo()
         dash_ids = fm.get_dash_ids()
 
-        for dash_id in ['FailureMode-fm-tasks-Task-inspection-trigger-condition-wall_thickness-lower']: #dash_ids:
+        for dash_id in dash_ids: #['FailureMode-fm-tasks-Task-inspection-trigger-condition-wall_thickness-lower']: #dash_ids:
 
             for expected in expected_list:
         

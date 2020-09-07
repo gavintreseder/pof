@@ -12,7 +12,7 @@ class Indicator():
 
     Methods
 
-
+        load_asset_data()
 
         sim_timeline()
 
@@ -85,11 +85,12 @@ class PoleSafetyFactor(Indicator):
 
         if method == 'simple':
             sf = self._safety_factor(
-                agd = self.component.conditions['external_diameter'].perfect,
-                czd = self.component.conditions['external_diameter'],
-                wt = self.component.conditions['wall_thickness'],
+                agd = self.component.indicator['external_diameter'].perfect,
+                czd = self.component.indicator['external_diameter'].get_condition_profile(0,200),
+                wt = self.component.indicator['wall_thickness'].get_condition_profile(0,200),
                 margin = 4
             )
+
         elif method == 'actual':
             sf = self._safety_factor(
                 agd = self.component.conditions['external_diameter'].perfect,
@@ -101,9 +102,10 @@ class PoleSafetyFactor(Indicator):
 
         return sf
 
+
     def _safety_factor(self, agd, czd, wt, pole_strength=None, pole_load=None, margin=4):
         """
-        Calculates the actual safety factor using the pole tip load
+        Calculates the safety factor using a margin of 4 if the pole load and pole strength are not available
 
             Params:
                 agd:    above ground diamater
@@ -120,9 +122,9 @@ class PoleSafetyFactor(Indicator):
 
             margin = pole_strength / pole_load
 
-        ssf = margin * (czd**4 - (czd - 2*wt)**4) / (agd**3 * czd)
+        sf = margin * (czd**4 - (czd - 2*wt)**4) / (agd**3 * czd)
 
-        return ssf
+        return sf
 
 
 

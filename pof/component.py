@@ -69,12 +69,24 @@ class Component():
 
         NotImplemented
 
-    def load_asset_data(self, **args):
+    def load_asset_data(self, *args, **kwargs):
 
         self.info = dict(
             pole_load = 10,
             pole_strength = 20,
         )
+
+        # Set perfect indicator values?? TODO
+
+        # Set indicators
+        for indicator in self.indicator.values():
+
+            # Set perfect
+            x = 2
+            # Set current
+            NotImplemented
+
+
 
     def set_failure_mode(self):
         
@@ -271,17 +283,54 @@ class Component():
         return ec
 
     def expected_indicators(self):
+        
+        ei = dict()
+
+        for indicator in self.indicator.values():
+            
+            indicator.expected()
 
         NotImplemented
+        return ei
 
 
-    def expected_condition(self): #TODO make work for all condition levels
+    def expected_condition(self, stdev=1): #TODO make work for all condition levels
         
-        ec = self.expected_condition_loss()
+        """ec = self.expected_condition_loss()
         for c in ec:
-            ec[c] = 100 - ec[c]
+            ec[c] = 100 - ec[c]"""
 
-        return ec
+        expected = dict()
+
+        for fm in self.fm.values():
+            # Get the expected condition loss for the failure mode
+
+            if fm.active:
+                for cond_name, condition in fm.conditions.items():
+    
+                    ec = np.array([fm._timelines[x][cond_name] for x in fm._timelines])
+
+                    if cond_name in expected:
+                        expected[cond_name] = expected[cond_name] + ec
+                    else:
+                        expected[cond_name] = ec
+
+        for cond_name, ecl in expected.items():
+            mean = ecl.mean(axis=0)
+            sd = ecl.std(axis=0)
+            upper = mean + sd*stdev
+            lower = mean - sd*stdev
+
+            upper[upper > condition.perfect] = condition.perfect
+            lower[lower < condition.failed] = condition.failed
+
+            expected[cond_name] = dict(
+                lower=lower,
+                mean=mean,
+                upper=upper,
+            )
+
+        return expected
 
     def expected_condition_loss_legacy(self):
         """Get the expected condition loss for a component"""
@@ -427,16 +476,16 @@ class Component():
                 )
             )
     
-            # Trial for indicator
-            self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
-            self.indicator['wall_thickness'] = Condition(100, 0, "pf_linear", [-5], pf_interval=15, pf_std = 1, name='wall_thickness')
-            self.indicator['external_diameter'] = Condition(100, 0, "pf_linear", [-2], pf_interval=30, pf_std = 1, name = 'external_diameter')
+        # Trial for indicator
+        self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
+        self.indicator['wall_thickness'] = Condition(160, 0, "pf_linear", [-5], pf_interval=30, pf_std = 1, name='wall_thickness')
+        self.indicator['external_diameter'] = Condition(320, 0, "pf_linear", [-2], pf_interval=30, pf_std = 1, name = 'external_diameter')
 
-            for fm in self.fm.values():
-                fm.set_conditions(dict(
-                    wall_thickness = self.indicator['wall_thickness'],
-                    external_diameter = self.indicator['external_diameter'],
-                ))
+        for fm in self.fm.values():
+            fm.set_conditions(dict(
+                wall_thickness = self.indicator['wall_thickness'],
+                external_diameter = self.indicator['external_diameter'],
+            ))
 
 
         return self

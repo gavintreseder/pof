@@ -21,13 +21,17 @@ if __package__ is None or __package__ == '':
     from condition import Condition
     from distribution import Distribution
     from consequence import Consequence
-    from task import Task, Inspection, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
+    from task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
+    import demo
 else:
     from pof.helper import fill_blanks, id_update
     from pof.condition import Condition
     from pof.distribution import Distribution
     from pof.consequence import Consequence
-    from pof.task import Task, Inspection, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
+    from pof.task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
+    import pof.demo as demo
+
+
 
 
 # TODO move t somewhere else
@@ -92,7 +96,15 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ************** Load Functions *****************
 
-    def load(self,
+    def load(self, kwargs):
+        try:
+            self._load(**kwargs)
+        except:
+            print("Error loading FailureMode data")
+
+        return self
+
+    def _load(self,
         name = 'fm',
         active=True,
         pf_curve='pf_linear',
@@ -103,6 +115,8 @@ class FailureMode:  # Maybe rename to failure mode
         cof=dict(),
         states = dict(),
         tasks = dict(),
+        *args,
+        **kwargs,
     ):
 
         # Failure Information
@@ -179,11 +193,17 @@ class FailureMode:  # Maybe rename to failure mode
             if isinstance(task, Task):
                 self.tasks[task_name] = task
             elif isinstance(task, dict):
-                self.tasks[task_name] = Task(**task)
+                if task['activity'] == 'Inspection':
+                    self.tasks[task['name']] = Inspection(**task)
+                elif task['activity'] == "ConditionTask":
+                    self.tasks[task_name] = ConditionTask(**task)
+
+                else:
+                    print("Invalid Task Activity")
             else:
                 print('Invalid Task')
 
-
+ 
     # ************** Get Functions *****************
 
     def get_states(self):
@@ -346,7 +366,7 @@ class FailureMode:  # Maybe rename to failure mode
         for task in self.tasks.values():
 
             if task.trigger == "time":
-                timeline[task.activity] = task.sim_timeline(t_end)
+                timeline[task.name] = task.sim_timeline(t_end)
 
         # Initialised detection
         timeline["detection"] = np.full(t_end - t_start + 1, self.is_detected())
@@ -501,7 +521,6 @@ class FailureMode:  # Maybe rename to failure mode
         #TODO general into expected event = 'failure', cumulative = True/False method
         t_failures = []
 
-        t_min = self._timelines[0]['time'][0]
         t_max = self._timelines[0]['time'][-1] + 1
 
         # Get the time of first failure or age at failure
@@ -527,6 +546,7 @@ class FailureMode:  # Maybe rename to failure mode
 
     def _expected(self, timeline_key, first_event=True):
         #TODO general into expected event = 'failure', cumulative = True/False method
+        #TODO delete
         t_events = []
 
         t_min = self._timelines[0]['time'][0]
@@ -546,6 +566,7 @@ class FailureMode:  # Maybe rename to failure mode
         # Fit the weibull
         wbf = WeibullFitter()
 
+        t_failures = NotImplemented
         event_observed = (t_failures != t_max)
 
         wbf.fit(durations=t_failures, event_observed=event_observed)
@@ -591,9 +612,8 @@ class FailureMode:  # Maybe rename to failure mode
         # Set the end to the largest time if no time is given
         if t_end == None:
             t_end = t_start
-            for details in erc.values():
-                for task in details.values():
-                    t_end = max(max(task['time'], default=t_start), t_end)
+            for task_name, task in erc.items():
+                t_end = max(max(task['time'], default=t_start), t_end)
 
         df = pd.DataFrame(erc).T.apply(fill_blanks, axis = 1, args = (t_start, t_end))
         df.index.name = 'task'
@@ -885,57 +905,10 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ****************** Demonstration ***********
 
-    def reset_demo(self):
-        self.name = None
-        self.active = None
-        self.pf_curve = None
-        self.pf_interval = None
-        self.pf_std = None
-        self.untreated=None
-        self.conditions=None
-        self.tasks = None
-        self.states = None
-        self.set_demo()
-
 
     def set_demo(self):
 
-        if self.name is None:
-            self.name = 'fm' 
-        if self.active is None:
-            self.active = True
-        if self.pf_curve is None:
-            self.pf_curve='pf_linear'
-        if self.pf_interval is None:
-            self.pf_interval=1
-        if self.pf_std is None:
-            self.pf_std=0
-
-        if self.untreated is None:
-            self.set_untreated(Distribution(alpha=50, beta=3, gamma=10))
-
-        if not self.conditions:
-            self.set_conditions(
-                dict(
-                    wall_thickness=Condition(100, 0, "pf_linear", [-5], pf_interval=self.pf_interval, pf_std = self.pf_std),
-                    external_diameter=Condition(100, 0, "pf_linear", [-2], pf_interval=self.pf_interval * 2, pf_std = self.pf_std),
-                )
-            )
-
-        if not self.tasks:
-            self.set_tasks(
-                dict(
-                    inspection=Inspection(t_interval=5, t_delay=10, name='inspection').set_default(),
-                    on_condition_repair=OnConditionRepair(activity="on_condition_repair", name = 'on_condition_repair').set_default(),
-                    on_condition_replacement=OnConditionReplacement(activity="on_condition_replacement", name = 'on_condition_replacement').set_default(),
-                    immediate_replacement=ImmediateMaintenance(activity="immediate_replacement", name = 'immediate_replacement').set_default(),
-                )
-            )
-
-        if not self.states:
-            self.set_states(dict(initiation=False, detection=False, failure=False,))
-
-
+        self.load(demo.failure_mode_data['slow_aging'])
 
         return self
 
