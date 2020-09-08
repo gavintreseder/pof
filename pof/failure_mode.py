@@ -626,9 +626,9 @@ class FailureMode:  # Maybe rename to failure mode
 
         return df.reset_index()
 
-    def expected_risk_cost(self, scaling=1):
-
-        scaling = self._sim_counter
+    def expected_risk_cost(self, scaling=None):
+        if scaling==None:
+            scaling = self._sim_counter
 
         profile = self._expected_cost(scaling=scaling)
         profile['risk'] = self._expected_risk(scaling=scaling)
@@ -814,6 +814,8 @@ class FailureMode:  # Maybe rename to failure mode
 
                 if var in self.__dict__ and isinstance(self.__dict__[var], (Condition, Distribution, Task)):
                     self.__dict__[var].update(id_str, value, sep)
+                    if var == 'untreated':
+                        self.set_init_dist() #TODO Ghetto fix
                 else:
                     print("Invalid id \"%s\" %s not in class" %(id_str, var))
             

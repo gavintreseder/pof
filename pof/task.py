@@ -428,23 +428,24 @@ class ConditionTask(Task):
             t_end = t_end + 1
             tl_ct = np.full(t_end - t_start, True)
 
-            try:
-                # Check the state triggers have been met
-                for state, trigger in self.triggers['state'].items():
+            # Check the state triggers have been met
+            for state, trigger in self.triggers['state'].items():
+                try:
                     tl_ct = (tl_ct) & (timeline[state][t_start:t_end])
-            except KeyError:
-                print("%s not found" % (state))
+                except KeyError:
+                    print("%s not found" % (state))
 
-            try:
-                # Check the condition triggers have been met
-                for condition, trigger in self.triggers['condition'].items():
+    
+            # Check the condition triggers have been met
+            for condition, trigger in self.triggers['condition'].items():
+                try:
                     tl_ct = (
                         (tl_ct)
                         & (timeline[condition][t_start:t_end] < trigger["upper"])
                         & (timeline[condition][t_start:t_end] > trigger["lower"])
                     )
-            except KeyError:
-                print("%s not found" % (condition))
+                except KeyError:
+                    print("%s not found" % (condition))
 
             tl_ct = tl_ct.astype(int)
 

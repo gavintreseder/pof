@@ -34,10 +34,34 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0))
         self.assertIsNotNone(fm)
 
-    def test_sim_timeline(self):
+    # ************ Test Init Timeline ***********************
 
-        fm = FailureMode(alpha=50, beta=1.5, gamma=0)
-        fm.sim_timeline(200)
+    def test_init_timeline_condition_step(self):
+        t_start = 0
+        t_end = 200
+        fm = FailureMode().load(demo.failure_mode_data['random'])
+
+        fm.init_timeline(t_start=0, t_end=200)
+
+        # Check times match
+        self.assertEqual(fm.timeline['time'][0], t_start, "First time does not equal t_start")
+        self.assertEqual(fm.timeline['time'][-1], t_end, "Last time in timeline does not equal t_end")
+
+        # Check states match
+        self.assertEqual(fm.timeline['intitiation'][0], fm.is_initiated(), "First initiation in timeline does not equal current initiation")
+        self.assertEqual(fm.timeline['detection'][0], fm.is_detected(), "First detection in timeline does not equal current detection")
+        self.assertEqual(fm.timeline['failure'][0], fm.is_failed(), "First Failure in timeline does not equal current failure")
+
+        # Check conditions match
+        # TODO move conditions to indicators first
+
+        # Check tasks match
+        #TODO rewrite time function in tasks first
+
+
+    def test_init_timeline_condition_linear(self):
+
+        fm = FailureMode(demo.failure_mode_data['slow_aging'])
 
     # ************ Test load ***********************
     

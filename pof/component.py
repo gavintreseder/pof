@@ -206,13 +206,17 @@ class Component():
 
     def expected_untreated(self, t_start=0, t_end=100):
 
-        cdf = dict()
+        sf=dict(
+            all = np.full((t_end - t_start + 1), 1)
+        )
         
         for fm in self.fm.values():
-            cdf[fm.name] = fm.untreated.cdf(t_start=t_start,t_end=t_end)
+            if fm.active:
+                sf[fm.name] = fm.untreated.sf(t_start=t_start,t_end=t_end)
+                sf['all'] = sf['all'] * sf[fm.name]
 
         # Treat the failure modes as a series and combine together
-        cdf['all'] =  1- np.array([fm.untreated.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
+        cdf = {fm : 1 - sf for fm, sf in sf.items()}
 
         return cdf
 

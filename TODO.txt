@@ -22,6 +22,7 @@
 
     # Add methods for'max', 'any', 'min', etc
 
+    # figure out how to load a failure mode with kwargs is the init as well
 
 # Illyse Tasks
 

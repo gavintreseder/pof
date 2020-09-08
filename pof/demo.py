@@ -21,7 +21,7 @@ distribution_data = dict(
 
     random = dict(
         name = "random",
-        alpha = 100,
+        alpha = 1000,
         beta = 1,
         gamma = 0,
     ),
@@ -108,7 +108,7 @@ inspection_data = dict(
             condition = dict(
                 instant = dict(
                     lower=0,
-                    upper=100,
+                    upper=0,
                 )
             ),
             state = dict(
@@ -195,7 +195,7 @@ on_condition_replacement_data = dict(
             fast_degrading=dict(lower=0, upper=20,),
             slow_degrading=dict(lower=0, upper=20,)
         ),
-        state=dict(detection=True),
+        state=dict(detection=True, failure=True),
     ),
 
     impacts = dict(
