@@ -65,6 +65,7 @@ class Task:
         *args, **kwargs
     ):
 
+        # Task information
         self.name = name
         self.activity = activity
         self.trigger = trigger
@@ -80,7 +81,7 @@ class Task:
         self.labour = NotImplemented # labour TODO
         self.spares = NotImplemented # spares TODO
         self.equipment = NotImplemented # equipment TODO
-        self.consequence = Consequence()
+        self.consequence = self.set_consequence()
 
         # Triggers
         self.p_effective = p_effective
@@ -106,10 +107,31 @@ class Task:
         except:
             print("Error loading Task data")
 
-    def _load(self, triggers=dict(), impacts=dict()):
+    def _load(self,
+        name='task', activity='Task', trigger="unknown", active=True,
+        cost = 0, labour= None, spares=None, equipment=None, consequence=None,
+        p_effective = 1, triggers = dict(), impacts =dict(), component_reset=False,
+        *args, **kwargs
+    ):
 
+        # Task information
+        self.name = name
+        self.activity = activity
+        self.trigger = trigger
+        self.active = active
+
+        # Consumed per use
+        self.cost = cost
+        self.labour = NotImplemented # labour TODO
+        self.spares = NotImplemented # spares TODO
+        self.equipment = NotImplemented # equipment TODO
+        self.consequence = self.set_consequence()
+
+        # Triggers
+        self.p_effective = p_effective
         self.set_triggers(triggers)
         self.set_impacts(impacts)
+
 
     # ************ Set Methods **********************
 
@@ -602,7 +624,7 @@ class Inspection(ScheduledTask):
 
         return self
 
-    def is_effective(self, t_now, timeline=None):
+    def is_effective(self, t_now, timeline=None): #TODO replace is_effective with trigger check
         """
         Simulate the completion of an inspection. Checks conditions and states are met
         """

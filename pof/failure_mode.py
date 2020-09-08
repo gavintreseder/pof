@@ -96,7 +96,7 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ************** Load Functions *****************
 
-    def load(self, kwargs):
+    def load(self, kwargs=None):
         try:
             self._load(**kwargs)
         except:
@@ -344,7 +344,7 @@ class FailureMode:  # Maybe rename to failure mode
         timeline["initiation"] = np.full(t_end + 1, self.is_initiated())
         t_initiate = 0
         if not self.is_initiated():
-            t_initiate = min(t_end, int(self.init_dist.sample()))
+            t_initiate = min(t_end + 1, int(self.init_dist.sample())) #TODO this needs to be conditional_sf
             timeline["initiation"][t_initiate:] = 1
 
         # Get condtiion
@@ -400,7 +400,7 @@ class FailureMode:  # Maybe rename to failure mode
             # Check for initiation changes
             if "initiation" in updates:
                 t_initiate = min(
-                    t_end, t_start + int(self.init_dist.sample())
+                    t_end, t_start + int(self.init_dist.sample()) #TODO this needs to be condiitonal sf
                 )  # TODO make this conditional
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True

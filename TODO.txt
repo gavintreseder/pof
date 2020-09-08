@@ -1,6 +1,22 @@
 
-# 04 Sep
+# 08 Sep
     
+
+    # asset model
+        # load it
+        # make parameters real
+
+    # asset data
+        #
+    # fleet data
+        # summarise assets into population groups*
+
+    # runner
+        # load it
+        # link it
+        # display it
+        # fleet summary
+
     # Standard Safety factor
     # Asset Loader
         # Load Asset Model (no tests)
@@ -11,7 +27,6 @@
 
     # Nice to have
         # Interface improvements
-            # Condition
             # Task Schedule
         # Make layout a class
         # Inpsection interval
@@ -24,12 +39,27 @@
 
     # figure out how to load a failure mode with kwargs is the init as well
 
+    # Change task to trigger
+
 # Illyse Tasks
+
+    # Distribution
+        # change all use of sample method to conditional survival rate
+
+    # Dash update id methods
+        # Change the update methods to use the set functions
+        # Complete tests for each of them
 
     # Testing
         # Write a test for different version of expected_risk_cost_df
+
+
     # Validation
         # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
+
+
+    # Stretch
+        # Raise exception v print error for catching mistakes
 
 Add Inspection Interval into interface
 Add starting condition

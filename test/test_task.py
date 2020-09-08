@@ -7,12 +7,15 @@ from pof.condition import Condition
 
 class TestTask(unittest.TestCase):
 
-    def test_instantiate(self):
-        task = Task()
+    def test_imports_correctly(self):
         self.assertTrue(True)
 
+    def test_instantiate(self):
+        task = Task()
+        self.assertIsNotNone(task)
 
-    def test_dash_update(self):
+
+    def test_update(self):
 
         # Test all the options
 

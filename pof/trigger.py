@@ -22,9 +22,9 @@ Examples - Corrective Maintenance within any state
 
 Examples - Next Maintenance - (initiated and outage) and
 
-    (AND State) AND (any condition)
+    (AND State) AND (OR condition)
 
-    (AND State) AND (all condition)
+    (AND State) AND (AND condition)
 
 
 """
