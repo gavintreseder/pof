@@ -13,7 +13,7 @@ demo.distribution.slow_aging
 distribution_data = dict(
 
     early_life = dict(
-        name = "infant_mortality",
+        name = "early_life",
         alpha = 10000,
         beta = 0.5,
         gamma = 0,
@@ -89,40 +89,66 @@ condition_data = dict(
 )
 
 # *********************** task data **********************************
-
 inspection_data = dict(
-    activity = 'Inspection',
-    name = 'inspection',
-    p_effective = 0.9,
-    cost = 50,
-    t_interval = 5,
-    t_delay = 10,
+    instant = dict(
+        activity = 'Inspection',
+        name = 'inspection',
+        p_effective = 0.9,
+        cost = 50,
+        t_interval = 5,
+        t_delay = 10,
 
-    triggers = dict(
-        condition = dict(
-            fast_degrading=dict(
-                lower=0,
-                upper=90,
+        triggers = dict(
+            condition = dict(
+                instant = dict(
+                    lower=0,
+                    upper=100,
+                )
             ),
-            slow_degrading=dict(
-                lower=0,
-                upper=90,
+            state = dict(
+                initiation=True
             ),
         ),
-        state = dict(
-            initiation=True
+
+        impacts = dict(
+            condition = dict(),
+            state = dict(detection=True,)
         ),
     ),
+    degrading = dict(
+        activity = 'Inspection',
+        name = 'inspection',
+        p_effective = 0.9,
+        cost = 50,
+        t_interval = 5,
+        t_delay = 10,
 
-    impacts = dict(
-        condition = dict(),
-        state = dict(detection=True,)
-    ),
+        triggers = dict(
+            condition = dict(
+                fast_degrading=dict(
+                    lower=0,
+                    upper=90,
+                ),
+                slow_degrading=dict(
+                    lower=0,
+                    upper=90,
+                ),
+            ),
+            state = dict(
+                initiation=True
+            ),
+        ),
+
+        impacts = dict(
+            condition = dict(),
+            state = dict(detection=True,)
+        ),
+    )
 )
 
 on_condition_repair_data = dict(
     activity = 'ConditionTask',
-    name = 'on_condition_repair_demo',
+    name = 'on_condition_repair',
     p_effective = 0.7,
     cost = 100,
 
@@ -154,7 +180,7 @@ on_condition_repair_data = dict(
 
 on_condition_replacement_data = dict(
     activity = 'ConditionTask',
-    name = 'inspection_demo',
+    name = 'on_condition_replacement',
     p_effective = 1,
     cost = 5000,
 
@@ -212,6 +238,20 @@ state_data = dict(
 # *********************** failure mode data ********************************** #TODO move condition
 
 failure_mode_data = dict(
+    early_life = dict(
+        name = 'early_life',
+        untreated = distribution_data['early_life'],
+
+        conditions = dict(
+            instant = condition_data['instant'],
+        ),
+
+        tasks = dict(
+            inspection = inspection_data['instant'],
+            on_condition_replacement = on_condition_replacement_data
+        ),
+        states = state_data['new']
+    ),
     random = dict(
         name = 'random',
         untreated = distribution_data['random'],
@@ -221,7 +261,7 @@ failure_mode_data = dict(
         ),
 
         tasks = dict(
-            inspection = inspection_data,
+            inspection = inspection_data['instant'],
             on_condition_replacement = on_condition_replacement_data
         ),
         states = state_data['new']
@@ -236,7 +276,7 @@ failure_mode_data = dict(
         ),
 
         tasks = dict(
-            inspection = inspection_data,
+            inspection = inspection_data['degrading'],
             on_condition_repair = on_condition_repair_data,
             on_condition_replacement = on_condition_replacement_data
         ),
@@ -252,7 +292,7 @@ failure_mode_data = dict(
         ),
 
         tasks = dict(
-            inspection = inspection_data,
+            inspection = inspection_data['degrading'],
             on_condition_repair = on_condition_repair_data,
             on_condition_replacement = on_condition_replacement_data
         ),

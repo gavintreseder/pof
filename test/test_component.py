@@ -13,22 +13,26 @@ import numpy as np
 import utils
 
 from pof.component import Component
+import pof.demo as demo
 
 class TestComponent(unittest.TestCase):
 
     def setUp(self):
         
-        comp = Component().set_demo()
+        None
 
     def test_class_imports_correctly(self):
         self.assertTrue(True)
 
     def test_class_instantiate(self):
         comp = Component()
-        self.assertTrue(True)
+        self.assertIsNotNone(comp)
 
-    # 
+    ## *************** Test set_demo ***********************
 
+    def test_set_demo(self):
+        comp = Component().set_demo()
+        self.assertIsNotNone(comp)
 
 
     # *************** Test init_timeline ***********************

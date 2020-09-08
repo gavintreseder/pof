@@ -22,6 +22,14 @@
 
     # Add methods for'max', 'any', 'min', etc
 
+
+# Illyse Tasks
+
+    # Testing
+        # Write a test for different version of expected_risk_cost_df
+    # Validation
+        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
+
 Add Inspection Interval into interface
 Add starting condition
 Load with pole failure modes

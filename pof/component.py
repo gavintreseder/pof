@@ -17,6 +17,7 @@ if __package__ is None or __package__ == '':
     from distribution import Distribution
     from helper import fill_blanks, id_update
     from indicator import PoleSafetyFactor
+    import demo as demo
 
 else:
     from pof.failure_mode import FailureMode
@@ -24,6 +25,7 @@ else:
     from pof.distribution import Distribution
     from pof.helper import fill_blanks, id_update
     from pof.indicator import PoleSafetyFactor
+    import pof.demo as demo
     
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 #TODO create get, set, del and add methods
@@ -260,7 +262,7 @@ class Component():
         df = pd.DataFrame().from_dict(erc, orient='index')
         df.index.name='failure_mode'
         df = df.reset_index().melt(id_vars = 'failure_mode', var_name='task')
-        df = pd.concat([df.drop(columns=['value']),df['value'].apply(pd.Series)], axis=1)
+        df = pd.concat([df.drop(columns=['value']),df['value'].apply(pd.Series)], axis=1)[['failure_mode', 'task', 'time', 'cost']].dropna()
         df = df.apply(fill_blanks, axis=1, args=(t_start,t_end))
         df_cost = df.explode('cost')['cost']
         df = df.explode('time')
@@ -465,37 +467,25 @@ class Component():
 
         if not self.fm:
             self.fm = dict(
-                random = FailureMode(untreated = dict(alpha=500, beta=1, gamma=0), name='random').set_demo(),
-                slow_aging = FailureMode(untreated = dict(alpha=100, beta=1.5, gamma=20), name='slow_aging').set_demo(),
-                fast_aging = FailureMode(untreated = dict(alpha=50, beta=2, gamma=20), name='fast_aging').set_demo(),
-            )
-        
-            self.fm['random'].set_conditions(
-                dict(
-                    wall_thickness=Condition(100, 0, "linear", [-100]),
-                )
+                early_life = FailureMode().load(demo.failure_mode_data['early_life']),
+                random = FailureMode().load(demo.failure_mode_data['random']),
+                slow_aging = FailureMode().load(demo.failure_mode_data['slow_aging']),
+                fast_aging = FailureMode().load(demo.failure_mode_data['fast_aging']),
             )
     
         # Trial for indicator
         self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
-        self.indicator['wall_thickness'] = Condition(160, 0, "pf_linear", [-5], pf_interval=30, pf_std = 1, name='wall_thickness')
-        self.indicator['external_diameter'] = Condition(320, 0, "pf_linear", [-2], pf_interval=30, pf_std = 1, name = 'external_diameter')
+        self.indicator['slow_degrading'] = Condition(**demo.condition_data['slow_degrading']) # TODO fix this call
+        self.indicator['fast_degrading'] = Condition(**demo.condition_data['fast_degrading']) # TODO fix this call
 
-        for fm in self.fm.values():
+        """for fm in self.fm.values():
             fm.set_conditions(dict(
-                wall_thickness = self.indicator['wall_thickness'],
-                external_diameter = self.indicator['external_diameter'],
-            ))
+                slow_degrading = self.indicator['slow_degrading'],
+                fast_degrading = self.indicator['fast_degrading'],
+            ))"""
 
 
         return self
-
-    def reset_demo(self):
-        """ Loads a demonstration data set for all parameters"""
-        self.fm = dict()
-
-        self.set_demo()
-
 
     def set_pole(self):
 
