@@ -1,3 +1,24 @@
+# Illyse Tasks
+
+    # Distribution
+        # change all use of sample method to conditional survival rate
+
+    # Dash update id methods
+        # Change the update methods to use the set functions
+        # Complete tests for each of them
+
+    # Testing
+        # Write a test for different version of expected_risk_cost_df
+        # Load data test can return a load error, but this isn't checked
+
+
+    # Validation
+        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
+
+
+    # Stretch
+        # Raise exception v print error for catching mistakes
+
 
 # 08 Sep
     
@@ -41,25 +62,7 @@
 
     # Change task to trigger
 
-# Illyse Tasks
 
-    # Distribution
-        # change all use of sample method to conditional survival rate
-
-    # Dash update id methods
-        # Change the update methods to use the set functions
-        # Complete tests for each of them
-
-    # Testing
-        # Write a test for different version of expected_risk_cost_df
-
-
-    # Validation
-        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
-
-
-    # Stretch
-        # Raise exception v print error for catching mistakes
 
 Add Inspection Interval into interface
 Add starting condition

@@ -194,9 +194,9 @@ class FailureMode:  # Maybe rename to failure mode
                 self.tasks[task_name] = task
             elif isinstance(task, dict):
                 if task['activity'] == 'Inspection':
-                    self.tasks[task['name']] = Inspection(**task)
+                    self.tasks[task['name']] = Inspection().load(task)
                 elif task['activity'] == "ConditionTask":
-                    self.tasks[task_name] = ConditionTask(**task)
+                    self.tasks[task_name] = ConditionTask().load(task)
 
                 else:
                     print("Invalid Task Activity")

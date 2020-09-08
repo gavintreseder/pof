@@ -149,7 +149,7 @@ inspection_data = dict(
             condition = dict(),
             state = dict(detection=True,)
         ),
-    )
+    ),
 )
 
 on_condition_repair_data = dict(

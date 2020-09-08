@@ -81,7 +81,7 @@ class Task:
         self.labour = NotImplemented # labour TODO
         self.spares = NotImplemented # spares TODO
         self.equipment = NotImplemented # equipment TODO
-        self.consequence = self.set_consequence()
+        self.set_consequence(consequence)
 
         # Triggers
         self.p_effective = p_effective
@@ -101,11 +101,13 @@ class Task:
 
     # ************ Load Methods **********************
 
-    def load(self, kwargs):
+    def load(self, kwargs=None):
         try:
             self._load(**kwargs)
         except:
-            print("Error loading Task data")
+            print("Error loading %s data" % (self.__class__.__name__))
+        
+        return self
 
     def _load(self,
         name='task', activity='Task', trigger="unknown", active=True,
@@ -125,12 +127,14 @@ class Task:
         self.labour = NotImplemented # labour TODO
         self.spares = NotImplemented # spares TODO
         self.equipment = NotImplemented # equipment TODO
-        self.consequence = self.set_consequence()
+        self.set_consequence(consequence)
 
         # Triggers
         self.p_effective = p_effective
         self.set_triggers(triggers)
         self.set_impacts(impacts)
+
+        return self
 
 
     # ************ Set Methods **********************
@@ -149,7 +153,8 @@ class Task:
             self.consequence = Consequence(**consequence)
         
         else:
-            print ("Invalid Consequence")
+            self.consequence = Consequence()
+            print ("Invalid Consequence - currently stubbed")
 
     def set_triggers(self, triggers=dict()):
 
@@ -330,7 +335,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    def __init__(self, t_interval, t_delay=0, name = 'scheduled_task', *args, **kwargs):
+    def __init__(self, t_interval=100, t_delay=0, name = 'scheduled_task', *args, **kwargs): #TODO fix up defaults
         super().__init__(*args, **kwargs)
 
         self.name = name
@@ -373,6 +378,15 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return self
 
+
+    def _load(self, t_interval, t_delay, **kwargs):
+        super()._load(**kwargs)
+        
+        self.t_interval=t_interval
+        self.t_delay=t_delay
+
+        return self
+
     def sim_timeline(
         self, t_stop, t_delay=0, t_start=0, timeline=NotImplemented
     ):  # TODO Stubbed out to only work for trigger time and simple tile
@@ -411,6 +425,11 @@ class ConditionTask(Task):
 
         self.task_type = "immediate"
 
+    def _load(self, **kwargs):
+        super()._load(**kwargs)
+
+        return self
+
     def set_default(self):
           
         self.impacts = dict(
@@ -439,6 +458,9 @@ class ConditionTask(Task):
         )
 
         return self
+
+
+
 
     def sim_timeline(self, t_end, timeline, t_start=0, t_delay=NotImplemented):
         """
@@ -595,13 +617,18 @@ class OnConditionReplacement(ConditionTask):
 
 class Inspection(ScheduledTask):
 
-    def __init__(self, t_interval, t_delay=0, name='inspection',  *args, **kwargs):
+    def __init__(self, t_interval=100, t_delay=0, name='inspection',  *args, **kwargs): #TODO fix up the defaults
         
         super().__init__(t_interval=t_interval, t_delay=t_delay, **kwargs)
 
         self.name = name
         self.activity = "Inspection"
 
+
+    def _load(self, **kwargs):
+        super()._load(**kwargs)
+
+        return self
 
     def set_default(self):
 
