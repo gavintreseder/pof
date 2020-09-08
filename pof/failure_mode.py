@@ -58,6 +58,8 @@ class FailureMode:  # Maybe rename to failure mode
         cof=dict(),
         states = dict(),
         tasks = dict(),
+        *args,
+        **kwargs,
     ):
 
         # Failure Information

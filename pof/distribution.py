@@ -12,7 +12,7 @@ class Distribution:
 
     # TODO Extend so that it works for all the common distributions
 
-    def __init__(self, alpha=100, beta=1, gamma=0, name='dist'):
+    def __init__(self, alpha=100, beta=1, gamma=0, name='dist', *args, **kwargs):
 
         self.name = name
         self.alpha = alpha

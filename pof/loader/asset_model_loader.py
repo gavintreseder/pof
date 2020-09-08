@@ -71,6 +71,9 @@ class AssetModelLoader:
             ('task_model', 'task', 'name'),
         ]
 
+        # Drop rows with no data
+        df = df.dropna(axis=1, how='all')
+
         # Propogate keys for 1 to many relationships
         df[keys] = df[keys].ffill()
 
@@ -166,13 +169,12 @@ class AssetModelLoader:
         cond_data = {cond : None for cond in conditions}
         return cond_data
 
-    def _get_dist_data(self, df_fm):
+    def _get_dist_data(self,df_fm):
 
         df_dist = df_fm['failure_model'].dropna()
         df_dist.columns = df_dist.columns.droplevel()
 
         try:
-
             dist_data = df_dist.iloc[0].dropna().to_dict()
         except IndexError:
             dist_data = df_dist.dropna().to_dict()

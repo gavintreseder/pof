@@ -65,6 +65,8 @@ class Condition:
         name="default",
         pf_interval=None,
         pf_std = 0,
+        *args,
+        **kwargs
     ):
 
         # Degradation details
