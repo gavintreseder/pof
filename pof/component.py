@@ -69,6 +69,19 @@ class Component():
         # Load Failure Modes
         # Load asset information??
 
+        if not self.fm:
+            self.fm = dict(
+                early_life = FailureMode().load(demo.failure_mode_data['early_life']),
+                random = FailureMode().load(demo.failure_mode_data['random']),
+                slow_aging = FailureMode().load(demo.failure_mode_data['slow_aging']),
+                fast_aging = FailureMode().load(demo.failure_mode_data['fast_aging']),
+            )
+    
+        # Trial for indicator
+        self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
+        self.indicator['slow_degrading'] = Condition(**demo.condition_data['slow_degrading']) # TODO fix this call
+        self.indicator['fast_degrading'] = Condition(**demo.condition_data['fast_degrading']) # TODO fix this call
+
         NotImplemented
 
     def load_asset_data(self, *args, **kwargs):
