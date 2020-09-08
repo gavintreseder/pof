@@ -668,56 +668,6 @@ class FailureMode:  # Maybe rename to failure mode
 
         return task_count
 
-    def expected_cost_df(self): # TODO delete. Backup only
-        # TODO I think this is legacy?
-
-        df_tasks = pd.DataFrame()
-        new_index = pd.Index(np.arange(0, 200, 1), name="time")
-
-        for task_name, task in self.tasks.items():
-
-            time, quantity = np.unique(task.t_completion, return_counts=True)
-            cost = quantity * task.cost / self._sim_counter
-            cost_cumulative = cost.cumsum()
-
-            df = pd.DataFrame(
-                dict(
-                    task=task_name,
-                    time=time,
-                    cost=cost,
-                    cost_cumulative=cost_cumulative,
-                )
-            )
-
-            df = df.set_index("time").reindex(new_index).reset_index()
-            df.loc[0, :] = 0
-            df.loc[0, "task"] = task_name
-            df = df.fillna(method="ffill")
-
-            df_tasks = pd.concat([df_tasks, df])
-
-
-        t_failures = []
-        for timeline in self._timelines.values():
-            if timeline['failure'].any():
-                t_failures.append(np.argmax(timeline["failure"]))
-
-        time, cost = np.unique(t_failures, return_counts = True)
-        cost = cost * self.cof.get_cost() / self._sim_counter
-        cost_cumulative = cost.cumsum()
-
-        df = pd.DataFrame(
-            dict(
-                task='risk',
-                time=time,
-                cost=cost,
-                cost_cumulative=cost_cumulative,
-            )
-        )
-
-        df_tasks = pd.concat([df_tasks, df])
-
-        return df_tasks
 
     # ****************** Reset Routines **************
 

@@ -191,19 +191,33 @@ class Task:
         if self.is_effective(t_now, timeline):
 
             # Update any conditions that need to be udpated
-            for condition_name, impact in self.impacts['condition'].items():
-                if verbose:
-                    print("Updating condition - %s" % (condition_name))
 
-                conditions[condition_name].set_condition(
-                    timeline[condition_name][t_now]
-                )
+            if 'all' in self.impacts['condition']:
+                impact = self.impacts['condition']['all']
+                for condition in conditions.values():
+                    condition.set_condition(
+                        timeline[condition.name][t_now]
+                    )
 
-                conditions[condition_name].reset_any(
-                    target=impact["target"],
-                    axis=impact["axis"],
-                    method=impact["method"],
-                )
+                    condition.reset_any(
+                        target=impact["target"],
+                        axis=impact["axis"],
+                        method=impact["method"],
+                    )
+            else:
+                for condition_name, impact in self.impacts['condition'].items():
+                    if verbose:
+                        print("Updating condition - %s" % (condition_name))
+
+                    conditions[condition_name].set_condition(
+                        timeline[condition_name][t_now]
+                    )
+
+                    conditions[condition_name].reset_any(
+                        target=impact["target"],
+                        axis=impact["axis"],
+                        method=impact["method"],
+                    )
 
             return self.impacts['state']
 

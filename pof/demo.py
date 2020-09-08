@@ -14,7 +14,7 @@ distribution_data = dict(
 
     early_life = dict(
         name = "early_life",
-        alpha = 10000,
+        alpha = 1000000,
         beta = 0.5,
         gamma = 0,
     ),
@@ -45,6 +45,7 @@ distribution_data = dict(
 
 condition_data = dict(
     wall__thickness = dict(
+        name='wall_thickness',
         perfect = 125,
         failed = 0,
         pf_curve = 'linear',
@@ -52,6 +53,7 @@ condition_data = dict(
         pf_std = 0.5,
     ),
     extneral_diameter = dict(
+        name='external_diameter',
         perfect = 250,
         failed = 0,
         pf_curve = 'linear',
@@ -59,6 +61,7 @@ condition_data = dict(
         pf_std = 0.5
     ),
     slow_degrading = dict(
+        name='slow_degrading',
         perfect = 100,
         failed = 0,
         pf_curve = 'linear',
@@ -66,6 +69,7 @@ condition_data = dict(
         pf_std = 0.5
     ),
     fast_degrading = dict(
+        name = 'fast_degrading',
         perfect = 100,
         failed = 0,
         pf_curve = 'linear',
@@ -73,6 +77,7 @@ condition_data = dict(
         pf_std = 0.5
     ),
     uncertain_degrading = dict(
+        name='uncertain_degrading',
         perfect = 100,
         failed = 0,
         pf_curve = 'linear',
@@ -80,6 +85,7 @@ condition_data = dict(
         pf_std = 5
     ),
     instant = dict(
+        name='instant',
         perfect = 1,
         failed = 0,
         pf_curve = 'linear', #TODO change to step
@@ -194,12 +200,7 @@ on_condition_replacement_data = dict(
 
     impacts = dict(
         condition = dict(
-            fast_degrading=dict(
-                target=1,
-                method="reduction_factor",
-                axis="condition",
-            ),
-            slow_degrading=dict(
+            all=dict(
                 target=1,
                 method="reduction_factor",
                 axis="condition",
