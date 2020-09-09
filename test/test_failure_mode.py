@@ -30,6 +30,10 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode()
         self.assertIsNotNone(fm)
     
+    def test_from_dict(self):
+        fm = FailureMode.from_dict(demo.failure_mode_data['early_life'])
+        self.assertIsNotNone(fm)
+    
     def test_instantiate_with_data(self):
         fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0))
         self.assertIsNotNone(fm)

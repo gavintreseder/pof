@@ -50,7 +50,7 @@ class FailureMode:  # Maybe rename to failure mode
     def __init__(self,
         name = 'fm',
         active=True,
-        pf_curve='pf_linear',
+        pf_curve='linear',
         pf_interval=10,
         pf_std=0,
         untreated=dict(),
@@ -79,7 +79,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.conditions = dict()
         self.set_conditions(conditions)
 
-        # Consequene of failure
+        # Consequence of failure
         self.cof = None
         self.set_consequence(consequence)
 
@@ -98,53 +98,20 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ************** Load Functions *****************
 
-    #@classmethod
-    def load(self, kwargs=None):
+    @classmethod
+    def from_dict(cls, details=None):
+        return cls(**details)
+
+    @classmethod
+    def load(cls, details=None):
         try:
-            self._load(**kwargs)
+            fm = cls(**details)
         except:
+            fm = cls()
             print("Error loading FailureMode data")
 
-        return self
+        return fm
 
-    def _load(self,
-        name = 'fm',
-        active=True,
-        pf_curve='pf_linear',
-        pf_interval=10,
-        pf_std=0,
-        untreated=dict(),
-        conditions=dict(), #TODO this needs to change for condition loss
-        consequence=dict(),
-        states = dict(),
-        tasks = dict(),
-        *args,
-        **kwargs,
-    ):
-
-        # Failure Information
-        self.name = name
-        self.active = active
-        self.pf_curve = pf_curve
-        self.pf_interval = pf_interval
-        self.pf_std = pf_std
-
-        # Failure Distributions
-        self.set_untreated(untreated)
-
-        # Faiure Condition
-        self.set_conditions(conditions)
-        
-        # Consequene of failure
-        self.set_consequence(consequence)
-
-        # Failre Mode state
-        self.set_states(states)
-
-        # Tasks
-        self.set_tasks(tasks)
-
-        return self
 
     # ************** Set Functions *****************
 

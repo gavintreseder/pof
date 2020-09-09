@@ -135,15 +135,14 @@ class Component():
         for name, fm in failure_modes.items():
         
             # Load a condition object
-            if isinstance(fm, Condition):
+            if isinstance(fm, FailureMode):
                 self.fm[name] = fm
             
             # Create a condition object
             elif isinstance(fm, dict):
-                self.fm[name] = FailureMode().load(**failure_modes)        
+                self.fm[name] = FailureMode().load(fm)        
 
 
-        NotImplemented
 
     # ****************** Set data ******************
 
@@ -152,6 +151,7 @@ class Component():
         """ Complete MC simulation and calculate all the metrics for the component"""
 
         return NotImplemented
+
 
     # ****************** Timeline ******************
 
