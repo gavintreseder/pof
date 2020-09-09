@@ -55,7 +55,7 @@ class FailureMode:  # Maybe rename to failure mode
         pf_std=0,
         untreated=dict(),
         conditions=dict(), #TODO this needs to change for condition loss
-        cof=dict(),
+        consequence=dict(),
         states = dict(),
         tasks = dict(),
         *args,
@@ -81,7 +81,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Consequene of failure
         self.cof = None
-        self.set_consequence(cof)
+        self.set_consequence(consequence)
 
         # Failure Mode state
         self.states = dict()
@@ -98,6 +98,7 @@ class FailureMode:  # Maybe rename to failure mode
 
     # ************** Load Functions *****************
 
+    #@classmethod
     def load(self, kwargs=None):
         try:
             self._load(**kwargs)
@@ -114,7 +115,7 @@ class FailureMode:  # Maybe rename to failure mode
         pf_std=0,
         untreated=dict(),
         conditions=dict(), #TODO this needs to change for condition loss
-        cof=dict(),
+        consequence=dict(),
         states = dict(),
         tasks = dict(),
         *args,
@@ -135,7 +136,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.set_conditions(conditions)
         
         # Consequene of failure
-        self.set_consequence(cof)
+        self.set_consequence(consequence)
 
         # Failre Mode state
         self.set_states(states)

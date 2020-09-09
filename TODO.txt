@@ -1,6 +1,7 @@
-# Illyse Tasks
+# 09 Sep -> Illyse Tasks
 
     # Distribution
+        # Create a new method that returns the conditional survival rate based when it is passed a time 
         # change all use of sample method to conditional survival rate
 
     # Dash update id methods
@@ -8,8 +9,10 @@
         # Complete tests for each of them
 
     # Testing
+        # Finish load test for Task, ConditionTask, ScheduledTask, Inspection
         # Write a test for different version of expected_risk_cost_df
         # Load data test can return a load error, but this isn't checked
+
 
 
     # Validation
@@ -20,12 +23,11 @@
         # Raise exception v print error for catching mistakes
 
 
-# 08 Sep
+# 08 Sep - Gav
     
 
     # asset model
-        # load it
-        # make parameters real
+        # review data with Greg
 
     # asset data
         #
@@ -52,6 +54,7 @@
         # Make layout a class
         # Inpsection interval
             # Generalise to sensitivity
+        # Save models
 
 
     # Replace on failure button

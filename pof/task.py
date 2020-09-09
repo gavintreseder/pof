@@ -139,22 +139,21 @@ class Task:
 
     # ************ Set Methods **********************
 
-    def set_consequence(self, consequence):
+    def set_consequence(self, consequence=dict()):
         """
         Takes a Consequence object or consequence dict to set a consequence
         """
     
-        # Load a condition object
+        # Load a consequence object
         if isinstance(consequence, Consequence):
             self.consequence = consequence
         
-        # Create a condition object
+        # Create a consequence object
         elif isinstance(consequence, dict):
             self.consequence = Consequence(**consequence)
         
         else:
-            self.consequence = Consequence()
-            print ("Invalid Consequence - currently stubbed")
+            print ("Invalid Consequence")
 
     def set_triggers(self, triggers=dict()):
 
@@ -382,6 +381,8 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     def _load(self, t_interval, t_delay, **kwargs):
         super()._load(**kwargs)
         
+        self.trigger='time'
+
         self.t_interval=t_interval
         self.t_delay=t_delay
 
@@ -428,6 +429,8 @@ class ConditionTask(Task):
     def _load(self, **kwargs):
         super()._load(**kwargs)
 
+        self.trigger = 'condition'
+    
         return self
 
     def set_default(self):

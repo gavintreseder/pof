@@ -11,6 +11,7 @@ import numpy as np
 import utils
 
 from pof.loader.asset_model_loader import AssetModelLoader
+from pof.component import Component
 from pof.failure_mode import FailureMode
 
 filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential Energy\Probability of Failure Model\pof\data\inputs\Asset Model - Demo.xlsx"
@@ -37,6 +38,26 @@ class TestTask(unittest.TestCase):
         fm.load(data['pole']['fm']['termites'])
         
         self.assertIsNotNone(fm)
+
+    def test_load_component(self):
+
+        """
+        FailureMode().load(demo.failure_mode_data['slow_aging'])
+        FailureMode().load(data['pole']['fm']['termites'])
+
+        Inspection().load(demo.inspection_data['instant'])
+        Inspection().load(data['pole']['fm']['termites']['tasks']['inspection'])
+
+        Component().load(demo.component_data)
+        Component().load(data['pole'])
+        """
+        aml = AssetModelLoader()
+        data = aml.load(filename)
+
+        comp = Component()
+        comp = comp.load(data['pole'])
+        self.assertIsNotNone(comp)
+
 
 if __name__ == '__main__':
     unittest.main()

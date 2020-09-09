@@ -64,25 +64,35 @@ class Component():
 
     # ****************** Load data ******************
 
-    def load(self, **kwargs):
-        # Load Condition
-        # Load Failure Modes
-        # Load asset information??
+    def load(self, kwargs=None):
+        try:
+            self._load(**kwargs)
+        except:
+            print("Error loading Component data")
 
-        if not self.fm:
-            self.fm = dict(
-                early_life = FailureMode().load(demo.failure_mode_data['early_life']),
-                random = FailureMode().load(demo.failure_mode_data['random']),
-                slow_aging = FailureMode().load(demo.failure_mode_data['slow_aging']),
-                fast_aging = FailureMode().load(demo.failure_mode_data['fast_aging']),
-            )
-    
+        return self
+
+    def _load(self,
+        fm=dict(),
+        asset_data=dict(),
+        **kwargs,
+    ):
+        # Load Indicators
+
+
+        # Load Failure Modes
+        self.set_failure_mode(fm)
+
+        # Load asset information??
+        #self.set_asset_data(asset_data)
+        
         # Trial for indicator
         self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
         self.indicator['slow_degrading'] = Condition(**demo.condition_data['slow_degrading']) # TODO fix this call
         self.indicator['fast_degrading'] = Condition(**demo.condition_data['fast_degrading']) # TODO fix this call
 
         NotImplemented
+
 
     def load_asset_data(self, *args, **kwargs):
 
@@ -102,18 +112,41 @@ class Component():
             NotImplemented
 
 
+    def set_indicators(self, indicators):
+        """
+        Takes a dictionary of Indicator objects or indicator data and sets the component indicators
+        """
 
-    def set_failure_mode(self):
+        for name, indicator in indicators.items():
         
+            # Load a condition object
+            if isinstance(indicator, Condition):
+                self.indicator[name] = indicator
+            
+            # Create a condition object
+            elif isinstance(indicator, dict):
+                self.indicator[name] = Indicator(**indicator)
+
+    def set_failure_mode(self, failure_modes):
+        """
+        Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
+        """
+
+        for name, fm in failure_modes.items():
+        
+            # Load a condition object
+            if isinstance(fm, Condition):
+                self.fm[name] = fm
+            
+            # Create a condition object
+            elif isinstance(fm, dict):
+                self.fm[name] = FailureMode().load(**failure_modes)        
+
+
         NotImplemented
 
     # ****************** Set data ******************
-    
-    def set_params(self, name=None):
 
-        self.name = name
-
-        return NotImplemented
 
     def mc(self, t_end, t_start, n_iterations):
         """ Complete MC simulation and calculate all the metrics for the component"""
