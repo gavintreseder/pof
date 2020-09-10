@@ -10,7 +10,7 @@ import numpy as np
 
 import utils
 
-from pof.loader.asset_model_loader import AssetModelLoader
+from pof.loader.asset_model_loader import AssetModelLoader  
 from pof.component import Component
 from pof.failure_mode import FailureMode
 

@@ -19,11 +19,15 @@ class AssetModelLoader:
     aml.load(filename)
     """
 
-    def __init__(self):
+    def __init__(self,
+        filename = None,
+        method_missing_data = 'error',
+    ):
 
         # file location
 
-        self.filename = None
+        self.filename = filename
+        self.method_missing_data = method_missing_data
     
 
     def load(self, filename=None):
@@ -211,9 +215,13 @@ class AssetModelLoader:
 
         #dist_data = df_dist
         try:
-            dist_data = df_dist.dropna(how=all).to_dict('records')[0]
+            dist_data = df_dist.dropna(how='all').to_dict('records')[0]
         except KeyError:
-            dist_data = df_dist.dropna().to_dict()
+            print('No Distribution present')
+            if self.method_missing_data == 'error':
+                raise ValueError("Distribution data is missing")
+            elif self.method_missing_data == 'default':
+                dist_data = df_dist.dropna().to_dict()
 
         return dist_data
 

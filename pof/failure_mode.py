@@ -44,7 +44,7 @@ seed(1)
 class FailureMode:  # Maybe rename to failure mode
 
 
-    PF_CURVE = ['linear', 'pf_linear'] #TODO add the rest
+    PF_CURVE = ['linear', 'step'] #TODO add the rest
 
 
     def __init__(self,
@@ -753,7 +753,7 @@ class FailureMode:  # Maybe rename to failure mode
 
             print("No timelines have been simulated")
 
-    def update2(self, object, value=None)
+    def update2(self, object, value=None):
         """
 
         """
@@ -767,7 +767,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         NotImplemented
 
-    def update_from_str():
+    def update_from_str(self):
 
         
         # split it based on teh sepearator
@@ -794,8 +794,6 @@ class FailureMode:  # Maybe rename to failure mode
 
     def update(self, id_str, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
-
-        Condition
 
         try:
 
