@@ -147,7 +147,7 @@ class Task:
                 triggers[trigger] = dict()
 
         for state in triggers['state']:
-            triggers[state] = bool(triggers[state])
+            triggers['state'][state] = bool(triggers['state'][state])
 
         self.triggers = triggers
 
@@ -158,7 +158,7 @@ class Task:
 
         # Recast any ints to bools TODO make more robust
         for state in impacts['state']:
-            impacts[state] = bool(impacts[state])
+            impacts['state'][state] = bool(impacts['state'][state])
 
         self.impacts = impacts
 

@@ -220,7 +220,10 @@ class FailureMode:  # Maybe rename to failure mode
         if self.pf_interval is None:
             gamma = max(0, self.untreated.gamma) 
         else:
-            gamma = max(0, self.pf_interval - self.untreated.gamma)
+            gamma = max(0, self.untreated.gamma - self.pf_interval)
+        
+        # TODO add an adjustment to make sure the pfinterval results in a resaonable gamma
+        #self.pf_interval = self.pf_interval - max(self.gamma - self.pf_interval + self.pf_std * 3 )
 
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name ='init')
 
@@ -815,13 +818,16 @@ class FailureMode:  # Maybe rename to failure mode
                         self.__dict__[var][var_3].update(id_str, value, sep)
 
                         self.set_init_dist() #TODO Ghetto fix
+                        for condition in self.conditions.values():#TODO Ghetto fix
+                            condition.pf_interval = value#TODO Ghetto fix
                     else:
                         self.__dict__[var][var_2] = value
                 else:
                     self.__dict__[var] = value
                     if var == 'pf_interval': #TODO Ghetto fix
-                        for condition in self.conditions.values():
-                            condition.pf_interval = value
+                        self.set_init_dist() #TODO Ghetto fix
+                        for condition in self.conditions.values():#TODO Ghetto fix
+                            condition.pf_interval = value#TODO Ghetto fix
 
             # Check if the variable is a class instance
             else:

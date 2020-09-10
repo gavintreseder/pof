@@ -11,6 +11,9 @@ libssl-1_1-x64.dll
 libssl-1_1-x64.pdb
 
 
+Reintall Pywin32
+
+
 
 https://pipenv-fork.readthedocs.io/en/latest/ 
 

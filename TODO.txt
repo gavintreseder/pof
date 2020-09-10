@@ -43,6 +43,9 @@
         # asset data
             # consequence model
 
+        # task error
+            # fast degrading not found
+
         # Notebooks to explain
 
 
