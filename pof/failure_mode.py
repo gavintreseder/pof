@@ -3,7 +3,7 @@
 Author: Gavin Treseder
 """
 
-#TODO make sure active is working
+# TODO make sure active is working
 
 # ************ Packages ********************
 import numpy as np
@@ -32,8 +32,6 @@ else:
     import pof.demo as demo
 
 
-
-
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO Change this to update timeline based on states that have changed
@@ -41,26 +39,25 @@ else:
 
 seed(1)
 
+
 class FailureMode:  # Maybe rename to failure mode
 
-
-    PF_CURVE = ['linear', 'pf_linear'] #TODO add the rest
-
+    PF_CURVE = ['linear', 'pf_linear']  # TODO add the rest
 
     def __init__(self,
-        name = 'fm',
-        active=True,
-        pf_curve='linear',
-        pf_interval=10,
-        pf_std=0,
-        untreated=dict(),
-        conditions=dict(), #TODO this needs to change for condition loss
-        consequence=dict(),
-        states = dict(),
-        tasks = dict(),
-        *args,
-        **kwargs,
-    ):
+                 name='fm',
+                 active=True,
+                 pf_curve='linear',
+                 pf_interval=10,
+                 pf_std=0,
+                 untreated=dict(),
+                 conditions=dict(),  # TODO this needs to change for condition loss
+                 consequence=dict(),
+                 states=dict(),
+                 tasks=dict(),
+                 *args,
+                 **kwargs,
+                 ):
 
         # Failure Information
         self.name = name
@@ -72,7 +69,7 @@ class FailureMode:  # Maybe rename to failure mode
         # Failure Distributions
         self.untreated = None
         self.init_dist = None
-        self.pof = None  
+        self.pof = None
         self.set_untreated(untreated)
 
         # Faiure Condition
@@ -104,7 +101,7 @@ class FailureMode:  # Maybe rename to failure mode
             fm = cls.from_dict(details)
         except:
             fm = cls()
-            print("Error loading %s data" %(cls.__name__))
+            print("Error loading %s data" % (cls.__name__))
         return fm
 
     @classmethod
@@ -113,9 +110,8 @@ class FailureMode:  # Maybe rename to failure mode
             fm = cls(**details)
         except:
             fm = cls()
-            print("Error loading %s data from dictionary" %(cls.__name__))
+            print("Error loading %s data from dictionary" % (cls.__name__))
         return fm
-
 
     # ************** Set Functions *****************
 
@@ -129,11 +125,11 @@ class FailureMode:  # Maybe rename to failure mode
         """
 
         for cond_name, condition in conditions.items():
-        
+
             # Load a condition object
             if isinstance(condition, Condition):
                 self.conditions[cond_name] = condition
-            
+
             # Create a condition object
             elif isinstance(condition, dict):
                 self.conditions[cond_name] = Condition(**condition)
@@ -143,7 +139,7 @@ class FailureMode:  # Maybe rename to failure mode
         # Load a distribution object
         if isinstance(untreated, Distribution):
             self.untreated = untreated
-        
+
         elif isinstance(untreated, dict):
             untreated['name'] = 'untreated'
             self.untreated = Distribution(**untreated)
@@ -152,13 +148,12 @@ class FailureMode:  # Maybe rename to failure mode
         self.set_init_dist()
 
     def set_states(self, states):
-        #TODO fix this default
+        # TODO fix this default
         for state in ['detection', 'failure', 'initiation']:
             self.states[state] = False
 
         for state_name, state in states.items():
             self.states[state_name] = state
-
 
         return True
 
@@ -181,7 +176,6 @@ class FailureMode:  # Maybe rename to failure mode
             else:
                 print('Invalid Task')
 
- 
     # ************** Get Functions *****************
 
     def get_states(self):
@@ -192,7 +186,6 @@ class FailureMode:  # Maybe rename to failure mode
         # TODO add other methods here
         if self.pof is not None:
             return self.pof.sf(t_start, t_end)
-        
 
     # ************** Is Function *******************
 
@@ -207,8 +200,6 @@ class FailureMode:  # Maybe rename to failure mode
 
     # *************** Get methods *******************
 
-
-
     def set_init_dist(self):  # TODO needs to get passed a condition and a pof
         """
         Convert the probability of failure into a probability of initiation
@@ -218,11 +209,12 @@ class FailureMode:  # Maybe rename to failure mode
         alpha = self.untreated.alpha
         beta = self.untreated.beta
         if self.pf_interval is None:
-            gamma = max(0, self.untreated.gamma) 
+            gamma = max(0, self.untreated.gamma)
         else:
             gamma = max(0, self.pf_interval - self.untreated.gamma)
 
-        self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name ='init')
+        self.init_dist = Distribution(
+            alpha=alpha, beta=beta, gamma=gamma, name='init')
 
     def get_expected_pof(self):
 
@@ -241,7 +233,6 @@ class FailureMode:  # Maybe rename to failure mode
             self.save_timeline(i)
 
     def sim_timeline(self, t_end, t_start=0, verbose=False):
-        
 
         timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
@@ -284,28 +275,28 @@ class FailureMode:  # Maybe rename to failure mode
 
                 # Update timeline
                 self.set_states(states)
-                self.update_timeline(t_now + 1, updates=states, verbose=verbose)
+                self.update_timeline(
+                    t_now + 1, updates=states, verbose=verbose)
 
                 # Check if a system impact is triggered
                 system_impacts.append(self.tasks[task_name].system_impact())
 
         return system_impacts
-                
-    
+
     def init_timeline(self, t_end, t_start=0):
 
         if self.active:
             self._init_timeline(t_end, t_start)
-        
+
         else:
-            self.timeline=dict(
-                time=np.linspace(t_start, t_end, t_end - t_start + 1, dtype=int),
-                intiation = np.full(t_end + 1, False),
-                dectection = np.full(t_end + 1, False),
-                failure = np.full(t_end + 1, False),
+            self.timeline = dict(
+                time=np.linspace(t_start, t_end, t_end -
+                                 t_start + 1, dtype=int),
+                intiation=np.full(t_end + 1, False),
+                dectection=np.full(t_end + 1, False),
+                failure=np.full(t_end + 1, False),
             )
-    
-        
+
         return self.timeline
 
     def _init_timeline(self, t_end, t_start=0):
@@ -322,7 +313,8 @@ class FailureMode:  # Maybe rename to failure mode
         timeline["initiation"] = np.full(t_end + 1, self.is_initiated())
         t_initiate = 0
         if not self.is_initiated():
-            t_initiate = min(t_end + 1, int(self.init_dist.sample())) #TODO this needs to be conditional_sf
+            # TODO this needs to be conditional_sf
+            t_initiate = min(t_end + 1, int(self.init_dist.sample()))
             timeline["initiation"][t_initiate:] = 1
 
         # Get condtiion
@@ -347,7 +339,8 @@ class FailureMode:  # Maybe rename to failure mode
                 timeline[task.name] = task.sim_timeline(t_end)
 
         # Initialised detection
-        timeline["detection"] = np.full(t_end - t_start + 1, self.is_detected())
+        timeline["detection"] = np.full(
+            t_end - t_start + 1, self.is_detected())
 
         # Check tasks with condition based trigger
         for task_name, task in self.tasks.items():
@@ -378,12 +371,14 @@ class FailureMode:  # Maybe rename to failure mode
             # Check for initiation changes
             if "initiation" in updates:
                 t_initiate = min(
-                    t_end, t_start + int(self.init_dist.sample()) #TODO this needs to be condiitonal sf
+                    # TODO this needs to be condiitonal sf
+                    t_end, t_start + int(self.init_dist.sample())
                 )  # TODO make this conditional
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True
             else:
-                t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
+                t_initiate = np.argmax(
+                    self.timeline["initiation"][t_start:] > 0)
 
             # Check for condition changes
             for condition_name, condition in self.conditions.items():
@@ -432,7 +427,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         return self.timeline
 
-    #def _update_indicators(self, t_start, t_end=None):
+    # def _update_indicators(self, t_start, t_end=None):
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """
@@ -440,7 +435,7 @@ class FailureMode:  # Maybe rename to failure mode
         """
 
         if timeline is None:
-            timeline=self.timeline
+            timeline = self.timeline
 
         if t_end is None:
             t_end = timeline["time"][-1]
@@ -450,11 +445,12 @@ class FailureMode:  # Maybe rename to failure mode
 
         # TODO make this more efficient by using a task array rather than a for loop
         if self.active:
-            for task in self.tasks: 
+            for task in self.tasks:
 
                 if 0 in timeline[task][t_start:]:
                     t_task = (
-                        timeline["time"][np.argmax(timeline[task][t_start:] == 0)] + t_start
+                        timeline["time"][np.argmax(
+                            timeline[task][t_start:] == 0)] + t_start
                     )
 
                     if t_task < next_time:
@@ -467,7 +463,7 @@ class FailureMode:  # Maybe rename to failure mode
 
     def save_timeline(self, i):
         self._timelines[i] = self.timeline
-    
+
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
 
@@ -476,27 +472,27 @@ class FailureMode:  # Maybe rename to failure mode
     def expected_simple(self):
         """Returns all expected outcomes using a simple average formula"""
 
-        #TODO strip out the values that don't matter
+        # TODO strip out the values that don't matter
 
         self.expected = dict()
         self.uncertainty = dict()
         self.lower = dict()
         self.upper = dict()
 
-
         for key in self._timelines[0]:
 
-            all_values = np.array([self._timelines[d][key] for d in self._timelines])
+            all_values = np.array([self._timelines[d][key]
+                                   for d in self._timelines])
 
             self.expected[key] = all_values.mean(axis=0)
             self.uncertainty[key] = all_values.std(axis=0)
             self.lower[key] = np.percentile(all_values, 10, axis=0)
             self.upper[key] = np.percentile(all_values, 90, axis=0)
-        
+
         return self.expected
 
     def expected_pof(self):
-        #TODO general into expected event = 'failure', cumulative = True/False method
+        # TODO general into expected event = 'failure', cumulative = True/False method
         t_failures = []
 
         t_max = self._timelines[0]['time'][-1] + 1
@@ -514,17 +510,17 @@ class FailureMode:  # Maybe rename to failure mode
         event_observed = (t_failures != t_max)
 
         wbf.fit(durations=t_failures, event_observed=event_observed)
-        
+
         self.pof = Distribution(
-            alpha = wbf.lambda_,
-            beta = wbf.rho_,
+            alpha=wbf.lambda_,
+            beta=wbf.rho_,
         )
 
         return self.pof
 
     def _expected(self, timeline_key, first_event=True):
-        #TODO general into expected event = 'failure', cumulative = True/False method
-        #TODO delete
+        # TODO general into expected event = 'failure', cumulative = True/False method
+        # TODO delete
         t_events = []
 
         t_min = self._timelines[0]['time'][0]
@@ -548,23 +544,25 @@ class FailureMode:  # Maybe rename to failure mode
         event_observed = (t_failures != t_max)
 
         wbf.fit(durations=t_failures, event_observed=event_observed)
-        
+
         self.wbf = wbf
 
     def expected_condition(self):
         """Get the expected condition for a failure mode"""
         expected = dict()
         for cond_name in self.conditions.values():
-            expected[cond_name] = np.array([self._timelines[x][cond_name] for x in self._timelines]).mean(axis=0)
+            expected[cond_name] = np.array(
+                [self._timelines[x][cond_name] for x in self._timelines]).mean(axis=0)
 
         return expected
 
-    def expected_condition_loss(self, stdev = 1):
+    def expected_condition_loss(self, stdev=1):
         """Get the expected condition for a failure mode"""
         expected = dict()
         for cond_name, condition in self.conditions.items():
-  
-            ec = np.array([self._timelines[x][cond_name] for x in self._timelines])
+
+            ec = np.array([self._timelines[x][cond_name]
+                           for x in self._timelines])
 
             mean = condition.perfect - ec.mean(axis=0)
             sd = ec.std(axis=0)
@@ -593,19 +591,21 @@ class FailureMode:  # Maybe rename to failure mode
             for task_name, task in erc.items():
                 t_end = max(max(task['time'], default=t_start), t_end)
 
-        df = pd.DataFrame(erc).T.apply(fill_blanks, axis = 1, args = (t_start, t_end))
+        df = pd.DataFrame(erc).T.apply(
+            fill_blanks, axis=1, args=(t_start, t_end))
         df.index.name = 'task'
         df_cost = df.explode('cost')['cost']
         df = df.explode('time')
         df['cost'] = df_cost
 
         # Add a cumulative cost
-        df['cost_cumulative'] = df.groupby(by=['task'])['cost'].transform(pd.Series.cumsum)
+        df['cost_cumulative'] = df.groupby(
+            by=['task'])['cost'].transform(pd.Series.cumsum)
 
         return df.reset_index()
 
     def expected_risk_cost(self, scaling=None):
-        if scaling==None:
+        if scaling == None:
             scaling = self._sim_counter
 
         profile = self._expected_cost(scaling=scaling)
@@ -616,7 +616,7 @@ class FailureMode:  # Maybe rename to failure mode
     def _expected_cost(self, scaling=1):
 
         task_cost = dict()
-        
+
         # Get the costs causes by tasks
         for task_name, task in self.tasks.items():
             if task.active:
@@ -624,14 +624,14 @@ class FailureMode:  # Maybe rename to failure mode
 
         return task_cost
 
-    def _expected_risk(self, scaling=1): # TODO expected risk with or without replacement
+    def _expected_risk(self, scaling=1):  # TODO expected risk with or without replacement
 
         t_failures = []
         for timeline in self._timelines.values():
             if timeline['failure'].any():
                 t_failures.append(np.argmax(timeline["failure"]))
 
-        time, cost = np.unique(t_failures, return_counts = True)
+        time, cost = np.unique(t_failures, return_counts=True)
         cost = cost * self.cof.get_cost() / scaling
 
         return dict(time=time, cost=cost)
@@ -645,7 +645,6 @@ class FailureMode:  # Maybe rename to failure mode
                 task_count[task_name] = task.expected_counts(self._sim_counter)
 
         return task_count
-
 
     # ****************** Reset Routines **************
 
@@ -719,7 +718,8 @@ class FailureMode:  # Maybe rename to failure mode
         ax_task.set_title("Task")
 
         for condition in self.conditions:
-            ax_cond.plot(timeline["time"], timeline[condition], label=condition)
+            ax_cond.plot(timeline["time"],
+                         timeline[condition], label=condition)
             ax_cond.legend()
 
         for state in self.get_states():
@@ -732,18 +732,19 @@ class FailureMode:  # Maybe rename to failure mode
 
         plt.show()
 
-
     def plot_expected(self):
 
         fig, ax = plt.subplots()
 
         if not self.expected:
 
-            ax.set_title("Expected outcome for %i simulations" %(len(self._timelines)))
+            ax.set_title("Expected outcome for %i simulations" %
+                         (len(self._timelines)))
 
             for key in list(self.timeline):
                 ax.plot(self.expected['time'], self.expected[key])
-                ax.fill_between(self.expected['time'], self.lower[key], self.upper[key], alpha=0.2)
+                ax.fill_between(
+                    self.expected['time'], self.lower[key], self.upper[key], alpha=0.2)
 
         elif not self.timeline:
 
@@ -753,6 +754,23 @@ class FailureMode:  # Maybe rename to failure mode
 
             print("No timelines have been simulated")
 
+    def update_from_dict(self, dict_data):
+
+        var = list(dict_data.keys())[0]
+
+        if var in self.__dict__:
+
+            if isinstance(self.__dict__[var], dict):
+
+                var_2 = list(dict_data.keys())[0]
+
+                if var_2 in ['Condition', 'Task', 'Distribution']:
+                    var_3 = id_str.split(sep)[2]
+                    self.__dict__[var][var_3].update(id_str, value, sep)
+
+            self.__dict__[var] = value
+        else:
+            print("Not an attribute of dist")
 
     def update(self, id_str, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
@@ -767,8 +785,8 @@ class FailureMode:  # Maybe rename to failure mode
             if var in self.__dict__:
 
                 # Check if the variable is a dictionary
-                if isinstance(self.__dict__[var], dict): 
-                    
+                if isinstance(self.__dict__[var], dict):
+
                     var_2 = id_str.split(sep)[1]
 
                     # Check if the variable is a class with its own update methods
@@ -776,12 +794,12 @@ class FailureMode:  # Maybe rename to failure mode
                         var_3 = id_str.split(sep)[2]
                         self.__dict__[var][var_3].update(id_str, value, sep)
 
-                        self.set_init_dist() #TODO Ghetto fix
+                        self.set_init_dist()  # TODO Ghetto fix
                     else:
                         self.__dict__[var][var_2] = value
                 else:
                     self.__dict__[var] = value
-                    if var == 'pf_interval': #TODO Ghetto fix
+                    if var == 'pf_interval':  # TODO Ghetto fix
                         for condition in self.conditions.values():
                             condition.pf_interval = value
 
@@ -793,10 +811,10 @@ class FailureMode:  # Maybe rename to failure mode
                 if var in self.__dict__ and isinstance(self.__dict__[var], (Condition, Distribution, Task)):
                     self.__dict__[var].update(id_str, value, sep)
                     if var == 'untreated':
-                        self.set_init_dist() #TODO Ghetto fix
+                        self.set_init_dist()  # TODO Ghetto fix
                 else:
-                    print("Invalid id \"%s\" %s not in class" %(id_str, var))
-            
+                    print("Invalid id \"%s\" %s not in class" % (id_str, var))
+
         except:
             print('Invalid ID')
 
@@ -806,7 +824,8 @@ class FailureMode:  # Maybe rename to failure mode
         prefix = prefix + "FailureMode" + sep + self.name + sep
 
         # Failure modes
-        fm_ids = [prefix + param for param in ['active', 'pf_curve', 'pf_interval', 'pf_std']]
+        fm_ids = [prefix + param for param in ['active',
+                                               'pf_curve', 'pf_interval', 'pf_std']]
 
         # Failure Dist
         fd_ids = self.untreated.get_dash_ids(prefix=prefix)
@@ -814,14 +833,14 @@ class FailureMode:  # Maybe rename to failure mode
         # Tasks
         task_ids = []
         for task in self.tasks.values():
-            task_ids = task_ids + task.get_dash_ids(prefix=prefix + 'tasks' + sep)
+            task_ids = task_ids + \
+                task.get_dash_ids(prefix=prefix + 'tasks' + sep)
 
         dash_ids = fm_ids + fd_ids + task_ids
 
         return dash_ids
 
-
-    def get_objects(self,prefix="", sep = "-"):
+    def get_objects(self, prefix="", sep="-"):
 
         # Failure mode object
         prefix = prefix + 'FailureMode' + sep
@@ -829,15 +848,16 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Tasks objects
         prefix = prefix + self.name + sep
-        objects = objects + [prefix + 'tasks' + sep + 'Task' + sep + task for task in self.tasks]
+        objects = objects + [prefix + 'tasks' + sep +
+                             'Task' + sep + task for task in self.tasks]
 
         return objects
 
     # ****************** Demonstration ***********
 
-
     def set_demo(self):
         return self.load(demo.failure_mode_data['slow_aging'])
+
 
 if __name__ == "__main__":
     failure_mode = FailureMode()

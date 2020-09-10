@@ -141,9 +141,15 @@ class Distribution:
 
         return P
 
-    def update_from_dict(self, dict):
+    def update_from_dict(self, dict_data):
 
-        pass
+        var = list(dict_data.keys())[0]
+        value = dict_data[var]
+
+        if var in self.__dict__:
+            self.__dict__[var] = value
+        else:
+            print("Not an attribute of dist")
 
 
 """class Dataset:
