@@ -45,7 +45,8 @@ class Component():
         name = 'comp',
         indicator = dict(),
         fm = dict(),
-
+        *args,
+        **kwargs,
 
     ):
         
@@ -72,6 +73,8 @@ class Component():
         self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
         self.indicator['slow_degrading'] = Condition.load(demo.condition_data['slow_degrading']) # TODO fix this call
         self.indicator['fast_degrading'] = Condition.load(demo.condition_data['fast_degrading']) # TODO fix this call
+
+        #TODO link failure_modes to indicators
 
         # Simulation traking
         self._sim_counter = 0

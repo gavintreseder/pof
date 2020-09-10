@@ -17,13 +17,15 @@ class TestTask(unittest.TestCase):
 
     # **************** test_load ***********************
 
-    def test_load_no_data(self):
-        task = Task().load()
+    def test_load_empty(self):
+        task = Task.load()
         self.assertIsNotNone(task)
 
-    def test_load_some_data(self):
-        task = Task().load(demo.inspection_data['instant'])
+    def test_load_valid_dict(self):
+        task = Task.load(demo.inspection_data['instant'])
         self.assertIsNotNone(task)
+
+    # **************** test_update ***********************
 
     def test_update(self):
 
@@ -43,12 +45,12 @@ class TestConditionTask(unittest.TestCase):
 
     # **************** test_load ***********************
 
-    def test_load_no_data(self):
-        task = ConditionTask().load()
+    def test_load_empty(self):
+        task = ConditionTask.load()
         self.assertIsNotNone(task)
 
-    def test_load_some_data(self):
-        task = ConditionTask().load(demo.on_condition_replacement_data)
+    def test_load_valid_dict(self):
+        task = ConditionTask.load(demo.on_condition_replacement_data)
         self.assertIsNotNone(task)
 
     def test_update(self):
@@ -59,27 +61,27 @@ class TestConditionTask(unittest.TestCase):
 
 class TestInspection(unittest.TestCase):
 
-    def setUp(self):
-        self.insp = Inspection(t_interval=5)
-        self.c = Condition(perfect=100, limit=0, cond_profile_type = 'linear', cond_profile_params = [-10])
-
-        # Counters
-        self.n_sims = 1000
-        self.n_detect = 0
-
-    def test_instantiate(self):
-        insp = Inspection()
-
+    def test_imports_correctly(self):
         self.assertTrue(True)
 
-    """Tests to complete
+    def test_instantiate(self):
+        task = Inspection()
+        self.assertIsNotNone(task)
 
+    # **************** test_load ***********************
 
-    inspection before conditions not met
-    inspection with one condition met
-    inspection with all conditions met
+    def test_load_empty(self):
+        task = Inspection.load()
+        self.assertIsNotNone(task)
 
-    """
-    #def test_sim_inspect_with_p_detection_1_before_t_inspection(self):
+    def test_load_valid_dict(self):
+        task = Inspection.load(demo.inspection_data['instant'])
+        self.assertIsNotNone(task)
 
+    # **************** test_update ***********************
+
+    def test_update(self):
+
+        # Test all the options
         
+        self.assertTrue(True)

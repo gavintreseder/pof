@@ -228,9 +228,9 @@ class AssetModelLoader:
 
             # Trigger information
             try:
-                state = df_task['trigger_model']['state'].iloc[0].dropna().to_dict(),
+                state = df_task['trigger_model']['state'].iloc[0].dropna().to_dict()
             except:
-                state = df_task['trigger_model']['state'].dropna().to_dict(),
+                state = df_task['trigger_model']['state'].dropna().to_dict()
 
             trigger_data = dict(
                 state = state,
@@ -239,9 +239,9 @@ class AssetModelLoader:
 
             # Impact information
             try:
-                state = df_task['impact_model']['state'].iloc[0].dropna().to_dict(),
+                state = df_task['impact_model']['state'].iloc[0].dropna().to_dict()
             except:
-                state = df_task['impact_model']['state'].dropna().to_dict(),
+                state = df_task['impact_model']['state'].dropna().to_dict()
                 
             impact_data = dict(
                 state = state,

@@ -30,14 +30,26 @@ class TestTask(unittest.TestCase):
         self.assertIsNotNone(aml)
 
 
-    def test_valid_failure_mode(self):
+    def test_failure_mode_loads(self):
         aml = AssetModelLoader()
         data = aml.load(filename)
 
-        fm = FailureMode()
-        fm.load(data['pole']['fm']['termites'])
-        
-        self.assertIsNotNone(fm)
+        fm = FailureMode.load(data['pole']['fm']['termites'])
+        self.assertIsNotNone(fm, msg="FailureMode cannot be loaded with da")
+
+        fm.sim_timeline(200)
+        self.assertIsNotNone(fm, msg="FailureMode cannot sim_timline after being loaded")
+
+
+    def test_component_loads(self):
+        aml = AssetModelLoader()
+        data = aml.load(filename)
+
+        comp = Component.load(data['pole'])
+        self.assertIsNotNone(comp, msg="FailureMode cannot be loaded with da")
+
+        #TODO
+        self.assertIsNotNone(comp, msg="FailureMode cannot sim_timline after being loaded")
 
     def test_load_component(self):
 
