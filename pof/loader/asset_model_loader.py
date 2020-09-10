@@ -195,11 +195,13 @@ class AssetModelLoader:
 
         return fms_data
 
+
     def _get_condition_data(self, df_fm):
         #TODO update for new arrangement
-        df_cond = df_fm['condition_model']
-        conditions = df_cond['condition']['name'].dropna().to_numpy()
-        cond_data = {cond : None for cond in conditions}
+        df_cond = df_fm['condition_model']['condition'].set_index('name').dropna(how='all')
+        df_cond['name'] = df_cond.index
+        cond_data = df_cond.to_dict('index')
+
         return cond_data
 
     def _get_dist_data(self,df_fm):
@@ -207,9 +209,10 @@ class AssetModelLoader:
         df_dist = df_fm['failure_model'].dropna()
         df_dist.columns = df_dist.columns.droplevel()
 
+        #dist_data = df_dist
         try:
-            dist_data = df_dist.iloc[0].dropna().to_dict()
-        except IndexError:
+            dist_data = df_dist.dropna(how=all).to_dict('records')[0]
+        except KeyError:
             dist_data = df_dist.dropna().to_dict()
 
         return dist_data

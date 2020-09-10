@@ -588,7 +588,7 @@ class FailureMode:  # Maybe rename to failure mode
         # Set the end to the largest time if no time is given
         if t_end == None:
             t_end = t_start
-            for task_name, task in erc.items():
+            for task in erc.values():
                 t_end = max(max(task['time'], default=t_start), t_end)
 
         df = pd.DataFrame(erc).T.apply(
@@ -733,7 +733,7 @@ class FailureMode:  # Maybe rename to failure mode
         plt.show()
 
     def plot_expected(self):
-
+        #TODO not finished
         fig, ax = plt.subplots()
 
         if not self.expected:
@@ -771,9 +771,50 @@ class FailureMode:  # Maybe rename to failure mode
             self.__dict__[var] = value
         else:
             print("Not an attribute of dist")
+            
+    def update2(self, object, value=None)
+        """
+
+        """
+
+
+        # Did it it get a string
+            # update from str
+        
+        # did it get a dict
+            # update from dict
+
+        NotImplemented
+
+    def update_from_str():
+
+        
+        # split it based on teh sepearator
+        # turn it into a dict
+        # update_from_dict(your_dict)
+
+        NotImplemented
+
+    def update_from_dict(self, dict_data):
+
+        # Check if the first key is an attribute of the class
+        # {alpha : 1}
+        # dict(alpha=1)
+
+        # Attribute 
+            # Is it a value
+            # Attribute a dict
+            # Is it a class
+        # Not an attribute
+            # print an error message
+
+        NotImplemented
+
 
     def update(self, id_str, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
+
+        Condition
 
         try:
 

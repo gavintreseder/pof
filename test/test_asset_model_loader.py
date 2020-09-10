@@ -20,7 +20,7 @@ filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential En
 
 #TODO move this file into test_loader
 
-class TestTask(unittest.TestCase):
+class TestAssetModelLoader(unittest.TestCase):
 
     def test_imports_correctly(self):
         self.assertTrue(True)
@@ -36,10 +36,13 @@ class TestTask(unittest.TestCase):
 
         fm = FailureMode.load(data['pole']['fm']['termites'])
         self.assertIsNotNone(fm, msg="FailureMode cannot be loaded with da")
-
+        fm.sim_timeline(200)
+        fm.sim_timeline(200)
         fm.sim_timeline(200)
         self.assertIsNotNone(fm, msg="FailureMode cannot sim_timline after being loaded")
 
+        fm.mc_timeline(200)
+        self.assertIsNotNone(fm, msg="FailureMode cannot sim_timline after being loaded")
 
     def test_component_loads(self):
         aml = AssetModelLoader()
