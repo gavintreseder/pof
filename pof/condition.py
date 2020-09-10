@@ -102,6 +102,24 @@ class Condition:
 
         return
 
+    @classmethod
+    def load(cls, details=None):
+        try:
+            cond = cls.from_dict(details)
+        except:
+            cond = cls()
+            print("Error loading Condition data")
+        return cond
+
+    @classmethod
+    def from_dict(cls, details=None):
+        try:
+            cond = cls(**details)
+        except:
+            cond = cls()
+            print("Error loading Component data from dictionary")
+        return cond
+
     def __str__(self):
 
         out = "Curve: %s\n" % (self.pf_curve)

@@ -4,8 +4,14 @@
         # Create a new method that returns the conditional survival rate based when it is passed a time 
         # change all use of sample method to conditional survival rate
 
-    # Dash update id methods
+    # Update method
+        #update_from_string
+            -> turn to dict, call update from dict
+        #update_from_dict
+
+    # Dash update id methods (see this from above)
         # Change the update methods to use the set functions
+            # The thing that we are trying to fix here is to make sure that an init dist gets recalculated every time we make a change to untreated
         # Complete tests for each of them
 
     # Testing
@@ -13,6 +19,8 @@
         # Write a test for different version of expected_risk_cost_df
         # Load data test can return a load error, but this isn't checked
 
+    # Asset_model_loader
+        # update rename duplicates so it also checks for duplicates in the asset model (whole list) and in the failure mdoes(no duplicates within comp)
 
 
     # Validation
@@ -21,6 +29,8 @@
 
     # Stretch
         # Raise exception v print error for catching mistakes
+
+    
 
 
 # 08 Sep - Gav
@@ -62,6 +72,12 @@
         # Inpsection interval
             # Generalise to sensitivity
         # Save models
+
+        # Condition reset
+            # condition reset not accumulating damage correclty (E.g. try reduction factor 50%)
+
+        # Loading
+            # make robust loader a base class that every other class inherits from
 
 
     # Replace on failure button

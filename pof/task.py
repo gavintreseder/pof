@@ -101,6 +101,24 @@ class Task:
 
     # ************ Load Methods **********************
 
+    @classmethod
+    def load(cls, details=None):
+        try:
+            task = cls.from_dict(details)
+        except:
+            task = cls()
+            print("Error loading %s data" %(cls.__name__))
+        return task
+
+    @classmethod
+    def from_dict(cls, details=None):
+        try:
+            task = cls(**details)
+        except:
+            task = cls()
+            print("Error loading %s data from dictionary" %(cls.__name__))
+        return task
+
     def load(self, kwargs=None):
         try:
             self._load(**kwargs)
@@ -152,6 +170,8 @@ class Task:
         elif isinstance(consequence, dict):
             self.consequence = Consequence(**consequence)
         
+        elif consequence is None:
+            self.consequence = Consequence() #TODO make this a load with zero
         else:
             print ("Invalid Consequence")
 

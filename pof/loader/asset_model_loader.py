@@ -65,17 +65,23 @@ class AssetModelLoader:
         df = pd.read_excel(self.filename, sheet_name='Model Input', header=[0,1,2])
 
         # Create keys
-        keys = [
-            ('asset_model', 'component', 'name'),
-            ('failure_model', 'failure_mode', 'name'),
-            ('task_model', 'task', 'name'),
-        ]
+        keys = dict(
+            asset_model = ('asset_model', 'component', 'name'),
+            #('indicator_model', 'indicator','name'),
+            failure_model = ('failure_model', 'failure_mode', 'name'),
+            task_model = ('task_model', 'task', 'name'),
+            #('trigger_model', 'condition', 'name'), #TODO revist this one
+            #('impact_model', 'condition', 'name'),
+        )
 
         # Drop rows with no data
         df = df.dropna(axis=1, how='all')
 
+        df = self.rename_keys(df=df, keys=keys)
+
         # Propogate keys for 1 to many relationships
-        df[keys] = df[keys].ffill()
+        key_list = [key for key in keys.values()]
+        df[key_list] = df[key_list].ffill()
 
         self.df = df
 
@@ -101,6 +107,33 @@ class AssetModelLoader:
         else:
             return True
 
+
+    def _validate_unique_keys(self, keys, df):
+
+        NotImplemented
+
+    def rename_keys(self, df, keys):
+
+        # Check Components aren't duplicated
+        #TODO only uses 
+
+        # Check Failure Modes aren't duplicated
+        key_cols = [keys['asset_model'], keys['failure_model']]
+        mask_key = df[key_cols].notnull().any(axis=1)
+        mask_dup = df.loc[mask_key, key_cols].ffill().duplicated(keep=False)
+
+        mask = mask_key & mask_dup
+        df.loc[mask, keys['failure_model']] += '.' + df[key_cols].loc[mask].ffill().groupby(key_cols).cumcount().add(1).astype(str)
+
+        # Check Tasks aren't duplicated
+        key_cols = [keys['asset_model'], keys['failure_model'], keys['task_model']]
+        mask_key = df[key_cols].notnull().any(axis=1)
+        mask_dup = df.loc[mask_key, key_cols].ffill().duplicated(keep=False)
+
+        mask = mask_key & mask_dup
+        df.loc[mask, keys['task_model']] += '.' + df[key_cols].loc[mask].ffill().groupby(key_cols).cumcount().add(1).astype(str)
+
+        return df
 
     # ********************* excel load methods *****************************
 

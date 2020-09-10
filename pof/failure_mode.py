@@ -99,17 +99,21 @@ class FailureMode:  # Maybe rename to failure mode
     # ************** Load Functions *****************
 
     @classmethod
-    def from_dict(cls, details=None):
-        return cls(**details)
+    def load(cls, details=None):
+        try:
+            fm = cls.from_dict(details)
+        except:
+            fm = cls()
+            print("Error loading %s data" %(cls.__name__))
+        return fm
 
     @classmethod
-    def load(cls, details=None):
+    def from_dict(cls, details=None):
         try:
             fm = cls(**details)
         except:
             fm = cls()
-            print("Error loading FailureMode data")
-
+            print("Error loading %s data from dictionary" %(cls.__name__))
         return fm
 
 
@@ -148,9 +152,13 @@ class FailureMode:  # Maybe rename to failure mode
         self.set_init_dist()
 
     def set_states(self, states):
+        #TODO fix this default
+        for state in ['detection', 'failure', 'initiation']:
+            self.states[state] = False
 
         for state_name, state in states.items():
             self.states[state_name] = state
+
 
         return True
 
@@ -829,10 +837,7 @@ class FailureMode:  # Maybe rename to failure mode
 
 
     def set_demo(self):
-
-        self.load(demo.failure_mode_data['slow_aging'])
-
-        return self
+        return self.load(demo.failure_mode_data['slow_aging'])
 
 if __name__ == "__main__":
     failure_mode = FailureMode()

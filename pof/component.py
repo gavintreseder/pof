@@ -40,10 +40,17 @@ class Component():
             
     """
 
-    def __init__(self):
+    def __init__(self,
+        active = True,
+        name = 'comp',
+        indicator = dict(),
+        fm = dict(),
+
+
+    ):
         
         # Object parameters
-        self.active = True
+        self.active = active
 
         # Initial parameters
         self.age = 0
@@ -54,44 +61,41 @@ class Component():
         self._children_id = NotImplemented
         
         # Parameter
-        self.name = 'comp' # TODO NotImplemented fully
+        self.name = name # TODO NotImplemented fully
         self.indicator = dict()
+        
+        # Failure Modes
         self.fm = dict()
+        self.set_failure_mode(fm)
 
+        # Trial for indicator
+        self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
+        self.indicator['slow_degrading'] = Condition.load(demo.condition_data['slow_degrading']) # TODO fix this call
+        self.indicator['fast_degrading'] = Condition.load(demo.condition_data['fast_degrading']) # TODO fix this call
 
         # Simulation traking
         self._sim_counter = 0
 
     # ****************** Load data ******************
 
-    def load(self, kwargs=None):
+    @classmethod
+    def load(cls, details=None):
         try:
-            self._load(**kwargs)
+            comp = cls.from_dict(details)
         except:
+            comp = cls()
             print("Error loading Component data")
+        return comp
 
-        return self
+    @classmethod
+    def from_dict(cls, details=None):
+        try:
+            comp = cls(**details)
+        except:
+            comp = cls()
+            print("Error loading Component data from dictionary")
+        return comp
 
-    def _load(self,
-        fm=dict(),
-        asset_data=dict(),
-        **kwargs,
-    ):
-        # Load Indicators
-
-
-        # Load Failure Modes
-        self.set_failure_mode(fm)
-
-        # Load asset information??
-        #self.set_asset_data(asset_data)
-        
-        # Trial for indicator
-        self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
-        self.indicator['slow_degrading'] = Condition(**demo.condition_data['slow_degrading']) # TODO fix this call
-        self.indicator['fast_degrading'] = Condition(**demo.condition_data['fast_degrading']) # TODO fix this call
-
-        NotImplemented
 
 
     def load_asset_data(self, *args, **kwargs):

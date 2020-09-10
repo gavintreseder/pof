@@ -92,7 +92,7 @@ class TestFailureMode(unittest.TestCase):
     def test_sim_timeline_condition_step(self): #TODO full coverage
         t_start = 0
         t_end = 200
-        fm = FailureMode().load(demo.failure_mode_data['random'])
+        fm = FailureMode.load(demo.failure_mode_data['random'])
 
         initiation_start = fm.is_initiated()
         detection_start = fm.is_detected()

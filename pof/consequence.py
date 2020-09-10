@@ -1,17 +1,27 @@
 
 
 class Consequence:
-    def __init__(self):
+    def __init__(self, risk_cost_total = 50000):
 
-        self.risk_cost_total = 50000
+        self.risk_cost_total = risk_cost_total
 
-    def load(self, kwargs=None):
+    @classmethod
+    def from_dict(cls, details=None):
         try:
-            self._load(**kwargs)
+            csq = cls(**details)
         except:
+            print("Error loading Consequence data from dictionary")
+        return csq
+
+    @classmethod
+    def load(cls, details=None, *args, **kwargs):
+        try:
+            csq = cls.from_dict(**details)
+        except:
+            csq = cls()
             print("Error loading Consequence data")
 
-        return self
+        return csq
 
     def _load(self, *args, **kwargs):
 

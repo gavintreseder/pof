@@ -30,8 +30,8 @@ def update_pof_fig(local):
 
     try:
         pof = dict(
-            treated = pd.DataFrame(local.expected_pof(t_end=200)),
-            untreated = pd.DataFrame(local.expected_untreated(t_end=200)),
+            maint = pd.DataFrame(local.expected_pof(t_end=200)),
+            no_maint = pd.DataFrame(local.expected_untreated(t_end=200)),
         )
 
         df = pd.concat(pof).rename_axis(['strategy', 'time']).reset_index()
