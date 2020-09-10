@@ -25,11 +25,12 @@ class Distribution:
 
     def __str__(self):
 
-        out = "Alpha = %s, Beta = %s, Gamma = %s" % (self.alpha, self.beta, self.gamma)
+        out = "Alpha = %s, Beta = %s, Gamma = %s" % (
+            self.alpha, self.beta, self.gamma)
 
         return out
 
-    def load(self, name = 'dist', **kwargs):
+    def load(self, name='dist', **kwargs):
         self.last_name = name
         self.alpha = kwargs.get('alpha')
         self.beta = kwargs.get('beta')
@@ -39,9 +40,9 @@ class Distribution:
 
     def params(self):
         params = dict(
-            alpha = self.alpha,
-            beta = self.beta,
-            gamma = self.gamma,
+            alpha=self.alpha,
+            beta=self.beta,
+            gamma=self.gamma,
         )
         return params
 
@@ -58,8 +59,10 @@ class Distribution:
         return
 
     def conditional_f(self, x_min, x_max):
-        P_min = ss.weibull_min.sf(x_min, self.beta, scale=self.alpha, loc=self.gamma)
-        P_max = ss.weibull_min.sf(x_max, self.beta, scale=self.alpha, loc=self.gamma)
+        P_min = ss.weibull_min.sf(
+            x_min, self.beta, scale=self.alpha, loc=self.gamma)
+        P_max = ss.weibull_min.sf(
+            x_max, self.beta, scale=self.alpha, loc=self.gamma)
         P = 1 - P_max / P_min
 
         return P
@@ -68,8 +71,10 @@ class Distribution:
         self, x_min, x_max
     ):  # TODO Occa should this be total failure rate (cdf) or conditional failure
 
-        P_min = ss.weibull_min.sf(x_min, self.beta, scale=self.alpha, loc=self.gamma)
-        P_max = ss.weibull_min.sf(x_max, self.beta, scale=self.alpha, loc=self.gamma)
+        P_min = ss.weibull_min.sf(
+            x_min, self.beta, scale=self.alpha, loc=self.gamma)
+        P_max = ss.weibull_min.sf(
+            x_max, self.beta, scale=self.alpha, loc=self.gamma)
         P = P_max / P_min
 
         return P
@@ -88,36 +93,57 @@ class Distribution:
             # Return
             return 0
 
-
     def get_dash_ids(self, prefix='', sep='-'):
 
         prefix = prefix + 'Distribution' + sep + self.name + sep
         return [prefix + param for param in ['alpha', 'beta', 'gamma']]
 
-
     def update(self, dash_id, value, sep='-'):
         """Updates a the distrubtion object using the dash componenet ID"""
 
         try:
-    
+
             id_update(self, id_str=dash_id, value=value, sep=sep)
 
         except:
             print('Invalid ID')
 
-
     def load_demo(self, scenario=None):
-        
+
         if scenario is None:
 
             data = dict(
-                name = "slow_aging",
-                alpha = 100,
-                beta = 2,
-                gamma = 10,
+                name="slow_aging",
+                alpha=100,
+                beta=2,
+                gamma=10,
             )
 
         self.load(data)
+
+    def csf(self, t_start, t_end):
+        t_interval = np.arange(t_start, t_end + 1, 1)
+
+        P_interval = ss.weibull_min.sf(
+            t_interval, self.beta, scale=self.alpha, loc=self.gamma)
+
+        P = P_interval / P_interval[0]
+
+        return P
+
+    def cff(self, t_start, t_end):
+        t_interval = np.arange(t_start, t_end + 1, 1)
+
+        P_interval = ss.weibull_min.sf(
+            t_interval, self.beta, scale=self.alpha, loc=self.gamma)
+
+        P = 1 - P_interval / P_interval[0]
+
+        return P
+
+    def update_from_dict(self, dict):
+
+        pass
 
 
 """class Dataset:
@@ -167,4 +193,3 @@ if __name__ == "__main__":
     distribution = Distribution()
 
     print("Distribution - Ok")
-
