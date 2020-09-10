@@ -146,12 +146,19 @@ class Task:
             if trigger not in triggers:
                 triggers[trigger] = dict()
 
+        for state in triggers['state']:
+            triggers[state] = bool(triggers[state])
+
         self.triggers = triggers
 
     def set_impacts(self, impacts=dict()):
         for impact in ['condition', 'state', 'time']:
             if impact not in impacts:
                 impacts[impact] = dict()
+
+        # Recast any ints to bools TODO make more robust
+        for state in impacts['state']:
+            impacts[state] = bool(impacts[state])
 
         self.impacts = impacts
 
@@ -451,11 +458,16 @@ class ConditionTask(Task):
             # Check the condition triggers have been met
             for condition, trigger in self.triggers['condition'].items():
                 try:
-                    tl_ct = (
-                        (tl_ct)
-                        & (timeline[condition][t_start:t_end] < trigger["upper"])
-                        & (timeline[condition][t_start:t_end] > trigger["lower"])
-                    )
+                    if trigger['lower'] != 'min':
+                        tl_ct = (
+                            (tl_ct)
+                            & (timeline[condition][t_start:t_end] > trigger["lower"])
+                        )
+                    if trigger['upper'] != 'max':
+                        tl_ct = (
+                            (tl_ct)
+                            & (timeline[condition][t_start:t_end] < trigger["upper"])
+                        )
                 except KeyError:
                     print("%s not found" % (condition))
 

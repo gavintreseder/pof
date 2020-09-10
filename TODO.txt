@@ -66,6 +66,8 @@
         # Asset details in interface
 
     # Nice to have
+        # AssetModelLoader
+            # Check to fill with defaults or rasie error
         # Interface improvements
             # Task Schedule
         # Make layout a class
