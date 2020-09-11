@@ -143,13 +143,13 @@ class Distribution:
 
     def update_from_dict(self, dict_data):
 
-        var = list(dict_data.keys())[0]
-        value = dict_data[var]
+        for k, v in dict_data.items():
 
-        if var in self.__dict__:
-            self.__dict__[var] = value
-        else:
-            print("Not an attribute of dist")
+            if k in self.__dict__:
+                self.__dict__[k] = v
+            else:
+                print("ERROR: Cannot update \"%s\" from dict" %
+                      (self.__class__.__name__))
         NotImplemented
 
 
