@@ -35,19 +35,34 @@
 
 # 08 Sep - Gav
 
+    # Critical
+        # inspection interval onto interface w button
+        # fix termite problem
+        # n failures expected for population
+            # fleet data
+        # asset data
+            # consequence model
+
+        # task error
+            # fast degrading not found
+
+        # Notebooks to explain
+
 
     # Tasks
         # Technical brief - 
         # Maint labels
 
     # Calibration
-        # 
+        # percent failing by age
+        # Number of faiures expected last year
 
     # asset model
         # review data with Greg
 
     # asset data
         #
+    
     # fleet data
         # summarise assets into population groups*
 

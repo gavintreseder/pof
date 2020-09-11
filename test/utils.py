@@ -8,7 +8,6 @@ from pof.task import Task
 from pof.consequence import Consequence
 from pof.distribution import Distribution
 
-
 VALID_CHILDREN = (Component, Condition, FailureMode, Task, Distribution, Consequence)
 
 def get_dash_id_value(instance, dash_id, prefix='', sep = "-"):

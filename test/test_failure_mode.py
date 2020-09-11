@@ -7,8 +7,8 @@ import io
 
 import utils
 
-from pof.failure_mode import FailureMode
-from pof.distribution import Distribution
+from pof.failure_mode import FailureMode                        
+from pof.distribution import Distribution 
 import pof.demo as demo
 
 class TestFailureMode(unittest.TestCase):

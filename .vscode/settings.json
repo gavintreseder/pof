@@ -12,4 +12,8 @@
     "python.pythonPath": "C:\\Users\\ischram\\AppData\\Local\\Continuum\\anaconda3\\python.exe",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
+    "python.autoComplete.extraPaths": [],
+    "python.pipenvPath": ".venv\\Scripts\\pipenv.exe",
+    "python.jupyterPath": ".venv\\Scripts\\jupyter.exe",
+    "python.ipythonPath": ".venv\\Scripts\\ipython.exe",
 }
