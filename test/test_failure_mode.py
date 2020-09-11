@@ -183,5 +183,10 @@ class TestFailureMode(unittest.TestCase):
 
                 self.assertEqual(val, expected, msg = "Error: dash_id %s" %(dash_id))
 
+
+    # ************ Test reset methods *****************
+
+    # Change all condition, state and task count. Check values change or don't change for each of them
+
 if __name__ == '__main__':
     unittest.main()

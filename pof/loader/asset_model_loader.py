@@ -21,7 +21,7 @@ class AssetModelLoader:
 
     def __init__(self,
         filename = None,
-        method_missing_data = 'error',
+        method_missing_data = 'default',
     ):
 
         # file location
@@ -216,7 +216,7 @@ class AssetModelLoader:
         #dist_data = df_dist
         try:
             dist_data = df_dist.dropna(how='all').to_dict('records')[0]
-        except KeyError:
+        except IndexError:
             print('No Distribution present')
             if self.method_missing_data == 'error':
                 raise ValueError("Distribution data is missing")

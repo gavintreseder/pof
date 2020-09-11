@@ -7,6 +7,7 @@ verify_ssl = true
 pylint = "*"
 ipykernel = "*"
 pypiwin32 = "*"
+jupyter-dash = "*"
 
 [packages]
 pandas = "*"
@@ -19,6 +20,8 @@ scipy = "*"
 tqdm = "*"
 traitlets = "==4.3.3"
 lifelines = "*"
+xlrd = "*"
+dash-bootstrap-components = "*"
 
 [requires]
 python_version = "*"

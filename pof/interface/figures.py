@@ -54,7 +54,8 @@ def update_condition_fig(local):
         fig = make_subplots(
             rows=len(ecl),
             shared_xaxes=True,
-            vertical_spacing=0.05
+            vertical_spacing=0.05,
+            title = 'Condition'
         )
 
         cmap = px.colors.qualitative.Safe
@@ -104,8 +105,19 @@ def update_condition_fig(local):
     return fig
 
 
-def humanise(data):
+def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=10):
+    
+    try:
+        df = local.expected_inspection_interval(t_min=t_min, t_max=t_max, step=step, n_iterations=n_iterations)
+        df_plot = df.melt(id_vars='inspection_interval', var_name = 'source', value_name='cost')
+        fig = px.line(df_plot, x="inspection_interval", y="cost", color='source', title='Risk v Cost at different Inspection Intervals')
+    except:
+        fig = go.Figure(layout=go.Layout(title=go.layout.Title(text="Error Producing Condition")))
 
+    return fig
+
+def humanise(data):
+    # Not used
     if isinstance(pd.DataFrame):
         data.columns = data.columns.str.replace('_', " ").str.title()
         data
