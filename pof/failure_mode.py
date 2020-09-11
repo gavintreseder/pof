@@ -733,7 +733,7 @@ class FailureMode:  # Maybe rename to failure mode
         plt.show()
 
     def plot_expected(self):
-        #TODO not finished
+        # TODO not finished
         fig, ax = plt.subplots()
 
         if not self.expected:
@@ -754,44 +754,43 @@ class FailureMode:  # Maybe rename to failure mode
 
             print("No timelines have been simulated")
 
-    def update_from_dict(self, dict_data):
-
-        var = list(dict_data.keys())[0]
-
-        if var in self.__dict__:
-
-            if isinstance(self.__dict__[var], dict):
-
-                var_2 = list(dict_data.keys())[0]
-
-                if var_2 in ['Condition', 'Task', 'Distribution']:
-                    var_3 = id_str.split(sep)[2]
-                    self.__dict__[var][var_3].update(id_str, value, sep)
-
-            self.__dict__[var] = value
-        else:
-            print("Not an attribute of dist")
-            
-    def update2(self, object, value=None)
+    def update2(self, id_object, value=None):
         """
 
         """
-
-
         # Did it it get a string
-            # update from str
-        
+        # update from str
+
+        if isinstance(id_object, str):
+            self.update_from_str(id_object, value, sep="-")
+
         # did it get a dict
-            # update from dict
+        # update from dict
 
-        NotImplemented
+        elif isinstance(id_object, dict):
+            self.update_from_dict(id_object)
 
-    def update_from_str():
+        else:
+            print("id not str or dict")
 
-        
+    NotImplemented
+
+    def update_from_str(self, id_str, value, sep='-'):
+
         # split it based on teh sepearator
         # turn it into a dict
         # update_from_dict(your_dict)
+
+        id_str = id_str.split(sep)
+
+        dict_data = {}
+        for key in reversed(id_str):
+            if dict_data == {}:
+                dict_data = {key: value}
+            else:
+                dict_data = {key: dict_data}
+
+        self.update_from_dict(dict_data)
 
         NotImplemented
 
@@ -801,15 +800,52 @@ class FailureMode:  # Maybe rename to failure mode
         # {alpha : 1}
         # dict(alpha=1)
 
-        # Attribute 
+        # Attribute
             # Is it a value
             # Attribute a dict
             # Is it a class
         # Not an attribute
             # print an error message
 
-        NotImplemented
+        var = list(dict_data.keys())[0]
 
+        if var in self.__dict__:
+
+            # Check if the variable is a dictionary
+            if isinstance(self.__dict__[var], dict):
+
+                var_2 = list(dict_data[var].keys())[0]
+
+                # Check if the variable is a class with its own update methods
+                if var_2 in ['Condition', 'Task', 'Distribution']:
+                    var_3 = list(dict_data[var][var_2].keys())[0]
+                    self.__dict__[var][var_3].update_from_dict(dict_data)
+
+                    self.set_init_dist()  # TODO Ghetto fix
+
+                else:
+                    value = dict_data[var][var_2]
+                    self.__dict__[var][var_2] = value
+            else:
+                value = dict_data[var]
+                self.__dict__[var] = value
+                if var == 'pf_interval':  # TODO Ghetto fix
+                    for condition in self.conditions.values():
+                        condition.pf_interval = value
+
+        # Check if the variable is a class instance
+        else:
+            var = list(dict_data[var].keys())[0]
+
+            if var in self.__dict__ and isinstance(self.__dict__[var], (Condition, Distribution, Task)):
+                self.__dict__[var].update_from_dict(dict_data)
+                if var == 'untreated':
+                    self.set_init_dist()  # TODO Ghetto fix
+            else:
+                print("Invalid id \"%s\" %s not in class" %
+                      (str(dict_data), var))
+
+        NotImplemented
 
     def update(self, id_str, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""

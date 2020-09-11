@@ -150,6 +150,7 @@ class Distribution:
             self.__dict__[var] = value
         else:
             print("Not an attribute of dist")
+        NotImplemented
 
 
 """class Dataset:
