@@ -450,7 +450,7 @@ class ConditionTask(Task):
             # Check the state triggers have been met
             for state, trigger in self.triggers['state'].items():
                 try:
-                    tl_ct = (tl_ct) & (timeline[state][t_start:t_end])
+                    tl_ct = (tl_ct) & (timeline[state][t_start:t_end] == trigger)
                 except KeyError:
                     print("%s not found" % (state))
 

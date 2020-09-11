@@ -10,8 +10,9 @@ libcrypto-1_1-x64.pdb
 libssl-1_1-x64.dll
 libssl-1_1-x64.pdb
 
-
-Reintall Pywin32
+https://stackoverflow.com/questions/58612306/how-to-fix-importerror-dll-load-failed-while-importing-win32api
+Reinstall Pywin32
+copy dlls across from other working pacakge. error apparent when running pywin32_postinstall.py -install
 
 
 

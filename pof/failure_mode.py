@@ -83,6 +83,10 @@ class FailureMode:  # Maybe rename to failure mode
         self.states = dict()
         self.set_states(states)
 
+        # Init State
+        self.init_states = dict() #TODO change to asset info set
+        self.set_init_state(states)
+
         # Tasks
         self.tasks = dict()
         self.set_tasks(tasks)
@@ -146,15 +150,24 @@ class FailureMode:  # Maybe rename to failure mode
         # Set the probability of initiation using the untreated parameters
         self.set_init_dist()
 
-    def set_states(self, states):
-        # TODO fix this default
+    def set_init_state(self, states):
+        #TODO fix this default
         for state in ['detection', 'failure', 'initiation']:
-            self.states[state] = False
+            self.init_states[state] = False
 
         for state_name, state in states.items():
-            self.states[state_name] = state
+            self.init_states[state_name] = bool(state)
 
         return True
+    def set_states(self, states):
+        # TODO check this on the wekeend and split into set and update methods. Set at start. Update 
+        for state_name, state in states.items():
+            self.states[state_name] = bool(state)
+
+        for state in ['detection', 'failure', 'initiation']:
+            if state not in self.states:
+                self.states[state] = False
+
 
     def set_tasks(self, tasks):
         """
@@ -657,6 +670,9 @@ class FailureMode:  # Maybe rename to failure mode
             condition.reset()
 
     def reset_for_next_sim(self):
+
+        # Reset state
+        self.set_states(self.init_states)
 
         # Reset conditions
         for condition in self.conditions.values():

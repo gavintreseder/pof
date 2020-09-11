@@ -177,5 +177,9 @@ class TestComponent(unittest.TestCase):
 
                 self.assertEqual(val, expected, msg = "Error: dash_id %s" %(dash_id))
 
+    def test_expected_inspection_interval(self):
+
+        
+
 if __name__ == '__main__':
     unittest.main()

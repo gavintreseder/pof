@@ -45,13 +45,31 @@
 
         # task error
             # fast degrading not found
+            # init timeline has minor reset problem if it is changed. tasks intervals not changed
+            Code to replicate
+
+
+    # Interface
+        # Loading
+            # asset models
+            # asset data
+        # Single Timeline
+        # Monte carlo
+        # Fleet
+
+fm2 = FailureMode.load(data['pole']['fm']['termites'])
+fm2.sim_timeline(200)
+fm2.plot_timeline()
+for cond in fm2.conditions.values():
+    cond.pf_interval = 50
+fm2.sim_timeline(200)
+fm2.plot_timeline()
 
         # Notebooks to explain
 
 
     # Tasks
-        # Technical brief - 
-        # Maint labels
+        # Technical brief -
 
     # Calibration
         # percent failing by age

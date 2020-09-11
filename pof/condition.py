@@ -446,6 +446,23 @@ class Condition:
 
     # ********************** Interface ********************
 
+    def update_from_dict(self, dict_data):
+        #TODO not finished, only made for condition
+
+        for k, v in dict_data.items():
+            # Update current condition
+            if k == 'condition':
+                self.set_condition(v)
+
+            
+            elif k in ['name', 'pf_curve', 'pf_interval', 'pf_std']:
+                self.__dict__[k] = v
+                self.set_condition_profile()
+
+            # Update params
+
+
+
     def dash_update(self, dash_id, value, sep='-'):
         """Updates a the condition object using the dash componenet ID"""
 
