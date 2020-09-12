@@ -22,6 +22,7 @@ traitlets = "==4.3.3"
 lifelines = "*"
 xlrd = "*"
 dash-bootstrap-components = "*"
+celery = "*"
 
 [requires]
 python_version = "*"

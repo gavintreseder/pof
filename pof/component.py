@@ -469,7 +469,7 @@ class Component():
             # Reset component
             self.reset()
 
-        df = pd.DataFrame().from_dict(rc, orient='index').rename(columsn{'risk':'risk_cost'})
+        df = pd.DataFrame().from_dict(rc, orient='index').rename(columns={'risk':'risk_cost'})
         df['direct_cost'] = df.drop(['inspection_interval', 'risk_cost'], axis=1).sum(axis=1)
         df['total'] = df['direct_cost'] + df['risk_cost']
         
@@ -540,7 +540,7 @@ class Component():
         return objects
 
     # ****************** Demonstration parameters ******************
-
+    
     def set_demo(self):
         """ Loads a demonstration data set if no parameters have been set already"""
 
