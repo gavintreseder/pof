@@ -131,7 +131,7 @@ class Component():
                 self.indicator[name] = indicator
             
             # Create a condition object
-            elif isinstance(indicator, dict):
+            elif isinstance(indicator, dict): #TODO add methods for different 
                 self.indicator[name] = Indicator(**indicator)
 
     def set_failure_mode(self, failure_modes):
@@ -540,7 +540,7 @@ class Component():
         return objects
 
     # ****************** Demonstration parameters ******************
-    
+
     def set_demo(self):
         """ Loads a demonstration data set if no parameters have been set already"""
 

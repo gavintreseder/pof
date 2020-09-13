@@ -84,7 +84,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.set_states(states)
 
         # Init State
-        self.init_states = dict() #TODO change to asset info set
+        self.init_states = dict()  # TODO change to asset info set
         self.set_init_state(states)
 
         # Tasks
@@ -151,7 +151,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.set_init_dist()
 
     def set_init_state(self, states):
-        #TODO fix this default
+        # TODO fix this default
         for state in ['detection', 'failure', 'initiation']:
             self.init_states[state] = False
 
@@ -159,15 +159,15 @@ class FailureMode:  # Maybe rename to failure mode
             self.init_states[state_name] = bool(state)
 
         return True
+
     def set_states(self, states):
-        # TODO check this on the wekeend and split into set and update methods. Set at start. Update 
+        # TODO check this on the wekeend and split into set and update methods. Set at start. Update
         for state_name, state in states.items():
             self.states[state_name] = bool(state)
 
         for state in ['detection', 'failure', 'initiation']:
             if state not in self.states:
                 self.states[state] = False
-
 
     def set_tasks(self, tasks):
         """
@@ -776,29 +776,19 @@ class FailureMode:  # Maybe rename to failure mode
         """
 
         """
-        # Did it it get a string
-        # update from str
-
         if isinstance(id_object, str):
             self.update_from_str(id_object, value, sep="-")
-
-        # did it get a dict
-        # update from dict
 
         elif isinstance(id_object, dict):
             self.update_from_dict(id_object)
 
         else:
-            print("ERROR: Cannot update %s from string or dict - add in class name" %
-                  (self.__class__))
+            print("ERROR: Cannot update \"%s\" from string or dict" %
+                  (self.__class__.__name__))
 
     NotImplemented
 
     def update_from_str(self, id_str, value, sep='-'):
-
-        # split it based on teh sepearator
-        # turn it into a dict
-        # update_from_dict(your_dict)
 
         id_str = id_str.split(sep)
 
@@ -815,54 +805,26 @@ class FailureMode:  # Maybe rename to failure mode
 
     def update_from_dict(self, dict_data):
 
-        # Check if the first key is an attribute of the class
-        # {alpha : 1}
-        # dict(alpha=1)
+        for k, v in dict_data.items():
 
-        # Attribute
-            # Is it a value
-            # Attribute a dict
-            # Is it a class
-        # Not an attribute
-            # print an error message
+            if k in self.__dict__:
 
-        var = list(dict_data.keys())[0]
-
-        if var in self.__dict__:
-
-            # Check if the variable is a dictionary
-            if isinstance(self.__dict__[var], dict):
-
-                var_2 = list(dict_data[var].keys())[0]
-
-                # Check if the variable is a class with its own update methods
-                if var_2 in ['Condition', 'Task', 'Distribution']:
-                    var_3 = list(dict_data[var][var_2].keys())[0]
-                    self.__dict__[var][var_3].update_from_dict(dict_data)
-
-                    self.set_init_dist()  # TODO Ghetto fix
-
+                if isinstance(self.__dict__[k], dict):
+                    for k_2, v_2 in v.items():
+                        if k_2 in ['Condition', 'Task', 'Distribution']:
+                            self.__dict__[k][v_2].update_from_dict(dict_data)
+                        else:
+                            self.__dict__[k][k_2] = v_2
                 else:
-                    value = dict_data[var][var_2]
-                    self.__dict__[var][var_2] = value
-            else:
-                value = dict_data[var]
-                self.__dict__[var] = value
-                if var == 'pf_interval':  # TODO Ghetto fix
-                    for condition in self.conditions.values():
-                        condition.pf_interval = value
+                    for k_2, v_2 in v.items():
+                        self.__dict__[k][k_2] = v_2
 
-        # Check if the variable is a class instance
-        else:
-            var = list(dict_data[var].keys())[0]
+            elif v in self.__dict__ and isinstance(self.__dict__[v], (Condition, Distribution, Task)):
+                self.__dict__[v].update_from_dict(dict_data)
 
-            if var in self.__dict__ and isinstance(self.__dict__[var], (Condition, Distribution, Task)):
-                self.__dict__[var].update_from_dict(dict_data)
-                if var == 'untreated':
-                    self.set_init_dist()  # TODO Ghetto fix
             else:
                 print("Invalid id \"%s\" %s not in class" %
-                      (str(dict_data), var))
+                      (str(dict_data), k))
 
         NotImplemented
 
