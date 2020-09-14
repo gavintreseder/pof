@@ -78,7 +78,7 @@ class Condition:
         self.pf_curve_params = pf_curve_params
         self.decreasing = decreasing
         self.set_pf_curve(pf_curve)
-        self.pf_interval = pf_int
+        self.pf_interval = pf_interval
         self.pf_std = pf_std
 
         # Time

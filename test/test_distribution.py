@@ -1,11 +1,11 @@
 
 import unittest
+import scipy.stats as ss
 
 import utils
-
 from pof.distribution import Distribution
 
-import scipy.stats as ss
+
 
 
 class TestDistribution(unittest.TestCase):

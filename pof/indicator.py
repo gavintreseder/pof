@@ -8,14 +8,20 @@ import numpy as np
 import collections
 import scipy.stats as ss
 from matplotlib import pyplot as plt
+from enum import Enum
+
 
 
 # TODO overload methods to avoid if statements and improve speed
+# TODO make sure everything works for conditions in both direction
+# TODO robust testing
+
+class IndicatorValid(Enum):
+    PF_CURVE = ['linear', 'step', 'linear-legacy']
 
 
 
-
-class Indicator():
+class Indicator:
 
     """
 
@@ -101,10 +107,9 @@ class Indicator():
 
     def plot_timeline(self):
 
-
-        for name, cond in self._timeline.items():
+        for name, timeline in self._timeline.items():
             # Plot with matplotlib
-            plt.plot(profile, label=name)
+            plt.plot(timeline, label=name)
 
         plt.title("Indicator Timeline")
         plt.show()
@@ -127,7 +132,7 @@ class Indicator():
 
         for cause, timeline in _timeline.items():
             plt.plot(timeline)
-            plt.plot(self.t_condition, self.current(), "rd")
+            #plt.plot(self.t_condition, self.current(), "rd")
 
 class ConditionIndicator(Indicator):
 
@@ -171,23 +176,35 @@ class ConditionIndicator(Indicator):
     # ********************** Timeline methods ******************************
 
 
-    def sim_timeline(self, t_end, t_start=0, pf_interval=None, pf_std=None, name=None):
+    def sim_timeline(self, t_end=None, t_start=0, pf_interval=None, pf_std=None, name=None):
         """
         Returns the timeline that considers all the accumulated degradation
         """
         
-        # Set the condition profile if it hasn't been created already
-        if pf_interval not in self._profile or pf_std is not None:
-            self._set_profile(pf_interval=pf_interval)
-  
-        self._timeline = self._get_timeline(t_start=t_start, t_stop=t_end, pf_interval=pf_interval)
+        # Use the condition parameters if unique parameters aren't provided TODO maybe remove
+        if pf_interval is None:
+            pf_interval = self.pf_interval
 
-        return self._timeline
+        if pf_std is None:
+            pf_std = self.pf_std
+
+        # Adjust the pf_interval based on the expected variance in pf_std
+        if pf_std is not None:
+            pf_interval = int(pf_interval + ss.norm.rvs(loc=0, scale=pf_std))
+
+        # Set the condition profile if it hasn't been created already or if uncertainty is needed
+        if pf_interval not in self._profile:
+            self._set_profile(pf_interval=pf_interval, name=name)
+  
+        self._timeline[name] = self._get_timeline(t_start=t_start, t_end=t_end, pf_interval=pf_interval, name=name)
+
+        return self._timeline[name]
 
 
     def _set_profile(self, perfect=None, failed=None, pf_interval=None, pf_std=None, name=None):
 
         #TODO Illyse - add the other profile types
+        #TODO maybe make this work using pf_interval and name so that it doesn't do as much recalcuting
         """
         Linear: μ(t) = b + a × t
         Exponential: μ(t) = b × exp(a × t)
@@ -209,10 +226,6 @@ class ConditionIndicator(Indicator):
         if pf_std is None:
             pf_std = self.pf_std
 
-        # Adjust the pf_interval based on the expected variance in pf_std
-        if pf_std is not None:
-            pf_interval = int(pf_interval + ss.norm.rvs(loc=0, scale=pf_std))
-
         # Get the time to be investitaged
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
@@ -228,39 +241,42 @@ class ConditionIndicator(Indicator):
         elif self.pf_curve == 'exponential' or self.pf_curve == 'exp':
             NotImplemented
         
-        self._profile[name] = y
+        self._profile[pf_interval] = y
         
 
 
-    def _get_timeline(self, t_start, t_stop, pf_interval, name=None):  # TODO this probably needs a delay?
+    def _get_timeline(self, t_start, t_end=None, pf_interval=None, name=None):  # TODO this probably needs a delay?
         """
         Returns the timeli
         """
 
         # Validate times
-        t_max = len(self._profile[name])
-        if t_stop == None:
-            t_stop = t_max
+        t_max = len(self._profile[pf_interval]) - 1
+        if t_end == None:
+            t_end = t_max
 
-        if t_start > t_stop:
-            t_start = t_stop
+        if t_start > t_end:
+            t_start = t_end
 
-        if t_stop < 0:
-            t_start = t_start - t_stop
-            t_stop = 0
+        if t_end < 0:
+            t_start = t_start - t_end
+            t_end = 0
 
-        cp = self._profile[name][min(t_start, t_max):min(t_stop, t_max) + 1]
+        cp = self._profile[pf_interval][max(0, min(t_start, t_max)):min(t_end, t_max) + 1]
 
         # Adjust for the accumulated condition
-        cp = cp - self.get_accumulated()
-        cp[cp < self.failed] = 0
+        accumulated = self.get_accumulated()
+        if accumulated > 0:
+            cp = cp - self.get_accumulated()
+            cp[cp < self.failed] = self.failed
+
 
         # Fill the start with the current condtiion
         if t_start < 0:
             cp = np.append(np.full(t_start * -1, cp[0]), cp)
 
         # Fill the end with the failed condition
-        n_after_failure = t_stop - t_start - len(cp) + 1
+        n_after_failure = t_end - t_start - len(cp) + 1
         if n_after_failure > 0:
             cp = np.append(cp, np.full(max(0, n_after_failure), self.failed))
 
@@ -277,7 +293,27 @@ class ConditionIndicator(Indicator):
 
         NotImplemented
 
+
+    # ************** Simulate Condition ***************
+
+    def sim(self, t):
+        """
+        Increment the current time by t and return the new condition
+        """
+        self.t_condition = min(t + self.t_condition, self.t_max)
+
+        return self.get_condition()
+
     # ********************* Get Methods **********************
+
+    def get_condition(self):
+        if self.decreasing:
+            return self.perfect - self.get_accumulated()
+        else:
+            return self.perfect + self.get_accumulated()
+
+    def get_timeline(self, name=None):
+        return self._timeline[name]
 
     def get_accumulated(self, name=None): #TODO make this work for arrays of names
 
@@ -293,7 +329,7 @@ class ConditionIndicator(Indicator):
                     accumulated = self._accumulated[name]
 
             # Get the accumulated condition for a list of names
-            elif isinstance(ob, collections.Iterable):
+            elif isinstance(name, collections.Iterable):
                 accumulated = sum([self._accumulated.get(key, 0) for key in name])
             else:
                 raise TypeError("name should be a string or iterable")
@@ -307,25 +343,31 @@ class ConditionIndicator(Indicator):
     def _set_accumulated(self, accumulated, name=None):
         
         if name is None:
-            name =self.name
+            name = self.name
 
-        self._accumulated[name] = accumulated
+        # check accumulated will not exceed the maximum allowable condition
+        current = self.get_accumulated()
+    
+        self._accumulated[name] = min(accumulated, abs(self.perfect - self.failed) - current - accumulated)
 
     def set_condition(self, condition, name=None):
-
+        #TODO consider impact of other impacts
+        
         if name is None:
             name =self.name
 
-        self._accumlated[name] = condition
+        if self.decreasing:
+            self._accumulated[name] = min(max(0, self.perfect - condition), self.perfect - self.failed)
+        else:
+            self._accumulated[name] = min(max(0, condition - self.perfect), self.failed - self.perfect)
 
 
     def set_pf_curve(self, pf_curve):
 
-        valid_pf_curve = ['linear', 'step', 'linear-legacy']
-        if pf_curve in valid_pf_curve:
+        if pf_curve in IndicatorValid.PF_CURVE:
             self.pf_curve = pf_curve
         else:
-            raise ValueError("pf_curve must be from: %s" %(valid_pf_curve))
+            raise ValueError("pf_curve must be from: %s" %(IndicatorValid.PF_CURVE))
 
     def set_threshold(self, detection=None, failure = None):
         if detection is None:
@@ -344,12 +386,66 @@ class ConditionIndicator(Indicator):
         # Set perfect
         if perfect > failed:
             self.decreasing = True
-            self.perfect = perfect
-            self.failed = failed
+
         else:
             self.decreasing = False
-            self.perfect = failed
-            self.failed = perfect
+        
+        self.perfect = perfect
+        self.failed = failed
+
+    def reset(self):
+
+        super().reset()
+        self._reset_accumulated()
+
+    def reset_any(
+        self, target=0, method="reset", axis="time", permanent = False
+    ):
+        """
+        # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
+        """
+
+        # Error with time reset, different method required.
+
+        if method == "reduction_factor":
+            accumulated = (abs(self.perfect - self.get_accumulated())) * (
+                1 - target
+            )
+
+        elif method == "reverse":
+            
+            accumulated = self.get_accumulated() - target
+
+        elif method == "set":
+            accumulated = target
+
+        # Calculate the accumulated condition TODO not working
+        if axis == "time":
+
+            self.t_accumulated = int(min(max(0, accumulated), self.t_max))
+
+        elif axis == "condition":
+
+            if self.decreasing:
+                accumulated = min(max(self.failed, accumulated), self.perfect)
+            else:
+                accumulated = max(min(self.failed, accumulated), self.perfect)
+
+            self._reset_accumulated(accumulated, permanent=permanent)
+        
+        #self.set_t_condition(0)
+
+
+    def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
+        
+        # Maintain permanent condition loss if set
+        if permanent:
+            existing_permanent = self._accumulated.get('permanent', 0)
+            accumulated = permanent + existing_permanent
+            name = 'permanent'
+
+        self._accumulated = dict()
+        self._set_accumulated(name=name, accumulated=accumulated)
 
 
 class PoleSafetyFactor(Indicator):
@@ -432,3 +528,7 @@ ConditionIndicator
 SafetyFactorIndicator
 
 """
+
+if __name__ == "__main__":
+    indicator = Indicator()
+    print("Indicator - Ok")

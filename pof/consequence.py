@@ -16,7 +16,7 @@ class Consequence:
     @classmethod
     def load(cls, details=None, *args, **kwargs):
         try:
-            csq = cls.from_dict(**details)
+            csq = cls.from_dict(details)
         except:
             csq = cls()
             print("Error loading Consequence data")
