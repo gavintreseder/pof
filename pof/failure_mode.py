@@ -144,8 +144,21 @@ class FailureMode:  # Maybe rename to failure mode
             self.untreated = untreated
 
         elif isinstance(untreated, dict):
-            untreated['name'] = 'untreated'
-            self.untreated = Distribution(**untreated)
+            if self.untreated is not None:
+                for key, value in untreated.items():
+                    self.untreated[key] = value
+
+            else:
+                untreated['name'] = 'untreated'
+                self.untreated = Distribution(**untreated)
+
+        else:
+            print("ERROR: Cannot update \"%s\" from dict" %
+                  (self.__class__.__name__))
+
+            # elif isinstance(untreated, dict):
+            #    untreated['name'] = 'untreated'
+            #    self.untreated = Distribution(**untreated)
 
         # Set the probability of initiation using the untreated parameters
         self.set_init_dist()
@@ -786,8 +799,6 @@ class FailureMode:  # Maybe rename to failure mode
             print("ERROR: Cannot update \"%s\" from string or dict" %
                   (self.__class__.__name__))
 
-    NotImplemented
-
     def update_from_str(self, id_str, value, sep='-'):
 
         id_str = id_str.split(self.name + sep, 1)[1]
@@ -802,32 +813,44 @@ class FailureMode:  # Maybe rename to failure mode
 
         self.update_from_dict(dict_data)
 
-        NotImplemented
+    def dict_to_list(self, dict_data):
+        keys = []
+        for k, v in dict_data.items():
+            if isinstance(dict_data[k], dict):
+                keys.append(k)
+                keys.extend(self.dict_to_list(v))
+            else:
+                keys.append(v)
+                break
+        value = keys[-1]
+        keys = keys[:-1]
+        return keys, value
 
     def update_from_dict(self, dict_data):
 
-        for k, v in dict_data.items():
+        keys, value = self.dict_to_list(dict_data)
 
-            if k in self.__dict__:
+        if keys[0] in ['name', 'active', 'pf_curve', 'pf_interval', 'pf_std']:
+            self.__dict__[keys[0]] = value
 
-                if isinstance(self.__dict__[k], dict):
-                    for k_2, v_2 in v.items():
-                        if k_2 in ['Condition', 'Task', 'Distribution']:
-                            self.__dict__[k][v_2].update_from_dict(dict_data)
-                        else:
-                            self.__dict__[k][k_2] = v_2
-                else:
-                    for k_2, v_2 in v.items():
-                        self.__dict__[k][k_2] = v_2
+        elif keys[0] == "untreated":
+            self.set_untreated(dict_data[keys[0]])
 
-            elif v in self.__dict__ and isinstance(self.__dict__[v], (Condition, Distribution, Task)):
-                self.__dict__[v].update_from_dict(dict_data)
+        elif keys[0] == "condition":
+            self.set_conditions(dict_data[keys[0]])
 
-            else:
-                print("ERROR: Cannot update \"%s\" from dict" %
-                      (self.__class__.__name__))
+        elif keys[0] == "consequence":
+            self.set_consequence(dict_data[keys[0]])
 
-        NotImplemented
+        elif keys[0] == "state":
+            self.set_states(dict_data[keys[0]])
+
+        elif keys[0] == "task":
+            self.set_tasks(dict_data[keys[0]])
+
+        else:
+            print("ERROR: Cannot update \"%s\" from dict" %
+                  (self.__class__.__name__))
 
     def update(self, id_str, value, sep='-'):
         """Updates a the failure mode object using the dash componenet ID"""
