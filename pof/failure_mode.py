@@ -790,6 +790,7 @@ class FailureMode:  # Maybe rename to failure mode
 
     def update_from_str(self, id_str, value, sep='-'):
 
+        id_str = id_str.split(self.name + sep, 1)[1]
         id_str = id_str.split(sep)
 
         dict_data = {}
@@ -823,8 +824,8 @@ class FailureMode:  # Maybe rename to failure mode
                 self.__dict__[v].update_from_dict(dict_data)
 
             else:
-                print("Invalid id \"%s\" %s not in class" %
-                      (str(dict_data), k))
+                print("ERROR: Cannot update \"%s\" from dict" %
+                      (self.__class__.__name__))
 
         NotImplemented
 

@@ -143,14 +143,13 @@ class Distribution:
 
     def update_from_dict(self, dict_data):
 
-        for k, v in dict_data.items():
+        for key, value in dict_data.items():
 
-            if k in self.__dict__:
-                self.__dict__[k] = v
+            if key in self.__dict__:
+                self.__dict__[key] = value
             else:
                 print("ERROR: Cannot update \"%s\" from dict" %
                       (self.__class__.__name__))
-        NotImplemented
 
 
 """class Dataset:

@@ -57,13 +57,12 @@ class Task:
     CONDITION_IMPACT_AXIS = ['condition', 'time']
     CONDITION_IMPACT_METHODS = ['reduction_factor', "tbc"]
 
-
     def __init__(self,
-        name='task', activity='Task', trigger="unknown", active=True,
-        cost = 0, labour= None, spares=None, equipment=None, consequence=None,
-        p_effective = 1, triggers = dict(), impacts =dict(), component_reset=False,
-        *args, **kwargs
-    ):
+                 name='task', activity='Task', trigger="unknown", active=True,
+                 cost=0, labour=None, spares=None, equipment=None, consequence=None,
+                 p_effective=1, triggers=dict(), impacts=dict(), component_reset=False,
+                 *args, **kwargs
+                 ):
 
         # Task information
         self.name = name
@@ -78,9 +77,9 @@ class Task:
 
         # Consumed per use
         self.cost = cost
-        self.labour = NotImplemented # labour TODO
-        self.spares = NotImplemented # spares TODO
-        self.equipment = NotImplemented # equipment TODO
+        self.labour = NotImplemented  # labour TODO
+        self.spares = NotImplemented  # spares TODO
+        self.equipment = NotImplemented  # equipment TODO
         self.set_consequence(consequence)
 
         # Triggers
@@ -98,7 +97,6 @@ class Task:
         self.cost_completion = []
         self._timeline = NotImplemented
 
-
     # ************ Load Methods **********************
 
     @classmethod
@@ -107,7 +105,7 @@ class Task:
             task = cls.from_dict(details)
         except:
             task = cls()
-            print("Error loading %s data" %(cls.__name__))
+            print("Error loading %s data" % (cls.__name__))
         return task
 
     @classmethod
@@ -116,9 +114,8 @@ class Task:
             task = cls(**details)
         except:
             task = cls()
-            print("Error loading %s data from dictionary" %(cls.__name__))
+            print("Error loading %s data from dictionary" % (cls.__name__))
         return task
-
 
     # ************ Set Methods **********************
 
@@ -126,19 +123,19 @@ class Task:
         """
         Takes a Consequence object or consequence dict to set a consequence
         """
-    
+
         # Load a consequence object
         if isinstance(consequence, Consequence):
             self.consequence = consequence
-        
+
         # Create a consequence object
         elif isinstance(consequence, dict):
             self.consequence = Consequence(**consequence)
-        
+
         elif consequence is None:
-            self.consequence = Consequence() #TODO make this a load with zero
+            self.consequence = Consequence()  # TODO make this a load with zero
         else:
-            print ("Invalid Consequence")
+            print("Invalid Consequence")
 
     def set_triggers(self, triggers=dict()):
 
@@ -162,15 +159,15 @@ class Task:
 
         self.impacts = impacts
 
-    # ************ Get Methods **********************   
+    # ************ Get Methods **********************
 
     def get_impacts(self):
         """Return an impact dictionary"""
-        
+
         return self.impacts
 
     def get_triggers(self):
-        """ Return a trigger dictionary""" #TODO maybe change to object type
+        """ Return a trigger dictionary"""  # TODO maybe change to object type
 
         return self.triggers
 
@@ -186,13 +183,11 @@ class Task:
         cost = cost / scaling * self.cost
         return dict(time=time, cost=cost)
 
-
     def expected_counts(self, scaling=1):
         """ Retuns a dictionary with the number of times a task was completed scaled by a scaling factor"""
         time, count = np.unique(self.t_completion, return_counts=True)
         count = count / scaling
         return dict(time=time, cost=count)
-
 
     # ********************* timeline methods ******************
 
@@ -244,22 +239,20 @@ class Task:
             return dict()
 
     def system_impact(self):
-        #maybe change to impacts['system']
+        # maybe change to impacts['system']
         return self.component_reset
-
 
     def record(self, t_start, timeline):
         """
         Record the details foth e
         """
-        # Time 
+        # Time
         self.t_completion.append(t_start)
 
         # Cost TODO make this variable based on time to failure
         self.cost_completion.append(self.cost)
 
-
-        # TODO add other modules Resource, Labour, availability, 
+        # TODO add other modules Resource, Labour, availability,
 
     # ********************* reset methods ******************
 
@@ -270,6 +263,69 @@ class Task:
         self.t_completion = []
 
     # ********************* interface methods ******************
+
+    def update2(self, id_object, value=None):
+        """
+
+        """
+        if isinstance(id_object, str):
+            self.update_from_str(id_object, value, sep="-")
+
+        elif isinstance(id_object, dict):
+            self.update_from_dict(id_object)
+
+        else:
+            print("ERROR: Cannot update \"%s\" from string or dict" %
+                  (self.__class__.__name__))
+
+    def update_from_str(self, id_str, value, sep='-'):
+
+        id_str = id_str.split(self.name + sep, 1)[1]
+        id_str = id_str.split(sep)
+
+        dict_data = {}
+        for key in reversed(id_str):
+            if dict_data == {}:
+                dict_data = {key: value}
+            else:
+                dict_data = {key: dict_data}
+
+        self.update_from_dict(dict_data)
+
+    def dict_to_list(self, dict_data):
+        keys = []
+        for k, v in dict_data.items():
+            if isinstance(dict_data[k], dict):
+                keys.append(k)
+                keys.extend(self.dict_to_list(v))
+            else:
+                keys.append(v)
+                break
+        value = keys[-1]
+        keys = keys[:-1]
+        return keys, value
+
+    def update_from_dict(self, dict_data):
+
+        keys, value = self.dict_to_list(dict_data)
+
+        if keys[0] in ['active', 'p_effective', 'cost', 't_interval', 't_delay']:
+
+            self.__dict__[keys[0]] = value
+
+        elif keys[0] in ["trigger", "impact"]:
+
+            if keys[1] == "condition":
+
+                self.__dict__[keys[0]+'s'][keys[1]][keys[2]][keys[3]] = value
+
+            elif keys[1] == 'state':
+
+                self.__dict__[keys[0]+'s'][keys[1]][keys[2]] = value
+
+        else:
+            print("ERROR: Cannot update \"%s\" from dict" %
+                  (self.__class__.__name__))
 
     def update(self, dash_id, value, sep='-'):
         """Update the task object to a value using a dash component id"""
@@ -289,15 +345,14 @@ class Task:
                 if ids[1] == "condition":
 
                     self.__dict__[ids[0]+'s'][ids[1]][ids[2]][ids[3]] = value
-                    
+
                 elif ids[1] == 'state':
- 
+
                     self.__dict__[ids[0]+'s'][ids[1]][ids[2]] = value
             else:
-                print ("Invalid Dash ID - %s" %(dash_id))
+                print("Invalid Dash ID - %s" % (dash_id))
         except:
-            print ("Dash ID Error- %s" %(dash_id))
-
+            print("Dash ID Error- %s" % (dash_id))
 
     def get_dash_ids(self, prefix='', sep='-'):
 
@@ -305,16 +360,18 @@ class Task:
 
         # task parameters
         param_list = ['active', 'p_effective', 'cost']
-        if self.trigger== "time":
+        if self.trigger == "time":
             param_list = param_list + ['t_interval', 't_delay']
 
         dash_ids = [prefix + param for param in param_list]
 
         # Triggers
-        dash_ids = dash_ids + list(flatten(self.triggers, parent_key = prefix + 'trigger', sep=sep))
-        
+        dash_ids = dash_ids + \
+            list(flatten(self.triggers, parent_key=prefix + 'trigger', sep=sep))
+
         # Impacts
-        dash_ids = dash_ids + list(flatten(self.impacts, parent_key = prefix + 'impact', sep=sep))
+        dash_ids = dash_ids + \
+            list(flatten(self.impacts, parent_key=prefix + 'impact', sep=sep))
 
         return dash_ids
 
@@ -326,7 +383,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    def __init__(self, t_interval=100, t_delay=0, name = 'scheduled_task', *args, **kwargs): #TODO fix up defaults
+    def __init__(self, t_interval=100, t_delay=0, name='scheduled_task', *args, **kwargs):  # TODO fix up defaults
         super().__init__(name=name, *args, **kwargs)
 
         self.trigger = "time"
@@ -367,7 +424,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return self
 
-
     def sim_timeline(
         self, t_stop, t_delay=0, t_start=0, timeline=NotImplemented
     ):  # TODO Stubbed out to only work for trigger time and simple tile
@@ -384,7 +440,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
                 schedule = np.concatenate((sched_start, schedule))
 
             schedule = np.concatenate(([schedule[0] + 1], schedule))[
-                t_start : t_stop + 1
+                t_start: t_stop + 1
             ]
         else:
             schedule = np.full(t_stop - t_start + 1, -1)
@@ -406,9 +462,9 @@ class ConditionTask(Task):
         self.task_type = "immediate"
 
     def set_default(self):
-          
+
         self.impacts = dict(
-            condition = dict(
+            condition=dict(
                 wall_thickness=dict(
                     target=0.5,
                     method="reduction_factor",
@@ -420,7 +476,7 @@ class ConditionTask(Task):
                     axis="condition",
                 ),
             ),
-            state = dict(
+            state=dict(
                 initiation=False,
                 detection=False,
                 failure=False,
@@ -429,17 +485,14 @@ class ConditionTask(Task):
 
         self.triggers = dict(
             condition=dict(wall_thickness=dict(lower=50, upper=70,)),
-            state = dict(),
+            state=dict(),
         )
 
         return self
 
-
-
-
     def sim_timeline(self, t_end, timeline, t_start=0, t_delay=NotImplemented):
         """
-        If state and condition triggers are met return the timeline met then 
+        If state and condition triggers are met return the timeline met then
         """
 
         if self.active:
@@ -450,11 +503,11 @@ class ConditionTask(Task):
             # Check the state triggers have been met
             for state, trigger in self.triggers['state'].items():
                 try:
-                    tl_ct = (tl_ct) & (timeline[state][t_start:t_end] == trigger)
+                    tl_ct = (tl_ct) & (
+                        timeline[state][t_start:t_end] == trigger)
                 except KeyError:
                     print("%s not found" % (state))
 
-    
             # Check the condition triggers have been met
             for condition, trigger in self.triggers['condition'].items():
                 try:
@@ -478,7 +531,8 @@ class ConditionTask(Task):
                 t_lower = np.argmax(tl_ct == 1)
                 t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
 
-                tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
+                tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[
+                    ::-1] - 1
                 tl_ct[tl_ct == False] = -1
 
             elif self.task_type == "immediate":
@@ -491,7 +545,7 @@ class ConditionTask(Task):
 
 
 class ScheduledReplacement(ScheduledTask):  # Not implemented
-    def __init__(self, t_interval, t_delay=0, name = 'scheduled_replacement'):
+    def __init__(self, t_interval, t_delay=0, name='scheduled_replacement'):
         super().__init__(t_interval=t_interval, t_delay=t_delay)
 
         self.name = name
@@ -500,8 +554,8 @@ class ScheduledReplacement(ScheduledTask):  # Not implemented
     def set_default(self):
 
         self.triggers = dict(
-            condition = dict(),
-            state = dict(failure=True,),
+            condition=dict(),
+            state=dict(failure=True,),
         )
 
         self.impacts = dict(
@@ -521,28 +575,28 @@ class ScheduledReplacement(ScheduledTask):  # Not implemented
 
 
 class OnConditionRepair(ConditionTask):
-    def __init__(self, activity="on_condition_repair", name = 'on_condition_repair'):
+    def __init__(self, activity="on_condition_repair", name='on_condition_repair'):
         super().__init__(self)
 
-        self.name=name
+        self.name = name
         self.activity = activity
 
     def set_default(self):
 
         self.impacts = dict(
-            condition = dict(
+            condition=dict(
                 wall_thickness=dict(
                     target=0,
                     method="reduction_factor",
                     axis="condition",
                 ),
             ),
-            state = dict(
+            state=dict(
                 initiation=False,
                 detection=False,
                 failure=False,
             ),
-        ) 
+        )
 
         self.set_triggers(
             dict(
@@ -557,7 +611,7 @@ class OnConditionRepair(ConditionTask):
 
 
 class OnConditionReplacement(ConditionTask):
-    def __init__(self, activity="on_condition_replace", name ='on_condition_replace'):
+    def __init__(self, activity="on_condition_replace", name='on_condition_replace'):
         super().__init__(self)
 
         self.name = name
@@ -565,9 +619,8 @@ class OnConditionReplacement(ConditionTask):
 
     def set_default(self):
 
-       
         self.impacts = dict(
-            condition = dict(
+            condition=dict(
                 wall_thickness=dict(
                     target=0,
                     method="reduction_factor",
@@ -579,11 +632,12 @@ class OnConditionReplacement(ConditionTask):
                     axis="condition",
                 ),
             ),
-            state = dict(initiation=False, detection=False, failure=False,),
+            state=dict(initiation=False, detection=False, failure=False,),
         )
         self.set_triggers(
             dict(
-                condition=dict(wall_thickness=dict(lower=0, upper=20,), external_diameter=dict(lower=0, upper=20,)),
+                condition=dict(wall_thickness=dict(lower=0, upper=20,),
+                               external_diameter=dict(lower=0, upper=20,)),
                 state=dict(detection=True),
             )
         )
@@ -597,13 +651,13 @@ class OnConditionReplacement(ConditionTask):
 
 class Inspection(ScheduledTask):
 
-    def __init__(self, t_interval=100, t_delay=0, name='inspection',  *args, **kwargs): #TODO fix up the defaults
-        
+    # TODO fix up the defaults
+    def __init__(self, t_interval=100, t_delay=0, name='inspection',  *args, **kwargs):
+
         super().__init__(t_interval=t_interval, t_delay=t_delay, **kwargs)
 
         self.name = name
         self.activity = "Inspection"
-
 
     def set_default(self):
 
@@ -615,18 +669,19 @@ class Inspection(ScheduledTask):
         self.p_effective = 0.9
 
         self.triggers = dict(
-            condition = dict(wall_thickness=dict(lower=0, upper=90,),),
-            state = dict(initiation=True)
-        ) 
+            condition=dict(wall_thickness=dict(lower=0, upper=90,),),
+            state=dict(initiation=True)
+        )
 
         self.impacts = dict(
-            condition = dict(),
-            state = dict(detection=True,)
-        ) 
+            condition=dict(),
+            state=dict(detection=True,)
+        )
 
         return self
 
-    def is_effective(self, t_now, timeline=None): #TODO replace is_effective with trigger check
+    # TODO replace is_effective with trigger check
+    def is_effective(self, t_now, timeline=None):
         """
         Simulate the completion of an inspection. Checks conditions and states are met
         """
@@ -664,12 +719,12 @@ class ImmediateMaintenance(ConditionTask):
     def set_default(self):
 
         self.triggers = dict(
-            condition = dict(),
-            state = dict(failure=True,)
-        ) 
+            condition=dict(),
+            state=dict(failure=True,)
+        )
 
         self.impacts = dict(
-            condition= dict(
+            condition=dict(
                 wall_thickness=dict(
                     target=1,
                     method="reduction_factor",
@@ -681,9 +736,9 @@ class ImmediateMaintenance(ConditionTask):
                     axis="condition",
                 ),
             ),
-            state = dict(initiation=False, detection=False, failure=False,)
+            state=dict(initiation=False, detection=False, failure=False,)
         )
-        
+
         self.component_reset = True
 
         self.cost = 5000
@@ -721,7 +776,7 @@ Task
         - time
     condition based triggers
         - condition
-    
+
     execution
         - states
 
@@ -763,7 +818,7 @@ Task
         # Planned
         # Reactive
     # Level of Failure
-        
+
 
     # Trigger
         # Time
@@ -786,17 +841,17 @@ Task
             sim_ttr()
             sim_conditions_met()
         sim_completion() return the new states
-            update conditions 
+            update conditions
             return states after completion t=0
 
-        sim_states() 
+        sim_states()
             update the states
 
     fm.update_timeline
 
         after completion return the timeline of state changes?
-        inspection 
-            -> change detection 
+        inspection
+            -> change detection
         repair
             -> change detection (current, need new inspection to change)
             -> change failure (current, need new initiation and condition to change)
@@ -806,14 +861,11 @@ Task
             -> change failure
             -> change condition
         replace
-        
+
 
     scheduled -> condition
 
 """
-
-
-
 
 
 if __name__ == "__main__":
