@@ -599,7 +599,7 @@ class Inspection(ScheduledTask):
 
     def __init__(self, t_interval=100, t_delay=0, name='inspection',  *args, **kwargs): #TODO fix up the defaults
         
-        super().__init__(t_interval=t_interval, t_delay=t_delay, **kwargs)
+        super().__init__(t_interval=t_interval, t_delay=t_delay, *args, **kwargs)
 
         self.name = name
         self.activity = "Inspection"
