@@ -176,7 +176,7 @@ class ConditionIndicator(Indicator):
     # ********************** Timeline methods ******************************
 
 
-    def sim_timeline(self, t_end=None, t_start=0, pf_interval=None, pf_std=None, name=None):
+    def sim_timeline(self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None):
         """
         Returns the timeline that considers all the accumulated degradation
         """
@@ -196,7 +196,7 @@ class ConditionIndicator(Indicator):
         if pf_interval not in self._profile:
             self._set_profile(pf_interval=pf_interval, name=name)
   
-        self._timeline[name] = self._get_timeline(t_start=t_start, t_end=t_end, pf_interval=pf_interval, name=name)
+        self._timeline[name] = self._get_timeline(t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name)
 
         return self._timeline[name]
 
@@ -245,24 +245,24 @@ class ConditionIndicator(Indicator):
         
 
 
-    def _get_timeline(self, t_start, t_end=None, pf_interval=None, name=None):  # TODO this probably needs a delay?
+    def _get_timeline(self, t_start, t_stop=None, pf_interval=None, name=None):  # TODO this probably needs a delay?
         """
         Returns the timeli
         """
 
         # Validate times
         t_max = len(self._profile[pf_interval]) - 1
-        if t_end == None:
-            t_end = t_max
+        if t_stop == None:
+            t_stop = t_max
 
-        if t_start > t_end:
-            t_start = t_end
+        if t_start > t_stop:
+            t_start = t_stop
 
-        if t_end < 0:
-            t_start = t_start - t_end
-            t_end = 0
+        if t_stop < 0:
+            t_start = t_start - t_stop
+            t_stop = 0
 
-        cp = self._profile[pf_interval][max(0, min(t_start, t_max)):min(t_end, t_max) + 1]
+        cp = self._profile[pf_interval][max(0, min(t_start, t_max)):min(t_stop, t_max) + 1]
 
         # Adjust for the accumulated condition
         accumulated = self.get_accumulated()
@@ -276,17 +276,28 @@ class ConditionIndicator(Indicator):
             cp = np.append(np.full(t_start * -1, cp[0]), cp)
 
         # Fill the end with the failed condition
-        n_after_failure = t_end - t_start - len(cp) + 1
+        n_after_failure = t_stop - t_start - len(cp) + 1
         if n_after_failure > 0:
             cp = np.append(cp, np.full(max(0, n_after_failure), self.failed))
 
         return cp
 
 
-    def sim_failure_timeline(self):
-        
-        #Overloaded 
-        NotImplemented
+    def sim_failure_timeline(
+        self, t_stop=None, t_start=0
+    ):  # TODO this probably needs a delay? and can combine with condtion profile to make it simpler
+        """
+        Return a sample failure schedule for the condition
+        """
+
+        cp = self.sim_timeline(t_stop, t_start)
+
+        if self.decreasing == True:
+            tl_f = cp <= self.threshold_failure
+        else:
+            tl_f = cp >= self.threshold_failure
+
+        return tl_f
 
 
     def restore(self):
@@ -364,7 +375,7 @@ class ConditionIndicator(Indicator):
 
     def set_pf_curve(self, pf_curve):
 
-        if pf_curve in IndicatorValid.PF_CURVE:
+        if pf_curve in IndicatorValid.PF_CURVE.value:
             self.pf_curve = pf_curve
         else:
             raise ValueError("pf_curve must be from: %s" %(IndicatorValid.PF_CURVE))

@@ -27,16 +27,39 @@ class TestFailureMode(unittest.TestCase):
         )"""
 
     def test_instantiate(self):
-        fm = FailureMode()
-        self.assertIsNotNone(fm)
-    
+        try:
+            fm = FailureMode()
+            self.assertIsNotNone(fm)
+        except ValueError:
+            self.fail('ValueError returned')
+        except:
+            self.fail('Unknown error')
+
     def test_from_dict(self):
-        fm = FailureMode.from_dict(demo.failure_mode_data['early_life'])
-        self.assertIsNotNone(fm)
+        try:
+            fm = FailureMode.from_dict(demo.failure_mode_data['early_life'])
+            self.assertIsNotNone(fm)
+        except ValueError:
+            self.fail('ValueError returned')
+        except:
+            self.fail('Unknown error')
+
+    def test_from_dict_value_error_exits(self):
+
+        false_data = dict(pf_curve = 'incorrect_value')
+
+        with self.assertRaises(ValueError) as cm:
+            fm = FailureMode.from_dict(false_data)
+
     
     def test_instantiate_with_data(self):
-        fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0))
-        self.assertIsNotNone(fm)
+        try:
+            fm = FailureMode(name='random', untreated = dict(alpha=500, beta=1, gamma=0))
+            self.assertIsNotNone(fm)
+        except ValueError:
+            self.fail('ValueError returned')
+        except:
+            self.fail('Unknown error')
 
     # ************ Test init_timeline ***********************
 
@@ -66,7 +89,7 @@ class TestFailureMode(unittest.TestCase):
     def test_init_timeline_condition_linear(self): # TODO full coverage
         t_start = 0
         t_end = 200
-        fm = FailureMode().load(demo.failure_mode_data['slow_aging'])
+        fm = FailureMode.load(demo.failure_mode_data['slow_aging'])
 
         fm.init_timeline(t_start=0, t_end=200)
 
@@ -124,21 +147,24 @@ class TestFailureMode(unittest.TestCase):
     
 
     def test_load_data_demo_data(self):
-        fm = FailureMode().load(demo.failure_mode_data['slow_aging'])
-        self.assertIsNotNone(fm)
+        try:
+            fm = FailureMode.load(demo.failure_mode_data['slow_aging'])
+            self.assertIsNotNone(fm)
+        except ValueError:
+            self.fail('ValueError returned')
+        except:
+            self.fail('Unknown error')
 
-    """@unittest.mock.patch('sys.stdout', new_callable=io.StringIO)
-    def assert_stdout(self, n, expected_output, mock_stdout):
-        fm = FailureMode().load(demo.failure_mode_data['slow_aging'])
-        self.assertEqual(mock_stdout.getvalue(), expected_output)
-
-    def test_load_data_demo_data_no_errors(self):
-        self.assert_stdout(2, '1\n2\n')"""
 
 
     def test_load_demo_no_data(self):
-        fm = FailureMode().load()
-        self.assertIsNotNone(fm)
+        try:
+            fm = FailureMode.load()
+            self.assertIsNotNone(fm)
+        except ValueError:
+            self.fail('ValueError returned')
+        except:
+            self.fail('Unknown error')
 
 
 
