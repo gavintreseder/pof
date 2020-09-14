@@ -143,6 +143,7 @@ class FailureMode:  # Maybe rename to failure mode
         if isinstance(untreated, Distribution):
             self.untreated = untreated
 
+        # Add a name to the distribution and set create the object
         elif isinstance(untreated, dict):
             if self.untreated is not None:
                 for key, value in untreated.items():

@@ -10,6 +10,7 @@ import pandas as pd
 import scipy.stats as ss
 from matplotlib import pyplot as plt
 from random import random
+from enum import Enum
 
 if __package__ is None or __package__ == '':
     from distribution import Distribution
@@ -23,6 +24,8 @@ else:
 # Simple _Sytmpom
 
 # TODO potentially change where t_accumulated and condition_accumulated gets calculated to improve the speed
+# TODO use enums for pf_curve https://stackoverflow.com/questions/39216012/python-allowed-values-of-a-variable
+
 
 class Condition:
 
@@ -63,7 +66,7 @@ class Condition:
         pf_curve_params=[-10],
         decreasing=True,
         name="default",
-        pf_interval=None,
+        pf_interval=10, # TODO temp fix
         pf_std = 0,
         *args,
         **kwargs
@@ -74,6 +77,7 @@ class Condition:
         self.pf_curve = pf_curve
         self.pf_curve_params = pf_curve_params
         self.decreasing = decreasing
+        self.set_pf_curve(pf_curve)
         self.pf_interval = pf_interval
         self.pf_std = pf_std
 
@@ -149,6 +153,14 @@ class Condition:
 
         return True
 
+    def set_pf_curve(self, pf_curve):
+
+        valid_pf_curve = ['linear', 'step', 'linear-legacy']
+        if pf_curve in valid_pf_curve:
+            self.pf_curve = pf_curve
+        else:
+            raise ValueError("pf_curve must be from: %s" %(valid_pf_curve))
+
     def set_condition(self, new_condition=None):  # Rewrite
 
         if new_condition is None:
@@ -198,6 +210,9 @@ class Condition:
             b = self.perfect
             
             y = m*x + b
+        
+        else:
+            raise ("Invalid pf_curve: %s " %(self.pf_curve))
 
         # Add the accumulated time
         cond_lost = y[self.t_accumulated] - self.perfect
@@ -381,26 +396,6 @@ class Condition:
 
         # Reset the condition profile
         self.set_condition_profile()
-
-    def reset_time(self, target=None):
-
-        return NotImplemented
-
-    def reset_condition(self, target=None):
-
-        return NotImplemented
-
-    def restore_time(self):
-
-        return NotImplemented
-
-    def restore_condition(self, target):
-
-        return NotImplemented
-
-    def restore(self, target):
-
-        return NotImplemented
 
     def reset_any(
         self, target=0, method="reset", axis="time"

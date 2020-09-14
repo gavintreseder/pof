@@ -32,7 +32,6 @@
 
     
 
-
 # 08 Sep - Gav
 
     # Critical
@@ -69,7 +68,11 @@ fm2.plot_timeline()
 
 
     # Tasks
-        # Technical brief -
+        # Tool demo
+            # Answer in the paper
+        
+        # Technical brief - Documentation
+            # 
 
     # Calibration
         # percent failing by age

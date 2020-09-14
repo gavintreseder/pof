@@ -16,7 +16,7 @@ if __package__ is None or __package__ == '':
     from condition import Condition
     from distribution import Distribution
     from helper import fill_blanks, id_update
-    from indicator import PoleSafetyFactor
+    from indicator import Indicator, ConditionIndicator, PoleSafetyFactor
     import demo as demo
 
 else:
@@ -24,7 +24,7 @@ else:
     from pof.condition import Condition
     from pof.distribution import Distribution
     from pof.helper import fill_blanks, id_update
-    from pof.indicator import PoleSafetyFactor
+    from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
     import pof.demo as demo
     
 #TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python

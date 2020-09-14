@@ -651,10 +651,9 @@ class OnConditionReplacement(ConditionTask):
 
 class Inspection(ScheduledTask):
 
-    # TODO fix up the defaults
-    def __init__(self, t_interval=100, t_delay=0, name='inspection',  *args, **kwargs):
-
-        super().__init__(t_interval=t_interval, t_delay=t_delay, **kwargs)
+    def __init__(self, t_interval=100, t_delay=0, name='inspection',  *args, **kwargs): #TODO fix up the defaults
+        
+        super().__init__(t_interval=t_interval, t_delay=t_delay, *args, **kwargs)
 
         self.name = name
         self.activity = "Inspection"
