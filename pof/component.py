@@ -26,31 +26,30 @@ else:
     from pof.helper import fill_blanks, id_update
     from pof.indicator import PoleSafetyFactor
     import pof.demo as demo
-
-# TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
-# TODO create get, set, del and add methods
+    
+#TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
+#TODO create get, set, del and add methods
 
 DEFAULT_ITERATIONS = 100
-
 
 class Component():
     """
         Parameters:
 
         Methods:
-
+            
     """
 
     def __init__(self,
-                 active=True,
-                 name='comp',
-                 indicator=dict(),
-                 fm=dict(),
-                 *args,
-                 **kwargs,
+        active = True,
+        name = 'comp',
+        indicator = dict(),
+        fm = dict(),
+        *args,
+        **kwargs,
 
-                 ):
-
+    ):
+        
         # Object parameters
         self.active = active
 
@@ -61,23 +60,21 @@ class Component():
         # Link to other componenets
         self._parent_id = NotImplemented
         self._children_id = NotImplemented
-
+        
         # Parameter
-        self.name = name  # TODO NotImplemented fully
+        self.name = name # TODO NotImplemented fully
         self.indicator = dict()
-
+        
         # Failure Modes
         self.fm = dict()
         self.set_failure_mode(fm)
 
         # Trial for indicator
         self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
-        self.indicator['slow_degrading'] = Condition.load(
-            demo.condition_data['slow_degrading'])  # TODO fix this call
-        self.indicator['fast_degrading'] = Condition.load(
-            demo.condition_data['fast_degrading'])  # TODO fix this call
+        self.indicator['slow_degrading'] = Condition.load(demo.condition_data['slow_degrading']) # TODO fix this call
+        self.indicator['fast_degrading'] = Condition.load(demo.condition_data['fast_degrading']) # TODO fix this call
 
-        # TODO link failure_modes to indicators
+        #TODO link failure_modes to indicators
 
         # Simulation traking
         self._sim_counter = 0
@@ -102,11 +99,13 @@ class Component():
             print("Error loading Component data from dictionary")
         return comp
 
+
+
     def load_asset_data(self, *args, **kwargs):
 
         self.info = dict(
-            pole_load=10,
-            pole_strength=20,
+            pole_load = 10,
+            pole_strength = 20,
         )
 
         # Set perfect indicator values?? TODO
@@ -119,19 +118,20 @@ class Component():
             # Set current
             NotImplemented
 
+
     def set_indicators(self, indicators):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
 
         for name, indicator in indicators.items():
-
+        
             # Load a condition object
             if isinstance(indicator, Condition):
                 self.indicator[name] = indicator
-
+            
             # Create a condition object
-            elif isinstance(indicator, dict):
+            elif isinstance(indicator, dict): #TODO add methods for different 
                 self.indicator[name] = Indicator(**indicator)
 
     def set_failure_mode(self, failure_modes):
@@ -140,21 +140,25 @@ class Component():
         """
 
         for name, fm in failure_modes.items():
-
+        
             # Load a condition object
             if isinstance(fm, FailureMode):
                 self.fm[name] = fm
-
+            
             # Create a condition object
             elif isinstance(fm, dict):
-                self.fm[name] = FailureMode().load(fm)
+                self.fm[name] = FailureMode().load(fm)        
+
+
 
     # ****************** Set data ******************
+
 
     def mc(self, t_end, t_start, n_iterations):
         """ Complete MC simulation and calculate all the metrics for the component"""
 
         return NotImplemented
+
 
     # ****************** Timeline ******************
 
@@ -169,12 +173,12 @@ class Component():
                 fm.save_timeline(i)
 
             self._sim_counter = self._sim_counter + 1
-
+    
     def sim_timeline(self, t_end, t_start=0):
         """ Simulates the timelines for all failure modes attached to this component"""
 
         # Initialise the failure modes
-        self.init_timeline(t_start=t_start, t_end=t_end)
+        self.init_timeline(t_start=t_start, t_end = t_end)
 
         t_now = t_start
 
@@ -233,6 +237,7 @@ class Component():
                 self.reset_condition()
                 #TODO add impact on other systems for complex systems"""
 
+
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
 
@@ -247,31 +252,31 @@ class Component():
 
         # Run expected method on all failure modes
 
-        # Run
+        # Run 
         NotImplemented
 
     # PoF
 
     def expected_untreated(self, t_start=0, t_end=100):
 
-        sf = dict(
-            all=np.full((t_end - t_start + 1), 1)
+        sf=dict(
+            all = np.full((t_end - t_start + 1), 1)
         )
-
+        
         for fm in self.fm.values():
             if fm.active:
-                sf[fm.name] = fm.untreated.sf(t_start=t_start, t_end=t_end)
+                sf[fm.name] = fm.untreated.sf(t_start=t_start,t_end=t_end)
                 sf['all'] = sf['all'] * sf[fm.name]
 
         # Treat the failure modes as a series and combine together
-        cdf = {fm: 1 - sf for fm, sf in sf.items()}
+        cdf = {fm : 1 - sf for fm, sf in sf.items()}
 
         return cdf
 
     def expected_pof(self, t_start=0, t_end=100):
 
         sf = self.expected_sf(t_start, t_end)
-
+        
         cdf = dict()
 
         for fm in sf:
@@ -280,12 +285,12 @@ class Component():
         return cdf
 
     def expected_sf(self, t_start=0, t_end=100):
-
+        
         # Calcuate the failure rates for each failure mode
-        sf = dict(
-            all=np.full((t_end - t_start + 1), 1)
+        sf=dict(
+            all = np.full((t_end - t_start + 1), 1)
         )
-
+   
         for fm_name, fm in self.fm.items():
             if fm.active:
                 pof = fm.expected_pof()
@@ -300,7 +305,8 @@ class Component():
 
         return sf
 
-    def expected_risk_cost_df(self, t_start=0, t_end=None):
+
+    def expected_risk_cost_df(self, t_start = 0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
         erc = self.expected_risk_cost()
 
@@ -311,25 +317,23 @@ class Component():
                     t_end = max(max(task['time'], default=t_start), t_end)
 
         df = pd.DataFrame().from_dict(erc, orient='index')
-        df.index.name = 'failure_mode'
-        df = df.reset_index().melt(id_vars='failure_mode', var_name='task')
-        df = pd.concat([df.drop(columns=['value']), df['value'].apply(pd.Series)], axis=1)[
-            ['failure_mode', 'task', 'time', 'cost']].dropna()
-        df = df.apply(fill_blanks, axis=1, args=(t_start, t_end))
+        df.index.name='failure_mode'
+        df = df.reset_index().melt(id_vars = 'failure_mode', var_name='task')
+        df = pd.concat([df.drop(columns=['value']),df['value'].apply(pd.Series)], axis=1)[['failure_mode', 'task', 'time', 'cost']].dropna()
+        df = df.apply(fill_blanks, axis=1, args=(t_start,t_end))
         df_cost = df.explode('cost')['cost']
         df = df.explode('time')
         df['cost'] = df_cost
 
         # Add a cumulative cost
-        df['cost_cumulative'] = df.groupby(by=['failure_mode', 'task'])[
-            'cost'].transform(pd.Series.cumsum)
+        df['cost_cumulative'] = df.groupby(by=['failure_mode', 'task'])['cost'].transform(pd.Series.cumsum)
 
         return df
 
     def expected_risk_cost(self):
 
         # Add scaling
-
+    
         ec = dict()
         for fm_name, fm in self.fm.items():
             if fm.active:
@@ -338,18 +342,19 @@ class Component():
         return ec
 
     def expected_indicators(self):
-
+        
         ei = dict()
 
         for indicator in self.indicator.values():
-
+            
             indicator.expected()
 
         NotImplemented
         return ei
 
-    # TODO make work for all condition levels
-    def expected_condition(self, stdev=1):
+
+    def expected_condition(self, stdev=1): #TODO make work for all condition levels
+        
         """ec = self.expected_condition_loss()
         for c in ec:
             ec[c] = 100 - ec[c]"""
@@ -361,9 +366,8 @@ class Component():
 
             if fm.active:
                 for cond_name, condition in fm.conditions.items():
-
-                    ec = np.array([fm._timelines[x][cond_name]
-                                   for x in fm._timelines])
+    
+                    ec = np.array([fm._timelines[x][cond_name] for x in fm._timelines])
 
                     if cond_name in expected:
                         expected[cond_name] = expected[cond_name] + ec
@@ -397,13 +401,10 @@ class Component():
             for c in ec:
                 if c in expected:
                     expected[c]['mean'] = expected[c]['mean'] + ec[c]['mean']
-                    # TODO change this to a pooled variance method
-                    expected[c]['sd'] = (
-                        expected[c]['sd']**2 + ec[c]['sd']**2)**0.5
-                    expected[c]['lower'] = expected[c]['mean'] - \
-                        expected[c]['sd']
-                    expected[c]['upper'] = expected[c]['mean'] + \
-                        expected[c]['sd']
+                    #TODO change this to a pooled variance method
+                    expected[c]['sd'] = (expected[c]['sd']**2 + ec[c]['sd']**2)**0.5
+                    expected[c]['lower'] = expected[c]['mean'] - expected[c]['sd']
+                    expected[c]['upper'] = expected[c]['mean'] + expected[c]['sd']
                 else:
                     expected[c] = ec[c]
 
@@ -419,10 +420,8 @@ class Component():
 
             if fm.active:
                 for cond_name, condition in fm.conditions.items():
-
-                    ec = condition.perfect - \
-                        np.array([fm._timelines[x][cond_name]
-                                  for x in fm._timelines])
+    
+                    ec = condition.perfect - np.array([fm._timelines[x][cond_name] for x in fm._timelines])
 
                     if cond_name in expected:
                         expected[cond_name] = expected[cond_name] + ec
@@ -451,7 +450,7 @@ class Component():
     # ****************** Optimal? ******************
 
     def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
-        # TODO add an optimal onto this
+        #TODO add an optimal onto this
         rc = dict()
         self.reset()
 
@@ -461,22 +460,19 @@ class Component():
             for fm in self.fm.values():
                 if 'inspection' in list(fm.tasks):
                     fm.tasks['inspection'].t_interval = i
-
+            
             self.mc_timeline(t_end=100, n_iterations=n_iterations)
 
-            rc[i] = self.expected_risk_cost_df().groupby(by=['task'])[
-                'cost'].sum()
+            rc[i] = self.expected_risk_cost_df().groupby(by=['task'])['cost'].sum()
             rc[i]['inspection_interval'] = i
 
             # Reset component
             self.reset()
 
-        df = pd.DataFrame().from_dict(rc, orient='index').rename(
-            columns={'risk': 'risk_cost'})
-        df['direct_cost'] = df.drop(
-            ['inspection_interval', 'risk_cost'], axis=1).sum(axis=1)
+        df = pd.DataFrame().from_dict(rc, orient='index').rename(columns={'risk':'risk_cost'})
+        df['direct_cost'] = df.drop(['inspection_interval', 'risk_cost'], axis=1).sum(axis=1)
         df['total'] = df['direct_cost'] + df['risk_cost']
-
+        
         return df
 
     # ****************** Reset ******************
@@ -491,6 +487,7 @@ class Component():
 
         for fm in self.fm.values():
             fm.reset_for_next_sim()
+
 
     def reset(self):
         """ Reset all parameters back to the initial state and reset sim parameters"""
@@ -508,11 +505,11 @@ class Component():
         """Updates the component class using the dash componenet ID"""
 
         try:
-            id_update(self, id_str=dash_id, value=value,
-                      sep=sep, children=[FailureMode])
+           id_update(self, id_str=dash_id, value=value, sep=sep, children=[FailureMode])
 
         except:
             print('Invalid ID')
+
 
     def get_dash_ids(self, prefix="", sep='-'):
         """ Return a list of dash ids for values that can be changed"""
@@ -530,7 +527,7 @@ class Component():
 
         return dash_ids
 
-    def get_objects(self, prefix="", sep="-"):
+    def get_objects(self,prefix="", sep = "-"):
 
         prefix = prefix + "Component" + sep
         objects = [prefix + self.name]
@@ -538,7 +535,7 @@ class Component():
         prefix = prefix + self.name + sep
 
         for fms in self.fm.values():
-            objects = objects + fms.get_objects(prefix=prefix + 'fm' + sep)
+            objects = objects + fms.get_objects(prefix = prefix + 'fm' + sep)
 
         return objects
 
@@ -549,21 +546,16 @@ class Component():
 
         if not self.fm:
             self.fm = dict(
-                early_life=FailureMode().load(
-                    demo.failure_mode_data['early_life']),
-                random=FailureMode().load(demo.failure_mode_data['random']),
-                slow_aging=FailureMode().load(
-                    demo.failure_mode_data['slow_aging']),
-                fast_aging=FailureMode().load(
-                    demo.failure_mode_data['fast_aging']),
+                early_life = FailureMode().load(demo.failure_mode_data['early_life']),
+                random = FailureMode().load(demo.failure_mode_data['random']),
+                slow_aging = FailureMode().load(demo.failure_mode_data['slow_aging']),
+                fast_aging = FailureMode().load(demo.failure_mode_data['fast_aging']),
             )
-
+    
         # Trial for indicator
         self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
-        self.indicator['slow_degrading'] = Condition(
-            **demo.condition_data['slow_degrading'])  # TODO fix this call
-        self.indicator['fast_degrading'] = Condition(
-            **demo.condition_data['fast_degrading'])  # TODO fix this call
+        self.indicator['slow_degrading'] = Condition(**demo.condition_data['slow_degrading']) # TODO fix this call
+        self.indicator['fast_degrading'] = Condition(**demo.condition_data['fast_degrading']) # TODO fix this call
 
         """for fm in self.fm.values():
             fm.set_conditions(dict(
@@ -571,11 +563,13 @@ class Component():
                 fast_degrading = self.indicator['fast_degrading'],
             ))"""
 
+
         return self
 
     def set_pole(self):
 
         NotImplemented
+
 
 
 if __name__ == "__main__":

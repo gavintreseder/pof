@@ -158,6 +158,14 @@ class TestComponent(unittest.TestCase):
         print(comp)
 
 
+    # ************ Test expected methods *****************
+
+    def test_expected_condition_no_timeline(self):
+        comp = Component().set_demo()
+        comp.expected_condition()
+        
+        #TODO add some checks
+
     # ************ Test update methods *****************
 
     def test_update(self):
@@ -179,7 +187,9 @@ class TestComponent(unittest.TestCase):
 
     def test_expected_inspection_interval(self):
 
-        
+        NotImplemented
+
+
 
 if __name__ == '__main__':
     unittest.main()

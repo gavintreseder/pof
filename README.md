@@ -1,6 +1,29 @@
 # pof
 
 
+
+# PoF
+Title (A Title Image too if possible…Edit them on canva.com if you are not a graphic designer.)
+## Description
+
+## Demo
+
+## Technical
+
+### Installation
+
+'''
+pip install pof
+'''
+Description(Describe by words and images alike)
+Demo(Images, Video links, Live Demo links)
+Technologies Used
+Special Gotchas of your projects (Problems you faced, unique elements of your project)
+Technical Description of your project like- Installation, Setup, How to contribute.
+
+
+
+# Gotchas
 Problem: Errors using virtual enrironment
 Solution: https://stackoverflow.com/questions/45954528/pip-is-configured-with-locations-that-require-tls-ssl-however-the-ssl-module-in/61429593#61429593
 Specifically, I copied the following files from C:\Users\MyUser\Miniconda3\Library\bin to C:\Users\MyUser\Miniconda3\DLLs:
