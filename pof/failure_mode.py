@@ -151,7 +151,7 @@ class FailureMode:  # Maybe rename to failure mode
 
             else:
                 untreated['name'] = 'untreated'
-                self.untreated = Distribution(**untreated)
+                self.untreated = Distribution.from_dict(untreated)
 
         else:
             print("ERROR: Cannot update \"%s\" from dict" %
