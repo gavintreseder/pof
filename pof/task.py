@@ -456,6 +456,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         except:
             # Error message for scheduled tasks
+            NotImplemented
 
 class ConditionTask(Task):
     """
