@@ -8,7 +8,6 @@ import io
 import utils
 
 from pof.failure_mode import FailureMode                        
-from pof.distribution import Distribution 
 import pof.demo as demo
 
 class TestFailureMode(unittest.TestCase):
@@ -25,6 +24,9 @@ class TestFailureMode(unittest.TestCase):
             untreated = dict(alpha=self.alpha, beta=self.beta, gamma=self.gamma),
             pf_interval = self.pf_interval
         )"""
+
+    def test_imports_correctly(self):
+        self.assertTrue(True)
 
     def test_instantiate(self):
         try:
@@ -46,10 +48,11 @@ class TestFailureMode(unittest.TestCase):
 
     def test_from_dict_value_error_exits(self):
 
-        false_data = dict(pf_curve = 'incorrect_value')
+        false_data = dict(pf_curve = 'invalid_value')
 
-        with self.assertRaises(ValueError) as cm:
+        with self.assertRaises(ValueError):
             fm = FailureMode.from_dict(false_data)
+            self.assertIsNotNone(fm)
 
     
     def test_instantiate_with_data(self):

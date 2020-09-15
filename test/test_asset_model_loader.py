@@ -32,28 +32,39 @@ class TestAssetModelLoader(unittest.TestCase):
         self.assertIsNotNone(aml)
 
 
-    def test_failure_mode_loads(self):
+    def test_load_failure_mode_loads_and_works_correctly(self):
         aml = AssetModelLoader()
         data = aml.load(filename)
 
         fm = FailureMode.load(data['pole']['fm']['termites'])
         self.assertIsNotNone(fm, msg="FailureMode cannot be loaded with da")
+        
+        try:
+            fm.sim_timeline(200)
+        except:
+            self.fail(msg="FailureMode cannot sim_timline after being loaded")
 
-        fm.sim_timeline(200)
-        self.assertIsNotNone(fm, msg="FailureMode cannot sim_timline after being loaded")
+        try:
+            fm.mc_timeline(t_end = 10, n_iterations = 10)
+        except:
+            self.fail(msg="FailureMode cannot sim_timline after being loaded")
 
-        fm.mc_timeline(t_end = 10, n_iterations = 10)
-        self.assertIsNotNone(fm, msg="FailureMode cannot sim_timline after being loaded")
-
-    def test_component_loads(self):
+    def test_load_component_loads_and_works_correctly(self):
         aml = AssetModelLoader()
         data = aml.load(filename)
 
         comp = Component.load(data['pole'])
-        self.assertIsNotNone(comp, msg="FailureMode cannot be loaded with da")
+        self.assertIsNotNone(comp, msg="Component cannot be loaded with data")
 
-        #TODO
-        self.assertIsNotNone(comp, msg="FailureMode cannot sim_timline after being loaded")
+        try:
+            comp.sim_timeline(200)
+        except:
+            self.fail(msg="Component cannot sim_timline after being loaded")
+
+        try:
+            comp.mc_timeline(t_end = 10, n_iterations = 10)
+        except:
+            self.fail(msg="Component cannot mc_timline after being loaded")
 
     def test_load_failure_mode_condition_tasks(self):
         aml = AssetModelLoader()
@@ -76,20 +87,6 @@ class TestAssetModelLoader(unittest.TestCase):
 
         # Load asset with initiated failure mode, condition already in window and condition task with 100% effectiveness
         #self.assertEqual()
-
-    def test_load_component(self):
-        aml = AssetModelLoader()
-        data = aml.load(filename)
-
-        comp = Component.load(demo.component_data)
-        comp2 = Component.load(data['pole'])
-        
-
-        comp2.sim_timeline(200)
-
-        # TODO Load asset with initiated failure mode, condition already in window and condition task with 100% effectiveness
-        self.assertIsNotNone(comp)
-
 
 
 if __name__ == '__main__':

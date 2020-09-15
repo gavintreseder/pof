@@ -23,6 +23,16 @@ class Distribution:
         #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
+
+    @classmethod
+    def from_dict(cls, details=None):
+        try:
+            fm = cls(**details)
+        except:
+            raise ValueError(
+                "Error loading %s data from dictionary" % (cls.__name__))
+        return fm
+
     def __str__(self):
 
         out = "Alpha = %s, Beta = %s, Gamma = %s" % (
@@ -37,6 +47,8 @@ class Distribution:
         self.gamma = kwargs.get('gamma')
 
         return self
+
+
 
     def params(self):
         params = dict(
@@ -151,6 +163,68 @@ class Distribution:
                 print("ERROR: Cannot update \"%s\" from dict" %
                       (self.__class__.__name__))
 
+    
+    def get_value(self, key):
+        """
+        Takes a key as either a dictionary or a variable name and returns the value stored at that location.
+
+        Usage:
+            dist = Distribution(alpha=10, beta = 3, gamma=1)
+            dist.get_value(key="alpha")
+            >>>> 10
+        """
+
+        """
+        Usage:
+            fm = FailureMode(name = "early_life",(alpha=10, beta = 3, gamma=1))
+
+            dist.get_value(key="name")
+            >>>> "early_life"
+
+            dist.get_value(key={"untreated":"alpha"})
+            >>>> "10
+
+            dist.get_value(key={"untreated":("alpha", "beta")})
+            >>>> (10, 3)
+
+        """
+
+        """
+        At the outside it'll have be dicts to give you the option to call multiple values long term
+        At the inside its probably going to be a list
+
+        ['untreated']['alpha']
+        ['untreated']['beta']
+
+        ['untreated']['alpha', 'beta]
+
+        """
+
+        """
+        key_1 = #get first leve key
+        key_2 =
+        key_3 =
+        """
+
+        """
+        for keys_1 in level_1_keys:
+            # Check if it is a value
+            
+            # Check if it is is an object with its own get_value method
+
+        """
+
+        # Component
+        key = {"failure_mode":{"early_life":{"tasks":{'repair':"t_interval"}}}}
+
+        # failure mode
+        key = {'untreated':'gamma'}
+
+        #dist version
+        key = 'gamma'
+        value = NotImplemented
+
+        return value
 
 """class Dataset:
 

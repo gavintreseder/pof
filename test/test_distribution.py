@@ -96,5 +96,28 @@ class TestDistribution(unittest.TestCase):
                     val, expected, msg="Error: dash_id %s" % (dash_id))
 
 
+
+    def test_get_value(self):
+
+        # Create an object with parameters
+
+        # use get value to get the value
+        
+        #check those values are the same
+
+        NotImplemented
+    
+    def test_update(self)
+
+        #Create an ojbect
+
+        # set a valuue
+
+        # get that value
+
+        # Check they match
+
+        NotImplemented
+
 if __name__ == '__main__':
     unittest.main()

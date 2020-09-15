@@ -146,7 +146,7 @@ class ConditionIndicator(Indicator):
         # Condition Loss by causes
 
         # Condition details
-        self.pf_curve = None
+        self.pf_curve = pf_curve
         self.pf_interval = pf_interval # Default pf_interval when a ConditionIndicator can't have multiple pf_intervals
         self.pf_std = pf_std
         self.pf_curve_params = NotImplemented #TODO for complex condition types
@@ -307,13 +307,13 @@ class ConditionIndicator(Indicator):
 
     # ************** Simulate Condition ***************
 
-    def sim(self, t):
+    def sim(self, t, name=None):
         """
-        Increment the current time by t and return the new condition
+        Return the condition at time t
         """
-        self.t_condition = min(t + self.t_condition, self.t_max)
-
-        return self.get_condition()
+        self.sim_timeline(t_stop = t, name=name)
+        
+        return self._timeline[name][t]
 
     # ********************* Get Methods **********************
 
