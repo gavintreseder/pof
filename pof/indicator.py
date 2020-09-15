@@ -307,13 +307,13 @@ class ConditionIndicator(Indicator):
 
     # ************** Simulate Condition ***************
 
-    def sim(self, t):
+    def sim(self, t, name=None):
         """
-        Increment the current time by t and return the new condition
+        Return the condition at time t
         """
-        self.t_condition = min(t + self.t_condition, self.t_max)
-
-        return self.get_condition()
+        self.sim_timeline(t_stop = t, name=name)
+        
+        return self._timeline[name][t]
 
     # ********************* Get Methods **********************
 

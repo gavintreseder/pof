@@ -132,7 +132,7 @@ class Component():
             
             # Create a condition object
             elif isinstance(indicator, dict): #TODO add methods for different 
-                self.indicator[name] = Indicator(**indicator)
+                self.indicator[name] = Indicator.from_dict(indicator)
 
     def set_failure_mode(self, failure_modes):
         """

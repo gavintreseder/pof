@@ -12,6 +12,7 @@ import scipy.stats as ss
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from random import random, seed
+from enum import Enum
 
 from tqdm import tqdm
 from lifelines import WeibullFitter
@@ -22,7 +23,8 @@ if __package__ is None or __package__ == '':
     from distribution import Distribution
     from consequence import Consequence
     from task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
-    import demo
+    import demo as demo
+
 else:
     from pof.helper import fill_blanks, id_update
     from pof.indicator import Indicator, ConditionIndicator
@@ -39,9 +41,11 @@ else:
 
 seed(1)
 
+class FailureModeValid(Enum):
+    PF_CURVE = ['linear', 'step']
+
 
 class FailureMode:  # Maybe rename to failure mode
-    PF_CURVE = ['linear', 'step']  # TODO add the rest
 
     def __init__(self,
                  name='fm',
@@ -50,7 +54,7 @@ class FailureMode:  # Maybe rename to failure mode
                  pf_interval=10,
                  pf_std=0,
                  untreated=dict(),
-                 conditions=dict(),  # TODO this needs to change for condition loss
+                 conditions=None,  # TODO this needs to change for condition loss
                  consequence=dict(),
                  states=dict(),
                  tasks=dict(),
@@ -124,21 +128,25 @@ class FailureMode:  # Maybe rename to failure mode
 
         self.cof = Consequence()
 
-    def set_conditions(self, conditions):
+    def set_conditions(self, input_condition=None):
         """
         Takes a dictionary of conditions and sets the failure mode conditions
         """
+        if input_condition is None:
+            # Create a default condition using failure mode parameters
+            print("Failure Mode (%s) - No condition provided - Default condition created" % (self.name))
+            self.conditions[None] = ConditionIndicator.from_dict(pf_curve = self.pf_curve, pf_interval = self.pf_interval, pf_std = self.pf_std)
+        else:
+            for cond_name, condition in input_condition.items():
 
-        for cond_name, condition in conditions.items():
+                # Load a condition object
+                if isinstance(condition, Indicator):
+                    self.conditions[cond_name] = condition
 
-            # Load a condition object
-            if isinstance(condition, Indicator):
-                self.conditions[cond_name] = condition
-
-            # Create a condition object
-            elif isinstance(condition, dict):
-                self.conditions[cond_name] = ConditionIndicator.from_dict(
-                    condition)
+                # Create a condition object
+                elif isinstance(condition, dict):
+                    self.conditions[cond_name] = ConditionIndicator.from_dict(
+                        condition)
 
     def set_untreated(self, untreated):
 
@@ -767,27 +775,6 @@ class FailureMode:  # Maybe rename to failure mode
 
         plt.show()
 
-    def plot_expected(self):
-        # TODO not finished
-        fig, ax = plt.subplots()
-
-        if not self.expected:
-
-            ax.set_title("Expected outcome for %i simulations" %
-                         (len(self._timelines)))
-
-            for key in list(self.timeline):
-                ax.plot(self.expected['time'], self.expected[key])
-                ax.fill_between(
-                    self.expected['time'], self.lower[key], self.upper[key], alpha=0.2)
-
-        elif not self.timeline:
-
-            self.plot_timeline()
-
-        else:
-
-            print("No timelines have been simulated")
 
     def update2(self, id_object, value=None):
         """

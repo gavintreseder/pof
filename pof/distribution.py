@@ -23,6 +23,16 @@ class Distribution:
         #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
+
+    @classmethod
+    def from_dict(cls, details=None):
+        try:
+            fm = cls(**details)
+        except:
+            raise ValueError(
+                "Error loading %s data from dictionary" % (cls.__name__))
+        return fm
+
     def __str__(self):
 
         out = "Alpha = %s, Beta = %s, Gamma = %s" % (
@@ -37,6 +47,8 @@ class Distribution:
         self.gamma = kwargs.get('gamma')
 
         return self
+
+
 
     def params(self):
         params = dict(
