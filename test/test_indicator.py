@@ -29,7 +29,7 @@ class TestConditionIndicator(unittest.TestCase):
 
     def test_sim_timeline(self):
         ci = ConditionIndicator()
-        ci.sim_timeline(t_end=100)
+        ci.sim_timeline(t_stop=100)
 
     def test_sim_timeline_no_data(self):
         ci = ConditionIndicator()
@@ -44,8 +44,8 @@ class TestConditionIndicator(unittest.TestCase):
 
         mock = Mock()
         mock(100)
-        mock(t_end=100, pf_interval=10, name='cause_1')
-        mock(t_end=100, pf_interval=20, name='cause_1')
+        mock(t_stop=100, pf_interval=10, name='cause_1')
+        mock(t_stop=100, pf_interval=20, name='cause_1')
 
 
         expected = {
@@ -66,9 +66,9 @@ class TestConditionIndicator(unittest.TestCase):
 
     def test_sim_timeline_order_data_then_none(self):
         mock = Mock()
-        mock(t_end=100, pf_interval=10, name='cause_1')
-        mock(t_end=100, pf_interval=20, name='cause_1')
-        mock(t_end=100, pf_interval=40, name='cause_2')
+        mock(t_stop=100, pf_interval=10, name='cause_1')
+        mock(t_stop=100, pf_interval=20, name='cause_1')
+        mock(t_stop=100, pf_interval=40, name='cause_2')
         mock(100)
 
 
@@ -118,7 +118,7 @@ class TestConditionIndicator(unittest.TestCase):
         expected = np.concatenate((np.full(10,100), np.linspace(100,90,11)))
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         
-        cp = ci.sim_timeline(t_start=-10, t_end=10)
+        cp = ci.sim_timeline(t_start=-10, t_stop=10)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -126,7 +126,7 @@ class TestConditionIndicator(unittest.TestCase):
         expected = np.concatenate((np.full(10,100), np.linspace(100,50,51), np.full(50,50)))
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
 
-        cp = ci.sim_timeline(t_start=-10, t_end=100)
+        cp = ci.sim_timeline(t_start=-10, t_stop=100)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -145,7 +145,7 @@ class TestConditionIndicator(unittest.TestCase):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
 
         ci.set_condition(90)
-        cp = ci.sim_timeline(t_start=-10, t_end = 20)
+        cp = ci.sim_timeline(t_start=-10, t_stop = 20)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -154,7 +154,7 @@ class TestConditionIndicator(unittest.TestCase):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
 
         ci.set_condition(90)
-        cp = ci.sim_timeline(t_start=-10, t_end = 100)
+        cp = ci.sim_timeline(t_start=-10, t_stop = 100)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -172,7 +172,7 @@ class TestConditionIndicator(unittest.TestCase):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear') 
 
         ci.set_condition(90)
-        cp = ci.sim_timeline(t_start=-10, t_end=100)
+        cp = ci.sim_timeline(t_start=-10, t_stop=100)
         np.testing.assert_array_equal(cp, expected)
 
     def test_sim_timeline_existing_condition_v_late_start_v_late_stop(self):
@@ -180,7 +180,7 @@ class TestConditionIndicator(unittest.TestCase):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear') 
 
         ci.set_condition(50)
-        cp = ci.sim_timeline(t_start=60, t_end=100)
+        cp = ci.sim_timeline(t_start=60, t_stop=100)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -190,7 +190,7 @@ class TestConditionIndicator(unittest.TestCase):
         expected = np.linspace(95,90,6)
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         
-        cp = ci.sim_timeline(t_start=5, t_end=10)
+        cp = ci.sim_timeline(t_start=5, t_stop=10)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -198,7 +198,7 @@ class TestConditionIndicator(unittest.TestCase):
         expected = np.concatenate((np.linspace(95,50,46), np.full(50, 50)))
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         
-        cp = ci.sim_timeline(t_start=5, t_end=100)
+        cp = ci.sim_timeline(t_start=5, t_stop=100)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -216,7 +216,7 @@ class TestConditionIndicator(unittest.TestCase):
         expected = np.linspace(100,90,11)
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         
-        cp = ci.sim_timeline(t_end=10)
+        cp = ci.sim_timeline(t_stop=10)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -224,7 +224,7 @@ class TestConditionIndicator(unittest.TestCase):
         expected = np.concatenate((np.linspace(100,50,51), np.full(50,50)))
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         
-        cp = ci.sim_timeline( t_end=100)
+        cp = ci.sim_timeline( t_stop=100)
 
         np.testing.assert_array_equal(cp, expected)
 
@@ -240,13 +240,13 @@ class TestConditionIndicator(unittest.TestCase):
     def test_sim_timeline_v_early_start_early_stop(self):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         expected = np.concatenate((np.full(100,100), np.linspace(100,90,11)))
-        cp = ci.sim_timeline(t_start=-100, t_end=10)
+        cp = ci.sim_timeline(t_start=-100, t_stop=10)
         np.testing.assert_array_equal(cp, expected)
 
     def test_sim_timeline_v_early_start_late_stop(self):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         expected = np.concatenate((np.full(100,100), np.linspace(100,50,51), np.full(50,50)))
-        cp = ci.sim_timeline(t_start=-100, t_end=100)
+        cp = ci.sim_timeline(t_start=-100, t_stop=100)
         np.testing.assert_array_equal(cp, expected)
 
     def test_sim_timeline_v_early_start_no_stop(self):
@@ -258,7 +258,7 @@ class TestConditionIndicator(unittest.TestCase):
     def test_sim_timeline_v_early_start_v_early_stop(self):
         expected = np.full(91,100)
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
-        cp = ci.sim_timeline(t_start=-100, t_end=-10)
+        cp = ci.sim_timeline(t_start=-100, t_stop=-10)
         np.testing.assert_array_equal(cp, expected)
 
     # very late start
@@ -266,13 +266,13 @@ class TestConditionIndicator(unittest.TestCase):
     def test_sim_timeline_v_late_start_early_stop(self):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         expected = [90]
-        cp = ci.sim_timeline(t_start=20, t_end=10)
+        cp = ci.sim_timeline(t_start=20, t_stop=10)
         np.testing.assert_array_equal(cp, expected)
 
     def test_sim_timeline_v_late_start_late_stop(self):
         ci = ConditionIndicator(perfect=100, failed=50,pf_interval=50, pf_curve='linear')
         expected = [50]
-        cp = ci.sim_timeline(t_start=110, t_end=100)
+        cp = ci.sim_timeline(t_start=110, t_stop=100)
         np.testing.assert_array_equal(cp, expected)
 
     def test_sim_timeline_v_late_start_no_stop(self):

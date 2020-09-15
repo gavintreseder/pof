@@ -324,8 +324,8 @@ class Task:
                 self.__dict__[keys[0]+'s'][keys[1]][keys[2]] = value
 
         else:
-            print("ERROR: Cannot update \"%s\" from dict" %
-                  (self.__class__.__name__))
+            raise KeyError("ERROR: Cannot update \"%s\" from dict with key %s" %
+                  (self.__class__.__name__), keys)
 
     def update(self, dash_id, value, sep='-'):
         """Update the task object to a value using a dash component id"""
@@ -447,6 +447,15 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return schedule
 
+    def update_from_dict(self, keys, value):
+        
+        try:
+            super().update_from_dict(keys, value)
+        except KeyError:
+            # Check for scheudle specific ones
+
+        except:
+            # Error message for scheduled tasks
 
 class ConditionTask(Task):
     """

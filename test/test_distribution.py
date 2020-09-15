@@ -21,13 +21,6 @@ class TestDistribution(unittest.TestCase):
         dist = Distribution()
         self.assertIsNotNone(dist)
 
-    def test_likelihood(self):
-        p_s1 = self.dist.likelihood(0, 10)
-        p_s2 = self.dist.likelihood(10, 50)
-
-        self.assertLessEqual(p_s1, 0)
-        self.assertGreaterEqual(p_s2, 0)
-
     def test_csf_length(self):
 
         dist = Distribution(alpha=50, beta=1.5, gamma=10)
