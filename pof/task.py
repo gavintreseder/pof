@@ -447,13 +447,13 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return schedule
 
-    def update_from_dict(self, keys, value):
+    def update_from_dict(self, keys):
         
         try:
-            super().update_from_dict(keys, value)
+            super().update_from_dict(keys)
         except KeyError:
             # Check for scheudle specific ones
-
+            NotImplemented
         except:
             # Error message for scheduled tasks
             NotImplemented
