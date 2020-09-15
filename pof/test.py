@@ -7,7 +7,7 @@ demo.slow_aging
 demo.distribution.slow_aging
 """
 
-
+# fmt: off
 # *********************** distribution data **********************************
 
 distribution_data = dict(

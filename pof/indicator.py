@@ -433,7 +433,7 @@ class ConditionIndicator(Indicator):
         # Calculate the accumulated condition TODO not working
         if axis == "time":
 
-            self.t_accumulated = int(min(max(0, accumulated), self.t_max))
+            NotImplemented
 
         elif axis == "condition":
 
@@ -444,8 +444,6 @@ class ConditionIndicator(Indicator):
 
             self._reset_accumulated(accumulated, permanent=permanent)
         
-        #self.set_t_condition(0)
-
 
     def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
         

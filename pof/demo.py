@@ -7,6 +7,7 @@ demo.slow_aging
 demo.distribution.slow_aging
 """
 
+# fmt: off
 
 # *********************** distribution data **********************************
 
@@ -185,28 +186,54 @@ on_condition_repair_data = dict(
 )
 
 on_condition_replacement_data = dict(
-    activity = 'ConditionTask',
-    name = 'on_condition_replacement',
-    p_effective = 1,
-    cost = 5000,
+    instant = dict(
+        activity = 'ConditionTask',
+        name = 'on_condition_replacement',
+        p_effective = 1,
+        cost = 5000,
 
-    triggers = dict(
-        condition=dict(
-            fast_degrading=dict(lower=0, upper=20,),
-            slow_degrading=dict(lower=0, upper=20,)
-        ),
-        state=dict(detection=True, failure=True),
-    ),
-
-    impacts = dict(
-        condition = dict(
-            all=dict(
-                target=1,
-                method="reduction_factor",
-                axis="condition",
+        triggers = dict(
+            condition=dict(
+                instant=dict(lower=True, upper=False,),
             ),
+            state=dict(detection=True, failure=True),
         ),
-        state = dict(initiation=False, detection=False, failure=False,),
+
+        impacts = dict(
+            condition = dict(
+                all=dict(
+                    target=1,
+                    method="reduction_factor",
+                    axis="condition",
+                ),
+            ),
+            state = dict(initiation=False, detection=False, failure=False,),
+        ),
+    ),
+    degrading = dict(
+        activity = 'ConditionTask',
+        name = 'on_condition_replacement',
+        p_effective = 1,
+        cost = 5000,
+
+        triggers = dict(
+            condition=dict(
+                fast_degrading=dict(lower=0, upper=20,),
+                slow_degrading=dict(lower=0, upper=20,)
+            ),
+            state=dict(detection=True, failure=True),
+        ),
+
+        impacts = dict(
+            condition = dict(
+                all=dict(
+                    target=1,
+                    method="reduction_factor",
+                    axis="condition",
+                ),
+            ),
+            state = dict(initiation=False, detection=False, failure=False,),
+        ),
     ),
 )
 
@@ -249,7 +276,7 @@ failure_mode_data = dict(
 
         tasks = dict(
             inspection = inspection_data['instant'],
-            on_condition_replacement = on_condition_replacement_data
+            on_condition_replacement = on_condition_replacement_data['instant']
         ),
         states = state_data['new']
     ),
@@ -263,7 +290,7 @@ failure_mode_data = dict(
 
         tasks = dict(
             inspection = inspection_data['instant'],
-            on_condition_replacement = on_condition_replacement_data
+            on_condition_replacement = on_condition_replacement_data['instant']
         ),
         states = state_data['new']
     ),
@@ -279,7 +306,7 @@ failure_mode_data = dict(
         tasks = dict(
             inspection = inspection_data['degrading'],
             on_condition_repair = on_condition_repair_data,
-            on_condition_replacement = on_condition_replacement_data
+            on_condition_replacement = on_condition_replacement_data['degrading']
         ),
         states = state_data['new']
     ),
@@ -295,7 +322,7 @@ failure_mode_data = dict(
         tasks = dict(
             inspection = inspection_data['degrading'],
             on_condition_repair = on_condition_repair_data,
-            on_condition_replacement = on_condition_replacement_data
+            on_condition_replacement = on_condition_replacement_data['degrading']
         ),
         states = state_data['new']
     )

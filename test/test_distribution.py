@@ -107,7 +107,7 @@ class TestDistribution(unittest.TestCase):
 
         NotImplemented
     
-    def test_update(self)
+    def test_update(self):
 
         #Create an ojbect
 

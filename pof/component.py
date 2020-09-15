@@ -70,6 +70,9 @@ class Component():
         self.fm = dict()
         self.set_failure_mode(fm)
 
+        # Link failure mode indicators to the component indicators
+        self.link_indicators()
+
         # Trial for indicator
         self.indicator['safety_factor'] = PoleSafetyFactor(component=self)
         self.indicator['slow_degrading'] = Condition.load(demo.condition_data['slow_degrading']) # TODO fix this call
@@ -135,6 +138,7 @@ class Component():
             elif isinstance(indicator, dict): #TODO add methods for different 
                 self.indicator[name] = Indicator.from_dict(indicator)
 
+
     def set_failure_mode(self, failure_modes):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
@@ -153,6 +157,10 @@ class Component():
                 self.fm[name] = FailureMode().load(fm)        
 
 
+    def link_indicators(self):
+
+        for fm in self.fm.values():
+            fm.link_indicators(self.indicator)
 
     # ****************** Set data ******************
 

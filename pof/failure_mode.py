@@ -9,10 +9,12 @@ Author: Gavin Treseder
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
+import collections
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from random import random, seed
 from enum import Enum
+
 
 from tqdm import tqdm
 from lifelines import WeibullFitter
@@ -24,6 +26,7 @@ if __package__ is None or __package__ == '':
     from consequence import Consequence
     from task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
     import demo as demo
+    from config import FailureModeConfig as cf
 
 else:
     from pof.helper import fill_blanks, id_update
@@ -32,6 +35,7 @@ else:
     from pof.consequence import Consequence
     from pof.task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
     import pof.demo as demo
+    from pof.config import FailureModeConfig as cf
 
 
 # TODO move t somewhere else
@@ -40,9 +44,6 @@ else:
 # TODO make it work with non zero start times
 
 seed(1)
-
-class FailureModeValid(Enum):
-    PF_CURVE = ['linear', 'step']
 
 
 class FailureMode:  # Maybe rename to failure mode
@@ -133,9 +134,12 @@ class FailureMode:  # Maybe rename to failure mode
         Takes a dictionary of conditions and sets the failure mode conditions
         """
         if input_condition is None:
-            # Create a default condition using failure mode parameters
-            print("Failure Mode (%s) - No condition provided - Default condition created" % (self.name))
-            self.conditions[None] = ConditionIndicator(pf_curve = self.pf_curve, pf_interval = self.pf_interval, pf_std = self.pf_std)
+            if cf.FILL_NONE_WITH_DEfAULT == True:
+                # Create a default condition using failure mode parameters
+                print("Failure Mode (%s) - No condition provided - Default condition created" % (self.name))
+                self.conditions[None] = ConditionIndicator(pf_curve = self.pf_curve, pf_interval = self.pf_interval, pf_std = self.pf_std)
+            else:
+                raise ValueError("Failure Mode (%s) - No condition provided" % (self.name))
         else:
             for cond_name, condition in input_condition.items():
 
@@ -212,6 +216,21 @@ class FailureMode:  # Maybe rename to failure mode
                     print("Invalid Task Activity")
             else:
                 print('Invalid Task')
+
+    def link_indicator(self, indicator):
+        """
+        Takes an indicator ojbect, or an iterable list of objects and linkes condition
+        """
+        # If it is an iterable, link them all 
+        if isinstance(indicator, collections.Iterable):
+            for indicator in indicator.values():
+                if indicator.name in self.conditions:
+                    self.condition[indicator.name] = indicator
+
+        # If there is only one update 
+        else:
+            if indicator.name in self.conditions:
+                self.conditions[indicator.name] = indicator
 
     # ************** Get Functions *****************
 
