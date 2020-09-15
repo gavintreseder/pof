@@ -135,10 +135,19 @@ class FailureMode:  # Maybe rename to failure mode
             if isinstance(condition, Indicator):
                 self.conditions[cond_name] = condition
 
-            # Create a condition object
+            # Add a name to the distribution and set create the object
             elif isinstance(condition, dict):
-                self.conditions[cond_name] = ConditionIndicator.from_dict(
-                    condition)
+                if self.condition is not None:
+                    for key, value in condition.items():
+                        self.condition[key] = value
+
+                else:
+                    self.conditions[cond_name] = ConditionIndicator.from_dict(
+                        condition)
+
+            else:
+                print("ERROR: Cannot update \"%s\" from dict" %
+                      (self.__class__.__name__))
 
     def set_untreated(self, untreated):
 
@@ -159,10 +168,6 @@ class FailureMode:  # Maybe rename to failure mode
         else:
             print("ERROR: Cannot update \"%s\" from dict" %
                   (self.__class__.__name__))
-
-            # elif isinstance(untreated, dict):
-            #    untreated['name'] = 'untreated'
-            #    self.untreated = Distribution(**untreated)
 
         # Set the probability of initiation using the untreated parameters
         self.set_init_dist()
