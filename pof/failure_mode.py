@@ -18,14 +18,14 @@ from lifelines import WeibullFitter
 
 if __package__ is None or __package__ == '':
     from helper import fill_blanks, id_update
-    from condition import Condition
+    from indicator import Indicator, ConditionIndicator
     from distribution import Distribution
     from consequence import Consequence
     from task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
     import demo
 else:
     from pof.helper import fill_blanks, id_update
-    from pof.condition import Condition
+    from pof.indicator import Indicator, ConditionIndicator
     from pof.distribution import Distribution
     from pof.consequence import Consequence
     from pof.task import Task, Inspection, ConditionTask, OnConditionRepair, OnConditionReplacement, ImmediateMaintenance
@@ -101,10 +101,12 @@ class FailureMode:  # Maybe rename to failure mode
     @classmethod
     def load(cls, details=None):
         try:
-            fm = cls.from_dict(details)
+            if isinstance(details, dict):
+                fm = cls.from_dict(details)
+            else:
+                fm = cls()
         except:
-            fm = cls()
-            print("Error loading %s data" % (cls.__name__))
+            raise ValueError("Error loading %s data" % (cls.__name__))
         return fm
 
     @classmethod
@@ -112,8 +114,8 @@ class FailureMode:  # Maybe rename to failure mode
         try:
             fm = cls(**details)
         except:
-            fm = cls()
-            print("Error loading %s data from dictionary" % (cls.__name__))
+            raise ValueError(
+                "Error loading %s data from dictionary" % (cls.__name__))
         return fm
 
     # ************** Set Functions *****************
@@ -130,12 +132,13 @@ class FailureMode:  # Maybe rename to failure mode
         for cond_name, condition in conditions.items():
 
             # Load a condition object
-            if isinstance(condition, Condition):
+            if isinstance(condition, Indicator):
                 self.conditions[cond_name] = condition
 
             # Create a condition object
             elif isinstance(condition, dict):
-                self.conditions[cond_name] = Condition(**condition)
+                self.conditions[cond_name] = ConditionIndicator.from_dict(
+                    condition)
 
     def set_untreated(self, untreated):
 
@@ -348,7 +351,7 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Get condtiion
         for condition_name, condition in self.conditions.items():
-            timeline[condition_name] = condition.get_condition_profile(
+            timeline[condition_name] = condition.sim_timeline(
                 t_start=t_start - t_initiate, t_stop=t_end - t_initiate
             )
 
@@ -420,7 +423,7 @@ class FailureMode:  # Maybe rename to failure mode
                     # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start]) #TODO this should be set earlier using a a better method
                     self.timeline[condition_name][
                         t_start:
-                    ] = condition.get_condition_profile(
+                    ] = condition.sim_timeline(
                         t_start=t_start - t_initiate, t_stop=t_end - t_initiate
                     )
 
@@ -892,7 +895,7 @@ class FailureMode:  # Maybe rename to failure mode
 
                 var = id_str.split(sep)[1]
 
-                if var in self.__dict__ and isinstance(self.__dict__[var], (Condition, Distribution, Task)):
+                if var in self.__dict__ and isinstance(self.__dict__[var], (Indicator, Distribution, Task)):
                     self.__dict__[var].update(id_str, value, sep)
                     if var == 'untreated':
                         self.set_init_dist()  # TODO Ghetto fix
