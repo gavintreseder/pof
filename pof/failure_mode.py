@@ -135,7 +135,7 @@ class FailureMode:  # Maybe rename to failure mode
         if input_condition is None:
             # Create a default condition using failure mode parameters
             print("Failure Mode (%s) - No condition provided - Default condition created" % (self.name))
-            self.conditions[None] = ConditionIndicator.from_dict(pf_curve = self.pf_curve, pf_interval = self.pf_interval, pf_std = self.pf_std)
+            self.conditions[None] = ConditionIndicator(pf_curve = self.pf_curve, pf_interval = self.pf_interval, pf_std = self.pf_std)
         else:
             for cond_name, condition in input_condition.items():
 

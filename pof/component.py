@@ -64,6 +64,7 @@ class Component():
         # Parameter
         self.name = name # TODO NotImplemented fully
         self.indicator = dict()
+        self.set_indicator(indicator)
         
         # Failure Modes
         self.fm = dict()
@@ -119,15 +120,15 @@ class Component():
             NotImplemented
 
 
-    def set_indicators(self, indicators):
+    def set_indicator(self, indicator_input=None):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
 
-        for name, indicator in indicators.items():
+        for name, indicator in indicator_input.items():
         
             # Load a condition object
-            if isinstance(indicator, Condition):
+            if isinstance(indicator, Indicator):
                 self.indicator[name] = indicator
             
             # Create a condition object
@@ -141,12 +142,14 @@ class Component():
 
         for name, fm in failure_modes.items():
         
-            # Load a condition object
+            # Load a FailureMode object
             if isinstance(fm, FailureMode):
                 self.fm[name] = fm
             
-            # Create a condition object
+            # Create a FailureMode object
             elif isinstance(fm, dict):
+
+                # Check if any indicators have already been created an replace them in dict
                 self.fm[name] = FailureMode().load(fm)        
 
 

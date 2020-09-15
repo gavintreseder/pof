@@ -146,7 +146,7 @@ class ConditionIndicator(Indicator):
         # Condition Loss by causes
 
         # Condition details
-        self.pf_curve = None
+        self.pf_curve = pf_curve
         self.pf_interval = pf_interval # Default pf_interval when a ConditionIndicator can't have multiple pf_intervals
         self.pf_std = pf_std
         self.pf_curve_params = NotImplemented #TODO for complex condition types
