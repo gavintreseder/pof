@@ -361,7 +361,7 @@ class FailureMode:  # Maybe rename to failure mode
                     t_now,
                     timeline=self.timeline,
                     states=self.get_states(),
-                    conditions=self.indicators,
+                    conditions=self.indicator,
                     verbose=verbose,
                 )
 
@@ -407,7 +407,7 @@ class FailureMode:  # Maybe rename to failure mode
             t_initiate = min(t_end + 1, int(self.init_dist.sample()))
             timeline["initiation"][t_initiate:] = 1
 
-        # Get condtiion
+        # Get condition
         for condition_name, condition in self.conditions.items():
             timeline[condition_name] = condition.sim_timeline(
                 t_start=t_start - t_initiate,
@@ -415,6 +415,11 @@ class FailureMode:  # Maybe rename to failure mode
                 pf_interval=self.pf_interval,
                 pf_std=self.pf_std,
             )
+
+        # Get the indicators
+        for indicator in self.indicator.values():
+            if indicator.name not in self.conditions:
+                timeline[indicator.name] = indicator.get_timeline()
 
         # Check failure
         timeline["failure"] = np.full(t_end + 1, self.is_failed())

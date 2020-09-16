@@ -1,18 +1,19 @@
-
-
 from dataclasses import dataclass
+
 
 @dataclass
 class Config:
 
     FILL_NONE_WITH_DEFAULT = True
     FILL_FROM_PARENT = True
+    REPLACE_ON_FAILURE = True
 
 
 @dataclass
 class ComponentConfig(Config):
 
     NotImplemented
+
 
 @dataclass
 class FailureModeConfig(Config):
@@ -21,6 +22,7 @@ class FailureModeConfig(Config):
     """
 
     FILL_NONE_WITH_DEFAULT = True
+
 
 @dataclass
 class TaskConfig(Config):

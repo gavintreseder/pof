@@ -48,6 +48,8 @@ class Indicator:
 
         self.pf_curve = pf_curve
 
+        self.t_ind = 0
+
     @classmethod
     def load(cls, details=None):
         try:
@@ -65,10 +67,6 @@ class Indicator:
             ind = cls()
             print("Error loading Indicator data from dictionary")
         return ind
-
-    def link(self, **args):
-
-        NotImplemented
 
     def sim_indicator_timeline(self):
 
@@ -90,6 +88,11 @@ class Indicator:
         self._timeline = dict()
         self._timelines = dict()
         NotImplemented
+
+    # ****************** Get methods **************
+
+    def get_timeline(self, name=None):
+        return self._timeline[name]
 
     #  ********************* Interface methods ***********************
 
@@ -158,6 +161,7 @@ class ConditionIndicator(Indicator):
         # Condition
         self.perfect = None
         self.failed = None
+        self.upper = None
         self.decreasing = None
         self.set_limits(perfect=perfect, failed=failed)
 
@@ -272,9 +276,9 @@ class ConditionIndicator(Indicator):
         ]
 
         # Adjust for the accumulated condition
-        accumulated = self.get_accumulated()
+        accumulated = self.get_accumulated(name=name)
         if accumulated > 0:
-            cp = cp - self.get_accumulated()
+            cp = cp - accumulated
             cp[cp < self.failed] = self.failed
 
         # Fill the start with the current condtiion
@@ -331,9 +335,6 @@ class ConditionIndicator(Indicator):
             return self.perfect - self.get_accumulated()
         else:
             return self.perfect + self.get_accumulated()
-
-    def get_timeline(self, name=None):
-        return self._timeline[name]
 
     def get_accumulated(self, name=None):  # TODO make this work for arrays of names
 
@@ -415,6 +416,7 @@ class ConditionIndicator(Indicator):
 
         self.perfect = perfect
         self.failed = failed
+        self.upper = abs(self.perfect - self.failed)
 
     def reset(self):
 
