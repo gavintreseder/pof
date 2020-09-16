@@ -36,17 +36,24 @@ class Indicator:
 
     """
 
-    def __init__(self, parent=None, name="indicator", pf_curve="linear", **kwargs):
+    def __init__(
+        self, name="indicator", pf_curve="step", perfect=False, failed=True, **kwargs
+    ):
 
         # TODO fix kwargs
 
         self.name = name
 
-        # Link to parent component for
-        self.component = parent  # TODO change this to asset data
-        # todo confirm need for parent
+        # Indicator limits
+        self.perfect = None
+        self.failed = None
+        self.upper = None
+        self.decreasing = None
+        self.set_limits(perfect=perfect, failed=failed)
 
         self.pf_curve = pf_curve
+
+        self.decreasing = None
 
         self.t_ind = 0
 
@@ -89,10 +96,38 @@ class Indicator:
         self._timelines = dict()
         NotImplemented
 
+    def set_limits(self, perfect, failed):
+        # TODO Add test make sure these tests work for bool and int
+
+        # Set perfect
+        if perfect > failed:
+            self.decreasing = True
+
+        else:
+            self.decreasing = False
+
+        self.perfect = perfect
+        self.failed = failed
+        self.upper = abs(self.perfect - self.failed)
+
     # ****************** Get methods **************
 
     def get_timeline(self, name=None):
-        return self._timeline[name]
+
+        if name is None:
+            if self.decreasing:
+                timeline = self.perfect - (self.perfect - np.array(list(self._timeline.values()))).sum(
+                    axis=0
+                )
+                timeline[timeline > self.failed] = self.failed
+            else:
+                timeline = self.perfect + (np.array(list(self._timeline.values())) - self.perfect).sum(
+                    axis=0
+                )
+                timeline[timeline < self.failed] = self.failed
+            return timeline
+        else:
+            return self._timeline[name]
 
     #  ********************* Interface methods ***********************
 
@@ -136,7 +171,6 @@ class Indicator:
 class ConditionIndicator(Indicator):
     def __init__(
         self,
-        parent=None,
         name="ConditionIndiator",
         pf_curve="linear",
         pf_interval=10,
@@ -148,7 +182,7 @@ class ConditionIndicator(Indicator):
         *args,
         **kwargs
     ):
-        super().__init__(name=name, *args, *kwargs)
+        super().__init__(name=name, perfect=perfect, failed=failed, *args, *kwargs)
         # Condition Loss by causes
 
         # Condition details
@@ -157,13 +191,6 @@ class ConditionIndicator(Indicator):
         self.pf_std = pf_std
         self.pf_curve_params = NotImplemented  # TODO for complex condition types
         self.set_pf_curve(pf_curve)
-
-        # Condition
-        self.perfect = None
-        self.failed = None
-        self.upper = None
-        self.decreasing = None
-        self.set_limits(perfect=perfect, failed=failed)
 
         # Detection and failure thresholds
         self.threshold_detection = None
@@ -211,6 +238,9 @@ class ConditionIndicator(Indicator):
     def _set_profile(
         self, perfect=None, failed=None, pf_interval=None, pf_std=None, name=None
     ):
+
+        if name is None:
+            name = self.name
 
         # TODO Illyse - add the other profile types
         # TODO maybe make this work using pf_interval and name so that it doesn't do as much recalcuting
@@ -404,20 +434,6 @@ class ConditionIndicator(Indicator):
         else:
             self.threshold_failure = failure
 
-    def set_limits(self, perfect, failed):
-        # TODO make sure these tests work for bool and int
-
-        # Set perfect
-        if perfect > failed:
-            self.decreasing = True
-
-        else:
-            self.decreasing = False
-
-        self.perfect = perfect
-        self.failed = failed
-        self.upper = abs(self.perfect - self.failed)
-
     def reset(self):
 
         super().reset()
@@ -494,12 +510,8 @@ class PoleSafetyFactor(Indicator):
         if method == "simple":
             sf = self._safety_factor(
                 agd=self.component.indicator["external_diameter"].perfect,
-                czd=self.component.indicator["external_diameter"].get_condition_profile(
-                    0, 200
-                ),
-                wt=self.component.indicator["wall_thickness"].get_condition_profile(
-                    0, 200
-                ),
+                czd=self.component.indicator["external_diameter"].get_timeline(),
+                wt=self.component.indicator["wall_thickness"].get_timeline(),
                 margin=4,
             )
 

@@ -572,12 +572,12 @@ class Component:
             )
 
         # Trial for indicator
-        self.indicator["safety_factor"] = PoleSafetyFactor(component=self)
-        self.indicator["slow_degrading"] = Condition(
-            **demo.condition_data["slow_degrading"]
+        #self.indicator["safety_factor"] = PoleSafetyFactor(component=self)
+        self.indicator["slow_degrading"] = ConditionIndicator.from_dict(
+            demo.condition_data["slow_degrading"]
         )  # TODO fix this call
-        self.indicator["fast_degrading"] = Condition(
-            **demo.condition_data["fast_degrading"]
+        self.indicator["fast_degrading"] = ConditionIndicator.from_dict(
+            demo.condition_data["fast_degrading"]
         )  # TODO fix this call
 
         """for fm in self.fm.values():

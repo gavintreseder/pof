@@ -82,6 +82,7 @@ class FailureMode:  # Maybe rename to failure mode
         self.set_untreated(untreated)
 
         # Indicators
+        self.indicator = None
 
         # Faiure Condition
         self.conditions = dict()
