@@ -15,8 +15,9 @@ from enum import Enum
 # TODO make sure everything works for conditions in both direction
 # TODO robust testing
 
+
 class IndicatorValid(Enum):
-    PF_CURVE = ['linear', 'step', 'linear-legacy']
+    PF_CURVE = ["linear", "step", "linear-legacy"]
 
 
 class Indicator:
@@ -35,7 +36,7 @@ class Indicator:
 
     """
 
-    def __init__(self, parent=None, name='indicator', **kwargs):
+    def __init__(self, parent=None, name="indicator", pf_curve="linear", **kwargs):
 
         # TODO fix kwargs
 
@@ -45,11 +46,15 @@ class Indicator:
         self.component = parent  # TODO change this to asset data
         # todo confirm need for parent
 
+        self.pf_curve = pf_curve
+
+        self.t_ind = 0
+
     @classmethod
     def load(cls, details=None):
         try:
             ind = cls.from_dict(details)
-        except:
+        except Exception:
             ind = cls()
             print("Error loading Indicator data")
         return ind
@@ -62,10 +67,6 @@ class Indicator:
             ind = cls()
             print("Error loading Indicator data from dictionary")
         return ind
-
-    def link(self, **args):
-
-        NotImplemented
 
     def sim_indicator_timeline(self):
 
@@ -87,6 +88,11 @@ class Indicator:
         self._timeline = dict()
         self._timelines = dict()
         NotImplemented
+
+    # ****************** Get methods **************
+
+    def get_timeline(self, name=None):
+        return self._timeline[name]
 
     #  ********************* Interface methods ***********************
 
@@ -124,12 +130,10 @@ class Indicator:
 
         for cause, timeline in _timeline.items():
             plt.plot(timeline)
-            #plt.plot(self.t_condition, self.current(), "rd")
+            # plt.plot(self.t_condition, self.current(), "rd")
 
     def update(self, id_object, value=None):
-        """
-
-        """
+        """"""
         if isinstance(id_object, str):
             self.update_from_str(id_object, value, sep="-")
 
@@ -137,10 +141,12 @@ class Indicator:
             self.update_from_dict(id_object)
 
         else:
-            print("ERROR: Cannot update \"%s\" from string or dict" %
-                  (self.__class__.__name__))
+            print(
+                'ERROR: Cannot update "%s" from string or dict'
+                % (self.__class__.__name__)
+            )
 
-    def update_from_str(self, id_str, value, sep='-'):
+    def update_from_str(self, id_str, value, sep="-"):
 
         id_str = id_str.split(self.name + sep, 1)[1]
 
@@ -152,30 +158,38 @@ class Indicator:
 
         for key, value in dict_data.items():
 
-            if key in ['name']:
+            if key in ["name"]:
                 self.__dict__[key] = value
-            elif key in ['parent']:
+            elif key in ["parent"]:
                 self.component = value
             else:
-                raise KeyError("ERROR: Cannot update \"%s\" from dict with key %s" %
-                               (self.__class__.__name__, key))
+                raise KeyError(
+                    'ERROR: Cannot update "%s" from dict with key %s'
+                    % (self.__class__.__name__, key)
+                )
 
 
 class ConditionIndicator(Indicator):
-
-    def __init__(self, parent=None, name='ConditionIndiator',
-                 pf_curve='linear', pf_interval=10, pf_std=0,
-                 threshold_detection=None, threshold_failure=None,
-                 perfect=100, failed=0,
-                 *args, **kwargs
-                 ):
+    def __init__(
+        self,
+        parent=None,
+        name="ConditionIndiator",
+        pf_curve="linear",
+        pf_interval=10,
+        pf_std=0,
+        threshold_detection=None,
+        threshold_failure=None,
+        perfect=100,
+        failed=0,
+        *args,
+        **kwargs
+    ):
         super().__init__(name=name, *args, *kwargs)
         # Condition Loss by causes
 
         # Condition details
         self.pf_curve = pf_curve
-        # Default pf_interval when a ConditionIndicator can't have multiple pf_intervals
-        self.pf_interval = pf_interval
+        self.pf_interval = pf_interval  # Default pf_interval when a ConditionIndicator can't have multiple pf_intervals
         self.pf_std = pf_std
         self.pf_curve_params = NotImplemented  # TODO for complex condition types
         self.set_pf_curve(pf_curve)
@@ -183,14 +197,14 @@ class ConditionIndicator(Indicator):
         # Condition
         self.perfect = None
         self.failed = None
+        self.upper = None
         self.decreasing = None
         self.set_limits(perfect=perfect, failed=failed)
 
         # Detection and failure thresholds
         self.threshold_detection = None
         self.threshold_failure = None
-        self.set_threshold(detection=threshold_detection,
-                           failure=threshold_failure)
+        self.set_threshold(detection=threshold_detection, failure=threshold_failure)
 
         # Current accumulation
         self._accumulated = dict()
@@ -202,7 +216,9 @@ class ConditionIndicator(Indicator):
 
     # ********************** Timeline methods ******************************
 
-    def sim_timeline(self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None):
+    def sim_timeline(
+        self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
+    ):
         """
         Returns the timeline that considers all the accumulated degradation
         """
@@ -223,11 +239,14 @@ class ConditionIndicator(Indicator):
             self._set_profile(pf_interval=pf_interval, name=name)
 
         self._timeline[name] = self._get_timeline(
-            t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name)
+            t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
+        )
 
         return self._timeline[name]
 
-    def _set_profile(self, perfect=None, failed=None, pf_interval=None, pf_std=None, name=None):
+    def _set_profile(
+        self, perfect=None, failed=None, pf_interval=None, pf_std=None, name=None
+    ):
 
         # TODO Illyse - add the other profile types
         # TODO maybe make this work using pf_interval and name so that it doesn't do as much recalcuting
@@ -255,23 +274,23 @@ class ConditionIndicator(Indicator):
         # Get the time to be investitaged
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
-        if self.pf_curve == 'linear':
+        if self.pf_curve == "linear":
 
             m = (failed - perfect) / pf_interval
             b = perfect
-            y = m*x + b
+            y = m * x + b
 
-        elif self.pf_curve == 'step':
-            NotImplemented
+        elif self.pf_curve == "step":
+            y = np.full(self.pf_interval, self.perfect)
 
-        elif self.pf_curve == 'exponential' or self.pf_curve == 'exp':
+        elif self.pf_curve == "exponential" or self.pf_curve == "exp":
             NotImplemented
 
         self._profile[pf_interval] = y
 
-    # TODO this probably needs a delay?
-
-    def _get_timeline(self, t_start, t_stop=None, pf_interval=None, name=None):
+    def _get_timeline(
+        self, t_start, t_stop=None, pf_interval=None, name=None
+    ):  # TODO this probably needs a delay?
         """
         Returns the timeli
         """
@@ -288,13 +307,14 @@ class ConditionIndicator(Indicator):
             t_start = t_start - t_stop
             t_stop = 0
 
-        cp = self._profile[pf_interval][max(
-            0, min(t_start, t_max)):min(t_stop, t_max) + 1]
+        cp = self._profile[pf_interval][
+            max(0, min(t_start, t_max)) : min(t_stop, t_max) + 1
+        ]
 
         # Adjust for the accumulated condition
-        accumulated = self.get_accumulated()
+        accumulated = self.get_accumulated(name=name)
         if accumulated > 0:
-            cp = cp - self.get_accumulated()
+            cp = cp - accumulated
             cp[cp < self.failed] = self.failed
 
         # Fill the start with the current condtiion
@@ -309,13 +329,19 @@ class ConditionIndicator(Indicator):
         return cp
 
     def sim_failure_timeline(
-        self, t_stop=None, t_start=0
+        self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
     ):  # TODO this probably needs a delay? and can combine with condtion profile to make it simpler
         """
         Return a sample failure schedule for the condition
         """
 
-        cp = self.sim_timeline(t_stop, t_start)
+        cp = self.sim_timeline(
+            t_stop=t_stop,
+            t_start=t_start,
+            pf_interval=pf_interval,
+            pf_std=pf_std,
+            name=name,
+        )
 
         if self.decreasing == True:
             tl_f = cp <= self.threshold_failure
@@ -364,8 +390,7 @@ class ConditionIndicator(Indicator):
 
             # Get the accumulated condition for a list of names
             elif isinstance(name, collections.Iterable):
-                accumulated = sum([self._accumulated.get(key, 0)
-                                   for key in name])
+                accumulated = sum([self._accumulated.get(key, 0) for key in name])
             else:
                 raise TypeError("name should be a string or iterable")
 
@@ -381,8 +406,9 @@ class ConditionIndicator(Indicator):
         # check accumulated will not exceed the maximum allowable condition
         current = self.get_accumulated()
 
-        self._accumulated[name] = min(accumulated, abs(
-            self.perfect - self.failed) - current - accumulated)
+        self._accumulated[name] = min(
+            accumulated, abs(self.perfect - self.failed) - current - accumulated
+        )
 
     def set_condition(self, condition, name=None):
         # TODO consider impact of other impacts
@@ -392,18 +418,19 @@ class ConditionIndicator(Indicator):
 
         if self.decreasing:
             self._accumulated[name] = min(
-                max(0, self.perfect - condition), self.perfect - self.failed)
+                max(0, self.perfect - condition), self.perfect - self.failed
+            )
         else:
             self._accumulated[name] = min(
-                max(0, condition - self.perfect), self.failed - self.perfect)
+                max(0, condition - self.perfect), self.failed - self.perfect
+            )
 
     def set_pf_curve(self, pf_curve):
 
         if pf_curve in IndicatorValid.PF_CURVE.value:
             self.pf_curve = pf_curve
         else:
-            raise ValueError("pf_curve must be from: %s" %
-                             (IndicatorValid.PF_CURVE))
+            raise ValueError("pf_curve must be from: %s" % (IndicatorValid.PF_CURVE))
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
@@ -428,15 +455,14 @@ class ConditionIndicator(Indicator):
 
         self.perfect = perfect
         self.failed = failed
+        self.upper = abs(self.perfect - self.failed)
 
     def reset(self):
 
         super().reset()
         self._reset_accumulated()
 
-    def reset_any(
-        self, target=0, method="reset", axis="time", permanent=False
-    ):
+    def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
@@ -444,9 +470,7 @@ class ConditionIndicator(Indicator):
         # Error with time reset, different method required.
 
         if method == "reduction_factor":
-            accumulated = (abs(self.perfect - self.get_accumulated())) * (
-                1 - target
-            )
+            accumulated = (abs(self.perfect - self.get_accumulated())) * (1 - target)
 
         elif method == "reverse":
 
@@ -458,7 +482,7 @@ class ConditionIndicator(Indicator):
         # Calculate the accumulated condition TODO not working
         if axis == "time":
 
-            self.t_accumulated = int(min(max(0, accumulated), self.t_max))
+            NotImplemented
 
         elif axis == "condition":
 
@@ -469,15 +493,13 @@ class ConditionIndicator(Indicator):
 
             self._reset_accumulated(accumulated, permanent=permanent)
 
-        # self.set_t_condition(0)
-
     def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
 
         # Maintain permanent condition loss if set
         if permanent:
-            existing_permanent = self._accumulated.get('permanent', 0)
+            existing_permanent = self._accumulated.get("permanent", 0)
             accumulated = permanent + existing_permanent
-            name = 'permanent'
+            name = "permanent"
 
         self._accumulated = dict()
         self._set_accumulated(name=name, accumulated=accumulated)
@@ -489,32 +511,51 @@ class ConditionIndicator(Indicator):
         except KeyError:
             # Check for condition specific ones
             for key, value in keys.items():
-                if key in ['pf_curve', 'pf_interval', 'pf_std', 'perfect', 'failed', 'decreasing', 'threshold_protection', 'threshold_failure']:
+                if key in [
+                    "pf_curve",
+                    "pf_interval",
+                    "pf_std",
+                    "perfect",
+                    "failed",
+                    "decreasing",
+                    "threshold_protection",
+                    "threshold_failure",
+                ]:
                     self.__dict__[key] = value
                 else:
-                    raise KeyError("ERROR: Cannot update \"%s\" from dict with key %s" %
-                                   (self.__class__.__name__, key))
+                    raise KeyError(
+                        'ERROR: Cannot update "%s" from dict with key %s'
+                        % (self.__class__.__name__, key)
+                    )
 
     def update_from_dict(self, keys):
 
         for key, value in keys.items():
-            if key in ['pf_curve', 'pf_interval', 'pf_std', 'perfect', 'failed', 'decreasing', 'threshold_protection', 'threshold_failure']:
+            if key in [
+                "pf_curve",
+                "pf_interval",
+                "pf_std",
+                "perfect",
+                "failed",
+                "decreasing",
+                "threshold_protection",
+                "threshold_failure",
+            ]:
                 self.__dict__[key] = value
             else:
                 try:
                     super().update_from_dict({key: value})
                 except KeyError:
                     # Check for condition specific ones
-                    raise KeyError("ERROR: Cannot update \"%s\" from dict with key %s" % (
-                        self.__class__.__name__, key))
+                    raise KeyError(
+                        'ERROR: Cannot update "%s" from dict with key %s'
+                        % (self.__class__.__name__, key)
+                    )
 
 
 class PoleSafetyFactor(Indicator):
-
-    def __init__(self, component, failed=1, decreasing=True):
-        super().__init__(self)
-
-        self.component = component
+    def __init__(self, failed=1, decreasing=True, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
 
         # Condition detection and limits
         self.decreasing = decreasing
@@ -535,30 +576,34 @@ class PoleSafetyFactor(Indicator):
 
         return timeline
 
-    def safety_factor(self, method='simple'):
+    def safety_factor(self, method="simple"):
 
-        if method == 'simple':
+        if method == "simple":
             sf = self._safety_factor(
-                agd=self.component.indicator['external_diameter'].perfect,
-                czd=self.component.indicator['external_diameter'].get_condition_profile(
-                    0, 200),
-                wt=self.component.indicator['wall_thickness'].get_condition_profile(
-                    0, 200),
-                margin=4
+                agd=self.component.indicator["external_diameter"].perfect,
+                czd=self.component.indicator["external_diameter"].get_condition_profile(
+                    0, 200
+                ),
+                wt=self.component.indicator["wall_thickness"].get_condition_profile(
+                    0, 200
+                ),
+                margin=4,
             )
 
-        elif method == 'actual':
+        elif method == "actual":
             sf = self._safety_factor(
-                agd=self.component.conditions['external_diameter'].perfect,
-                czd=self.component.conditions['external_diameter'],
-                wt=self.component.conditions['wall_thickness'],
-                pole_load=self.component.info['pole_load'],
-                pole_strength=self.component.info['pole_strength'],
+                agd=self.component.conditions["external_diameter"].perfect,
+                czd=self.component.conditions["external_diameter"],
+                wt=self.component.conditions["wall_thickness"],
+                pole_load=self.component.info["pole_load"],
+                pole_strength=self.component.info["pole_strength"],
             )
 
         return sf
 
-    def _safety_factor(self, agd, czd, wt, pole_strength=None, pole_load=None, margin=4):
+    def _safety_factor(
+        self, agd, czd, wt, pole_strength=None, pole_load=None, margin=4
+    ):
         """
         Calculates the safety factor using a margin of 4 if the pole load and pole strength are not available
 
@@ -577,7 +622,7 @@ class PoleSafetyFactor(Indicator):
 
             margin = pole_strength / pole_load
 
-        sf = margin * (czd**4 - (czd - 2*wt)**4) / (agd**3 * czd)
+        sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (agd ** 3 * czd)
 
         return sf
 
@@ -588,13 +633,15 @@ class PoleSafetyFactor(Indicator):
         except KeyError:
             # Check for condition specific ones
             for key, value in keys.items():
-                if key in ['component', 'decreasing']:
+                if key in ["component", "decreasing"]:
                     self.__dict__[key] = value
-                elif key in ['failure']:
+                elif key in ["failure"]:
                     self.threshold_failure = value
                 else:
-                    raise KeyError("ERROR: Cannot update \"%s\" from dict with key %s" %
-                                   (self.__class__.__name__, keys))
+                    raise KeyError(
+                        'ERROR: Cannot update "%s" from dict with key %s'
+                        % (self.__class__.__name__, keys)
+                    )
 
 
 """

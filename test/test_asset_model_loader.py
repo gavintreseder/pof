@@ -10,20 +10,19 @@ import numpy as np
 
 import utils
 
-from pof.loader.asset_model_loader import AssetModelLoader  
+from pof.loader.asset_model_loader import AssetModelLoader
 from pof.component import Component
 from pof.failure_mode import FailureMode
 import pof.demo as demo
 
-#TODO move this all to a test file rather than demo
+# TODO move this all to a test file rather than demo
 filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential Energy\Probability of Failure Model\pof\data\inputs\Asset Model - Demo.xlsx"
 
-#FailureMode().load(data['pole']['fm']['termites'])
 
-#TODO move this file into test_loader
+# TODO move this file into test_loader
+
 
 class TestAssetModelLoader(unittest.TestCase):
-
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -31,21 +30,21 @@ class TestAssetModelLoader(unittest.TestCase):
         aml = AssetModelLoader()
         self.assertIsNotNone(aml)
 
-
     def test_load_failure_mode_loads_and_works_correctly(self):
+        """ Load an Asset model and then check a FailureMode can be created from the data and that the object works correctly"""
         aml = AssetModelLoader()
         data = aml.load(filename)
 
-        fm = FailureMode.load(data['pole']['fm']['termites'])
+        fm = FailureMode.load(data["pole"]["fm"]["termites"])
         self.assertIsNotNone(fm, msg="FailureMode cannot be loaded with da")
-        
+
         try:
             fm.sim_timeline(200)
         except:
             self.fail(msg="FailureMode cannot sim_timline after being loaded")
 
         try:
-            fm.mc_timeline(t_end = 10, n_iterations = 10)
+            fm.mc_timeline(t_end=10, n_iterations=10)
         except:
             self.fail(msg="FailureMode cannot sim_timline after being loaded")
 
@@ -53,7 +52,7 @@ class TestAssetModelLoader(unittest.TestCase):
         aml = AssetModelLoader()
         data = aml.load(filename)
 
-        comp = Component.load(data['pole'])
+        comp = Component.load(data["pole"])
         self.assertIsNotNone(comp, msg="Component cannot be loaded with data")
 
         try:
@@ -62,7 +61,7 @@ class TestAssetModelLoader(unittest.TestCase):
             self.fail(msg="Component cannot sim_timline after being loaded")
 
         try:
-            comp.mc_timeline(t_end = 10, n_iterations = 10)
+            comp.mc_timeline(t_end=10, n_iterations=10)
         except:
             self.fail(msg="Component cannot mc_timline after being loaded")
 
@@ -70,24 +69,25 @@ class TestAssetModelLoader(unittest.TestCase):
         aml = AssetModelLoader()
         data = aml.load(filename)
 
-        fm = FailureMode.load(data['pole']['fm']['termites'])
-        
-        #Change the condition so that the termite powder should be triggered straight away #TODO replace this with asset data
-        fm.set_init_state({'initiation':True})
-        fm.set_states({'initiation':True})
-        for cond in fm.conditions.values():
-            cond.update_from_dict(dict(
-                pf_interval = 100,
-                condition = 49,
-            ))
+        fm = FailureMode.load(data["pole"]["fm"]["termites"])
 
+        # Change the condition so that the termite powder should be triggered straight away #TODO replace this with asset data
+        fm.set_init_state({"initiation": True})
+        fm.set_states({"initiation": True})
+        for cond in fm.conditions.values():
+            cond.update_from_dict(
+                dict(
+                    pf_interval=100,
+                    condition=49,
+                )
+            )
 
         fm.sim_timeline(400)
         fm.plot_timeline()
 
         # Load asset with initiated failure mode, condition already in window and condition task with 100% effectiveness
-        #self.assertEqual()
+        # self.assertEqual()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
