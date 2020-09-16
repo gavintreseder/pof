@@ -1,4 +1,3 @@
-
 """
     Filename: test_component.py
     Description: Contains the code for testing the Component class
@@ -8,6 +7,7 @@
 
 import unittest
 from unittest.mock import MagicMock
+from unittest.mock import patch
 import numpy as np
 
 import utils
@@ -15,16 +15,26 @@ import utils
 from pof.component import Component
 import pof.demo as demo
 
-class TestComponent(unittest.TestCase):
 
+class TestComponent(unittest.TestCase):
     def setUp(self):
-        
+
         None
 
     def test_class_imports_correctly(self):
-        self.assertTrue(True)
+        self.assertIsNotNone(Component)
 
     def test_class_instantiate(self):
+        comp = Component()
+        self.assertIsNotNone(comp)
+
+    @patch("cf.USE_DEFAULT", True)
+    def test_class_instantiate_no_input_use_default_true(self):
+        comp = Component()
+        self.assertIsNotNone(comp)
+
+    @patch("cf.USE_DEFAULT", False)
+    def test_class_instantiate_no_input_use_default_false(self):
         comp = Component()
         self.assertIsNotNone(comp)
 
@@ -34,7 +44,6 @@ class TestComponent(unittest.TestCase):
         comp = Component().set_demo()
         self.assertIsNotNone(comp)
 
-
     # *************** Test init_timeline ***********************
 
     def test_init_timeline(self):
@@ -43,7 +52,7 @@ class TestComponent(unittest.TestCase):
         comp.init_timeline(t_end)
 
         for fm in comp.fm.values():
-            t_fm_timeline_end = fm.timeline['time'][-1]
+            t_fm_timeline_end = fm.timeline["time"][-1]
 
             self.assertEqual(t_end, t_fm_timeline_end)
 
@@ -51,13 +60,13 @@ class TestComponent(unittest.TestCase):
 
     def test_complete_tasks_one_fm_one_task(self):
         fm_next_tasks = dict(
-            slow_aging = ['inspection'],
+            slow_aging=["inspection"],
         )
         t_now = 5
         comp = Component().set_demo()
         comp.init_timeline(200)
         comp.complete_tasks(t_now, fm_next_tasks)
-        
+
         for fm_name, fm in comp.fm.items():
             for task_name, task in fm.tasks.items():
 
@@ -71,14 +80,14 @@ class TestComponent(unittest.TestCase):
 
     def test_complete_tasks_two_fm_two_task(self):
         fm_next_tasks = dict(
-            slow_aging = ['inspection', 'cm'],
-            fast_aging = ['inspection', 'cm'],
+            slow_aging=["inspection", "cm"],
+            fast_aging=["inspection", "cm"],
         )
         t_now = 5
         comp = Component().set_demo()
         comp.init_timeline(200)
         comp.complete_tasks(t_now, fm_next_tasks)
-        
+
         for fm_name, fm in comp.fm.items():
             for task_name, task in fm.tasks.items():
 
@@ -96,9 +105,9 @@ class TestComponent(unittest.TestCase):
 
         t_now = None
         test_next_task = dict(
-            slow_aging = (5, ['inspection']),
-            fast_aging = (10, ['inspection', 'cm']),
-            random = (15, ['inspection'])
+            slow_aging=(5, ["inspection"]),
+            fast_aging=(10, ["inspection", "cm"]),
+            random=(15, ["inspection"]),
         )
 
         expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
@@ -106,28 +115,27 @@ class TestComponent(unittest.TestCase):
         comp = Component().set_demo()
 
         for fm_name, fm in comp.fm.items():
-            fm.next_tasks = MagicMock(return_value = test_next_task[fm_name])
-        
+            fm.next_tasks = MagicMock(return_value=test_next_task[fm_name])
+
         t_next, next_task = comp.next_tasks(t_now)
-        
+
         self.assertEqual(next_task, expected)
         self.assertEqual(t_next, 5)
-
 
     def test_next_tasks_many_fm_many_task(self):
 
         times = dict(
-            slow_aging= [5,5,5],
-            fast_aging = [10,5,5],
-            random = [10,10,5],
+            slow_aging=[5, 5, 5],
+            fast_aging=[10, 5, 5],
+            random=[10, 10, 5],
         )
 
         for i in range(3):
             t_now = None
             test_next_task = dict(
-                slow_aging = (times['slow_aging'][i], ['inspection']),
-                fast_aging = (times['fast_aging'][i], ['inspection', 'cm']),
-                random = (times['random'][i], ['inspection'])
+                slow_aging=(times["slow_aging"][i], ["inspection"]),
+                fast_aging=(times["fast_aging"][i], ["inspection", "cm"]),
+                random=(times["random"][i], ["inspection"]),
             )
 
             expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
@@ -135,10 +143,10 @@ class TestComponent(unittest.TestCase):
             comp = Component().set_demo()
 
             for fm_name, fm in comp.fm.items():
-                fm.next_tasks = MagicMock(return_value = test_next_task[fm_name])
-            
+                fm.next_tasks = MagicMock(return_value=test_next_task[fm_name])
+
             t_next, next_task = comp.next_tasks(t_now)
-            
+
             self.assertEqual(next_task, expected)
             self.assertEqual(t_next, 5)
 
@@ -152,19 +160,18 @@ class TestComponent(unittest.TestCase):
 
     def test_sim_timline_active_one(self):
         comp = Component().set_demo()
-        
-        comp.fm[list(comp.fm)[0]].active=False
+
+        comp.fm[list(comp.fm)[0]].active = False
         comp.sim_timeline(200)
         print(comp)
-
 
     # ************ Test expected methods *****************
 
     def test_expected_condition_no_timeline(self):
         comp = Component().set_demo()
         comp.expected_condition()
-        
-        #TODO add some checks
+
+        # TODO add some checks
 
     # ************ Test update methods *****************
 
@@ -178,18 +185,17 @@ class TestComponent(unittest.TestCase):
         for dash_id in dash_ids:
 
             for expected in expected_list:
-        
+
                 comp.update(dash_id, expected)
 
                 val = utils.get_dash_id_value(comp, dash_id)
 
-                self.assertEqual(val, expected, msg = "Error: dash_id %s" %(dash_id))
+                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 
     def test_expected_inspection_interval(self):
 
         NotImplemented
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

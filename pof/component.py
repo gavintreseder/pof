@@ -14,21 +14,20 @@ import scipy.stats as ss
 from tqdm import tqdm
 from lifelines import WeibullFitter
 
+# Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
-    from failure_mode import FailureMode
-    from condition import Condition
-    from distribution import Distribution
-    from helper import fill_blanks, id_update
-    from indicator import Indicator, ConditionIndicator, PoleSafetyFactor
-    import demo as demo
+    import sys
+    import os
 
-else:
-    from pof.failure_mode import FailureMode
-    from pof.condition import Condition
-    from pof.distribution import Distribution
-    from pof.helper import fill_blanks, id_update
-    from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
-    import pof.demo as demo
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from pof.failure_mode import FailureMode
+from pof.condition import Condition
+from pof.distribution import Distribution
+from pof.helper import fill_blanks, id_update
+from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
+from pof.load import Load
+import pof.demo as demo
 
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO create get, set, del and add methods
@@ -37,7 +36,7 @@ DEFAULT_ITERATIONS = 100
 
 
 @dataclass
-class Component:
+class Component(Load):
     """
     Parameters:
 
@@ -79,24 +78,6 @@ class Component:
 
     # ****************** Load data ******************
 
-    @classmethod
-    def load(cls, details=None):
-        try:
-            comp = cls.from_dict(details)
-        except Exception:
-            comp = cls()
-            print("Error loading Component data")
-        return comp
-
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            comp = cls(**details)
-        except Exception:
-            comp = cls()
-            print("Error loading Component data from dictionary")
-        return comp
-
     def load_asset_data(self, *args, **kwargs):
 
         self.info = dict(
@@ -114,40 +95,50 @@ class Component:
             # Set current
             NotImplemented
 
-    def set_indicator(self, indicator_input=None):
+    def set_indicator(self, indicator_input):  # TODO add testing for None
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
+        try:
+            for name, indicator in indicator_input.items():
 
-        for name, indicator in indicator_input.items():
+                # Load a condition object
+                if isinstance(indicator, Indicator):
+                    self.indicator[name] = indicator
 
-            # Load a condition object
-            if isinstance(indicator, Indicator):
-                self.indicator[name] = indicator
-
-            # Create a condition object
-            elif isinstance(indicator, dict):  # TODO add methods for different
-                if indicator["pf_curve"] in ["step", "linear"]:
-                    self.indicator[name] = ConditionIndicator.from_dict(indicator)
-                elif indicator["pf_curve"] in ["ssf_calc", "dsf_calc"]:
-                    self.indicator[name] = PoleSafetyFactor.from_dict(indicator)
+                # Create a condition object
+                elif isinstance(indicator, dict):  # TODO add methods for different
+                    if indicator["pf_curve"] in ["step", "linear"]:
+                        self.indicator[name] = ConditionIndicator.from_dict(indicator)
+                    elif indicator["pf_curve"] in ["ssf_calc", "dsf_calc"]:
+                        self.indicator[name] = PoleSafetyFactor.from_dict(indicator)
+        except AttributeError:
+            print(
+                "%s - %s cannot be set from %s"
+                % (self.__class__.__name__, self.name, indicator_input)
+            )
 
     def set_failure_mode(self, failure_modes):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
+        try:
+            for name, fm in failure_modes.items():
 
-        for name, fm in failure_modes.items():
+                # Load a FailureMode object
+                if isinstance(fm, FailureMode):
+                    self.fm[name] = fm
 
-            # Load a FailureMode object
-            if isinstance(fm, FailureMode):
-                self.fm[name] = fm
+                # Create a FailureMode object
+                elif isinstance(fm, dict):
 
-            # Create a FailureMode object
-            elif isinstance(fm, dict):
-
-                # Check if any indicators have already been created an replace them in dict
-                self.fm[name] = FailureMode.load(fm)
+                    # Check if any indicators have already been created an replace them in dict
+                    self.fm[name] = FailureMode.load(fm)
+        except AttributeError:
+            print(
+                "%s - %s cannot be set from %s"
+                % (self.__class__.__name__, self.name, failure_modes)
+            )
 
     def link_indicators(self):
 

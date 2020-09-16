@@ -42,6 +42,12 @@ import pof.demo as demo
 from pof.config import FailureModeConfig as cf
 from pof.load import Load
 
+# TODO
+"""
+    - Use condition pf to change indicator 
+    - task indicator
+"""
+
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
