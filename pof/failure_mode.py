@@ -3,7 +3,13 @@
 Author: Gavin Treseder
 """
 
-# TODO make sure active is working
+
+# Change the system path is
+if __package__ is None or __package__ == "":
+    import sys
+    import os
+
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 # ************ Packages ********************
 import numpy as np
@@ -15,41 +21,23 @@ from matplotlib import pyplot as plt
 from random import random, seed
 from enum import Enum
 
-
 from tqdm import tqdm
 from lifelines import WeibullFitter
 
-if __package__ is None or __package__ == "":
-    from helper import fill_blanks, id_update
-    from indicator import Indicator, ConditionIndicator
-    from distribution import Distribution
-    from consequence import Consequence
-    from task import (
-        Task,
-        Inspection,
-        ConditionTask,
-        OnConditionRepair,
-        OnConditionReplacement,
-        ImmediateMaintenance,
-    )
-    import demo as demo
-    from config import FailureModeConfig as cf
-
-else:
-    from pof.helper import fill_blanks, id_update
-    from pof.indicator import Indicator, ConditionIndicator
-    from pof.distribution import Distribution
-    from pof.consequence import Consequence
-    from pof.task import (
-        Task,
-        Inspection,
-        ConditionTask,
-        OnConditionRepair,
-        OnConditionReplacement,
-        ImmediateMaintenance,
-    )
-    import pof.demo as demo
-    from pof.config import FailureModeConfig as cf
+from pof.helper import fill_blanks, id_update
+from pof.indicator import Indicator, ConditionIndicator
+from pof.distribution import Distribution
+from pof.consequence import Consequence
+from pof.task import (
+    Task,
+    Inspection,
+    ConditionTask,
+    OnConditionRepair,
+    OnConditionReplacement,
+    ImmediateMaintenance,
+)
+import pof.demo as demo
+from pof.config import FailureModeConfig as cf
 
 
 # TODO move t somewhere else
@@ -61,6 +49,9 @@ seed(1)
 
 
 class FailureMode:  # Maybe rename to failure mode
+
+    PF_CURVE = ["linear", "step"]
+
     def __init__(
         self,
         name="fm",
@@ -89,6 +80,8 @@ class FailureMode:  # Maybe rename to failure mode
         self.init_dist = None
         self.pof = None
         self.set_untreated(untreated)
+
+        # Indicators
 
         # Faiure Condition
         self.conditions = dict()
@@ -147,7 +140,7 @@ class FailureMode:  # Maybe rename to failure mode
         Takes a dictionary of conditions and sets the failure mode conditions
         """
         if input_condition is None:
-            if cf.FILL_NONE_WITH_DEfAULT == True:
+            if cf.FILL_NONE_WITH_DEFAULT == True:
                 # Create a default condition using failure mode parameters
                 print(
                     "Failure Mode (%s) - No condition provided - Default condition created"
@@ -171,17 +164,26 @@ class FailureMode:  # Maybe rename to failure mode
 
                 # Add a name to the distribution and set create the object
                 elif isinstance(condition, dict):
-                    if self.condition is not None:
+
+                    self.conditions[cond_name] = ConditionIndicator.from_dict(
+                        condition
+                    )  # Gav's fix
+                    # TODO Illyse - this doesn't work for all methods
+                    """
+                    if self.conditions is not None: 
                         for key, value in condition.items():
-                            self.condition[key] = value
+                            self.conditions[key] = value
 
                     else:
                         self.conditions[cond_name] = ConditionIndicator.from_dict(
                             condition
                         )
-
-            else:
-                print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+                    """
+                else:
+                    print(
+                        'ERROR: Cannot update "%s" condition from dict'
+                        % (self.__class__.__name__)
+                    )
 
     def set_untreated(self, untreated):
 
@@ -245,13 +247,19 @@ class FailureMode:  # Maybe rename to failure mode
 
     def link_indicator(self, indicator):
         """
-        Takes an indicator ojbect, or an iterable list of objects and linkes condition
+        Takes an indicator ojbect, or an iterable list of objects and links condition
         """
+
+        # Link all the indicators so they can be used for tasks
+        self.indicator = (
+            indicator  # TODO eventually replace all conditon with indicator
+        )
+
         # If it is an iterable, link them all
         if isinstance(indicator, collections.Iterable):
             for indicator in indicator.values():
                 if indicator.name in self.conditions:
-                    self.condition[indicator.name] = indicator
+                    self.conditions[indicator.name] = indicator
 
         # If there is only one update
         else:
@@ -296,7 +304,7 @@ class FailureMode:  # Maybe rename to failure mode
             gamma = max(0, self.untreated.gamma - self.pf_interval)
 
         # TODO add an adjustment to make sure the pfinterval results in a resaonable gamma
-        # self.pf_interval = self.pf_interval - max(self.gamma - self.pf_interval + self.pf_std * 3 )
+        # self.pf_interval = self.pf_interval - max(self.gamma - self.pf_interval + self.pf_std * 3)
 
         self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name="init")
 
@@ -353,7 +361,7 @@ class FailureMode:  # Maybe rename to failure mode
                     t_now,
                     timeline=self.timeline,
                     states=self.get_states(),
-                    conditions=self.conditions,
+                    conditions=self.indicators,
                     verbose=verbose,
                 )
 
@@ -402,7 +410,10 @@ class FailureMode:  # Maybe rename to failure mode
         # Get condtiion
         for condition_name, condition in self.conditions.items():
             timeline[condition_name] = condition.sim_timeline(
-                t_start=t_start - t_initiate, t_stop=t_end - t_initiate
+                t_start=t_start - t_initiate,
+                t_stop=t_end - t_initiate,
+                pf_interval=self.pf_interval,
+                pf_std=self.pf_std,
             )
 
         # Check failure
@@ -410,7 +421,10 @@ class FailureMode:  # Maybe rename to failure mode
         if not self.is_failed():
             for condition in self.conditions.values():
                 tl_f = condition.sim_failure_timeline(
-                    t_start=t_start - t_initiate, t_stop=t_end - t_initiate
+                    t_start=t_start - t_initiate,
+                    t_stop=t_end - t_initiate,
+                    pf_interval=self.pf_interval,
+                    pf_std=self.pf_std,
                 )
                 timeline["failure"] = (timeline["failure"]) | (tl_f)
 
@@ -471,7 +485,10 @@ class FailureMode:  # Maybe rename to failure mode
                         )
                     # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start]) #TODO this should be set earlier using a a better method
                     self.timeline[condition_name][t_start:] = condition.sim_timeline(
-                        t_start=t_start - t_initiate, t_stop=t_end - t_initiate
+                        t_start=t_start - t_initiate,
+                        t_stop=t_end - t_initiate,
+                        pf_interval=self.pf_interval,
+                        pf_std=self.pf_std,
                     )
 
             # Check for detection changes
@@ -974,5 +991,6 @@ class FailureMode:  # Maybe rename to failure mode
 
 
 if __name__ == "__main__":
+
     failure_mode = FailureMode()
     print("FailureMode - Ok")

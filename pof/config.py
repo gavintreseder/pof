@@ -1,14 +1,32 @@
 
 
+from dataclasses import dataclass
 
-class ComponentConfig:
+@dataclass
+class Config:
+
+    FILL_NONE_WITH_DEFAULT = True
+    FILL_FROM_PARENT = True
+
+
+@dataclass
+class ComponentConfig(Config):
+
     NotImplemented
 
-class FailureModeConfig:
+@dataclass
+class FailureModeConfig(Config):
+    """
+    Contains the config parameters for the FailureMode class
+    """
+
     FILL_NONE_WITH_DEFAULT = True
 
-class TaskConfig:
+@dataclass
+class TaskConfig(Config):
+
     NotImplemented
+
 
 """
 Create isntances of the objects so they can be accessed using:
