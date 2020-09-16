@@ -1,54 +1,46 @@
+from dataclasses import dataclass
+
 import numpy as np
 import scipy.stats as ss
 
+# Change the system path when this is run directly
+if __package__ is None or __package__ == "":
+    import sys
+    import os
 
-if __package__ is None or __package__ == '':
-    from helper import id_update
-else:
-    from pof.helper import id_update
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from pof.load import Load
+from pof.helper import id_update
+
+# TODO Extend so that it works for all the common distributions
 
 
-class Distribution:
-
-    # TODO Extend so that it works for all the common distributions
-
-    def __init__(self, alpha=100, beta=1, gamma=0, name='dist', *args, **kwargs):
+class Distribution(Load):
+    def __init__(self, alpha=100, beta=1, gamma=0, name="dist", *args, **kwargs):
 
         self.name = name
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
 
-        #self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-        #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-        #self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
-
-
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            fm = cls(**details)
-        except:
-            raise ValueError(
-                "Error loading %s data from dictionary" % (cls.__name__))
-        return fm
+        # self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+        # self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+        # self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
     def __str__(self):
 
-        out = "Alpha = %s, Beta = %s, Gamma = %s" % (
-            self.alpha, self.beta, self.gamma)
+        out = "Alpha = %s, Beta = %s, Gamma = %s" % (self.alpha, self.beta, self.gamma)
 
         return out
 
-    def load(self, name='dist', **kwargs):
+    def load(self, name="dist", **kwargs):
         self.last_name = name
-        self.alpha = kwargs.get('alpha')
-        self.beta = kwargs.get('beta')
-        self.gamma = kwargs.get('gamma')
+        self.alpha = kwargs.get("alpha")
+        self.beta = kwargs.get("beta")
+        self.gamma = kwargs.get("gamma")
 
         return self
-
-
 
     def params(self):
         params = dict(
@@ -71,10 +63,8 @@ class Distribution:
         return
 
     def conditional_f(self, x_min, x_max):
-        P_min = ss.weibull_min.sf(
-            x_min, self.beta, scale=self.alpha, loc=self.gamma)
-        P_max = ss.weibull_min.sf(
-            x_max, self.beta, scale=self.alpha, loc=self.gamma)
+        P_min = ss.weibull_min.sf(x_min, self.beta, scale=self.alpha, loc=self.gamma)
+        P_max = ss.weibull_min.sf(x_max, self.beta, scale=self.alpha, loc=self.gamma)
         P = 1 - P_max / P_min
 
         return P
@@ -83,10 +73,8 @@ class Distribution:
         self, x_min, x_max
     ):  # TODO Occa should this be total failure rate (cdf) or conditional failure
 
-        P_min = ss.weibull_min.sf(
-            x_min, self.beta, scale=self.alpha, loc=self.gamma)
-        P_max = ss.weibull_min.sf(
-            x_max, self.beta, scale=self.alpha, loc=self.gamma)
+        P_min = ss.weibull_min.sf(x_min, self.beta, scale=self.alpha, loc=self.gamma)
+        P_max = ss.weibull_min.sf(x_max, self.beta, scale=self.alpha, loc=self.gamma)
         P = P_max / P_min
 
         return P
@@ -105,12 +93,12 @@ class Distribution:
             # Return
             return 0
 
-    def get_dash_ids(self, prefix='', sep='-'):
+    def get_dash_ids(self, prefix="", sep="-"):
 
-        prefix = prefix + 'Distribution' + sep + self.name + sep
-        return [prefix + param for param in ['alpha', 'beta', 'gamma']]
+        prefix = prefix + "Distribution" + sep + self.name + sep
+        return [prefix + param for param in ["alpha", "beta", "gamma"]]
 
-    def update(self, dash_id, value, sep='-'):
+    def update(self, dash_id, value, sep="-"):
         """Updates a the distrubtion object using the dash componenet ID"""
 
         try:
@@ -118,7 +106,7 @@ class Distribution:
             id_update(self, id_str=dash_id, value=value, sep=sep)
 
         except:
-            print('Invalid ID')
+            print("Invalid ID")
 
     def load_demo(self, scenario=None):
 
@@ -137,7 +125,8 @@ class Distribution:
         t_interval = np.arange(t_start, t_end + 1, 1)
 
         P_interval = ss.weibull_min.sf(
-            t_interval, self.beta, scale=self.alpha, loc=self.gamma)
+            t_interval, self.beta, scale=self.alpha, loc=self.gamma
+        )
 
         P = P_interval / P_interval[0]
 
@@ -147,7 +136,8 @@ class Distribution:
         t_interval = np.arange(t_start, t_end + 1, 1)
 
         P_interval = ss.weibull_min.sf(
-            t_interval, self.beta, scale=self.alpha, loc=self.gamma)
+            t_interval, self.beta, scale=self.alpha, loc=self.gamma
+        )
 
         P = 1 - P_interval / P_interval[0]
 
@@ -160,10 +150,8 @@ class Distribution:
             if key in self.__dict__:
                 self.__dict__[key] = value
             else:
-                print("ERROR: Cannot update \"%s\" from dict" %
-                      (self.__class__.__name__))
+                print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
-    
     def get_value(self, key):
         """
         Takes a key as either a dictionary or a variable name and returns the value stored at that location.
@@ -215,16 +203,17 @@ class Distribution:
         """
 
         # Component
-        key = {"failure_mode":{"early_life":{"tasks":{'repair':"t_interval"}}}}
+        key = {"failure_mode": {"early_life": {"tasks": {"repair": "t_interval"}}}}
 
         # failure mode
-        key = {'untreated':'gamma'}
+        key = {"untreated": "gamma"}
 
-        #dist version
-        key = 'gamma'
+        # dist version
+        key = "gamma"
         value = NotImplemented
 
         return value
+
 
 """class Dataset:
 

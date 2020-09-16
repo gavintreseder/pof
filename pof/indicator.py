@@ -15,14 +15,22 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 
 from pof.load import Load
+from pof.config import IndicatorConfig as cf
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
 # TODO robust testing
+# TODO move threshold down into condition indciator so indicator is purely bool
 
 
-class IndicatorValid(Enum):
-    PF_CURVE = ["linear", "step", "ssf_calc", "dsf_calc"]
+PF_CURVES = ["linear", "step", "ssf_calc", "dsf_calc"]
+
+USE_DEFAULT = cf.USE_DEFAULT
+
+PF_CURVE = "step"
+PF_INTERVAL = 10
+PERFECT = False
+FAILED = True
 
 
 @dataclass
@@ -43,19 +51,28 @@ class Indicator(Load):
     """
 
     name: str = "indicator"
-    pf_curve: str = "step"
-    perfect: bool = False
-    failed: bool = True
-    decreasing: bool = field(init=False)
     pf_curve: str = None
-    _profile: dict = field(init=False)
-    _timeline: dict = field(init=False)
-    _timelines: dict = field(init=False)
+    pf_interval: int = None
+    pf_std: int = 0
+    perfect: bool = None
+    failed: bool = None
+    decreasing: bool = field(init=False)
+
+    threshold_detection: int = None
+    threshold_failure: int = None
+
+    _profile: Dict = field(init=False)
+    _timeline: Dict = field(init=False)
+    _timelines: Dict = field(init=False)
 
     def __post_init__(self):
 
-        self.set_limits()
+        self.set_limits(perfect=self.perfect, failed=self.failed)
+        self.set_threshold(
+            detection=self.threshold_detection, failure=self.threshold_failure
+        )
         self.set_pf_curve(pf_curve=self.pf_curve)
+        self.set_pf_interval(pf_interval=self.pf_interval)
         self.reset()
 
     def sim_indicator_timeline(self):
@@ -80,28 +97,80 @@ class Indicator(Load):
 
     def set_pf_curve(self, pf_curve):
 
-        if pf_curve in IndicatorValid.PF_CURVE.value:
+        if pf_curve in PF_CURVES:
             self.pf_curve = pf_curve
         else:
-            raise ValueError("pf_curve must be from: %s" % (IndicatorValid.PF_CURVE))
+            if USE_DEFAULT:
+                self.pf_curve = PF_CURVES
+            else:
+                raise ValueError("pf_curve must be from: %s" % (PF_CURVES))
+
+    def set_pf_interval(self, pf_interval=None):
+
+        # TODO add robust testing around pf_interval non negative numbers etc
+        if pf_interval is None:
+            if self.pf_interval is None:
+                if USE_DEFAULT:
+                    print(
+                        "%s - %s - pf_interval set to DEFAULT %s"
+                        % (self.__class__.__name__, self.name, PF_INTERVAL)
+                    )
+                    self.pf_interval = PF_INTERVAL
+                else:
+                    raise ValueError(
+                        "%s - %s - pf_interval required"
+                        % (self.__class__.__name__, self.name)
+                    )
+        else:
+            self.pf_interval = pf_interval
 
     def set_limits(self, perfect=None, failed=None):
         # TODO Add test make sure these tests work for bool and int
 
-        if perfect is not None:
+        if perfect is None:
+            if self.perfect is None:
+                if USE_DEFAULT:
+                    self.perfect = PERFECT
+                else:
+                    raise ValueError(
+                        "%s - %s - perfect value required"
+                        % (self.__class__.__name__, self.name)
+                    )
+        else:
             self.perfect = perfect
 
-        if failed is not None:
-            self.failed = failed
+        if failed is None:
+            if self.failed is None:
+                if USE_DEFAULT:
+                    self.failed = FAILED
+                else:
+                    raise ValueError(
+                        "%s - %s - failed value required"
+                        % (self.__class__.__name__, self.name)
+                    )
+        else:
+            self.perfect = perfect
 
         # Set perfect
         if self.perfect > self.failed:
             self.decreasing = True
-
         else:
             self.decreasing = False
 
         self.upper = abs(self.perfect - self.failed)
+
+    def set_threshold(self, detection=None, failure=None):
+        if detection is None:
+            if self.threshold_detection is None:
+                self.threshold_detection = self.perfect
+            else:
+                self.threshold_detection = detection
+
+        if failure is None:
+            if self.threshold_failure is None:
+                self.threshold_failure = self.failed
+            else:
+                self.threshold_failure = failure
 
     # ****************** Get methods **************
 
@@ -173,34 +242,15 @@ class Indicator(Load):
             # plt.plot(self.t_condition, self.current(), "rd")
 
 
+@dataclass
 class ConditionIndicator(Indicator):
-    def __init__(
-        self,
-        name="ConditionIndiator",
-        pf_curve="linear",
-        pf_interval=None,
-        pf_std=0,
-        threshold_detection=None,
-        threshold_failure=None,
-        perfect=100,
-        failed=0,
-        *args,
-        **kwargs
-    ):
-        super().__init__(
-            name=name, pf_curve=pf_curve, perfect=perfect, failed=failed, *args, *kwargs
-        )
-        # Condition Loss by causes
 
-        # Condition details
-        self.pf_interval = pf_interval  # Default pf_interval when a ConditionIndicator can't  have multiple pf_intervals
-        self.pf_std = pf_std
+    name: str = "ConditionIndicator"
+
+    def __post_init__(self):
+        super().__post_init__()
+
         self.pf_curve_params = NotImplemented  # TODO for complex condition types
-
-        # Detection and failure thresholds
-        self.threshold_detection = None
-        self.threshold_failure = None
-        self.set_threshold(detection=threshold_detection, failure=threshold_failure)
 
         # Current accumulation
         self._accumulated = dict()
@@ -410,17 +460,6 @@ class ConditionIndicator(Indicator):
                 max(0, condition - self.perfect), self.failed - self.perfect
             )
 
-    def set_threshold(self, detection=None, failure=None):
-        if detection is None:
-            self.threshold_detection = self.perfect
-        else:
-            self.threshold_detection = detection
-
-        if failure is None:
-            self.threshold_failure = self.failed
-        else:
-            self.threshold_failure = failure
-
     def reset(self):
 
         super().reset()
@@ -474,6 +513,9 @@ class PoleSafetyFactor(Indicator):
 
     failed: int = 1
     decreasing: int = True
+
+    def __post_init__(self):
+        super().__post_init__()
 
     def sim_failure_timeline(self):
         """
