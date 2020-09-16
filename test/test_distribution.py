@@ -6,8 +6,6 @@ import utils
 from pof.distribution import Distribution
 
 
-
-
 class TestDistribution(unittest.TestCase):
 
     def setUp(self):
@@ -95,21 +93,42 @@ class TestDistribution(unittest.TestCase):
                 self.assertEqual(
                     val, expected, msg="Error: dash_id %s" % (dash_id))
 
-
-
     def test_get_value(self):
+
+        d = Distribution(alpha=10, beta=3, gamma=1)
+
+        alpha = d.get_value(key="alpha")
+        self.assertEqual(alpha, 10)
+
+        alpha, beta, gamma = d.get_value(key=["alpha", "beta", "gamma"])
+        self.assertEqual(alpha, 10)
+        self.assertEqual(beta, 3)
+        self.assertEqual(gamma, 1)
 
         # Create an object with parameters
 
         # use get value to get the value
-        
-        #check those values are the same
 
-        NotImplemented
-    
-    def test_update(self)
+        # check those values are the same
 
-        #Create an ojbect
+        # NotImplemented
+
+    def test_update(self):
+
+        test_data = {"alpha": 5, "beta": 3, "gamma": 1}
+
+        d1 = Distribution.from_dict(test_data)
+
+        test_data["alpha"] = 10
+        test_data["beta"] = 5
+
+        d2 = Distribution.from_dict(test_data)
+
+        d1.update_from_dict({"alpha": 10, "beta": 5})
+
+        self.assertEqual(d1.__dict__, d2.__dict__)
+
+        # Create an ojbect
 
         # set a valuue
 
@@ -117,7 +136,8 @@ class TestDistribution(unittest.TestCase):
 
         # Check they match
 
-        NotImplemented
+        # NotImplemented
+
 
 if __name__ == '__main__':
     unittest.main()

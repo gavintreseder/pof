@@ -3,9 +3,9 @@ import scipy.stats as ss
 
 
 if __package__ is None or __package__ == '':
-    from helper import id_update
+    from helper import id_update, str_to_dict
 else:
-    from pof.helper import id_update
+    from pof.helper import id_update, str_to_dict
 
 
 class Distribution:
@@ -22,7 +22,6 @@ class Distribution:
         #self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         #self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
-
 
     @classmethod
     def from_dict(cls, details=None):
@@ -47,8 +46,6 @@ class Distribution:
         self.gamma = kwargs.get('gamma')
 
         return self
-
-
 
     def params(self):
         params = dict(
@@ -153,6 +150,28 @@ class Distribution:
 
         return P
 
+    def update(self, id_object, value=None):
+        """
+
+        """
+        if isinstance(id_object, str):
+            self.update_from_str(id_object, value, sep="-")
+
+        elif isinstance(id_object, dict):
+            self.update_from_dict(id_object)
+
+        else:
+            print("ERROR: Cannot update \"%s\" from string or dict" %
+                  (self.__class__.__name__))
+
+    def update_from_str(self, id_str, value, sep='-'):
+
+        id_str = id_str.split(self.name + sep, 1)[1]
+
+        dict_data = str_to_dict(id_str, value, sep)
+
+        self.update_from_dict(dict_data)
+
     def update_from_dict(self, dict_data):
 
         for key, value in dict_data.items():
@@ -163,68 +182,30 @@ class Distribution:
                 print("ERROR: Cannot update \"%s\" from dict" %
                       (self.__class__.__name__))
 
-    
     def get_value(self, key):
         """
-        Takes a key as either a dictionary or a variable name and returns the value stored at that location.
+        Takes a key as either a list or a variable name and returns the value stored at that location.
 
         Usage:
             dist = Distribution(alpha=10, beta = 3, gamma=1)
             dist.get_value(key="alpha")
             >>>> 10
         """
+        if isinstance(key, str):
+            value = self.__dict__[key]
 
-        """
-        Usage:
-            fm = FailureMode(name = "early_life",(alpha=10, beta = 3, gamma=1))
-
-            dist.get_value(key="name")
-            >>>> "early_life"
-
-            dist.get_value(key={"untreated":"alpha"})
-            >>>> "10
-
-            dist.get_value(key={"untreated":("alpha", "beta")})
-            >>>> (10, 3)
-
-        """
-
-        """
-        At the outside it'll have be dicts to give you the option to call multiple values long term
-        At the inside its probably going to be a list
-
-        ['untreated']['alpha']
-        ['untreated']['beta']
-
-        ['untreated']['alpha', 'beta]
-
-        """
-
-        """
-        key_1 = #get first leve key
-        key_2 =
-        key_3 =
-        """
-
-        """
-        for keys_1 in level_1_keys:
-            # Check if it is a value
-            
-            # Check if it is is an object with its own get_value method
-
-        """
-
-        # Component
-        key = {"failure_mode":{"early_life":{"tasks":{'repair':"t_interval"}}}}
-
-        # failure mode
-        key = {'untreated':'gamma'}
-
-        #dist version
-        key = 'gamma'
-        value = NotImplemented
+        elif isinstance(key, list):
+            if len(key) == 1:
+                value = self.__dict__[key[0]]
+            else:
+                value = ()
+                for k in key:
+                    value = value + (self.__dict__[k],)
+        else:
+            print("ERROR")
 
         return value
+
 
 """class Dataset:
 

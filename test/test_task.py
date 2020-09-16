@@ -6,6 +6,9 @@ from pof.task import Task, ConditionTask, Inspection
 from pof.condition import Condition
 import pof.demo as demo
 
+import fixtures
+
+
 class TestTask(unittest.TestCase):
 
     def test_imports_correctly(self):
@@ -29,9 +32,43 @@ class TestTask(unittest.TestCase):
 
     def test_update(self):
 
+        #test_data_1 = fixtures.on_condition_replacement_data
+        #test_data_2 = fixtures.on_condition_replacement_data
+        test_data_1 = dict(
+            cost=0,
+            triggers=dict(
+                condition=dict(
+                    fast_degrading=dict(lower=0, upper=90,),
+                    slow_degrading=dict(lower=0, upper=20,)
+                )
+            )
+        )
+        test_data_2 = dict(
+            cost=5000,
+            triggers=dict(
+                condition=dict(
+                    fast_degrading=dict(lower=0, upper=20,),
+                    slow_degrading=dict(lower=0, upper=20,)
+                )
+            )
+        )
         # Test all the options
-        
-        self.assertTrue(True)
+        t1 = Task.from_dict(test_data_1)
+        t2 = Task.from_dict(test_data_2)
+
+        t1.update_from_dict(
+            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}})
+
+        #self.assertEqual(t1.__dict__, t2.__dict__)
+        self.assertEqual(t1.cost, t2.cost)
+        self.assertEqual(t1.triggers, t2.triggers)
+
+    def test_update_error(self):
+
+        t = Task.from_dict()
+        update = {"alpha": 10, "beta": 5}
+
+        self.assertRaises(KeyError, t.update_from_dict, update)
 
 
 class TestConditionTask(unittest.TestCase):
@@ -56,8 +93,9 @@ class TestConditionTask(unittest.TestCase):
     def test_update(self):
 
         # Test all the options
-        
+
         self.assertTrue(True)
+
 
 class TestInspection(unittest.TestCase):
 
@@ -83,5 +121,5 @@ class TestInspection(unittest.TestCase):
     def test_update(self):
 
         # Test all the options
-        
+
         self.assertTrue(True)
