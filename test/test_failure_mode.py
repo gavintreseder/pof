@@ -1,10 +1,11 @@
 import unittest
 import unittest.mock
-import io
+import unittest.mock.patch
 
 import utils
 
 from pof.failure_mode import FailureMode
+import pof.config
 import pof.demo as demo
 
 
@@ -239,27 +240,6 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode()
 
     # ************ Test update methods *****************
-
-    def test_update(self):
-
-        expected_list = [True]
-
-        fm = FailureMode().set_demo()
-        dash_ids = fm.get_dash_ids()
-
-        for (
-            dash_id
-        ) in (
-            dash_ids
-        ):  # ['FailureMode-fm-tasks-Task-inspection-trigger-condition-wall_thickness-lower']: #dash_ids:
-
-            for expected in expected_list:
-
-                fm.update(dash_id, expected)
-
-                val = utils.get_dash_id_value(fm, dash_id)
-
-                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 
     # ************ Test link indicators ***************
 

@@ -167,6 +167,7 @@ class AssetModelLoader:
             ind_data = self._get_indicator_data(df_comp)
 
             comp_data = dict(
+                name=comp,
                 fm=fm_data,
                 indicator=ind_data,
             )
@@ -234,21 +235,6 @@ class AssetModelLoader:
         )
         df_cond["name"] = df_cond.index
 
-        if cf.FILL_FROM_PARENT == True:  # TODO move this to a 'validate method'
-            try:
-                fm_data = (
-                    df_fm["failure_model"]["distribution"]
-                    .dropna(how="all")
-                    .iloc[0]
-                    .to_dict()
-                )
-
-                for col in ["pf_interval", "pf_curve", "pf_std"]:
-                    df_cond[col].fillna(fm_data[col], inplace=True)
-            except IndexError:
-                print("No valid failure mode to update from")
-                pass
-
         cond_data = df_cond.to_dict("index")
 
         return cond_data
@@ -261,11 +247,7 @@ class AssetModelLoader:
         try:
             dist_data = df_dist.iloc[0].to_dict()
         except IndexError:
-            print("No distribution data present")
-            if cf.FILL_NONE_WITH_DEFAULT:
-                dist_data = df_dist.to_dict()
-            else:
-                raise ValueError("Distribution data is missing")
+            dist_data = df_dist.to_dict()
 
         return dist_data
 
@@ -335,3 +317,17 @@ class AssetModelLoader:
             tasks_data.update(task_data)
 
         return tasks_data
+
+        # ******************* Validate Methods ***********************
+
+        def validate(self):
+
+            # Check components have a failure mode
+
+            # Check all failure modes have a distribution
+
+            NotImplemented
+
+        def validate_component_has_failure_mode(self):
+
+            NotImplemented

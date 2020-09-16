@@ -4,10 +4,13 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Dict
+
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
-
 from tqdm import tqdm
 from lifelines import WeibullFitter
 
@@ -33,6 +36,7 @@ else:
 DEFAULT_ITERATIONS = 100
 
 
+@dataclass
 class Component:
     """
     Parameters:
@@ -41,35 +45,20 @@ class Component:
 
     """
 
-    def __init__(
-        self,
-        active=True,
-        name="comp",
-        indicator=dict(),
-        fm=dict(),
-        *args,
-        **kwargs,
-    ):
+    name: str = "comp"
+    active: bool = True
 
-        # Object parameters
-        self.active = active
+    _parent_id: str = NotImplemented
+    _children_id: str = NotImplemented
 
-        # Initial parameters
-        self.age = 0
-        self.age_last_insp = 0
+    indicator: Dict = None
+    fm: Dict = None
 
-        # Link to other componenets
-        self._parent_id = NotImplemented
-        self._children_id = NotImplemented
+    def __post_init__(self):
 
-        # Parameter
-        self.name = name  # TODO NotImplemented fully
-        self.indicator = dict()
-        self.set_indicator(indicator)
+        self.set_indicator(self.indicator)
 
-        # Failure Modes
-        self.fm = dict()
-        self.set_failure_mode(fm)
+        self.set_failure_mode(self.fm)
 
         # Link failure mode indicators to the component indicators
         self.link_indicators()
@@ -94,7 +83,7 @@ class Component:
     def load(cls, details=None):
         try:
             comp = cls.from_dict(details)
-        except:
+        except Exception:
             comp = cls()
             print("Error loading Component data")
         return comp
@@ -103,7 +92,7 @@ class Component:
     def from_dict(cls, details=None):
         try:
             comp = cls(**details)
-        except:
+        except Exception:
             comp = cls()
             print("Error loading Component data from dictionary")
         return comp
@@ -158,7 +147,7 @@ class Component:
             elif isinstance(fm, dict):
 
                 # Check if any indicators have already been created an replace them in dict
-                self.fm[name] = FailureMode().load(fm)
+                self.fm[name] = FailureMode.load(fm)
 
     def link_indicators(self):
 
@@ -572,7 +561,7 @@ class Component:
             )
 
         # Trial for indicator
-        #self.indicator["safety_factor"] = PoleSafetyFactor(component=self)
+        # self.indicator["safety_factor"] = PoleSafetyFactor(component=self)
         self.indicator["slow_degrading"] = ConditionIndicator.from_dict(
             demo.condition_data["slow_degrading"]
         )  # TODO fix this call

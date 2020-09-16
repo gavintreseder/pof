@@ -4,12 +4,17 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-import numpy as np
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Dict
+from enum import Enum
 import collections
+
+import numpy as np
 import scipy.stats as ss
 from matplotlib import pyplot as plt
-from enum import Enum
 
+from pof.load import Load
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
@@ -17,10 +22,11 @@ from enum import Enum
 
 
 class IndicatorValid(Enum):
-    PF_CURVE = ["linear", "step", "linear-legacy"]
+    PF_CURVE = ["linear", "step", "ssf_calc", "dsf_calc"]
 
 
-class Indicator:
+@dataclass
+class Indicator(Load):
 
     """
 
@@ -36,44 +42,21 @@ class Indicator:
 
     """
 
-    def __init__(
-        self, name="indicator", pf_curve="step", perfect=False, failed=True, **kwargs
-    ):
+    name: str = "indicator"
+    pf_curve: str = "step"
+    perfect: bool = False
+    failed: bool = True
+    decreasing: bool = field(init=False)
+    pf_curve: str = None
+    _profile: dict = field(init=False)
+    _timeline: dict = field(init=False)
+    _timelines: dict = field(init=False)
 
-        # TODO fix kwargs
+    def __post_init__(self):
 
-        self.name = name
-
-        # Indicator limits
-        self.perfect = None
-        self.failed = None
-        self.upper = None
-        self.decreasing = None
-        self.set_limits(perfect=perfect, failed=failed)
-
-        self.pf_curve = pf_curve
-
-        self.decreasing = None
-
-        self.t_ind = 0
-
-    @classmethod
-    def load(cls, details=None):
-        try:
-            ind = cls.from_dict(details)
-        except Exception:
-            ind = cls()
-            print("Error loading Indicator data")
-        return ind
-
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            ind = cls(**details)
-        except:
-            ind = cls()
-            print("Error loading Indicator data from dictionary")
-        return ind
+        self.set_limits()
+        self.set_pf_curve(pf_curve=self.pf_curve)
+        self.reset()
 
     def sim_indicator_timeline(self):
 
@@ -94,40 +77,62 @@ class Indicator:
         self._profile = dict()
         self._timeline = dict()
         self._timelines = dict()
-        NotImplemented
 
-    def set_limits(self, perfect, failed):
+    def set_pf_curve(self, pf_curve):
+
+        if pf_curve in IndicatorValid.PF_CURVE.value:
+            self.pf_curve = pf_curve
+        else:
+            raise ValueError("pf_curve must be from: %s" % (IndicatorValid.PF_CURVE))
+
+    def set_limits(self, perfect=None, failed=None):
         # TODO Add test make sure these tests work for bool and int
 
+        if perfect is not None:
+            self.perfect = perfect
+
+        if failed is not None:
+            self.failed = failed
+
         # Set perfect
-        if perfect > failed:
+        if self.perfect > self.failed:
             self.decreasing = True
 
         else:
             self.decreasing = False
 
-        self.perfect = perfect
-        self.failed = failed
         self.upper = abs(self.perfect - self.failed)
 
     # ****************** Get methods **************
 
-    def get_timeline(self, name=None):
+    def agg_timeline(self):
 
-        if name is None:
-            if self.decreasing:
-                timeline = self.perfect - (self.perfect - np.array(list(self._timeline.values()))).sum(
-                    axis=0
-                )
-                timeline[timeline > self.failed] = self.failed
-            else:
-                timeline = self.perfect + (np.array(list(self._timeline.values())) - self.perfect).sum(
-                    axis=0
-                )
-                timeline[timeline < self.failed] = self.failed
-            return timeline
+        if self.decreasing:
+            timeline = self.perfect - (
+                self.perfect - np.array(list(self._timeline.values()))
+            ).sum(axis=0)
+            timeline[timeline < self.failed] = self.failed
         else:
-            return self._timeline[name]
+            timeline = self.perfect + (
+                np.array(list(self._timeline.values())) - self.perfect
+            ).sum(axis=0)
+            timeline[timeline > self.failed] = self.failed
+        return timeline
+
+    def get_timeline(self, name=None):
+        """ Returns the timeline for a name if it is in the key or if no key is passed and None is not a key, it aggregates all timelines"""
+        try:
+            timeline = self._timeline[name]
+        except KeyError:
+            if name is None:
+                timeline = self.agg_timeline()
+            else:
+                raise KeyError(
+                    "Name - %s - is not in %s %s timeline"
+                    % (name, self.__class__.__name__, self.name)
+                )
+
+        return timeline
 
     #  ********************* Interface methods ***********************
 
@@ -173,7 +178,7 @@ class ConditionIndicator(Indicator):
         self,
         name="ConditionIndiator",
         pf_curve="linear",
-        pf_interval=10,
+        pf_interval=None,
         pf_std=0,
         threshold_detection=None,
         threshold_failure=None,
@@ -182,15 +187,15 @@ class ConditionIndicator(Indicator):
         *args,
         **kwargs
     ):
-        super().__init__(name=name, perfect=perfect, failed=failed, *args, *kwargs)
+        super().__init__(
+            name=name, pf_curve=pf_curve, perfect=perfect, failed=failed, *args, *kwargs
+        )
         # Condition Loss by causes
 
         # Condition details
-        self.pf_curve = pf_curve
-        self.pf_interval = pf_interval  # Default pf_interval when a ConditionIndicator can't have multiple pf_intervals
+        self.pf_interval = pf_interval  # Default pf_interval when a ConditionIndicator can't  have multiple pf_intervals
         self.pf_std = pf_std
         self.pf_curve_params = NotImplemented  # TODO for complex condition types
-        self.set_pf_curve(pf_curve)
 
         # Detection and failure thresholds
         self.threshold_detection = None
@@ -199,11 +204,6 @@ class ConditionIndicator(Indicator):
 
         # Current accumulation
         self._accumulated = dict()
-
-        # Profile and timeslines
-        self._profile = dict()
-        self._timeline = dict()
-        self._timelines = dict()
 
     # ********************** Timeline methods ******************************
 
@@ -229,7 +229,8 @@ class ConditionIndicator(Indicator):
         if pf_interval not in self._profile:
             self._set_profile(pf_interval=pf_interval, name=name)
 
-        self._timeline[name] = self._get_timeline(
+        # Get the timeline
+        self._timeline[name] = self._acc_timeline(
             t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
         )
 
@@ -238,9 +239,6 @@ class ConditionIndicator(Indicator):
     def _set_profile(
         self, perfect=None, failed=None, pf_interval=None, pf_std=None, name=None
     ):
-
-        if name is None:
-            name = self.name
 
         # TODO Illyse - add the other profile types
         # TODO maybe make this work using pf_interval and name so that it doesn't do as much recalcuting
@@ -282,9 +280,8 @@ class ConditionIndicator(Indicator):
 
         self._profile[pf_interval] = y
 
-    def _get_timeline(
-        self, t_start, t_stop=None, pf_interval=None, name=None
-    ):  # TODO this probably needs a delay?
+    def _acc_timeline(self, t_start=0, t_stop=None, pf_interval=None, name=None):
+        # TODO this probably needs a delay?
         """
         Returns the timeli
         """
@@ -301,26 +298,26 @@ class ConditionIndicator(Indicator):
             t_start = t_start - t_stop
             t_stop = 0
 
-        cp = self._profile[pf_interval][
+        profile = self._profile[pf_interval][
             max(0, min(t_start, t_max)) : min(t_stop, t_max) + 1
         ]
 
         # Adjust for the accumulated condition
         accumulated = self.get_accumulated(name=name)
         if accumulated > 0:
-            cp = cp - accumulated
-            cp[cp < self.failed] = self.failed
+            profile = profile - accumulated
+            profile[profile < self.failed] = self.failed
 
         # Fill the start with the current condtiion
         if t_start < 0:
-            cp = np.append(np.full(t_start * -1, cp[0]), cp)
+            profile = np.append(np.full(t_start * -1, profile[0]), profile)
 
         # Fill the end with the failed condition
-        n_after_failure = t_stop - t_start - len(cp) + 1
+        n_after_failure = t_stop - t_start - len(profile) + 1
         if n_after_failure > 0:
-            cp = np.append(cp, np.full(max(0, n_after_failure), self.failed))
+            profile = np.append(profile, np.full(max(0, n_after_failure), self.failed))
 
-        return cp
+        return profile
 
     def sim_failure_timeline(
         self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
@@ -329,7 +326,7 @@ class ConditionIndicator(Indicator):
         Return a sample failure schedule for the condition
         """
 
-        cp = self.sim_timeline(
+        profile = self.sim_timeline(
             t_stop=t_stop,
             t_start=t_start,
             pf_interval=pf_interval,
@@ -338,9 +335,9 @@ class ConditionIndicator(Indicator):
         )
 
         if self.decreasing == True:
-            tl_f = cp <= self.threshold_failure
+            tl_f = profile <= self.threshold_failure
         else:
-            tl_f = cp >= self.threshold_failure
+            tl_f = profile >= self.threshold_failure
 
         return tl_f
 
@@ -376,12 +373,15 @@ class ConditionIndicator(Indicator):
 
             # Get the accumulated condition for a single name
             if isinstance(name, str):
-                if name in self._accumulated:
-                    accumulated = self._accumulated[name]
+                accumulated = self._accumulated.get(name, 0) + self._accumulated.get(
+                    "permanent", 0
+                )
 
             # Get the accumulated condition for a list of names
             elif isinstance(name, collections.Iterable):
-                accumulated = sum([self._accumulated.get(key, 0) for key in name])
+                accumulated = sum(
+                    [self._accumulated.get(key, 0) for key in name]
+                ) + self._accumulated.get("permanent", 0)
             else:
                 raise TypeError("name should be a string or iterable")
 
@@ -390,9 +390,6 @@ class ConditionIndicator(Indicator):
     # ********************* Set Methods **********************
 
     def _set_accumulated(self, accumulated, name=None):
-
-        if name is None:
-            name = self.name
 
         # check accumulated will not exceed the maximum allowable condition
         current = self.get_accumulated()
@@ -404,9 +401,6 @@ class ConditionIndicator(Indicator):
     def set_condition(self, condition, name=None):
         # TODO consider impact of other impacts
 
-        if name is None:
-            name = self.name
-
         if self.decreasing:
             self._accumulated[name] = min(
                 max(0, self.perfect - condition), self.perfect - self.failed
@@ -415,13 +409,6 @@ class ConditionIndicator(Indicator):
             self._accumulated[name] = min(
                 max(0, condition - self.perfect), self.failed - self.perfect
             )
-
-    def set_pf_curve(self, pf_curve):
-
-        if pf_curve in IndicatorValid.PF_CURVE.value:
-            self.pf_curve = pf_curve
-        else:
-            raise ValueError("pf_curve must be from: %s" % (IndicatorValid.PF_CURVE))
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
@@ -482,13 +469,11 @@ class ConditionIndicator(Indicator):
         self._set_accumulated(name=name, accumulated=accumulated)
 
 
+@dataclass
 class PoleSafetyFactor(Indicator):
-    def __init__(self, failed=1, decreasing=True, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
 
-        # Condition detection and limits
-        self.decreasing = decreasing
-        self.threshold_failure = failed
+    failed: int = 1
+    decreasing: int = True
 
     def sim_failure_timeline(self):
         """

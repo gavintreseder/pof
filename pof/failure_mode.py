@@ -4,7 +4,7 @@ Author: Gavin Treseder
 """
 
 
-# Change the system path is
+# Change the system path when this is run directly
 if __package__ is None or __package__ == "":
     import sys
     import os
@@ -38,6 +38,7 @@ from pof.task import (
 )
 import pof.demo as demo
 from pof.config import FailureModeConfig as cf
+from pof.load import Load
 
 
 # TODO move t somewhere else
@@ -48,7 +49,7 @@ from pof.config import FailureModeConfig as cf
 seed(1)
 
 
-class FailureMode:  # Maybe rename to failure mode
+class FailureMode(Load):  # Maybe rename to failure mode
 
     PF_CURVE = ["linear", "step"]
 
@@ -108,27 +109,6 @@ class FailureMode:  # Maybe rename to failure mode
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-
-    # ************** Load Functions *****************
-
-    @classmethod
-    def load(cls, details=None):
-        try:
-            if isinstance(details, dict):
-                fm = cls.from_dict(details)
-            else:
-                fm = cls()
-        except:
-            raise ValueError("Error loading %s data" % (cls.__name__))
-        return fm
-
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            fm = cls(**details)
-        except:
-            raise ValueError("Error loading %s data from dictionary" % (cls.__name__))
-        return fm
 
     # ************** Set Functions *****************
 

@@ -3,11 +3,10 @@ import unittest
 import utils
 
 from pof.task import Task, ConditionTask, Inspection
-from pof.condition import Condition
 import pof.demo as demo
 
-class TestTask(unittest.TestCase):
 
+class TestTask(unittest.TestCase):
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -22,7 +21,7 @@ class TestTask(unittest.TestCase):
         self.assertIsNotNone(task)
 
     def test_load_valid_dict(self):
-        task = Task.load(demo.inspection_data['instant'])
+        task = Task.load(demo.inspection_data["instant"])
         self.assertIsNotNone(task)
 
     # **************** test_update ***********************
@@ -30,12 +29,11 @@ class TestTask(unittest.TestCase):
     def test_update(self):
 
         # Test all the options
-        
+
         self.assertTrue(True)
 
 
 class TestConditionTask(unittest.TestCase):
-
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -56,11 +54,11 @@ class TestConditionTask(unittest.TestCase):
     def test_update(self):
 
         # Test all the options
-        
+
         self.assertTrue(True)
 
-class TestInspection(unittest.TestCase):
 
+class TestInspection(unittest.TestCase):
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -75,7 +73,7 @@ class TestInspection(unittest.TestCase):
         self.assertIsNotNone(task)
 
     def test_load_valid_dict(self):
-        task = Inspection.load(demo.inspection_data['instant'])
+        task = Inspection.load(demo.inspection_data["instant"])
         self.assertIsNotNone(task)
 
     # **************** test_update ***********************
@@ -83,5 +81,5 @@ class TestInspection(unittest.TestCase):
     def test_update(self):
 
         # Test all the options
-        
+
         self.assertTrue(True)
