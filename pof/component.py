@@ -120,26 +120,42 @@ class Component(Load):
                 % (self.__class__.__name__, self.name, indicator_input)
             )
 
-    def set_failure_mode(self, failure_modes):
+    def set_failure_mode(self, fm_input):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
         try:
-            for name, fm in failure_modes.items():
+            # Load a FailureMode object directly
+            if isinstance(fm_input, FailureMode):
+                self.fm[fm_input.name] = fm_input
 
-                # Load a FailureMode object
-                if isinstance(fm, FailureMode):
-                    self.fm[name] = fm
+            # Load from dicts of FailureModes, 
+            elif isinstance(fm_input, dict):
 
-                # Create a FailureMode object
-                elif isinstance(fm, dict):
+                # Load all the failure modes in the dictionary
+                for name, fm in fm_input.items():
 
-                    # Check if any indicators have already been created an replace them in dict
-                    self.fm[name] = FailureMode.load(fm)
+                    # Is the dict item a FailureMode Object
+                    if isinstance(fm_input, FailureMode):
+                        self.fm[fm_input.name] = fm_input
+                    
+                    # Update with the update method if the FailureMode already exists
+                    elif name in self.fm:
+                        #TODO update method
+
+                    # Create a failure mode from the dictionary
+                    else: 
+                        self.fm[name] = FailureMode.load(fm)                        
+
+            else:
+                raise TypeError (
+                    "%s - %s - Invalid data type %s"
+                    % (self.__class__.__name__, self.name, fm_input)
+                )
         except AttributeError:
             print(
                 "%s - %s cannot be set from %s"
-                % (self.__class__.__name__, self.name, failure_modes)
+                % (self.__class__.__name__, self.name, fm_input)
             )
 
     def link_indicators(self):
