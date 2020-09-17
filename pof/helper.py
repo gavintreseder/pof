@@ -2,7 +2,7 @@ import collections
 import numpy as np
 
 
-def flatten(d, parent_key='', sep='_'):
+def flatten(d, parent_key="", sep="_"):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
@@ -19,15 +19,15 @@ def fill_blanks(row, t_start, t_end):
     time = np.linspace(t_start, t_end, n, dtype=int)
     cost = np.full(n, 0)
 
-    if row['time'].size:
-        cost[row['time']] = row['cost']
+    if row["time"].size:
+        cost[row["time"]] = row["cost"]
 
-    row['time'] = time
-    row['cost'] = cost
+    row["time"] = time
+    row["cost"] = cost
     return row
 
 
-def id_update(instance, id_str, value, sep='-', children=None):
+def id_update(instance, id_str, value, sep="-", children=None):
     """Updates an object using an id"""
 
     # Remove the class type and class name from the dash_id
@@ -60,10 +60,10 @@ def id_update(instance, id_str, value, sep='-', children=None):
         if var in instance.__dict__ and isinstance(instance.__dict__[var], children):
             instance.__dict__[var].update(id_str, value, sep)
         else:
-            print("Invalid id \"%s\" %s not in class" % (id_str, var))
+            print('Invalid id "%s" %s not in class' % (id_str, var))
 
 
-def str_to_dict(id_str, value, sep='-'):
+def str_to_dict(id_str, value, sep="-"):
 
     id_str = id_str.split(sep)
 
@@ -78,11 +78,11 @@ def str_to_dict(id_str, value, sep='-'):
 
 # is it in the class
 
-    # Attribute
-    # Child class
-    # Dict
-    # attribute
-    # class
+# Attribute
+# Child class
+# Dict
+# attribute
+# class
 
 # is it in a dict of that objects
 
@@ -91,5 +91,5 @@ def str_to_dict(id_str, value, sep='-'):
 
 
 # Is it in the class
-    # attribute
-    # Child class
+# attribute
+# Child class

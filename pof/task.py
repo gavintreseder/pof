@@ -449,39 +449,6 @@ class ConditionTask(Task):
 
         self.task_type = "immediate"
 
-    def set_default(self):
-
-        self.impacts = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    target=0.5,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-                external_diameter=dict(
-                    target=0.5,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-            ),
-            state=dict(
-                initiation=False,
-                detection=False,
-                failure=False,
-            ),
-        )
-
-        self.triggers = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    lower=50,
-                    upper=70,
-                )
-            ),
-            state=dict(),
-        )
-
-        return self
 
     def sim_timeline(self, t_end, timeline, t_start=0, t_delay=NotImplemented):
         """
@@ -549,36 +516,6 @@ class ConditionTask(Task):
 
         self.name = name # TODO Illyse, name is currenlty an error
         self.activty = "replace"
-
-    def set_default(self):
-
-        self.triggers = dict(
-            condition=dict(),
-            state=dict(
-                failure=True,
-            ),
-        )
-
-        self.impacts = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    target=1,
-                    method="restore",
-                    axis="condition",
-                ),
-            ),
-            state=dict(
-                initiation=False,
-                detection=False,
-                failure=False,
-            ),
-        )
-
-        self.component_reset = True
-
-        self.cost = 1000
-
-        return self
 
 
 class OnConditionRepair(ConditionTask):
@@ -782,18 +719,6 @@ class ImmediateMaintenance(ConditionTask):
 
         return self
 
-
-# completion
-
-
-# feedback
-# Describe what each section is
-# First page includes context, line of sight, performance and the gaps
-
-#
-
-# Talk through each row line by line
-# Context
 
 # TODO
 """

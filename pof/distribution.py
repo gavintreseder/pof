@@ -107,16 +107,6 @@ class Distribution(Load):
         prefix = prefix + "Distribution" + sep + self.name + sep
         return [prefix + param for param in ["alpha", "beta", "gamma"]]
 
-    def update(self, dash_id, value, sep="-"):
-        """Updates a the distrubtion object using the dash componenet ID"""
-
-        try:
-
-            id_update(self, id_str=dash_id, value=value, sep=sep)
-
-        except:
-            print("Invalid ID")
-
     def load_demo(self, scenario=None):
 
         if scenario is None:
@@ -188,9 +178,9 @@ class Distribution(Load):
         Takes a key as either a list or a variable name and returns the value stored at that location.
 
         Usage:
-            dist = Distribution(alpha=10, beta = 3, gamma=1)
-            dist.get_value(key="alpha")
-            >>>> 10
+            >>>> dist = Distribution(alpha=10, beta = 3, gamma=1)
+            >>>> dist.get_value(key="alpha")
+        10
         """
         if isinstance(key, str):
             value = self.__dict__[key]
