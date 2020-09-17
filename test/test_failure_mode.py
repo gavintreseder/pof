@@ -5,22 +5,31 @@ from unittest.mock import patch
 import utils
 
 from pof.failure_mode import FailureMode
-from pof.config import FailureModeConfig as cf
 import pof.demo as demo
 
 
 class TestFailureMode(unittest.TestCase):
-    def test_imports_correctly(self):
-        self.assertTrue(True)
+    def test_class_imports_correctly(self):
+        self.assertIsNotNone(FailureMode)
 
-    def test_instantiate(self):
-        try:
-            fm = FailureMode()
-            self.assertIsNotNone(fm)
-        except ValueError:
-            self.fail("ValueError returned")
-        except:
-            self.fail("Unknown error")
+    def test_class_instantiate(self):
+        failure_mode = FailureMode()
+        self.assertIsNotNone(failure_mode)
+
+    @patch("pof.failure_mode.cf.USE_DEFAULT", True)
+    def test_class_instantiate_no_input_use_default_true(self):
+        """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
+        failure_mode = FailureMode()
+        self.assertIsNotNone(failure_mode)
+
+    @patch("pof.failure_mode.cf.USE_DEFAULT", False)
+    def test_class_instantiate_no_input_use_default_false(self):
+        """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
+        with self.assertRaises(
+            ValueError,
+            msg="Indicator should not be able to link if there isn't an indicator by that name",
+        ):
+            failure_mode = FailureMode()
 
     def test_from_dict(self):
         try:

@@ -56,14 +56,8 @@ from pof.load import Load
 
 seed(1)
 
-USE_DEFAULT = cf.USE_DEFAULT
-
 PF_CURVES = ["linear", "step"]
 REQUIRED_STATES = ["initiation", "detection", "failure"]
-
-PF_INTERVAL = 100
-PF_CURVE = "step"
-STATES = dict(initiation=False, detection=False, failure=False)
 
 
 @dataclass
@@ -173,10 +167,10 @@ class FailureMode(Load):  # Maybe rename to failure mode
         if pf_curve in PF_CURVES:
             self.pf_curve = pf_curve
         else:
-            if USE_DEFAULT:
-                self.pf_curve = PF_CURVE
+            if cf.USE_DEFAULT:
+                self.pf_curve = cf.PF_CURVE
             else:
-                raise ValueError("pf_curve must be from: %s" % (PF_CURVES))
+                raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
 
     def set_untreated(self, untreated):
 
@@ -210,7 +204,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
         # TODO Update this method at the same time as set state
 
         if self.init_states is None:
-            if USE_DEFAULT:
+            if cf.USE_DEFAULT:
                 self.init_states = {state: False for state in REQUIRED_STATES}
             else:
                 raise ValueError("Failure Mode - %s - No states provided" % (self.name))
@@ -231,7 +225,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
         # Set a default value if none has been provided
         if self.states is None:
-            if USE_DEFAULT:
+            if cf.USE_DEFAULT:
                 self.states = {state: False for state in REQUIRED_STATES}
             else:
                 raise ValueError("Failure Mode - %s - No states provided" % (self.name))
