@@ -22,9 +22,8 @@ class Distribution(Load):
     """
     Usage:
 
-    >>>> Distribution()
-
-    <__main__.Distribution instance at 0x...>
+    >>> Distribution()
+    <...Distribution object at 0x...>
 
     """
 
