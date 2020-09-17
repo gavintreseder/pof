@@ -171,13 +171,36 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
 
     def set_untreated(self, untreated):
+        """
+        Takes a Distribution, a dictionary that represents a Distribution or an iterable of these objects and sets untreated to those objects
+        Usage
 
+
+        set_untreated(Distribution)
+        >>>> self.untreated == Distribution
+
+        set_untreated(dict(name = Distribution))
+        >>>> self.untreated == Distribution
+
+        set_untreated(dict("untreated" = dict("alpha" = 10)))
+        >>>> self.untreated.alpha == 10
+
+        set_untreated(dict_data(untreated))
+        >>>> self.untreated == Distribution
+        """
         # Load a distribution object
         if isinstance(untreated, Distribution):
             self.untreated = untreated
 
         # Add a name to the distribution and set create the object
         elif isinstance(untreated, dict):
+            # is it a dist in a dict
+
+            # does it already exist
+            # if untreat.name is in self.untreated:
+            # if yes update
+            # if no create
+
             # TODO Illyse, was this commented out block needed?
             """
             if self.untreated is not None:
