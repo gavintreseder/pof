@@ -181,7 +181,7 @@ class TestComponent(unittest.TestCase):
 
     # ************ Test update methods *****************
 
-    def test_update(self):
+    def test_update_from_str(self):
 
         expected_list = [True]
 
@@ -194,7 +194,7 @@ class TestComponent(unittest.TestCase):
 
                 comp.update(dash_id, expected)
 
-                val = utils.get_dash_id_value(comp, dash_id)
+                val = NotImplemented
 
                 self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 

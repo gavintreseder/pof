@@ -12,6 +12,11 @@ import scipy.stats as ss
 from scipy.linalg import circulant
 from random import random, seed
 
+if __package__ is None or __package__ == "":
+    import sys
+    import os
+
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.helper import flatten, str_to_dict
 from pof.condition import Condition

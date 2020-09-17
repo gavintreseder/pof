@@ -94,9 +94,9 @@ class AssetModelLoaderConfig(Config):
 
 config = Config()
 
-component = ComponentConfig()
-failure_mode = FailureModeConfig()
-indicator = IndicatorConfig()
+component_config = ComponentConfig()
+failure_mode_config = FailureModeConfig()
+indicator_config = IndicatorConfig()
 task_config = TaskConfig()
 distribution_config = DistributionConfig()
 

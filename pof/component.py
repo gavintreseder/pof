@@ -93,7 +93,7 @@ class Component(Load):
         for indicator in self.indicator.values():
 
             # Set perfect
-            x = 2
+
             # Set current
             NotImplemented
 
@@ -129,7 +129,7 @@ class Component(Load):
             if isinstance(fm_input, FailureMode):
                 self.fm[fm_input.name] = fm_input
 
-            # Load from dicts of FailureModes, 
+            # Load from dicts of FailureModes,
             elif isinstance(fm_input, dict):
 
                 # Load all the failure modes in the dictionary
@@ -138,17 +138,17 @@ class Component(Load):
                     # Is the dict item a FailureMode Object
                     if isinstance(fm_input, FailureMode):
                         self.fm[fm_input.name] = fm_input
-                    
+
                     # Update with the update method if the FailureMode already exists
                     elif name in self.fm:
-                        #TODO update method
-
+                        # TODO update method Illyse
+                        NotImplemented
                     # Create a failure mode from the dictionary
-                    else: 
-                        self.fm[name] = FailureMode.load(fm)                        
+                    else:
+                        self.fm[name] = FailureMode.load(fm)
 
             else:
-                raise TypeError (
+                raise TypeError(
                     "%s - %s - Invalid data type %s"
                     % (self.__class__.__name__, self.name, fm_input)
                 )

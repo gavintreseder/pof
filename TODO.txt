@@ -56,6 +56,8 @@
         # Monte carlo
         # Fleet
 
+# Consider adding doc tests
+
 fm2 = FailureMode.load(data['pole']['fm']['termites'])
 fm2.sim_timeline(200)
 fm2.plot_timeline()
