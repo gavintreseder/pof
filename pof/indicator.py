@@ -15,22 +15,12 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 
 from pof.load import Load
-from pof.config import IndicatorConfig as cf
+from pof.config import indicator_config as cf
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
 # TODO robust testing
 # TODO move threshold down into condition indciator so indicator is purely bool
-
-
-PF_CURVES = ["linear", "step", "ssf_calc", "dsf_calc"]
-
-USE_DEFAULT = cf.USE_DEFAULT
-
-PF_CURVE = "step"
-PF_INTERVAL = 10
-PERFECT = False
-FAILED = True
 
 
 @dataclass
@@ -97,25 +87,25 @@ class Indicator(Load):
 
     def set_pf_curve(self, pf_curve):
 
-        if pf_curve in PF_CURVES:
+        if pf_curve in cf.PF_CURVES:
             self.pf_curve = pf_curve
         else:
-            if USE_DEFAULT:
-                self.pf_curve = PF_CURVES
+            if cf.USE_DEFAULT:
+                self.pf_curve = cf.PF_CURVES
             else:
-                raise ValueError("pf_curve must be from: %s" % (PF_CURVES))
+                raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
 
     def set_pf_interval(self, pf_interval=None):
 
         # TODO add robust testing around pf_interval non negative numbers etc
         if pf_interval is None:
             if self.pf_interval is None:
-                if USE_DEFAULT:
+                if cf.USE_DEFAULT:
                     print(
                         "%s - %s - pf_interval set to DEFAULT %s"
-                        % (self.__class__.__name__, self.name, PF_INTERVAL)
+                        % (self.__class__.__name__, self.name, cf.PF_INTERVAL)
                     )
-                    self.pf_interval = PF_INTERVAL
+                    self.pf_interval = cf.PF_INTERVAL
                 else:
                     raise ValueError(
                         "%s - %s - pf_interval required"
@@ -129,8 +119,8 @@ class Indicator(Load):
 
         if perfect is None:
             if self.perfect is None:
-                if USE_DEFAULT:
-                    self.perfect = PERFECT
+                if cf.USE_DEFAULT:
+                    self.perfect = cf.PERFECT
                 else:
                     raise ValueError(
                         "%s - %s - perfect value required"
@@ -141,8 +131,8 @@ class Indicator(Load):
 
         if failed is None:
             if self.failed is None:
-                if USE_DEFAULT:
-                    self.failed = FAILED
+                if cf.USE_DEFAULT:
+                    self.failed = cf.FAILED
                 else:
                     raise ValueError(
                         "%s - %s - failed value required"
@@ -574,18 +564,21 @@ class ConditionIndicator(Indicator):
     def update_from_dict(self, keys):
 
         for key, value in keys.items():
-            
+
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                # is object then update
-                # is it a dict
-                self.__dict__[key] = value
+                if (
+                    False
+                ):  # TODO Illyse - the false is just to make the code run, not the acutally condition
+                    # is object then update
+                    # is it a dict
+                    self.__dict__[key] = value
                 else:
                     # Check for condition specific ones
                     raise KeyError(
-                        'ERROR: Cannot update "%s" from dict with key %s'
-                        % (self.__class__.__name__, key)
+                        'ERROR: Cannot update "%s" - %s from dict with key %s'
+                        % (self.__class__.__name__, self.name, key)
                     )
 
 

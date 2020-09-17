@@ -6,7 +6,7 @@
 
 import pandas as pd
 
-from pof.config import Config as cf
+from pof.config import asset_model_loader_config as cf
 
 
 class AssetModelLoader:

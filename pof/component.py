@@ -28,6 +28,7 @@ from pof.helper import fill_blanks, id_update
 from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
 from pof.load import Load
 import pof.demo as demo
+from pof.config import component_config as cf
 
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO create get, set, del and add methods
@@ -80,6 +81,7 @@ class Component(Load):
 
     def load_asset_data(self, *args, **kwargs):
 
+        # TODO Hook up data
         self.info = dict(
             pole_load=10,
             pole_strength=20,
