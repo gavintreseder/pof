@@ -306,6 +306,8 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 else:
                     if task["activity"] == "Inspection":
                         self.tasks[task["name"]] = Inspection.load(task)
+                    elif task["activity"] == "ConditionTask":
+                        self.tasks[task_name] = ConditionTask.load(task)
                     else:
                         print("Invalid Task Activity")
         else:

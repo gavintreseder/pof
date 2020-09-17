@@ -93,7 +93,7 @@ class Component(Load):
         for indicator in self.indicator.values():
 
             # Set perfect
-            x = 2
+
             # Set current
             NotImplemented
 
@@ -141,8 +141,8 @@ class Component(Load):
 
                     # Update with the update method if the FailureMode already exists
                     elif name in self.fm:
-                        # TODO update method
-                        
+                        # TODO update method Illyse
+                        NotImplemented
                     # Create a failure mode from the dictionary
                     else:
                         self.fm[name] = FailureMode.load(fm)

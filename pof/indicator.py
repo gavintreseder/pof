@@ -7,16 +7,21 @@
 from dataclasses import dataclass
 from dataclasses import field
 from typing import Dict
-from enum import Enum
 import collections
 
 import numpy as np
 import scipy.stats as ss
 from matplotlib import pyplot as plt
 
+if __package__ is None or __package__ == "":
+    import sys
+    import os
+
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from pof.load import Load
-import pof.config.indicator as cf
 from pof.helper import str_to_dict
+from pof.config import indicator_config as cf
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
@@ -183,11 +188,11 @@ class Indicator(Load):
         """ Returns the timeline for a name if it is in the key or if no key is passed and None is not a key, it aggregates all timelines"""
         try:
             timeline = self._timeline[name]
-        except KeyError:
+        except KeyError as name_not_in_timeline:
             if name is None:
                 timeline = self.agg_timeline()
             else:
-                raise KeyError(
+                raise KeyError from name_not_in_timeline(
                     "Name - %s - is not in %s %s timeline"
                     % (name, self.__class__.__name__, self.name)
                 )
