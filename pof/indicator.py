@@ -568,9 +568,10 @@ class ConditionIndicator(Indicator):
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                # is object then update
-                # is it a dict
-                self.__dict__[key] = value
+                if False #TODO Illyse - the false is just to make the code run, not the acutally condition 
+                    # is object then update
+                    # is it a dict
+                    self.__dict__[key] = value
                 else:
                     # Check for condition specific ones
                     raise KeyError(
