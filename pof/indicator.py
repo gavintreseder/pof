@@ -564,11 +564,13 @@ class ConditionIndicator(Indicator):
     def update_from_dict(self, keys):
 
         for key, value in keys.items():
-            
+
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                if False #TODO Illyse - the false is just to make the code run, not the acutally condition 
+                if (
+                    False
+                ):  # TODO Illyse - the false is just to make the code run, not the acutally condition
                     # is object then update
                     # is it a dict
                     self.__dict__[key] = value
