@@ -13,7 +13,7 @@ from scipy.linalg import circulant
 from random import random, seed
 
 
-from pof.helper import flatten
+from pof.helper import flatten, str_to_dict
 from pof.condition import Condition
 from pof.consequence import Consequence
 from pof.distribution import Distribution
@@ -268,7 +268,7 @@ class Task:
 
     # ********************* interface methods ******************
 
-    def update2(self, id_object, value=None):
+    def update(self, id_object, value=None):
         """"""
         if isinstance(id_object, str):
             self.update_from_str(id_object, value, sep="-")
@@ -285,81 +285,35 @@ class Task:
     def update_from_str(self, id_str, value, sep="-"):
 
         id_str = id_str.split(self.name + sep, 1)[1]
-        id_str = id_str.split(sep)
 
-        dict_data = {}
-        for key in reversed(id_str):
-            if dict_data == {}:
-                dict_data = {key: value}
-            else:
-                dict_data = {key: dict_data}
+        dict_data = str_to_dict(id_str, value, sep)
 
         self.update_from_dict(dict_data)
 
-    def dict_to_list(self, dict_data):
-        keys = []
-        for k, v in dict_data.items():
-            if isinstance(dict_data[k], dict):
-                keys.append(k)
-                keys.extend(self.dict_to_list(v))
-            else:
-                keys.append(v)
-                break
-        value = keys[-1]
-        keys = keys[:-1]
-        return keys, value
-
     def update_from_dict(self, dict_data):
 
-        keys, value = self.dict_to_list(dict_data)
+        for key, value in dict_data.items():
 
-        if keys[0] in ["active", "p_effective", "cost", "t_interval", "t_delay"]:
+            if key in ["active", "p_effective", "cost"]:
+                self.__dict__[key] = value
 
-            self.__dict__[keys[0]] = value
+            elif key in ["trigger", "impact"]:
 
-        elif keys[0] in ["trigger", "impact"]:
+                for key_1, value in dict_data[key].items():
 
-            if keys[1] == "condition":
+                    if key_1 == "condition":
+                        for key_2, value in dict_data[key][key_1].items():
+                            for key_3, value in dict_data[key][key_1][key_2].items():
+                                self.__dict__[key + "s"][key_1][key_2][key_3] = value
 
-                self.__dict__[keys[0] + "s"][keys[1]][keys[2]][keys[3]] = value
-
-            elif keys[1] == "state":
-
-                self.__dict__[keys[0] + "s"][keys[1]][keys[2]] = value
-
-        else:
-            raise KeyError(
-                'ERROR: Cannot update "%s" from dict with key %s'
-                % (self.__class__.__name__),
-                keys,
-            )
-
-    def update(self, dash_id, value, sep="-"):
-        """Update the task object to a value using a dash component id"""
-
-        try:
-
-            dash_id = dash_id.split(self.name + sep, 1)[1]
-
-            ids = dash_id.split(sep)
-
-            if ids[0] in ["active", "p_effective", "cost", "t_interval", "t_delay"]:
-
-                self.__dict__[ids[0]] = value
-
-            elif ids[0] in ["trigger", "impact"]:
-
-                if ids[1] == "condition":
-
-                    self.__dict__[ids[0] + "s"][ids[1]][ids[2]][ids[3]] = value
-
-                elif ids[1] == "state":
-
-                    self.__dict__[ids[0] + "s"][ids[1]][ids[2]] = value
+                    elif key_1 == "state":
+                        for key_2, value in dict_data[key][key_1].items():
+                            self.__dict__[key + "s"][key_1][key_2] = value
             else:
-                print("Invalid Dash ID - %s" % (dash_id))
-        except:
-            print("Dash ID Error- %s" % (dash_id))
+                raise KeyError(
+                    'ERROR: Cannot update "%s" from dict with key %s'
+                    % (self.__class__.__name__, key)
+                )
 
     def get_dash_ids(self, prefix="", sep="-"):
 
@@ -464,10 +418,14 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             super().update_from_dict(keys)
         except KeyError:
             # Check for scheudle specific ones
-            NotImplemented
-        except:
-            # Error message for scheduled tasks
-            NotImplemented
+            for key, value in keys.items():
+                if key in ["t_interval", "t_delay"]:
+                    self.__dict__[key] = value
+                else:
+                    raise KeyError(
+                        'ERROR: Cannot update "%s" from dict with key %s'
+                        % (self.__class__.__name__, keys)
+                    )
 
 
 class ConditionTask(Task):
@@ -568,10 +526,20 @@ class ConditionTask(Task):
 
         return tl_ct
 
+    def update_from_dict(self, keys):
 
-class ScheduledReplacement(ScheduledTask):  # Not implemented
-    def __init__(self, t_interval, t_delay=0, name="scheduled_replacement"):
-        super().__init__(t_interval=t_interval, t_delay=t_delay)
+        try:
+            super().update_from_dict(keys)
+        except KeyError:
+            # Check for condition specific ones
+            for key, value in keys.items():
+                if key in ["task_type"]:
+                    self.__dict__[key] = value
+                else:
+                    raise KeyError(
+                        'ERROR: Cannot update "%s" from dict with key %s'
+                        % (self.__class__.__name__, keys)
+                    )
 
         self.name = name
         self.activty = "replace"

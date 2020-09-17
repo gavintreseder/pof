@@ -7,6 +7,8 @@ import utils
 from pof.failure_mode import FailureMode
 import pof.demo as demo
 
+import fixtures
+
 
 class TestFailureMode(unittest.TestCase):
     def test_class_imports_correctly(self):
@@ -237,6 +239,27 @@ class TestFailureMode(unittest.TestCase):
 
     # ************ Test update methods *****************
 
+    def test_update2(self):
+
+        expected_list = [True]
+
+        fm = FailureMode().set_demo()
+        dash_ids = fm.get_dash_ids()
+
+        for (
+            dash_id
+        ) in (
+            dash_ids
+        ):  # ['FailureMode-fm-tasks-Task-inspection-trigger-condition-wall_thickness-lower']: #dash_ids:
+
+            for expected in expected_list:
+
+                fm.update(dash_id, expected)
+
+                val = utils.get_dash_id_value(fm, dash_id)
+
+                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
+
     # ************ Test link indicators ***************
 
     # TODO change to use set methods
@@ -296,6 +319,22 @@ class TestFailureMode(unittest.TestCase):
     # ************ Test reset methods *****************
 
     # Change all condition, state and task count. Check values change or don't change for each of them
+
+    def test_update(self):
+
+        test_data_1_fix = fixtures.failure_mode_data["early_life"]
+        test_data_2_fix = fixtures.failure_mode_data["random"]
+
+        # Test all the options
+        fm1 = FailureMode.from_dict(test_data_1_fix)
+        fm2 = FailureMode.from_dict(test_data_2_fix)
+
+        fm1.update_from_dict(test_data_2_fix)
+
+        # self.assertEqual(t1.__dict__, t2.__dict__)
+        self.assertEqual(fm1.name, fm2.name)
+        self.assertEqual(fm1.untreated.alpha, fm2.untreated.alpha)
+        self.assertEqual(fm1.conditions["perfect"], fm2.conditions["perfect"])
 
 
 if __name__ == "__main__":

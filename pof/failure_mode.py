@@ -26,7 +26,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from pof.helper import fill_blanks, id_update
+from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
 from pof.distribution import Distribution
 from pof.consequence import Consequence
@@ -183,9 +183,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
             # TODO Illyse, was this commented out block needed?
             """
             if self.untreated is not None:
-                for key, value in untreated.items():
-                    self.untreated[key] = value
-
+                self.untreated.update_from_dict(untreated)
             else:
                 untreated["name"] = "untreated"
                 self.untreated = Distribution.from_dict(untreated)
@@ -866,54 +864,101 @@ class FailureMode(Load):  # Maybe rename to failure mode
     def update_from_str(self, id_str, value, sep="-"):
 
         id_str = id_str.split(self.name + sep, 1)[1]
-        id_str = id_str.split(sep)
 
-        dict_data = {}
-        for key in reversed(id_str):
-            if dict_data == {}:
-                dict_data = {key: value}
-            else:
-                dict_data = {key: dict_data}
+        dict_data = str_to_dict(id_str, value, sep)
 
         self.update_from_dict(dict_data)
 
-    def dict_to_list(self, dict_data):
-        keys = []
-        for k, v in dict_data.items():
-            if isinstance(dict_data[k], dict):
-                keys.append(k)
-                keys.extend(self.dict_to_list(v))
-            else:
-                keys.append(v)
-                break
-        value = keys[-1]
-        keys = keys[:-1]
-        return keys, value
-
     def update_from_dict(self, dict_data):
 
-        keys, value = self.dict_to_list(dict_data)
+        for key, value in dict_data.items():
 
+            if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
+                self.__dict__[key] = value
+
+            elif key == "untreated":
+                self.set_untreated(dict_data[key])
+
+            elif key == "conditions":
+                self.set_conditions(dict_data[key])
+
+            elif key == "consequence":
+                self.set_consequence(dict_data[key])
+
+            elif key == "states":
+                self.set_states(dict_data[key])
+
+            elif key == "tasks":
+                self.set_tasks(dict_data[key])
+
+            else:
+                print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+
+    def get_value(self, key):
+        """
+        Takes a key as either a dictionary or a variable name and returns the value stored at that location.
+
+        Usage:
+            fm = FailureMode(name = "early_life",(alpha=10, beta = 3, gamma=1))
+
+            dist.get_value(key="name")
+            >>>> "early_life"
+
+            dist.get_value(key={"untreated":"alpha"})
+            >>>> "10
         if keys[0] in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
             self.__dict__[keys[0]] = value
 
-        elif keys[0] == "untreated":
-            self.set_untreated(dict_data[keys[0]])
+            dist.get_value(key={"untreated":("alpha", "beta")})
+            >>>> (10, 3)
 
-        elif keys[0] == "condition":
-            self.set_conditions(dict_data[keys[0]])
+        """
 
-        elif keys[0] == "consequence":
-            self.set_consequence(dict_data[keys[0]])
+        """
+        At the outside it'll have be dicts to give you the option to call multiple values long term
+        At the inside its probably going to be a list
 
-        elif keys[0] == "state":
-            self.set_states(dict_data[keys[0]])
+        ['untreated']['alpha']
+        ['untreated']['beta']
 
-        elif keys[0] == "task":
-            self.set_tasks(dict_data[keys[0]])
+        ['untreated']['alpha', 'beta]
 
+        """
+
+        """
+        key_1 = #get first leve key
+        key_2 =
+        key_3 =
+        """
+
+        """
+        for keys_1 in level_1_keys:
+            # Check if it is a value
+            
+            # Check if it is is an object with its own get_value method
+
+        """
+
+        # Component
+        key = {"failure_mode": {"early_life": {"tasks": {"repair": "t_interval"}}}}
+
+        # failure mode
+        key = {"untreated": "gamma"}
+
+        if isinstance(key, str):
+            value = self.__dict__[key]
+
+        elif isinstance(key, list):
+            if len(key) == 1:
+                value = self.__dict__[key[0]]
+            else:
+                value = ()
+                for k in key:
+                    value = value + (self.__dict__[k],)
         else:
             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+
+        return value
 
     def update(self, id_str, value, sep="-"):
         """Updates a the failure mode object using the dash componenet ID"""

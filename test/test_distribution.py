@@ -1,4 +1,3 @@
-
 import unittest
 import scipy.stats as ss
 
@@ -6,10 +5,7 @@ import utils
 from pof.distribution import Distribution
 
 
-
-
 class TestDistribution(unittest.TestCase):
-
     def setUp(self):
         self.alpha = 50
         self.beta = 1.5
@@ -38,14 +34,12 @@ class TestDistribution(unittest.TestCase):
         p_1 = dist.csf(0, 0)
         p_2 = dist.csf(50, 100)
 
-        p_start = ss.weibull_min.sf(
-            50, dist.beta, scale=dist.alpha, loc=dist.gamma)
-        p_end = ss.weibull_min.sf(
-            100, dist.beta, scale=dist.alpha, loc=dist.gamma)
+        p_start = ss.weibull_min.sf(50, dist.beta, scale=dist.alpha, loc=dist.gamma)
+        p_end = ss.weibull_min.sf(100, dist.beta, scale=dist.alpha, loc=dist.gamma)
 
         self.assertEqual(p_1[0], 1)
         self.assertEqual(p_2[0], 1)
-        self.assertEqual(p_2[-1], p_end/p_start)
+        self.assertEqual(p_2[-1], p_end / p_start)
 
     def test_cff_length(self):
 
@@ -64,14 +58,12 @@ class TestDistribution(unittest.TestCase):
         p_1 = dist.cff(0, 0)
         p_2 = dist.cff(50, 100)
 
-        p_start = ss.weibull_min.sf(
-            50, dist.beta, scale=dist.alpha, loc=dist.gamma)
-        p_end = ss.weibull_min.sf(
-            100, dist.beta, scale=dist.alpha, loc=dist.gamma)
+        p_start = ss.weibull_min.sf(50, dist.beta, scale=dist.alpha, loc=dist.gamma)
+        p_end = ss.weibull_min.sf(100, dist.beta, scale=dist.alpha, loc=dist.gamma)
 
         self.assertEqual(p_1[0], 0)
         self.assertEqual(p_2[0], 0)
-        self.assertEqual(p_2[-1], 1 - p_end/p_start)
+        self.assertEqual(p_2[-1], 1 - p_end / p_start)
 
         # Check the boundary cases
 
@@ -79,7 +71,7 @@ class TestDistribution(unittest.TestCase):
 
     def test_update(self):
 
-        expected_list = [True, False, 10, 'abc']
+        expected_list = [True, False, 10, "abc"]
 
         dist = Distribution(alpha=50, beta=1.5, gamma=10)
         dash_ids = dist.get_dash_ids()
@@ -92,24 +84,42 @@ class TestDistribution(unittest.TestCase):
 
                 val = utils.get_dash_id_value(dist, dash_id)
 
-                self.assertEqual(
-                    val, expected, msg="Error: dash_id %s" % (dash_id))
-
-
+                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 
     def test_get_value(self):
+
+        d = Distribution(alpha=10, beta=3, gamma=1)
+
+        alpha = d.get_value(key="alpha")
+        self.assertEqual(alpha, 10)
+
+        alpha, beta, gamma = d.get_value(key=["alpha", "beta", "gamma"])
+        self.assertEqual(alpha, 10)
+        self.assertEqual(beta, 3)
+        self.assertEqual(gamma, 1)
 
         # Create an object with parameters
 
         # use get value to get the value
-        
-        #check those values are the same
 
         NotImplemented
-    
+
     def test_update(self):
 
-        #Create an ojbect
+        test_data = {"alpha": 5, "beta": 3, "gamma": 1}
+
+        d1 = Distribution.from_dict(test_data)
+
+        test_data["alpha"] = 10
+        test_data["beta"] = 5
+
+        d2 = Distribution.from_dict(test_data)
+
+        d1.update_from_dict({"alpha": 10, "beta": 5})
+
+        self.assertEqual(d1.__dict__, d2.__dict__)
+
+        # Create an ojbect
 
         # set a valuue
 
@@ -117,7 +127,8 @@ class TestDistribution(unittest.TestCase):
 
         # Check they match
 
-        NotImplemented
+        # NotImplemented
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

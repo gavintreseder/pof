@@ -1,11 +1,14 @@
 import unittest
 from unittest.mock import Mock
 import numpy as np
+import copy
 
 import utils
 
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
+
+import fixtures
 
 
 cid = dict(
@@ -151,6 +154,7 @@ class TestConditionIndicator(unittest.TestCase):
             )
 
     # *********** Test the condition limits ******************
+
     def test_condition_starts_zero(self):
         cond = ConditionIndicator(
             perfect=0, failed=100, pf_curve="linear", pf_interval=10
@@ -636,6 +640,31 @@ class TestConditionIndicator(unittest.TestCase):
 
     def test_accumulate_time(self):
         self.assertEqual(False, False)
+
+    def test_update(self):
+
+        test_data_1 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
+        test_data_1["name"] = "FD"
+        test_data_1["perfect"] = 99
+        test_data_1["pf_std"] = 0.25
+        test_data_2 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
+
+        c1 = ConditionIndicator.from_dict(test_data_1)
+        c2 = ConditionIndicator.from_dict(test_data_2)
+
+        c1.update_from_dict({"name": "fast_degrading", "perfect": 100, "pf_std": 0.5})
+
+        # self.assertEqual(c1.__dict__, c2.__dict__)
+        self.assertEqual(c1.name, c2.name)
+        self.assertEqual(c1.perfect, c2.perfect)
+        self.assertEqual(c1.pf_std, c2.pf_std)
+
+    def test_update_error(self):
+
+        c = ConditionIndicator.from_dict()
+        update = {"alpha": 10, "beta": 5}
+
+        self.assertRaises(KeyError, c.update_from_dict, update)
 
 
 if __name__ == "__main__":
