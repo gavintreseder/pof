@@ -43,6 +43,10 @@ class Component(Load):
 
     Methods:
 
+
+    Usage:
+    
+
     """
 
     name: str = "comp"
@@ -593,4 +597,8 @@ class Component(Load):
 
 if __name__ == "__main__":
     component = Component()
+    component
     print("Component - Ok")
+
+    """import doctest
+    doctest.testmod()"""

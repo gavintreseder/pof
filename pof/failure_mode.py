@@ -1054,6 +1054,10 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
 
 if __name__ == "__main__":
+    
+    cf.USE_DEFAULT = True
 
     failure_mode = FailureMode()
+    failure_mode
+
     print("FailureMode - Ok")

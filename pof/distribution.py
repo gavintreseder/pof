@@ -18,6 +18,16 @@ from pof.config import distribution_config as cf
 
 
 class Distribution(Load):
+
+    """
+    Usage:
+
+    >>>> Distribution()
+
+    <__main__.Distribution instance at 0x...>
+
+    """
+
     def __init__(self, alpha=100, beta=1, gamma=0, name="dist", *args, **kwargs):
 
         self.name = name
@@ -241,7 +251,7 @@ class Demo:
     fast_aging = Distribution(Dataset.fast_aging)"""
 
 if __name__ == "__main__":
+    import doctest
 
-    distribution = Distribution()
-
+    doctest.testmod()
     print("Distribution - Ok")
