@@ -141,20 +141,18 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 # Add a name to the distribution and set create the object
                 elif isinstance(condition, dict):
 
-                    self.conditions[cond_name] = ConditionIndicator.from_dict(
-                        condition
-                    )  # Gav's fix
-                    # TODO Illyse - this doesn't work for all methods
-                    """
-                    if self.conditions is not None: 
-                        for key, value in condition.items():
-                            self.conditions[key] = value
+                    if self.conditions is not None:
+                        if isinstance(self.conditions[cond_name], Indicator):
+                            self.conditions[cond_name].update_from_dict(condition)
+                        else:
+                            for key, value in condition.items():
+                                self.conditions[key] = value
 
                     else:
                         self.conditions[cond_name] = ConditionIndicator.from_dict(
                             condition
                         )
-                    """
+
                 else:
                     print(
                         'ERROR: Cannot update "%s" condition from dict'
@@ -173,13 +171,36 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
 
     def set_untreated(self, untreated):
+        """
+        Takes a Distribution, a dictionary that represents a Distribution or an iterable of these objects and sets untreated to those objects
+        Usage
 
+
+        set_untreated(Distribution)
+        >>>> self.untreated == Distribution
+
+        set_untreated(dict(name = Distribution))
+        >>>> self.untreated == Distribution
+
+        set_untreated(dict("untreated" = dict("alpha" = 10)))
+        >>>> self.untreated.alpha == 10
+
+        set_untreated(dict_data(untreated))
+        >>>> self.untreated == Distribution
+        """
         # Load a distribution object
         if isinstance(untreated, Distribution):
             self.untreated = untreated
 
         # Add a name to the distribution and set create the object
         elif isinstance(untreated, dict):
+            # is it a dist in a dict
+
+            # does it already exist
+            # if untreat.name is in self.untreated:
+            # if yes update
+            # if no create
+
             # TODO Illyse, was this commented out block needed?
             """
             if self.untreated is not None:
@@ -255,6 +276,42 @@ class FailureMode(Load):  # Maybe rename to failure mode
                     print("Invalid Task Activity")
             else:
                 print("Invalid Task")
+
+    def set_tasks2(self, tasks):
+        """
+        Takes a dictionary of tasks and sets the failure mode tasks
+        """
+        # TODO Gav/Illyse: unsure if line 286-289 is needed if we know we will (always?) get a dict of tasks. I think logic is right otherwise
+
+        # Check if Task
+        if isinstance(tasks, Task):
+            self.tasks[tasks.name] = tasks
+
+        # Check if Dictionary
+        elif isinstance(tasks, dict):
+            # Iterate through Dictionary
+            for task_name, task in tasks.items():
+                # is it a Task
+                if isinstance(task, Task):
+                    self.tasks[task_name] = task
+                # does it exist: yes, update
+                elif task_name in self.tasks:
+                    # update method
+                    self.tasks[
+                        task_name
+                    ] = Task()  # TODO Illyse: Check if this is right
+                    self.tasks[task_name].update_from_dict(task)
+
+                # does it exist: no, create from dictionary
+                else:
+                    if task["activity"] == "Inspection":
+                        self.tasks[task["name"]] = Inspection.load(task)
+                    elif task["activity"] == "ConditionTask":
+                        self.tasks[task_name] = ConditionTask.load(task)
+                    else:
+                        print("Invalid Task Activity")
+        else:
+            print("Invalid Task")
 
     def link_indicator(self, indicator):
         """
@@ -847,7 +904,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
         plt.show()
 
-    def update2(self, id_object, value=None):
+    def update(self, id_object, value=None):
         """"""
         if isinstance(id_object, str):
             self.update_from_str(id_object, value, sep="-")
@@ -959,57 +1016,6 @@ class FailureMode(Load):  # Maybe rename to failure mode
             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
         return value
-
-    def update(self, id_str, value, sep="-"):
-        """Updates a the failure mode object using the dash componenet ID"""
-
-        try:
-
-            # Remove the class type and class name from the dash_id
-            id_str = id_str.split(self.name + sep, 1)[1]
-            var = id_str.split(sep)[0]
-
-            # Check if the variable is an attribute of the class
-            if var in self.__dict__:
-
-                # Check if the variable is a dictionary
-                if isinstance(self.__dict__[var], dict):
-
-                    var_2 = id_str.split(sep)[1]
-
-                    # Check if the variable is a class with its own update methods
-                    if var_2 in ["Condition", "Task", "Distribution"]:
-                        var_3 = id_str.split(sep)[2]
-                        self.__dict__[var][var_3].update(id_str, value, sep)
-
-                        self.set_init_dist()  # TODO Ghetto fix
-                        for condition in self.conditions.values():  # TODO Ghetto fix
-                            condition.pf_interval = value  # TODO Ghetto fix
-                    else:
-                        self.__dict__[var][var_2] = value
-                else:
-                    self.__dict__[var] = value
-                    if var == "pf_interval":  # TODO Ghetto fix
-                        self.set_init_dist()  # TODO Ghetto fix
-                        for condition in self.conditions.values():  # TODO Ghetto fix
-                            condition.pf_interval = value  # TODO Ghetto fix
-
-            # Check if the variable is a class instance
-            else:
-
-                var = id_str.split(sep)[1]
-
-                if var in self.__dict__ and isinstance(
-                    self.__dict__[var], (Indicator, Distribution, Task)
-                ):
-                    self.__dict__[var].update(id_str, value, sep)
-                    if var == "untreated":
-                        self.set_init_dist()  # TODO Ghetto fix
-                else:
-                    print('Invalid id "%s" %s not in class' % (id_str, var))
-
-        except:
-            print("Invalid ID")
 
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""

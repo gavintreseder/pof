@@ -20,6 +20,7 @@ if __package__ is None or __package__ == "":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.load import Load
+from pof.helper import str_to_dict
 from pof.config import indicator_config as cf
 from pof.helper import str_to_dict
 

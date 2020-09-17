@@ -151,7 +151,8 @@ class Distribution(Load):
 
         return P
 
-    def update(self, id_object, value=None):
+    # TODO Illyse: change update name
+    def update2(self, id_object, value=None):
         """"""
         if isinstance(id_object, str):
             self.update_from_str(id_object, value, sep="-")
