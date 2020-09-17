@@ -277,6 +277,40 @@ class FailureMode(Load):  # Maybe rename to failure mode
             else:
                 print("Invalid Task")
 
+    def set_tasks2(self, tasks):
+        """
+        Takes a dictionary of tasks and sets the failure mode tasks
+        """
+        # TODO Gav/Illyse: unsure if line 286-289 is needed if we know we will (always?) get a dict of tasks. I think logic is right otherwise
+
+        # Check if Task
+        if isinstance(tasks, Task):
+            self.tasks[tasks.name] = tasks
+
+        # Check if Dictionary
+        elif isinstance(tasks, dict):
+            # Iterate through Dictionary
+            for task_name, task in tasks.items():
+                # is it a Task
+                if isinstance(task, Task):
+                    self.tasks[task_name] = task
+                # does it exist: yes, update
+                elif task_name in self.tasks:
+                    # update method
+                    self.tasks[
+                        task_name
+                    ] = Task()  # TODO Illyse: Check if this is right
+                    self.tasks[task_name].update_from_dict(task)
+
+                # does it exist: no, create from dictionary
+                else:
+                    if task["activity"] == "Inspection":
+                        self.tasks[task["name"]] = Inspection.load(task)
+                    else:
+                        print("Invalid Task Activity")
+        else:
+            print("Invalid Task")
+
     def link_indicator(self, indicator):
         """
         Takes an indicator ojbect, or an iterable list of objects and links condition

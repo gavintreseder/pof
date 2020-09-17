@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 
 from pof.load import Load
 import pof.config.indicator as cf
+from pof.helper import str_to_dict
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
