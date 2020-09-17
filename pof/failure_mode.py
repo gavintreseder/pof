@@ -39,7 +39,7 @@ from pof.task import (
     ImmediateMaintenance,
 )
 import pof.demo as demo
-from pof.config import FailureModeConfig as cf
+from pof.config import failure_mode_config as cf
 from pof.load import Load
 
 # TODO

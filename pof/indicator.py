@@ -15,7 +15,7 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 
 from pof.load import Load
-from pof.config import IndicatorConfig as cf
+from pof.config import indicator_config as cf
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
@@ -578,7 +578,7 @@ class ConditionIndicator(Indicator):
                     # Check for condition specific ones
                     raise KeyError(
                         'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.__name__, key)
+                        % (self.__class__.__name__, self.name, key)
                     )
 
 

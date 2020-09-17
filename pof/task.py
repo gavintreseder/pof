@@ -18,6 +18,7 @@ from pof.condition import Condition
 from pof.consequence import Consequence
 from pof.distribution import Distribution
 import pof.demo as demo
+from pof.config import task_config as config
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -541,7 +542,7 @@ class ConditionTask(Task):
                         % (self.__class__.__name__, keys)
                     )
 
-        self.name = name
+        self.name = name # TODO Illyse, name is currenlty an error
         self.activty = "replace"
 
     def set_default(self):
