@@ -37,7 +37,7 @@ class FailureModeConfig(Config):
     FILL_NONE_WITH_DEFAULT: bool = True
 
     PF_INTERVAL = 100
-    PF_CURVES = ['step', 'linear', 'ssf_calc', 'dsf_calc']
+    PF_CURVES = ["step", "linear", "ssf_calc", "dsf_calc"]
     PF_CURVE = "step"
     STATES = dict(initiation=False, detection=False, failure=False)
 
@@ -53,6 +53,11 @@ class IndicatorConfig(Config):
     """
     Contains the config parameters for the Indicator class
     """
+
+    PF_CURVE = "step"
+    PF_INTERVAL = 10
+    PERFECT = False
+    FAILED = True
 
 
 config = Config()
