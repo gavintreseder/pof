@@ -147,20 +147,18 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 # Add a name to the distribution and set create the object
                 elif isinstance(condition, dict):
 
-                    self.conditions[cond_name] = ConditionIndicator.from_dict(
-                        condition
-                    )  # Gav's fix
-                    # TODO Illyse - this doesn't work for all methods
-                    """
-                    if self.conditions is not None: 
-                        for key, value in condition.items():
-                            self.conditions[key] = value
+                    if self.conditions is not None:
+                        if isinstance(self.conditions[cond_name], Indicator):
+                            self.conditions[cond_name].update_from_dict(condition)
+                        else:
+                            for key, value in condition.items():
+                                self.conditions[key] = value
 
                     else:
                         self.conditions[cond_name] = ConditionIndicator.from_dict(
                             condition
                         )
-                    """
+
                 else:
                     print(
                         'ERROR: Cannot update "%s" condition from dict'
@@ -853,7 +851,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
         plt.show()
 
-    def update2(self, id_object, value=None):
+    def update(self, id_object, value=None):
         """"""
         if isinstance(id_object, str):
             self.update_from_str(id_object, value, sep="-")
@@ -965,57 +963,6 @@ class FailureMode(Load):  # Maybe rename to failure mode
             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
         return value
-
-    def update(self, id_str, value, sep="-"):
-        """Updates a the failure mode object using the dash componenet ID"""
-
-        try:
-
-            # Remove the class type and class name from the dash_id
-            id_str = id_str.split(self.name + sep, 1)[1]
-            var = id_str.split(sep)[0]
-
-            # Check if the variable is an attribute of the class
-            if var in self.__dict__:
-
-                # Check if the variable is a dictionary
-                if isinstance(self.__dict__[var], dict):
-
-                    var_2 = id_str.split(sep)[1]
-
-                    # Check if the variable is a class with its own update methods
-                    if var_2 in ["Condition", "Task", "Distribution"]:
-                        var_3 = id_str.split(sep)[2]
-                        self.__dict__[var][var_3].update(id_str, value, sep)
-
-                        self.set_init_dist()  # TODO Ghetto fix
-                        for condition in self.conditions.values():  # TODO Ghetto fix
-                            condition.pf_interval = value  # TODO Ghetto fix
-                    else:
-                        self.__dict__[var][var_2] = value
-                else:
-                    self.__dict__[var] = value
-                    if var == "pf_interval":  # TODO Ghetto fix
-                        self.set_init_dist()  # TODO Ghetto fix
-                        for condition in self.conditions.values():  # TODO Ghetto fix
-                            condition.pf_interval = value  # TODO Ghetto fix
-
-            # Check if the variable is a class instance
-            else:
-
-                var = id_str.split(sep)[1]
-
-                if var in self.__dict__ and isinstance(
-                    self.__dict__[var], (Indicator, Distribution, Task)
-                ):
-                    self.__dict__[var].update(id_str, value, sep)
-                    if var == "untreated":
-                        self.set_init_dist()  # TODO Ghetto fix
-                else:
-                    print('Invalid id "%s" %s not in class' % (id_str, var))
-
-        except:
-            print("Invalid ID")
 
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""
