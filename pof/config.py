@@ -12,6 +12,10 @@ from typing import Dict
 
 @dataclass
 class Config:
+    """
+    Params:
+
+    """
 
     # Check if these are still used anywhere?
     on_error_use_default: bool = True
@@ -62,7 +66,7 @@ class TaskConfig(Config):
     None
 
 
-@dataclass(frozen=True)
+@dataclass
 class IndicatorConfig(Config):
     """
     Contains the config parameters for the Indicator class
@@ -74,7 +78,7 @@ class IndicatorConfig(Config):
     FAILED: bool = True
 
 
-@dataclass(frozen=True)
+@dataclass
 class DistributionConfig(Config):
 
     alpha: float = 50
@@ -82,7 +86,7 @@ class DistributionConfig(Config):
     gamma: float = 10
 
 
-@dataclass(frozen=True)
+@dataclass
 class AssetModelLoaderConfig(Config):
 
     None
@@ -90,10 +94,14 @@ class AssetModelLoaderConfig(Config):
 
 config = Config()
 
-component_config = ComponentConfig()
-failure_mode_config = FailureModeConfig()
-indicator_config = IndicatorConfig()
+component = ComponentConfig()
+failure_mode = FailureModeConfig()
+indicator = IndicatorConfig()
 task_config = TaskConfig()
 distribution_config = DistributionConfig()
 
 asset_model_loader_config = AssetModelLoaderConfig()
+
+
+if __name__ == "__main__":
+    print("Config - Ok")

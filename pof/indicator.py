@@ -15,7 +15,7 @@ import scipy.stats as ss
 from matplotlib import pyplot as plt
 
 from pof.load import Load
-from pof.config import indicator_config as cf
+import pof.config.indicator as cf
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
