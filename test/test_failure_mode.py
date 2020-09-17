@@ -1,29 +1,17 @@
 import unittest
 import unittest.mock
-import io
+from unittest.mock import patch
 
 import utils
 
 from pof.failure_mode import FailureMode
+from pof.config import FailureModeConfig as cf
 import pof.demo as demo
 
 import fixtures
 
 
 class TestFailureMode(unittest.TestCase):
-    def setUp(self):
-        # Failure distribtion
-        self.alpha = 50
-        self.beta = 1.5
-        self.gamma = 10
-
-        self.pf_interval = 5
-
-        """self.fm = FailureMode(
-            untreated = dict(alpha=self.alpha, beta=self.beta, gamma=self.gamma),
-            pf_interval = self.pf_interval
-        )"""
-
     def test_imports_correctly(self):
         self.assertTrue(True)
 

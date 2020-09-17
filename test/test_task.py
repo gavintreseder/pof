@@ -4,7 +4,6 @@ import copy
 import utils
 
 from pof.task import Task, ConditionTask, Inspection
-from pof.condition import Condition
 import pof.demo as demo
 
 import fixtures

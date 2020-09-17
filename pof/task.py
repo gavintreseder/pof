@@ -12,18 +12,12 @@ import scipy.stats as ss
 from scipy.linalg import circulant
 from random import random, seed
 
-if __package__ is None or __package__ == "":
-    from helper import flatten, str_to_dict
-    from condition import Condition
-    from consequence import Consequence
-    from distribution import Distribution
-    import demo as demo
-else:
-    from pof.helper import flatten, str_to_dict
-    from pof.condition import Condition
-    from pof.consequence import Consequence
-    from pof.distribution import Distribution
-    import pof.demo as demo
+
+from pof.helper import flatten, str_to_dict
+from pof.condition import Condition
+from pof.consequence import Consequence
+from pof.distribution import Distribution
+import pof.demo as demo
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python

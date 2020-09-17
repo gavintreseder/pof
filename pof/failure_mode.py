@@ -3,56 +3,50 @@
 Author: Gavin Treseder
 """
 
-
-# Change the system path is
-if __package__ is None or __package__ == "":
-    import sys
-    import os
-
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 # ************ Packages ********************
+
+from dataclasses import dataclass
+from typing import Dict
+from random import random, seed
+from enum import Enum
+
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
 import collections
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
-from random import random, seed
-from enum import Enum
-
 from tqdm import tqdm
 from lifelines import WeibullFitter
 
+# Change the system path when this is run directly
 if __package__ is None or __package__ == "":
-    from helper import fill_blanks, id_update, str_to_dict
-    from indicator import Indicator, ConditionIndicator
-    from distribution import Distribution
-    from consequence import Consequence
-    from task import (
-        Task,
-        Inspection,
-        ConditionTask,
-        OnConditionRepair,
-        OnConditionReplacement,
-        ImmediateMaintenance,
-    )
-    import demo as demo
+    import sys
+    import os
 
-else:
-    from pof.helper import fill_blanks, id_update, str_to_dict
-    from pof.indicator import Indicator, ConditionIndicator
-    from pof.distribution import Distribution
-    from pof.consequence import Consequence
-    from pof.task import (
-        Task,
-        Inspection,
-        ConditionTask,
-        OnConditionRepair,
-        OnConditionReplacement,
-        ImmediateMaintenance,
-    )
-    import pof.demo as demo
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from pof.helper import fill_blanks, id_update, str_to_dict
+from pof.indicator import Indicator, ConditionIndicator
+from pof.distribution import Distribution
+from pof.consequence import Consequence
+from pof.task import (
+    Task,
+    Inspection,
+    ConditionTask,
+    OnConditionRepair,
+    OnConditionReplacement,
+    ImmediateMaintenance,
+)
+import pof.demo as demo
+from pof.config import FailureModeConfig as cf
+from pof.load import Load
+
+# TODO
+"""
+    - Use condition pf to change indicator 
+    - task indicator
+"""
 
 
 # TODO move t somewhere else
@@ -62,87 +56,60 @@ else:
 
 seed(1)
 
+USE_DEFAULT = cf.USE_DEFAULT
 
-class FailureMode:  # Maybe rename to failure mode
+PF_CURVES = ["linear", "step"]
+REQUIRED_STATES = ["initiation", "detection", "failure"]
 
-    PF_CURVE = ["linear", "step"]
+PF_INTERVAL = 100
+PF_CURVE = "step"
+STATES = dict(initiation=False, detection=False, failure=False)
 
-    def __init__(
-        self,
-        name="fm",
-        active=True,
-        pf_curve="linear",
-        pf_interval=10,
-        pf_std=0,
-        untreated=dict(),
-        conditions=None,  # TODO this needs to change for condition loss
-        consequence=dict(),
-        states=dict(),
-        tasks=dict(),
-        *args,
-        **kwargs,
-    ):
 
-        # Failure Information
-        self.name = name
-        self.active = active
-        self.pf_curve = pf_curve
-        self.pf_interval = pf_interval
-        self.pf_std = pf_std
+@dataclass
+class FailureMode(Load):  # Maybe rename to failure mode
+
+    name: str = "fm"
+    active: bool = True
+    pf_curve: str = None
+    pf_interval: int = None  # Add cf.default here
+    pf_std: int = 0
+
+    # Set methods used
+    untreated: Dict = None
+    consequence: Dict = None
+    indicators: Dict = None
+    conditions: Dict = None
+    states: Dict = None
+    tasks: Dict = None
+    init_states: Dict = None
+
+    # Simulation Details
+    timeline: Dict = None
+    _timelines: Dict = None
+    _sim_counter: Dict = None
+
+    def __post_init__(self):
+
+        self.set_pf_curve(pf_curve=self.pf_curve)
 
         # Failure Distributions
-        self.untreated = None
         self.init_dist = None
         self.pof = None
-        self.set_untreated(untreated)
+        self.set_untreated(self.untreated)
 
         # Indicators
+        self.indicator = None
 
-        # Faiure Condition
-        self.conditions = dict()
-        self.set_conditions(conditions)
-
-        # Consequence of failure
-        self.cof = None
-        self.set_consequence(consequence)
-
-        # Failure Mode state
-        self.states = dict()
-        self.set_states(states)
-
-        # Init State
-        self.init_states = dict()  # TODO change to asset info set
-        self.set_init_state(states)
+        self.set_conditions(self.conditions)
+        self.set_consequence(consequence=self.consequence)
+        self.set_states(states=self.states)
+        self.set_init_states(states=self.states)  # TODO change to asset info set
 
         # Tasks
-        self.tasks = dict()
-        self.set_tasks(tasks)
+        self.set_tasks(tasks=self.tasks)
 
-        # Simulation details
-        self.timeline = dict()
-        self._timelines = dict()
-        self._sim_counter = 0
-
-    # ************** Load Functions *****************
-
-    @classmethod
-    def load(cls, details=None):
-        try:
-            if isinstance(details, dict):
-                fm = cls.from_dict(details)
-            else:
-                fm = cls()
-        except:
-            raise ValueError("Error loading %s data" % (cls.__name__))
-        return fm
-
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            fm = cls(**details)
-        except:
-            raise ValueError("Error loading %s data from dictionary" % (cls.__name__))
-        return fm
+        self.reset()
 
     # ************** Set Functions *****************
 
@@ -200,6 +167,17 @@ class FailureMode:  # Maybe rename to failure mode
                         % (self.__class__.__name__)
                     )
 
+    def set_pf_curve(self, pf_curve=None):
+        """ Set the pf_curve to a valid str"""
+
+        if pf_curve in PF_CURVES:
+            self.pf_curve = pf_curve
+        else:
+            if USE_DEFAULT:
+                self.pf_curve = PF_CURVE
+            else:
+                raise ValueError("pf_curve must be from: %s" % (PF_CURVES))
+
     def set_untreated(self, untreated):
 
         # Load a distribution object
@@ -208,11 +186,17 @@ class FailureMode:  # Maybe rename to failure mode
 
         # Add a name to the distribution and set create the object
         elif isinstance(untreated, dict):
+            # TODO Illyse, was this commented out block needed?
+            """
             if self.untreated is not None:
                 self.untreated.update_from_dict(untreated)
             else:
                 untreated["name"] = "untreated"
                 self.untreated = Distribution.from_dict(untreated)
+            """
+
+            untreated["name"] = "untreated"
+            self.untreated = Distribution.from_dict(untreated)
 
         else:
             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
@@ -220,22 +204,42 @@ class FailureMode:  # Maybe rename to failure mode
         # Set the probability of initiation using the untreated parameters
         self.set_init_dist()
 
-    def set_init_state(self, states):
-        # TODO fix this default
-        for state in ["detection", "failure", "initiation"]:
-            self.init_states[state] = False
+    def set_init_states(self, states):
+        # TODO Update this method at the same time as set state
 
-        for state_name, state in states.items():
-            self.init_states[state_name] = bool(state)
+        if self.init_states is None:
+            if USE_DEFAULT:
+                self.init_states = {state: False for state in REQUIRED_STATES}
+            else:
+                raise ValueError("Failure Mode - %s - No states provided" % (self.name))
 
-        return True
+        # update from the input argument
+        if states is not None:
+            self.init_states.update(states)
 
-    def set_states(self, states):
+        # Update from required states
+        for state in REQUIRED_STATES:
+            if state not in self.init_states:
+                self.init_states[state] = False
+
+    def set_states(self, states=None):
         # TODO check this on the wekeend and split into set and update methods. Set at start. Update
-        for state_name, state in states.items():
-            self.states[state_name] = bool(state)
+        # TODO make this work with actual asset
+        # TODO this is super super ugly. make state an indiciator or it's own class.
 
-        for state in ["detection", "failure", "initiation"]:
+        # Set a default value if none has been provided
+        if self.states is None:
+            if USE_DEFAULT:
+                self.states = {state: False for state in REQUIRED_STATES}
+            else:
+                raise ValueError("Failure Mode - %s - No states provided" % (self.name))
+
+        # update from the input argument
+        if states is not None:
+            self.states.update(states)
+
+        # Update from required states
+        for state in REQUIRED_STATES:
             if state not in self.states:
                 self.states[state] = False
 
@@ -249,9 +253,9 @@ class FailureMode:  # Maybe rename to failure mode
                 self.tasks[task_name] = task
             elif isinstance(task, dict):
                 if task["activity"] == "Inspection":
-                    self.tasks[task["name"]] = Inspection().load(task)
+                    self.tasks[task["name"]] = Inspection.load(task)
                 elif task["activity"] == "ConditionTask":
-                    self.tasks[task_name] = ConditionTask().load(task)
+                    self.tasks[task_name] = ConditionTask.load(task)
 
                 else:
                     print("Invalid Task Activity")
@@ -789,8 +793,8 @@ class FailureMode:  # Maybe rename to failure mode
             condition.reset()
 
         # Reset timelines
-        self._timelines = dict()
         self.timeline = dict()
+        self._timelines = dict()
 
         # Reset counters
         self._sim_counter = 0
