@@ -1,4 +1,5 @@
 import unittest
+import copy
 
 import utils
 
@@ -10,7 +11,6 @@ import fixtures
 
 
 class TestTask(unittest.TestCase):
-
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -25,41 +25,27 @@ class TestTask(unittest.TestCase):
         self.assertIsNotNone(task)
 
     def test_load_valid_dict(self):
-        task = Task.load(demo.inspection_data['instant'])
+        task = Task.load(demo.inspection_data["instant"])
         self.assertIsNotNone(task)
 
     # **************** test_update ***********************
 
     def test_update(self):
 
-        #test_data_1 = fixtures.on_condition_replacement_data
-        #test_data_2 = fixtures.on_condition_replacement_data
-        test_data_1 = dict(
-            cost=0,
-            triggers=dict(
-                condition=dict(
-                    fast_degrading=dict(lower=0, upper=90,),
-                    slow_degrading=dict(lower=0, upper=20,)
-                )
-            )
-        )
-        test_data_2 = dict(
-            cost=5000,
-            triggers=dict(
-                condition=dict(
-                    fast_degrading=dict(lower=0, upper=20,),
-                    slow_degrading=dict(lower=0, upper=20,)
-                )
-            )
-        )
+        test_data_1 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_1["cost"] = 0
+        test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
+        test_data_2 = copy.deepcopy(fixtures.on_condition_replacement_data)
+
         # Test all the options
         t1 = Task.from_dict(test_data_1)
         t2 = Task.from_dict(test_data_2)
 
         t1.update_from_dict(
-            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}})
+            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}}
+        )
 
-        #self.assertEqual(t1.__dict__, t2.__dict__)
+        # self.assertEqual(t1.__dict__, t2.__dict__)
         self.assertEqual(t1.cost, t2.cost)
         self.assertEqual(t1.triggers, t2.triggers)
 
@@ -72,7 +58,6 @@ class TestTask(unittest.TestCase):
 
 
 class TestConditionTask(unittest.TestCase):
-
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -98,7 +83,6 @@ class TestConditionTask(unittest.TestCase):
 
 
 class TestInspection(unittest.TestCase):
-
     def test_imports_correctly(self):
         self.assertTrue(True)
 
@@ -113,7 +97,7 @@ class TestInspection(unittest.TestCase):
         self.assertIsNotNone(task)
 
     def test_load_valid_dict(self):
-        task = Inspection.load(demo.inspection_data['instant'])
+        task = Inspection.load(demo.inspection_data["instant"])
         self.assertIsNotNone(task)
 
     # **************** test_update ***********************

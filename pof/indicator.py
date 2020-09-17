@@ -508,6 +508,7 @@ class ConditionIndicator(Indicator):
 
         try:
             super().update_from_dict(keys)
+
         except KeyError:
             # Check for condition specific ones
             for key, value in keys.items():
@@ -531,21 +532,14 @@ class ConditionIndicator(Indicator):
     def update_from_dict(self, keys):
 
         for key, value in keys.items():
-            if key in [
-                "pf_curve",
-                "pf_interval",
-                "pf_std",
-                "perfect",
-                "failed",
-                "decreasing",
-                "threshold_protection",
-                "threshold_failure",
-            ]:
+            
+            try:
+                super().update_from_dict({key: value})
+            except KeyError:
+                # is object then update
+                # is it a dict
                 self.__dict__[key] = value
-            else:
-                try:
-                    super().update_from_dict({key: value})
-                except KeyError:
+                else:
                     # Check for condition specific ones
                     raise KeyError(
                         'ERROR: Cannot update "%s" from dict with key %s'

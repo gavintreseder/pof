@@ -1,11 +1,14 @@
 import unittest
 from unittest.mock import Mock
 import numpy as np
+import copy
 
 import utils
 
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
+
+import fixtures
 
 
 cid = dict(
@@ -634,31 +637,19 @@ class TestConditionIndicator(unittest.TestCase):
 
     def test_update(self):
 
-        #test_data_1 = fixtures.on_condition_replacement_data
-        #test_data_2 = fixtures.on_condition_replacement_data
-        test_data_1 = dict(
-            name='fast_degrading',
-            perfect=99,
-            failed=0,
-            pf_curve='linear',
-            pf_interval=10,
-            pf_std=0.25
-        )
-        test_data_2 = dict(
-            name='fast_degrading',
-            perfect=100,
-            failed=0,
-            pf_curve='linear',
-            pf_interval=10,
-            pf_std=0.5
-        )
-        # Test all the options
+        test_data_1 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
+        test_data_1["name"] = "FD"
+        test_data_1["perfect"] = 99
+        test_data_1["pf_std"] = 0.25
+        test_data_2 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
+
         c1 = ConditionIndicator.from_dict(test_data_1)
         c2 = ConditionIndicator.from_dict(test_data_2)
 
-        c1.update_from_dict({"perfect": 100, "pf_std": 0.5})
+        c1.update_from_dict({"name": "fast_degrading", "perfect": 100, "pf_std": 0.5})
 
-        #self.assertEqual(t1.__dict__, t2.__dict__)
+        # self.assertEqual(c1.__dict__, c2.__dict__)
+        self.assertEqual(c1.name, c2.name)
         self.assertEqual(c1.perfect, c2.perfect)
         self.assertEqual(c1.pf_std, c2.pf_std)
 
@@ -670,5 +661,5 @@ class TestConditionIndicator(unittest.TestCase):
         self.assertRaises(KeyError, c.update_from_dict, update)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
