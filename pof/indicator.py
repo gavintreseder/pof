@@ -22,6 +22,7 @@ if __package__ is None or __package__ == "":
 from pof.load import Load
 from pof.helper import str_to_dict
 from pof.config import indicator_config as cf
+from pof.helper import str_to_dict
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
@@ -192,10 +193,10 @@ class Indicator(Load):
             if name is None:
                 timeline = self.agg_timeline()
             else:
-                raise KeyError from name_not_in_timeline(
+                raise KeyError(
                     "Name - %s - is not in %s %s timeline"
                     % (name, self.__class__.__name__, self.name)
-                )
+                ) from name_not_in_timeline
 
         return timeline
 

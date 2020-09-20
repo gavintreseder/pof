@@ -7,13 +7,13 @@ Author: Gavin Treseder
 
 from dataclasses import dataclass
 from typing import Dict
+from typing import Optional
 from random import random, seed
-from enum import Enum
 
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
-import collections
+from collections.abc import Iterable
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from tqdm import tqdm
@@ -53,6 +53,7 @@ from pof.load import Load
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO Change this to update timeline based on states that have changed
 # TODO make it work with non zero start times
+# TODO add method for multiple defaults
 
 seed(1)
 
@@ -60,18 +61,24 @@ PF_CURVES = ["linear", "step"]
 REQUIRED_STATES = ["initiation", "detection", "failure"]
 
 
-@dataclass
-class FailureMode(Load):  # Maybe rename to failure mode
+@dataclass(repr=False)
+class FailureModeData(Load):
+    """
+    A class that contains the data for the FailureMode object.
 
-    name: str = "fm"
+    THis is a temporary fix due to issues with @property and @dataclass changing the constructor to only accept data with leading underscores
+    """
+
+    name: str = "fm"  # TODO use a config file to store all the defaultscf.get('name', fallback=None)
     active: bool = True
     pf_curve: str = None
-    pf_interval: int = None  # Add cf.default here
+    pf_interval: int = None
     pf_std: int = 0
 
     # Set methods used
     untreated: Dict = None
-    consequence: Dict = None
+    dists: Dict = None
+    consequences: Dict = None
     indicators: Dict = None
     conditions: Dict = None
     states: Dict = None
@@ -83,27 +90,126 @@ class FailureMode(Load):  # Maybe rename to failure mode
     _timelines: Dict = None
     _sim_counter: Dict = None
 
-    def __post_init__(self):
 
-        self.set_pf_curve(pf_curve=self.pf_curve)
+class FailureMode(FailureModeData):
 
-        # Failure Distributions
-        self.init_dist = None
-        self.pof = None
-        self.set_untreated(self.untreated)
+    """
+    A class that contains the methods for FailureMode object
 
-        # Indicators
-        self.indicator = None
+    Params:
+        see FailureModeData
 
-        self.set_conditions(self.conditions)
-        self.set_consequence(consequence=self.consequence)
-        self.set_states(states=self.states)
-        self.set_init_states(states=self.states)  # TODO change to asset info set
+    Methods:
+        Overloaded methods for properties with set logic
 
-        # Tasks
-        self.set_tasks(tasks=self.tasks)
+    Usage:
 
-        self.reset()
+    First import FailureMode from the failure_mode module
+
+        >>> from failure_mode import FailureMode
+
+    Create a FailureMode object
+
+        >>> FailureMode()
+        <failure_mode.FailureMode object at 0x...>
+
+    """  # TODO check why failure_mode is included
+
+    # *************** Property Methods *************
+    # #TODO convert any get/set pairs to properties
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def pf_curve(self):
+        return self._pf_curve
+
+    @pf_curve.setter
+    def pf_curve(self, value):
+        """ Set the pf_curve to a valid str"""
+
+        if value in PF_CURVES:
+            self._pf_curve = value
+        else:
+            if cf.USE_DEFAULT:
+                self._pf_curve = cf.PF_CURVE
+            else:
+                raise ValueError(
+                    "%s - %s - pf_curve must be from: %s"
+                    % (self.__class__.__name__, self.name, cf.PF_CURVES)
+                )
+
+    @property
+    def dists(self):
+        return self._dists
+
+    @dists.setter
+    def dists(self, value):
+        self._set_container_attr("_dists", Distribution, value)
+
+    def dists2(self, value):
+
+        # TODO Illyse -> see if this logic works for other containers
+        """ Set the distribution"""
+
+        # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
+        if getattr(self, "_dists", None) is None:
+            self._dists = dict()
+
+        try:
+            # Add the value to the dictionary if it is a Distribution
+            if isinstance(value, Distribution):
+                self._dists[value.name] = value
+
+            # Check if the input is an iterable
+            elif isinstance(value, Iterable):
+
+                # Create a
+                if "name" in value:  # TODO Check all keys in function
+                    self._dists[value["name"]] = Distribution.load(value)
+
+                else:
+                    # Iterate through and create objects
+                    for val in value.values():
+                        # Calls this method again with the inside value
+                        self.dists = val
+
+            else:
+                raise ValueError
+
+        except:
+            if value is None and cf.USE_DEFAULT is True:
+                print(
+                    "%s - %s - Distribution cannot be set from %s - Default Uses"
+                    % (self.__class__.__name__, self.name, value)
+                )
+            else:
+                raise ValueError(
+                    "%s - %s - Distribution cannot be set from %s"
+                    % (self.__class__.__name__, self.name, value)
+                )
+
+    @property
+    def timeline(self):
+        return self._timeline
+
+    @timeline.setter
+    def timeline(self, value):
+        self._timeline = value
+
+    @property
+    def timelines(self):
+        return self._timelines
+
+    @timelines.setter
+    def timelines(self, value):
+        self._timelines = value
 
     # ************** Set Functions *****************
 
@@ -157,17 +263,6 @@ class FailureMode(Load):  # Maybe rename to failure mode
                         % (self.__class__.__name__)
                     )
 
-    def set_pf_curve(self, pf_curve=None):
-        """ Set the pf_curve to a valid str"""
-
-        if pf_curve in PF_CURVES:
-            self.pf_curve = pf_curve
-        else:
-            if cf.USE_DEFAULT:
-                self.pf_curve = cf.PF_CURVE
-            else:
-                raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
-
     def set_untreated(self, untreated):
         """
         Takes a Distribution, a dictionary that represents a Distribution or an iterable of these objects and sets untreated to those objects
@@ -175,16 +270,16 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
 
         set_untreated(Distribution)
-        >>>> self.untreated == Distribution
+        self.untreated == Distribution
 
         set_untreated(dict(name = Distribution))
-        >>>> self.untreated == Distribution
+        self.untreated == Distribution
 
         set_untreated(dict("untreated" = dict("alpha" = 10)))
-        >>>> self.untreated.alpha == 10
+        self.untreated.alpha == 10
 
         set_untreated(dict_data(untreated))
-        >>>> self.untreated == Distribution
+        self.untreated == Distribution
         """
         # Load a distribution object
         if isinstance(untreated, Distribution):
@@ -329,7 +424,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
         )
 
         # If it is an iterable, link them all
-        if isinstance(indicator, collections.Iterable):
+        if isinstance(indicator, Iterable):
             for indicator in indicator.values():
                 if indicator.name in self.conditions:
                     self.conditions[indicator.name] = indicator
@@ -367,19 +462,22 @@ class FailureMode(Load):  # Maybe rename to failure mode
         """
         Convert the probability of failure into a probability of initiation
         """
+        # TODO being moved to Distribution
 
         # Super simple placeholder # TODO add other methods
-        alpha = self.untreated.alpha
-        beta = self.untreated.beta
+        alpha = self.dists["untreated"].alpha
+        beta = self.dists["untreated"].beta
         if self.pf_interval is None:
-            gamma = max(0, self.untreated.gamma)
+            gamma = max(0, self.dists["untreated"].gamma)
         else:
-            gamma = max(0, self.untreated.gamma - self.pf_interval)
+            gamma = max(0, self.dists["untreated"].gamma - self.pf_interval)
 
         # TODO add an adjustment to make sure the pfinterval results in a resaonable gamma
         # self.pf_interval = self.pf_interval - max(self.gamma - self.pf_interval + self.pf_std * 3)
 
-        self.init_dist = Distribution(alpha=alpha, beta=beta, gamma=gamma, name="init")
+        self.dists["init"] = Distribution(
+            alpha=alpha, beta=beta, gamma=gamma, name="init"
+        )
 
     def get_expected_pof(self):
 
@@ -797,9 +895,8 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
         return task_cost
 
-    def _expected_risk(
-        self, scaling=1
-    ):  # TODO expected risk with or without replacement
+    def _expected_risk(self, scaling=1):
+        # TODO expected risk with or without replacement
 
         t_failures = []
         for timeline in self._timelines.values():
@@ -850,10 +947,10 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
         # Reset timelines
         self.timeline = dict()
-        self._timelines = dict()
+        self.timelines = dict()
 
         # Reset counters
-        self._sim_counter = 0
+        self.sim_counter = 0
 
     # ****************** Optimise routines ***********
 
@@ -963,20 +1060,21 @@ class FailureMode(Load):  # Maybe rename to failure mode
         Usage:
             fm = FailureMode(name = "early_life",(alpha=10, beta = 3, gamma=1))
 
-            dist.get_value(key="name")
-            >>>> "early_life"
+            #>>> dist.get_value(key="name")
+            "early_life"
 
-            dist.get_value(key={"untreated":"alpha"})
-            >>>> "10
+            #>>> dist.get_value(key={"untreated":"alpha"})
+            "10
+
+            #>>> dist.get_value(key={"untreated":("alpha", "beta")})
+            (10, 3)
+
+        """
+
+        """
         if keys[0] in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
             self.__dict__[keys[0]] = value
 
-            dist.get_value(key={"untreated":("alpha", "beta")})
-            >>>> (10, 3)
-
-        """
-
-        """
         At the outside it'll have be dicts to give you the option to call multiple values long term
         At the inside its probably going to be a list
 
@@ -1065,6 +1163,8 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
 
 if __name__ == "__main__":
+    import doctest
 
-    failure_mode = FailureMode()
+    # Add a line to set config to test version**
+    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"dist": FailureMode()})
     print("FailureMode - Ok")

@@ -1,13 +1,14 @@
 import unittest
 import unittest.mock
 from unittest.mock import patch
+import logging
+import sys
 
 import utils
 
 from pof.failure_mode import FailureMode
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
-
 import fixtures
 
 
@@ -36,7 +37,7 @@ class TestFailureMode(unittest.TestCase):
 
     def test_from_dict(self):
         try:
-            fm = FailureMode.from_dict(demo.failure_mode_data["early_life"])
+            fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
             self.assertIsNotNone(fm)
         except ValueError:
             self.fail("ValueError returned")
@@ -239,27 +240,6 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode()
 
     # ************ Test update methods *****************
-
-    def test_update2(self):
-
-        expected_list = [True]
-
-        fm = FailureMode().set_demo()
-        dash_ids = fm.get_dash_ids()
-
-        for (
-            dash_id
-        ) in (
-            dash_ids
-        ):  # ['FailureMode-fm-tasks-Task-inspection-trigger-condition-wall_thickness-lower']: #dash_ids:
-
-            for expected in expected_list:
-
-                fm.update(dash_id, expected)
-
-                val = utils.get_dash_id_value(fm, dash_id)
-
-                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 
     # ************ Test link indicators ***************
 

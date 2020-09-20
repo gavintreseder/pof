@@ -69,8 +69,8 @@ class Task:
         equipment=None,
         consequence=None,
         p_effective=1,
-        triggers=dict(),
-        impacts=dict(),
+        triggers=None,
+        impacts=None,
         component_reset=False,
         *args,
         **kwargs
@@ -466,40 +466,6 @@ class ConditionTask(Task):
 
         self.task_type = "immediate"
 
-    def set_default(self):
-
-        self.impacts = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    target=0.5,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-                external_diameter=dict(
-                    target=0.5,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-            ),
-            state=dict(
-                initiation=False,
-                detection=False,
-                failure=False,
-            ),
-        )
-
-        self.triggers = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    lower=50,
-                    upper=70,
-                )
-            ),
-            state=dict(),
-        )
-
-        return self
-
     def sim_timeline(self, t_end, timeline, t_start=0, t_delay=NotImplemented):
         """
         If state and condition triggers are met return the timeline met then
@@ -801,18 +767,6 @@ class ImmediateMaintenance(ConditionTask):
 
         return self
 
-
-# completion
-
-
-# feedback
-# Describe what each section is
-# First page includes context, line of sight, performance and the gaps
-
-#
-
-# Talk through each row line by line
-# Context
 
 # TODO
 """

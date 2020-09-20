@@ -18,9 +18,9 @@ import pof.demo as demo
 
 
 class TestComponent(unittest.TestCase):
-    def setUp(self):
-
-        None
+    """
+    Unit tests for the Component class
+    """
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)

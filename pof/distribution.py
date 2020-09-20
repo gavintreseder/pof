@@ -18,6 +18,21 @@ from pof.config import distribution_config as cf
 
 
 class Distribution(Load):
+
+    """
+    Usage:
+
+    First import Distribution using the distribution package
+
+        >>> from distribution import Distribution
+
+    Create a Distribution object
+
+        >>> Distribution()
+        <distribution.Distribution object at 0x...>
+
+    """
+
     def __init__(self, alpha=100, beta=1, gamma=0, name="dist", *args, **kwargs):
 
         self.name = name
@@ -29,27 +44,11 @@ class Distribution(Load):
         # self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
         # self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            fm = cls(**details)
-        except:
-            raise ValueError("Error loading %s data from dictionary" % (cls.__name__))
-        return fm
-
     def __str__(self):
 
         out = "Alpha = %s, Beta = %s, Gamma = %s" % (self.alpha, self.beta, self.gamma)
 
         return out
-
-    def load(self, name="dist", **kwargs):
-        self.last_name = name
-        self.alpha = kwargs.get("alpha")
-        self.beta = kwargs.get("beta")
-        self.gamma = kwargs.get("gamma")
-
-        return self
 
     def params(self):
         params = dict(
@@ -66,10 +65,6 @@ class Distribution(Load):
     def cdf(self, t_start, t_end):
         X = np.linspace(t_start, t_end, t_end - t_start + 1)
         return ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-
-    def set_time_range(self):
-
-        return
 
     def conditional_f(self, x_min, x_max):
         P_min = ss.weibull_min.sf(x_min, self.beta, scale=self.alpha, loc=self.gamma)
@@ -106,16 +101,6 @@ class Distribution(Load):
 
         prefix = prefix + "Distribution" + sep + self.name + sep
         return [prefix + param for param in ["alpha", "beta", "gamma"]]
-
-    def update(self, dash_id, value, sep="-"):
-        """Updates a the distrubtion object using the dash componenet ID"""
-
-        try:
-
-            id_update(self, id_str=dash_id, value=value, sep=sep)
-
-        except:
-            print("Invalid ID")
 
     def load_demo(self, scenario=None):
 
@@ -189,9 +174,9 @@ class Distribution(Load):
         Takes a key as either a list or a variable name and returns the value stored at that location.
 
         Usage:
-            dist = Distribution(alpha=10, beta = 3, gamma=1)
-            dist.get_value(key="alpha")
-            >>>> 10
+            >>> dist = Distribution(alpha=10, beta = 3, gamma=1)
+            >>> dist.get_value(key="alpha")
+            10
         """
         if isinstance(key, str):
             value = self.__dict__[key]
@@ -252,7 +237,7 @@ class Demo:
     fast_aging = Distribution(Dataset.fast_aging)"""
 
 if __name__ == "__main__":
+    import doctest
 
-    distribution = Distribution()
-
+    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"dist": Distribution()})
     print("Distribution - Ok")

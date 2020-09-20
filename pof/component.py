@@ -43,6 +43,10 @@ class Component(Load):
 
     Methods:
 
+
+    Usage:
+
+
     """
 
     name: str = "comp"
@@ -116,7 +120,7 @@ class Component(Load):
                         self.indicator[name] = PoleSafetyFactor.from_dict(indicator)
         except AttributeError:
             print(
-                "%s - %s cannot be set from %s"
+                "%s - %s - Indicators cannot be set from %s"
                 % (self.__class__.__name__, self.name, indicator_input)
             )
 
@@ -148,13 +152,13 @@ class Component(Load):
                         self.fm[name] = FailureMode.load(fm)
 
             else:
-                raise TypeError(
+                raise ValueError(
                     "%s - %s - Invalid data type %s"
                     % (self.__class__.__name__, self.name, fm_input)
                 )
-        except AttributeError:
+        except ValueError:
             print(
-                "%s - %s cannot be set from %s"
+                "%s - %s - FailureModes cannot be set from %s"
                 % (self.__class__.__name__, self.name, fm_input)
             )
 
@@ -593,4 +597,8 @@ class Component(Load):
 
 if __name__ == "__main__":
     component = Component()
+    component
     print("Component - Ok")
+
+    """import doctest
+    doctest.testmod()"""

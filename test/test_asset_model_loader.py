@@ -36,7 +36,9 @@ class TestAssetModelLoader(unittest.TestCase):
         data = aml.load(filename)
 
         fm = FailureMode.load(data["pole"]["fm"]["termites"])
-        self.assertIsNotNone(fm, msg="FailureMode cannot be loaded with da")
+        self.assertIsNotNone(
+            fm, msg="FailureMode cannot be loaded with data from AssetModelLoader"
+        )
 
         try:
             fm.sim_timeline(200)
