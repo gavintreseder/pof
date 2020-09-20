@@ -5,6 +5,7 @@ Author: Gavin Treseder
 
 # ************ Packages ********************
 
+import copy
 from dataclasses import dataclass
 from typing import Dict
 from typing import Optional
@@ -151,11 +152,20 @@ class FailureMode(FailureModeData):
 
     @dists.setter
     def dists(self, value):
+        # TODO maybe just update init each time anyway?
+        if self._dists is None:
+            self.dists = dict()
+
+        untreated = copy(self.dists.get("untreated"))
         self._set_container_attr("_dists", Distribution, value)
+
+        # Check if 'untreated' was updated and if so, call init dist TODO
+        if untreated != self.dists.get("untreated"):
+            self.set_init_dist()
 
     def dists2(self, value):
 
-        #TODO Illyse -> see if this logic works for other containers
+        # TODO Illyse -> see if this logic works for other containers
         """ Set the distribution"""
 
         # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
