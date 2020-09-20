@@ -50,14 +50,6 @@ class Distribution(Load):
 
         return out
 
-    def load(self, name="dist", **kwargs):
-        self.name = name
-        self.alpha = kwargs.get("alpha")
-        self.beta = kwargs.get("beta")
-        self.gamma = kwargs.get("gamma")
-
-        return self
-
     def params(self):
         params = dict(
             alpha=self.alpha,

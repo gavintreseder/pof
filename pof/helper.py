@@ -77,22 +77,3 @@ def str_to_dict(id_str, value, sep="-"):
         else:
             dict_data = {key: dict_data}
     return dict_data
-
-
-# is it in the class
-
-# Attribute
-# Child class
-# Dict
-# attribute
-# class
-
-# is it in a dict of that objects
-
-# FailureMode to fm
-# tasks
-
-
-# Is it in the class
-# attribute
-# Child class
