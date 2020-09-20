@@ -153,14 +153,12 @@ class FailureMode(FailureModeData):
     @dists.setter
     def dists(self, value):
         # TODO maybe just update init each time anyway?
-        if self._dists is None:
-            self.dists = dict()
+        untreated = copy.copy(getattr(getattr(self, "_dists", None), "untreated", None))
 
-        untreated = copy(self.dists.get("untreated"))
         self._set_container_attr("_dists", Distribution, value)
 
         # Check if 'untreated' was updated and if so, call init dist TODO
-        if untreated != self.dists.get("untreated"):
+        if untreated != self.dists.get("untreated", None):
             self.set_init_dist()
 
     def dists2(self, value):

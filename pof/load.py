@@ -89,7 +89,7 @@ class Load:
                 else:
 
                     for val in value.values():
-                        self._set_container_attr(attr, val, d_type)
+                        self._set_container_attr(attr, d_type, val)
 
             else:
                 raise ValueError
