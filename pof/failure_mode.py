@@ -141,17 +141,15 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 # Add a name to the distribution and set create the object
                 elif isinstance(condition, dict):
 
-                    if self.conditions is not None:
-                        if isinstance(self.conditions[cond_name], Indicator):
-                            self.conditions[cond_name].update_from_dict(condition)
-                        else:
-                            for key, value in condition.items():
-                                self.conditions[key] = value
+                    # if self.conditions is not None:
+                    #     if isinstance(self.conditions[cond_name], Indicator):
+                    #         self.conditions[cond_name].update_from_dict(condition)
+                    #     else:
+                    #         for key, value in condition.items():
+                    #             self.conditions[key] = value
 
-                    else:
-                        self.conditions[cond_name] = ConditionIndicator.from_dict(
-                            condition
-                        )
+                    # else:
+                    self.conditions[cond_name] = ConditionIndicator.from_dict(condition)
 
                 else:
                     print(
@@ -214,7 +212,9 @@ class FailureMode(Load):  # Maybe rename to failure mode
             self.untreated = Distribution.from_dict(untreated)
 
         else:
-            print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+            untreated["name"] = "untreated"
+            self.untreated = Distribution.from_dict(untreated)
+            # print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
         # Set the probability of initiation using the untreated parameters
         self.set_init_dist()
@@ -258,7 +258,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
             if state not in self.states:
                 self.states[state] = False
 
-    def set_tasks(self, tasks):
+    def set_tasks2(self, tasks):
         """
         Takes a dictionary of tasks and sets the failure mode tasks
         """
@@ -277,12 +277,11 @@ class FailureMode(Load):  # Maybe rename to failure mode
             else:
                 print("Invalid Task")
 
-    def set_tasks2(self, tasks):
+    def set_tasks(self, tasks):
         """
         Takes a dictionary of tasks and sets the failure mode tasks
         """
-        # TODO Gav/Illyse: unsure if line 286-289 is needed if we know we will (always?) get a dict of tasks. I think logic is right otherwise
-
+        print(tasks)
         # Check if Task
         if isinstance(tasks, Task):
             self.tasks[tasks.name] = tasks
@@ -291,25 +290,31 @@ class FailureMode(Load):  # Maybe rename to failure mode
         elif isinstance(tasks, dict):
             # Iterate through Dictionary
             for task_name, task in tasks.items():
+                print(task_name)
                 # is it a Task
                 if isinstance(task, Task):
                     self.tasks[task_name] = task
                 # does it exist: yes, update
                 elif task_name in self.tasks:
+                    if isinstance(self.tasks[task_name], dict):
+                        if task["activity"] == "Inspection":
+                            self.tasks[task["name"]] = Inspection.load(task)
+                        elif task["activity"] == "ConditionTask":
+                            self.tasks[task_name] = ConditionTask.load(task)
                     # update method
-                    self.tasks[
-                        task_name
-                    ] = Task()  # TODO Illyse: Check if this is right
-                    self.tasks[task_name].update_from_dict(task)
-
+                    else:
+                        self.tasks[task_name].update_from_dict(task)
                 # does it exist: no, create from dictionary
-                else:
+                elif isinstance(task, dict):
                     if task["activity"] == "Inspection":
                         self.tasks[task["name"]] = Inspection.load(task)
                     elif task["activity"] == "ConditionTask":
                         self.tasks[task_name] = ConditionTask.load(task)
                     else:
                         print("Invalid Task Activity")
+                else:
+                    self.tasks[tasks["name"]].update_from_dict(tasks)
+                    break
         else:
             print("Invalid Task")
 
@@ -933,11 +938,11 @@ class FailureMode(Load):  # Maybe rename to failure mode
             if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
                 self.__dict__[key] = value
 
-            elif key == "untreated":
-                self.set_untreated(dict_data[key])
+            # elif key == "untreated":
+            # self.set_untreated(dict_data[key])
 
-            elif key == "conditions":
-                self.set_conditions(dict_data[key])
+            # elif key == "conditions":
+            # self.set_conditions(dict_data[key])
 
             elif key == "consequence":
                 self.set_consequence(dict_data[key])

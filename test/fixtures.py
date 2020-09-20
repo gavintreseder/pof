@@ -125,9 +125,9 @@ inspection_data = dict(
         activity='Inspection',
         name='inspection',
         p_effective=0.9,
-        cost=50,
+        cost=55,
         t_interval=5,
-        t_delay=0,
+        t_delay=10,
 
         triggers=dict(
             condition=dict(
@@ -262,7 +262,7 @@ failure_mode_data = dict(
         ),
 
         tasks=dict(
-            inspection=inspection_data['instant'],
+            inspection=inspection_data['degrading'],
             on_condition_replacement=on_condition_replacement_data
         ),
         states=state_data['new']

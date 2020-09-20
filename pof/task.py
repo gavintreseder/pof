@@ -299,8 +299,9 @@ class Task:
     def update_from_dict(self, dict_data):
 
         for key, value in dict_data.items():
+            print(self.__dict__)
 
-            if key in ["active", "p_effective", "cost"]:
+            if key in ["name", "activity", "active", "p_effective", "cost"]:
                 self.__dict__[key] = value
 
             elif key in ["trigger", "impact"]:
@@ -418,19 +419,35 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return schedule
 
+    # def update_from_dict(self, keys):
+
+    #     try:
+    #         super().update_from_dict(keys)
+    #     except KeyError:
+    #         # Check for scheudle specific ones
+    #         for key, value in keys.items():
+    #             if key in ["t_interval", "t_delay"]:
+    #                 self.__dict__[key] = value
+    #             else:
+    #                 raise KeyError(
+    #                     'ERROR: Cannot update "%s" from dict with key %s'
+    #                     % (self.__class__.__name__, keys)
+    #                 )
+
     def update_from_dict(self, keys):
 
-        try:
-            super().update_from_dict(keys)
-        except KeyError:
-            # Check for scheudle specific ones
-            for key, value in keys.items():
-                if key in ["t_interval", "t_delay"]:
+        for key, value in keys.items():
+
+            try:
+                super().update_from_dict({key: value})
+            except KeyError:
+                if key in self.__dict__:
                     self.__dict__[key] = value
                 else:
+                    # Check for condition specific ones
                     raise KeyError(
-                        'ERROR: Cannot update "%s" from dict with key %s'
-                        % (self.__class__.__name__, keys)
+                        'ERROR: Cannot update "%s" - %s from dict with key %s'
+                        % (self.__class__.__name__, self.name, key)
                     )
 
 
@@ -534,21 +551,23 @@ class ConditionTask(Task):
 
     def update_from_dict(self, keys):
 
-        try:
-            super().update_from_dict(keys)
-        except KeyError:
-            # Check for condition specific ones
-            for key, value in keys.items():
-                if key in ["task_type"]:
+        for key, value in keys.items():
+
+            try:
+                super().update_from_dict({key: value})
+            except KeyError:
+                if (
+                    False
+                ):  # TODO Illyse - the false is just to make the code run, not the acutally condition
+                    # is object then update
+                    # is it a dict
                     self.__dict__[key] = value
                 else:
+                    # Check for condition specific ones
                     raise KeyError(
-                        'ERROR: Cannot update "%s" from dict with key %s'
-                        % (self.__class__.__name__, keys)
+                        'ERROR: Cannot update "%s" - %s from dict with key %s'
+                        % (self.__class__.__name__, self.name, key)
                     )
-
-        self.name = name # TODO Illyse, name is currenlty an error
-        self.activty = "replace"
 
     def set_default(self):
 
