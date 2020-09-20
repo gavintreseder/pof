@@ -69,8 +69,8 @@ class Task:
         equipment=None,
         consequence=None,
         p_effective=1,
-        triggers=dict(),
-        impacts=dict(),
+        triggers=None,
+        impacts=None,
         component_reset=False,
         *args,
         **kwargs
@@ -449,7 +449,6 @@ class ConditionTask(Task):
 
         self.task_type = "immediate"
 
-
     def sim_timeline(self, t_end, timeline, t_start=0, t_delay=NotImplemented):
         """
         If state and condition triggers are met return the timeline met then
@@ -514,8 +513,8 @@ class ConditionTask(Task):
                         % (self.__class__.__name__, keys)
                     )
 
-        self.name = name # TODO Illyse, name is currenlty an error
-        self.activty = "replace"
+        self.name = name  # TODO Illyse, name is currenlty an error
+        self.activity = "replace"
 
 
 class OnConditionRepair(ConditionTask):

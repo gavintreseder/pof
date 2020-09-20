@@ -34,6 +34,14 @@
 
 # 08 Sep - Gav
 
+
+    # Components
+
+        # Asset Data
+            # Consequence Model
+            # Load data from csv file
+            # Cox model
+
     # Critical
         # inspection interval onto interface w button
         # fix termite problem

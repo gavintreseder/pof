@@ -1,6 +1,13 @@
 from pof.config import Config as cf
 
 
+"""
+The load module is used to overload other pof classes so that they can use a common load methods
+"""
+
+# TODO add more robust error checking for types other than value error
+
+
 class Load:
     """
     A class with methods for loading data that
@@ -13,7 +20,7 @@ class Load:
         """
         try:
             instance = cls.from_dict(details)
-        except ValueError as error:  # TODO expand this
+        except ValueError as error:
             if cf.on_error_use_default:
                 print("Error loading %s data - defaults used" % (cls.__name__))
                 instance = cls()
@@ -29,7 +36,7 @@ class Load:
         """
         try:
             instance = cls(**details)
-        except ValueError as error:  # TODO expand this
+        except ValueError as error:
             if cf.on_error_use_default:
                 print(
                     "Error loading %s data from dictionary - defaults used"

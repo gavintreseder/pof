@@ -63,6 +63,20 @@ REQUIRED_STATES = ["initiation", "detection", "failure"]
 @dataclass
 class FailureMode(Load):  # Maybe rename to failure mode
 
+    """
+    Usage:
+
+    First import FailureMode from the failure_mode module
+
+        >>> from failure_mode import FailureMode
+
+    Create a FailureMode object
+
+        >>> FailureMode()
+        <FailureMode object at 0x...>
+
+    """
+
     name: str = "fm"
     active: bool = True
     pf_curve: str = None
@@ -71,7 +85,8 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
     # Set methods used
     untreated: Dict = None
-    consequence: Dict = None
+    distributions: Dict = None
+    consequences: Dict = None
     indicators: Dict = None
     conditions: Dict = None
     states: Dict = None
@@ -88,6 +103,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
         self.set_pf_curve(pf_curve=self.pf_curve)
 
         # Failure Distributions
+        self.set_distributions(self.distributions)
         self.init_dist = None
         self.pof = None
         self.set_untreated(self.untreated)
@@ -169,6 +185,36 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 self.pf_curve = cf.PF_CURVE
             else:
                 raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
+
+    def set_distributions(self, distributions):
+
+        NotImplemented
+
+    def set_distribution(self, dist_input):
+        """"""
+        try:
+            # Is the input a Distribution
+            if isinstance(dist_input, Distribution):
+                self.dists[dist_input.name] = dist_input
+
+            else:
+                name = dist_input["name"]
+
+                # Update with the update method if the Distribution already exists
+                if name in self.dists:
+                    self.dists[name].update_from_dict(dist_input)
+
+                # Create a failure mode from the dictionary
+                else:
+                    self.dists[name] = FailureMode.load(fm)
+
+        except:
+            raise ValueError(
+                "%s - %s - Distribution cannot be set from %s"
+                % (self.__cls__.__name__, self.name, dist_input)
+            )
+
+        NotImplemented
 
     def set_untreated(self, untreated):
         """
@@ -297,9 +343,8 @@ class FailureMode(Load):  # Maybe rename to failure mode
                 # does it exist: yes, update
                 elif task_name in self.tasks:
                     # update method
-                    self.tasks[
-                        task_name
-                    ] = Task()  # TODO Illyse: Check if this is right
+                    self.tasks[task_name] = Task()
+                    # TODO Illyse: Check if this is right
                     self.tasks[task_name].update_from_dict(task)
 
                 # does it exist: no, create from dictionary
@@ -362,6 +407,7 @@ class FailureMode(Load):  # Maybe rename to failure mode
         """
         Convert the probability of failure into a probability of initiation
         """
+        # TODO being moved to Distribution
 
         # Super simple placeholder # TODO add other methods
         alpha = self.untreated.alpha
@@ -1060,10 +1106,8 @@ class FailureMode(Load):  # Maybe rename to failure mode
 
 
 if __name__ == "__main__":
-    
-    cf.USE_DEFAULT = True
+    import doctest
 
-    failure_mode = FailureMode()
-    failure_mode
-
+    # Add a line to set config to test version**
+    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"dist": FailureMode()})
     print("FailureMode - Ok")
