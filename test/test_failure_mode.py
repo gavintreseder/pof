@@ -7,6 +7,7 @@ import sys
 import utils
 
 from pof.failure_mode import FailureMode
+from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
 import fixtures
 
@@ -315,6 +316,67 @@ class TestFailureMode(unittest.TestCase):
         self.assertEqual(fm1.name, fm2.name)
         self.assertEqual(fm1.untreated.alpha, fm2.untreated.alpha)
         self.assertEqual(fm1.conditions["perfect"], fm2.conditions["perfect"])
+
+    def test_set_task_Task(self):
+
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+
+        test_data = Task.from_dict(fixtures.inspection_data["instant"])
+
+        fm.set_tasks(test_data)
+
+        # self.assertIsInstance(fm_task_no_exists.tasks["inspection"], Inspection)
+        self.assertIsInstance(fm.tasks["inspection"], Task)
+        self.assertIsInstance(fm.tasks["on_condition_replacement"], Task)
+
+    def test_set_task_dict_Task(self):
+
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+
+        test_data = dict(name=Task.from_dict(fixtures.inspection_data["instant"]))
+
+        fm.set_tasks(test_data)
+        self.assertIsInstance(fm.tasks["inspection"], Task)
+        self.assertIsInstance(fm.tasks["on_condition_replacement"], Task)
+
+    def test_set_task_dict_create(self):
+
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+
+        self.assertIsInstance(fm.tasks["inspection"], Task)
+        self.assertIsInstance(fm.tasks["on_condition_replacement"], Task)
+
+    def test_set_task_dict_update(self):
+
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["random"])
+
+        test_data = dict(inspection=fixtures.inspection_data["instant"])
+
+        fm.set_tasks(test_data)
+        self.assertEqual(
+            fm.tasks["inspection"].cost,
+            test_data["inspection"]["cost"],
+        )
+        self.assertEqual(
+            fm.tasks["inspection"].t_delay,
+            test_data["inspection"]["t_delay"],
+        )
+
+    def test_set_task_dict(self):
+
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["random"])
+
+        test_data = dict(fixtures.inspection_data["instant"])
+
+        fm.set_tasks(test_data)
+        self.assertEqual(
+            fm.tasks["inspection"].cost,
+            test_data["cost"],
+        )
+        self.assertEqual(
+            fm.tasks["inspection"].t_delay,
+            test_data["t_delay"],
+        )
 
 
 if __name__ == "__main__":
