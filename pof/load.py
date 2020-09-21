@@ -67,29 +67,29 @@ class Load:
 
     # TODO overide __setattr__ to make it imporve dypte.load
     @classmethod
-    def _set_container_attr(self, attr, d_type, value):
+    def _set_container_attr(cls, attr, d_type, value):
 
         # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
-        if getattr(self, attr, None) is None:
-            setattr(self, attr, dict())
+        if getattr(cls, attr, None) is None:
+            setattr(cls, attr, dict())
 
         try:
             # Add the value to the dictionary if it is a Distribution
             if isinstance(value, d_type):
-                getattr(self, attr)[value.name] = value
+                getattr(cls, attr)[value.name] = value
 
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
 
                 # Create a
                 if "name" in value:  # TODO Check all keys in function
-                    getattr(self, attr)[value["name"]] = d_type.load(value)
+                    getattr(cls, attr)[value["name"]] = d_type.load(value)
 
                 # Iterate through and create objects using this method
                 else:
 
                     for val in value.values():
-                        self._set_container_attr(attr, d_type, val)
+                        cls._set_container_attr(attr, d_type, val)
 
             else:
                 raise ValueError
@@ -98,8 +98,8 @@ class Load:
             if value is None and cf.USE_DEFAULT is True:
                 logging.info(
                     "%s (%s) - %s cannot be set from %s - Default Use",
-                    self.__class__.__name__,
-                    self.name,
+                    cls.__name__,
+                    cls.name,
                     attr,
                     value,
                 )
@@ -107,8 +107,8 @@ class Load:
                 raise ValueError(
                     "%s (%s) - %s cannot be set from %s"
                     % (
-                        self.__class__.__name__,
-                        self.name,
+                        cls.__name__,
+                        cls.name,
                         attr,
                         value,
                     )
