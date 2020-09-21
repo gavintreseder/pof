@@ -19,7 +19,23 @@ cf = cf["Distribution"]
 # TODO Extend so that it works for all the common distributions
 
 
-class Distribution(Load):
+@dataclass(repr=False)
+class DistributionData(Load):
+    """
+    A class that contains the data for the Distribution object.
+    """
+
+    name: str = "dist"  # TODO use a config file to store all the defaultscf.get('name', fallback=None)
+    alpha: int = 100
+    beta: int = 1
+    gamma: int = 0
+
+    # self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+    # self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
+    # self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
+
+
+class Distribution(DistributionData):
 
     """
     Usage:
@@ -34,17 +50,6 @@ class Distribution(Load):
         <distribution.Distribution object at 0x...>
 
     """
-
-    def __init__(self, alpha=100, beta=1, gamma=0, name="dist", *args, **kwargs):
-
-        self.name = name
-        self.alpha = alpha
-        self.beta = beta
-        self.gamma = gamma
-
-        # self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-        # self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-        # self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
 
     def __str__(self):
 

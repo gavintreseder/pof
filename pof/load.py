@@ -66,7 +66,7 @@ class Load:
         return instance
 
     # TODO overide __setattr__ to make it imporve dypte.load
-    @classmethod
+
     def _set_container_attr(self, attr, d_type, value):
 
         # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error

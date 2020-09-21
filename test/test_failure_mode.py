@@ -319,32 +319,31 @@ class TestFailureMode(unittest.TestCase):
 
     def test_set_task_Task(self):
 
-        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["random"])
 
         test_data = Task.from_dict(fixtures.inspection_data["instant"])
 
-        fm.set_tasks(test_data)
+        fm._set_container_attr("tasks", Task, test_data)
 
-        # self.assertIsInstance(fm_task_no_exists.tasks["inspection"], Inspection)
         self.assertIsInstance(fm.tasks["inspection"], Task)
-        self.assertIsInstance(fm.tasks["on_condition_replacement"], Task)
+        self.assertEqual(
+            fm.tasks["inspection"].cost,
+            test_data.cost,
+        )
 
     def test_set_task_dict_Task(self):
 
-        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["random"])
 
-        test_data = dict(name=Task.from_dict(fixtures.inspection_data["instant"]))
+        test_data = dict(inspection=Task.from_dict(fixtures.inspection_data["instant"]))
 
-        fm.set_tasks(test_data)
-        self.assertIsInstance(fm.tasks["inspection"], Task)
-        self.assertIsInstance(fm.tasks["on_condition_replacement"], Task)
-
-    def test_set_task_dict_create(self):
-
-        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+        fm._set_container_attr("tasks", Task, test_data)
 
         self.assertIsInstance(fm.tasks["inspection"], Task)
-        self.assertIsInstance(fm.tasks["on_condition_replacement"], Task)
+        self.assertEqual(
+            fm.tasks["inspection"].cost,
+            test_data["inspection"].cost,
+        )
 
     def test_set_task_dict_update(self):
 
@@ -352,14 +351,12 @@ class TestFailureMode(unittest.TestCase):
 
         test_data = dict(inspection=fixtures.inspection_data["instant"])
 
-        fm.set_tasks(test_data)
+        fm._set_container_attr("tasks", Task, test_data)
+
+        self.assertIsInstance(fm.tasks["inspection"], Task)
         self.assertEqual(
             fm.tasks["inspection"].cost,
             test_data["inspection"]["cost"],
-        )
-        self.assertEqual(
-            fm.tasks["inspection"].t_delay,
-            test_data["inspection"]["t_delay"],
         )
 
     def test_set_task_dict(self):
@@ -368,14 +365,12 @@ class TestFailureMode(unittest.TestCase):
 
         test_data = dict(fixtures.inspection_data["instant"])
 
-        fm.set_tasks(test_data)
+        fm._set_container_attr("tasks", Task, test_data)
+
+        self.assertIsInstance(fm.tasks["inspection"], Task)
         self.assertEqual(
             fm.tasks["inspection"].cost,
             test_data["cost"],
-        )
-        self.assertEqual(
-            fm.tasks["inspection"].t_delay,
-            test_data["t_delay"],
         )
 
 
