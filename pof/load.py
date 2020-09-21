@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
 
-from pof.config import Config as cf
+from config import config as cf
 
 
 """
@@ -33,7 +33,7 @@ class Load:
                 logging.info("Error loading %s data - defaults used" % (cls.__name__))
                 instance = cls()
             else:
-                longing.warning("Error loading %s data" % (cls.__name__))
+                logging.warning("Error loading %s data" % (cls.__name__))
                 raise error
         return instance
 

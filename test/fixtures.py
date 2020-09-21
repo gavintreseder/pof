@@ -242,7 +242,7 @@ failure_mode_data = dict(
     early_life=dict(
         name='early_life',
         pf_curve = 'linear',
-        pf_interval=10, 
+        pf_interval=10,
         dists = dict(
             untreated=distribution_data['early_life'],
         ),

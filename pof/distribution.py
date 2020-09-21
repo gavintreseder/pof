@@ -12,7 +12,9 @@ if __package__ is None or __package__ == "":
 
 from pof.load import Load
 from pof.helper import id_update, str_to_dict
-from pof.config import distribution_config as cf
+from config import config as cf
+
+cf = cf["Distribution"]
 
 # TODO Extend so that it works for all the common distributions
 

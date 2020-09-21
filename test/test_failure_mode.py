@@ -52,7 +52,7 @@ class TestFailureMode(unittest.TestCase):
             fm = FailureMode.from_dict(false_data)
             self.assertIsNotNone(fm)
 
-    def test_instantiate_with_data(self):
+    def test_class_instantiate_with_data(self):
         try:
             fm = FailureMode(name="random", untreated=dict(alpha=500, beta=1, gamma=0))
             self.assertIsNotNone(fm)

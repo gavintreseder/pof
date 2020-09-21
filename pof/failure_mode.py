@@ -5,6 +5,7 @@ Author: Gavin Treseder
 
 # ************ Packages ********************
 
+import configparser
 import copy
 from dataclasses import dataclass
 from typing import Dict
@@ -40,8 +41,8 @@ from pof.task import (
     ImmediateMaintenance,
 )
 import pof.demo as demo
-from pof.config import failure_mode_config as cf
 from pof.load import Load
+from config import config as cf
 
 # TODO
 """
@@ -49,12 +50,13 @@ from pof.load import Load
     - task indicator
 """
 
-
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO Change this to update timeline based on states that have changed
 # TODO make it work with non zero start times
 # TODO add method for multiple defaults
+
+cf = cf["FailureMode"]
 
 seed(1)
 
@@ -67,17 +69,19 @@ class FailureModeData(Load):
     """
     A class that contains the data for the FailureMode object.
 
-    THis is a temporary fix due to issues with @property and @dataclass changing the constructor to only accept data with leading underscores
+    This is a temporary fix due to issues with @property and @dataclass changing the constructor to only accept data with leading underscores
     """
 
-    name: str = "fm"  # TODO use a config file to store all the defaultscf.get('name', fallback=None)
-    active: bool = True
-    pf_curve: str = None
-    pf_interval: int = None
-    pf_std: int = 0
+    # pylint: disable=too-many-instance-attributes
+    # Reasonable in this implementation
+
+    name: str = cf.get("name")
+    active: bool = cf.getboolean("active")
+    pf_curve: str = cf.get("pf_curve")
+    pf_interval: int = cf.get("pf_interval")
+    pf_std: int = cf.get("pf_std")
 
     # Set methods used
-    untreated: Dict = None
     dists: Dict = None
     consequences: Dict = None
     indicators: Dict = None
@@ -88,8 +92,8 @@ class FailureModeData(Load):
 
     # Simulation Details
     timeline: Dict = None
-    _timelines: Dict = None
-    _sim_counter: Dict = None
+    timelines: Dict = None
+    sim_counter: Dict = None
 
 
 class FailureMode(FailureModeData):
@@ -138,26 +142,65 @@ class FailureMode(FailureModeData):
         if value in PF_CURVES:
             self._pf_curve = value
         else:
-            if cf.USE_DEFAULT:
-                self._pf_curve = cf.PF_CURVE
+            raise ValueError(
+                "%s (%s) - pf_curve must be from: %s"
+                % (self.__class__.__name__, self.name, PF_CURVES)
+            )
+
+    @property
+    def pf_interval(self):
+        return self._pf_interval
+
+    @pf_interval.setter
+    def pf_interval(self, value):
+
+        try:
+            if value > 0:
+                self._pf_interval = value
             else:
                 raise ValueError(
-                    "%s - %s - pf_curve must be from: %s"
-                    % (self.__class__.__name__, self.name, cf.PF_CURVES)
+                    "%s (%s) - pf_interval must be greater than 0"
+                    % (self.__class__.__name__, self.name)
                 )
+        except:
+            raise
 
     @property
     def dists(self):
+        """
+        Usage:
+
+        A single distribution can be added to the dists dictionary
+
+            >>> fm.dists = Distribution(name='untreated')
+            >>> fm.dists
+            {'untreated': <pof.distribution.Distribution object at 0x...
+
+            >>> fm.dists = dict(name='dist_from_dict', alpha=50, beta = 10, gamma=1)
+            >>> fm.dists
+            {'dist_from_dict': <pof.distribution.Distribution object at 0x..
+
+        An iterator of distributions can be added to the dists dictionary
+
+            >>> fm.dists = dict('fm_name' = Distribution())
+            >>> fm.dists
+            {'fm_name': <pof.distribution.Distribution object at 0x...
+
+            >>> fm.dists = dict('first_dist' = dict(name='first_dist', alpha=50, beta=10, gamma=1))
+            {'first_dist': <pof.distribution.Distribution object at 0x...
+
+        """
         return self._dists
 
     @dists.setter
     def dists(self, value):
+
         # TODO maybe just update init each time anyway?
         untreated = copy.copy(getattr(getattr(self, "_dists", None), "untreated", None))
 
         self._set_container_attr("_dists", Distribution, value)
 
-        # Check if 'untreated' was updated and if so, call init dist TODO
+        # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
             self.set_init_dist()
 
@@ -179,6 +222,8 @@ class FailureMode(FailureModeData):
             elif isinstance(value, Iterable):
 
                 # Create a
+                # Is this dict a valid source for creating the ojbect
+
                 if "name" in value:  # TODO Check all keys in function
                     self._dists[value["name"]] = Distribution.load(value)
 
@@ -194,12 +239,12 @@ class FailureMode(FailureModeData):
         except:
             if value is None and cf.USE_DEFAULT is True:
                 print(
-                    "%s - %s - Distribution cannot be set from %s - Default Uses"
+                    "%s (%s) - Distribution cannot be set from %s - Default Uses"
                     % (self.__class__.__name__, self.name, value)
                 )
             else:
                 raise ValueError(
-                    "%s - %s - Distribution cannot be set from %s"
+                    "%s (%s) - Distribution cannot be set from %s"
                     % (self.__class__.__name__, self.name, value)
                 )
 
@@ -1170,9 +1215,17 @@ class FailureMode(FailureModeData):
         return self.load(demo.failure_mode_data["slow_aging"])
 
 
+def doctest_setup():
+    from pof.failure_mode import FailureMode
+    from pof.distribution import Distribution
+
+
 if __name__ == "__main__":
     import doctest
 
     # Add a line to set config to test version**
-    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"dist": FailureMode()})
+    doctest.testmod(
+        optionflags=doctest.ELLIPSIS,
+        extraglobs={"fm": FailureMode()},
+    )
     print("FailureMode - Ok")
