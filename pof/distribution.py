@@ -19,17 +19,16 @@ cf = cf["Distribution"]
 # TODO Extend so that it works for all the common distributions
 
 
-@dataclass(repr=False)
+@dataclass()
 class DistributionData(Load):
     """
     A class that contains the data for the Distribution object.
     """
 
-    name: str = "dist"  # TODO use a config file to store all the defaultscf.get('name', fallback=None)
     alpha: int = 100
     beta: int = 1
     gamma: int = 0
-
+    name: str = "dist"  # TODO use a config file to store all the defaultscf.get('name', fallback=None)
     # self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
     # self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
     # self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
@@ -47,7 +46,7 @@ class Distribution(DistributionData):
     Create a Distribution object
 
         >>> Distribution()
-        <distribution.Distribution object at 0x...>
+        Distribution(name=...)
 
     """
 
@@ -132,6 +131,28 @@ class Distribution(DistributionData):
         P = P_interval / P_interval[0]
 
         return P
+
+    @classmethod
+    def from_pf_interval(cls, dist, pf_interval):
+        """
+        Returns a distribution that has been adjusted by a pf_interval
+
+        >>> from pof.distribution import Distribution
+        >>> dist = Distribution(alpha = 50, beta = 50, gamma = 10)
+        >>> pf_dist = Distribution.from_pf_interval(dist, 5)
+        >>> pf_dist.__dict__
+        {'name': 'dist', 'alpha': 50, 'beta': 50, 'gamma': 5}
+        """
+        alpha = dist.alpha
+        beta = dist.beta
+        if pf_interval is None:
+            gamma = max(0, dist.gamma)
+        else:
+            gamma = max(0, dist.gamma - pf_interval)
+
+        new_dist = cls(alpha=alpha, beta=beta, gamma=gamma)
+
+        return new_dist
 
     def cff(self, t_start, t_end):
         t_interval = np.arange(t_start, t_end + 1, 1)
