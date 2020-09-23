@@ -105,7 +105,7 @@ class Indicator(Load):
         # TODO add robust testing around pf_interval non negative numbers etc
         if pf_interval is None:
             if self.pf_interval is None:
-                if cf['USE_DEFAULT']:
+                if cf.getboolean('use_default'):
                     print(
                         "%s - %s - pf_interval set to DEFAULT %s"
                         % (self.__class__.__name__, self.name, cf['PF_INTERVAL'])
@@ -124,7 +124,7 @@ class Indicator(Load):
 
         if perfect is None:
             if self.perfect is None:
-                if cf['USE_DEFAULT']:
+                if cf.getboolean('use_default'):
                     self.perfect = cf['PERFECT']
                 else:
                     raise ValueError(
@@ -136,7 +136,7 @@ class Indicator(Load):
 
         if failed is None:
             if self.failed is None:
-                if cf['USE_DEFAULT']:
+                if cf.getboolean('use_default'):
                     self.failed =cf['FAILED']
                 else:
                     raise ValueError(

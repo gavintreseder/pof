@@ -190,7 +190,7 @@ class FailureMode(FailureModeData):
     @untreated.setter
     def untreated(self, dist):
         dist["name"] = "untreated"
-        self.dists = dict(untreated=dist)
+        self.set_dists(dist)
 
     # ************** Set Functions *****************
 
@@ -248,7 +248,7 @@ class FailureMode(FailureModeData):
 
         untreated = copy.copy(getattr(getattr(self, "_dists", None), "untreated", None))
 
-        self._set_container_attr("_dists", Distribution, value)
+        self._set_container_attr("_dists", Distribution, dists)
 
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
