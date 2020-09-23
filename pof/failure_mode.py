@@ -290,65 +290,11 @@ class FailureMode(FailureModeData):
             if state not in self.states:
                 self.states[state] = False
 
-    def set_tasks2(self, tasks):
-        """
-        Takes a dictionary of tasks and sets the failure mode tasks
-        """
-
-        for task_name, task in tasks.items():
-            if isinstance(task, Task):
-                self.tasks[task_name] = task
-            elif isinstance(task, dict):
-                if task["activity"] == "Inspection":
-                    self.tasks[task["name"]] = Inspection.load(task)
-                elif task["activity"] == "ConditionTask":
-                    self.tasks[task_name] = ConditionTask.load(task)
-
-                else:
-                    print("Invalid Task Activity")
-            else:
-                print("Invalid Task")
-
     def set_tasks(self, tasks):
         """
         Takes a dictionary of tasks and sets the failure mode tasks
         """
-        print(tasks)
-        # Check if Task
-        if isinstance(tasks, Task):
-            self.tasks[tasks.name] = tasks
-
-        # Check if Dictionary
-        elif isinstance(tasks, dict):
-            # Iterate through Dictionary
-            for task_name, task in tasks.items():
-                print(task_name)
-                # is it a Task
-                if isinstance(task, Task):
-                    self.tasks[task_name] = task
-                # does it exist: yes, update
-                elif task_name in self.tasks:
-                    if isinstance(self.tasks[task_name], dict):
-                        if task["activity"] == "Inspection":
-                            self.tasks[task["name"]] = Inspection.load(task)
-                        elif task["activity"] == "ConditionTask":
-                            self.tasks[task_name] = ConditionTask.load(task)
-                    # update method
-                    else:
-                        self.tasks[task_name].update_from_dict(task)
-                # does it exist: no, create from dictionary
-                elif isinstance(task, dict):
-                    if task["activity"] == "Inspection":
-                        self.tasks[task["name"]] = Inspection.load(task)
-                    elif task["activity"] == "ConditionTask":
-                        self.tasks[task_name] = ConditionTask.load(task)
-                    else:
-                        print("Invalid Task Activity")
-                else:
-                    self.tasks[tasks["name"]].update_from_dict(tasks)
-                    break
-        else:
-            print("Invalid Task")
+        self._set_container_attr("tasks", Task, tasks)
 
     def link_indicator(self, indicator):
         """
@@ -944,17 +890,17 @@ class FailureMode(FailureModeData):
         plt.show()
 
     def update_from_dict(self, dict_data):
-        # before set-method change
+
         for key, value in dict_data.items():
 
             if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
                 self.__dict__[key] = value
 
-            # elif key == "untreated":
-            # self.set_untreated(dict_data[key])
+            elif key == "untreated":
+                self.set_dists(dict_data[key])
 
-            # elif key == "conditions":
-            # self.set_conditions(dict_data[key])
+            elif key == "conditions":
+                self.set_conditions(dict_data[key])
 
             elif key == "consequence":
                 self.set_consequence(dict_data[key])
