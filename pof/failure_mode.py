@@ -943,28 +943,6 @@ class FailureMode(FailureModeData):
 
         plt.show()
 
-    def update(self, id_object, value=None):
-        """"""
-        if isinstance(id_object, str):
-            self.update_from_str(id_object, value, sep="-")
-
-        elif isinstance(id_object, dict):
-            self.update_from_dict(id_object)
-
-        else:
-            print(
-                'ERROR: Cannot update "%s" from string or dict'
-                % (self.__class__.__name__)
-            )
-
-    def update_from_str(self, id_str, value, sep="-"):
-
-        id_str = id_str.split(self.name + sep, 1)[1]
-
-        dict_data = str_to_dict(id_str, value, sep)
-
-        self.update_from_dict(dict_data)
-
     def update_from_dict(self, dict_data):
 
         for key, value in dict_data.items():

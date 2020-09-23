@@ -24,6 +24,7 @@ from pof.consequence import Consequence
 from pof.distribution import Distribution
 import pof.demo as demo
 from config import config as cf
+from pof.load import Load
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -274,28 +275,6 @@ class Task:
 
     # ********************* interface methods ******************
 
-    def update(self, id_object, value=None):
-        """"""
-        if isinstance(id_object, str):
-            self.update_from_str(id_object, value, sep="-")
-
-        elif isinstance(id_object, dict):
-            self.update_from_dict(id_object)
-
-        else:
-            print(
-                'ERROR: Cannot update "%s" from string or dict'
-                % (self.__class__.__name__)
-            )
-
-    def update_from_str(self, id_str, value, sep="-"):
-
-        id_str = id_str.split(self.name + sep, 1)[1]
-
-        dict_data = str_to_dict(id_str, value, sep)
-
-        self.update_from_dict(dict_data)
-
     def update_from_dict(self, dict_data):
 
         for key, value in dict_data.items():
@@ -419,21 +398,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return schedule
 
-    # def update_from_dict(self, keys):
-
-    #     try:
-    #         super().update_from_dict(keys)
-    #     except KeyError:
-    #         # Check for scheudle specific ones
-    #         for key, value in keys.items():
-    #             if key in ["t_interval", "t_delay"]:
-    #                 self.__dict__[key] = value
-    #             else:
-    #                 raise KeyError(
-    #                     'ERROR: Cannot update "%s" from dict with key %s'
-    #                     % (self.__class__.__name__, keys)
-    #                 )
-
     def update_from_dict(self, keys):
 
         for key, value in keys.items():
@@ -444,7 +408,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
                 if key in self.__dict__:
                     self.__dict__[key] = value
                 else:
-                    # Check for condition specific ones
                     raise KeyError(
                         'ERROR: Cannot update "%s" - %s from dict with key %s'
                         % (self.__class__.__name__, self.name, key)
@@ -522,14 +485,9 @@ class ConditionTask(Task):
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                if (
-                    False
-                ):  # TODO Illyse - the false is just to make the code run, not the acutally condition
-                    # is object then update
-                    # is it a dict
+                if key in self.__dict__:
                     self.__dict__[key] = value
                 else:
-                    # Check for condition specific ones
                     raise KeyError(
                         'ERROR: Cannot update "%s" - %s from dict with key %s'
                         % (self.__class__.__name__, self.name, key)

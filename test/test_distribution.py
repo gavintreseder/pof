@@ -69,22 +69,22 @@ class TestDistribution(unittest.TestCase):
 
         # ************ Test update methods *****************
 
-    def test_update(self):
+    # def test_update(self):
 
-        expected_list = [True, False, 10, "abc"]
+    #     expected_list = [True, False, 10, "abc"]
 
-        dist = Distribution(alpha=50, beta=1.5, gamma=10)
-        dash_ids = dist.get_dash_ids()
+    #     dist = Distribution(alpha=50, beta=1.5, gamma=10)
+    #     dash_ids = dist.get_dash_ids()
 
-        for dash_id in dash_ids:
+    #     for dash_id in dash_ids:
 
-            for expected in expected_list:
+    #         for expected in expected_list:
 
-                dist.update(dash_id, expected)
+    #             dist.update(dash_id, expected)
 
-                val = utils.get_dash_id_value(dist, dash_id)
+    #             val = utils.get_dash_id_value(dist, dash_id)
 
-                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
+    #             self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 
     def test_get_value(self):
 
@@ -106,28 +106,15 @@ class TestDistribution(unittest.TestCase):
 
     def test_update(self):
 
-        test_data = {"alpha": 5, "beta": 3, "gamma": 1}
+        test_data_1 = {"alpha": 5, "beta": 3, "gamma": 1}
+        test_data_2 = {"alpha": 10, "beta": 5, "gamma": 1}
 
-        d1 = Distribution.from_dict(test_data)
+        d1 = Distribution.from_dict(test_data_1)
+        d2 = Distribution.from_dict(test_data_2)
 
-        test_data["alpha"] = 10
-        test_data["beta"] = 5
+        d1.update({"alpha": 10, "beta": 5})
 
-        d2 = Distribution.from_dict(test_data)
-
-        d1.update_from_dict({"alpha": 10, "beta": 5})
-
-        self.assertEqual(d1.__dict__, d2.__dict__)
-
-        # Create an ojbect
-
-        # set a valuue
-
-        # get that value
-
-        # Check they match
-
-        # NotImplemented
+        self.assertEqual(d1, d2)
 
 
 if __name__ == "__main__":

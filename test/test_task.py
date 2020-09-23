@@ -50,7 +50,10 @@ class TestTask(unittest.TestCase):
 
     def test_update_error(self):
 
-        t = Task.from_dict()
+        test_data = copy.deepcopy(fixtures.on_condition_replacement_data)
+
+        t = Task.from_dict(test_data)
+
         update = {"alpha": 10, "beta": 5}
 
         self.assertRaises(KeyError, t.update_from_dict, update)
@@ -76,9 +79,32 @@ class TestConditionTask(unittest.TestCase):
 
     def test_update(self):
 
-        # Test all the options
+        test_data_1 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_1["cost"] = 0
+        test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
+        test_data_2 = copy.deepcopy(fixtures.on_condition_replacement_data)
 
-        self.assertTrue(True)
+        # Test all the options
+        t1 = ConditionTask.from_dict(test_data_1)
+        t2 = ConditionTask.from_dict(test_data_2)
+
+        t1.update_from_dict(
+            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}}
+        )
+
+        # self.assertEqual(t1.__dict__, t2.__dict__)
+        self.assertEqual(t1.cost, t2.cost)
+        self.assertEqual(t1.triggers, t2.triggers)
+
+    def test_update_error(self):
+
+        test_data = copy.deepcopy(fixtures.on_condition_replacement_data)
+
+        t = ConditionTask.from_dict(test_data)
+
+        update = {"alpha": 10, "beta": 5}
+
+        self.assertRaises(KeyError, t.update_from_dict, update)
 
 
 class TestInspection(unittest.TestCase):
@@ -103,6 +129,32 @@ class TestInspection(unittest.TestCase):
 
     def test_update(self):
 
-        # Test all the options
+        test_data_1 = copy.deepcopy(fixtures.inspection_data["instant"])
+        test_data_1["cost"] = 0
+        test_data_1["triggers"]["condition"]["instant"]["upper"] = 90
+        test_data_2 = copy.deepcopy(fixtures.inspection_data["instant"])
 
-        self.assertTrue(True)
+        # Test all the options
+        t1 = Inspection.from_dict(test_data_1)
+        t2 = Inspection.from_dict(test_data_2)
+
+        t1.update_from_dict(
+            {
+                "cost": 50,
+                "trigger": {"condition": {"instant": {"upper": 0}}},
+            }
+        )
+
+        # self.assertEqual(t1.__dict__, t2.__dict__)
+        self.assertEqual(t1.cost, t2.cost)
+        self.assertEqual(t1.triggers, t2.triggers)
+
+    def test_update_error(self):
+
+        test_data = copy.deepcopy(fixtures.inspection_data["instant"])
+
+        t = Inspection.from_dict(test_data)
+
+        update = {"alpha": 10, "beta": 5}
+
+        self.assertRaises(KeyError, t.update_from_dict, update)
