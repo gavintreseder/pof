@@ -662,7 +662,9 @@ class TestConditionIndicator(unittest.TestCase):
 
     def test_update_error(self):
 
-        c = ConditionIndicator.from_dict()
+        test_data = copy.deepcopy(fixtures.condition_data["fast_degrading"])
+
+        c = ConditionIndicator.from_dict(test_data)
         update = {"alpha": 10, "beta": 5}
 
         self.assertRaises(KeyError, c.update_from_dict, update)
