@@ -7,9 +7,8 @@ Author: Gavin Treseder
 
 import configparser
 import copy
-from dataclasses import dataclass
-from typing import Dict
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Dict, Optional
 from random import random, seed
 
 import numpy as np
@@ -42,21 +41,18 @@ from pof.task import (
 )
 import pof.demo as demo
 from pof.load import Load
-from config import config as cf
+from config import config
 
 # TODO
 """
-    - Use condition pf to change indicator 
+    - Use condition pf to change indicator
     - task indicator
 """
 
-# TODO move t somewhere else
-# TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO Change this to update timeline based on states that have changed
 # TODO make it work with non zero start times
-# TODO add method for multiple defaults
 
-cf = cf["FailureMode"]
+cf = config["FailureMode"]
 
 seed(1)
 
@@ -75,11 +71,12 @@ class FailureModeData(Load):
     # pylint: disable=too-many-instance-attributes
     # Reasonable in this implementation
 
-    name: str = cf.get("name")
-    active: bool = cf.getboolean("active")
-    pf_curve: str = cf.get("pf_curve")
-    pf_interval: int = cf.get("pf_interval")
-    pf_std: int = cf.get("pf_std")
+    name: str = field(default_factory=lambda: cf.get("name"))
+    active: bool = field(default_factory=lambda: cf.getboolean("active"))
+    pf_curve: str = field(default_factory=lambda: cf.get("pf_curve"))
+    pf_interval: int = field(default_factory=lambda: cf.getint("pf_interval"))
+    pf_std: int = field(default_factory=lambda: cf.getint("pf_std"))
+    untreated: Distribution = None  # Used to avoid breaking untreated set methods
 
     # Set methods used
     dists: Dict = None
@@ -91,9 +88,9 @@ class FailureModeData(Load):
     init_states: Dict = None
 
     # Simulation Details
-    timeline: Dict = None
-    timelines: Dict = None
-    sim_counter: Dict = None
+    timeline: Dict = field(init=False, default_factory=lambda: dict())
+    timelines: Dict = field(init=False, default_factory=lambda: dict())
+    sim_counter: int = 0
 
 
 class FailureMode(FailureModeData):
@@ -122,6 +119,11 @@ class FailureMode(FailureModeData):
 
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
+
+    def __post_init__(self):
+
+        # Convert any dictionaries that were input into objects:
+        self.set_dists(self.dists)
 
     @property
     def name(self):
@@ -166,89 +168,6 @@ class FailureMode(FailureModeData):
             raise
 
     @property
-    def dists(self):
-        """
-        Usage:
-
-        A single distribution can be added to the dists dictionary
-
-            >>> fm.dists = Distribution(name='untreated')
-            >>> fm.dists
-            {'untreated': <pof.distribution.Distribution object at 0x...
-
-            >>> fm.dists = dict(name='dist_from_dict', alpha=50, beta = 10, gamma=1)
-            >>> fm.dists
-            {'dist_from_dict': <pof.distribution.Distribution object at 0x..
-
-        An iterator of distributions can be added to the dists dictionary
-
-            >>> fm.dists = dict('fm_name' = Distribution())
-            >>> fm.dists
-            {'fm_name': <pof.distribution.Distribution object at 0x...
-
-            >>> fm.dists = dict('first_dist' = dict(name='first_dist', alpha=50, beta=10, gamma=1))
-            {'first_dist': <pof.distribution.Distribution object at 0x...
-
-        """
-        return self._dists
-
-    @dists.setter
-    def dists(self, value):
-
-        # TODO maybe just update init each time anyway?
-        untreated = copy.copy(getattr(getattr(self, "_dists", None), "untreated", None))
-
-        self._set_container_attr("_dists", Distribution, value)
-
-        # Check if 'untreated' was updated and if so, call init dist
-        if untreated != self.dists.get("untreated", None):
-            self.set_init_dist()
-
-    def dists2(self, value):
-
-        # TODO Illyse -> see if this logic works for other containers
-        """ Set the distribution"""
-
-        # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
-        if getattr(self, "_dists", None) is None:
-            self._dists = dict()
-
-        try:
-            # Add the value to the dictionary if it is a Distribution
-            if isinstance(value, Distribution):
-                self._dists[value.name] = value
-
-            # Check if the input is an iterable
-            elif isinstance(value, Iterable):
-
-                # Create a
-                # Is this dict a valid source for creating the ojbect
-
-                if "name" in value:  # TODO Check all keys in function
-                    self._dists[value["name"]] = Distribution.load(value)
-
-                else:
-                    # Iterate through and create objects
-                    for val in value.values():
-                        # Calls this method again with the inside value
-                        self.dists = val
-
-            else:
-                raise ValueError
-
-        except:
-            if value is None and cf.USE_DEFAULT is True:
-                print(
-                    "%s (%s) - Distribution cannot be set from %s - Default Uses"
-                    % (self.__class__.__name__, self.name, value)
-                )
-            else:
-                raise ValueError(
-                    "%s (%s) - Distribution cannot be set from %s"
-                    % (self.__class__.__name__, self.name, value)
-                )
-
-    @property
     def timeline(self):
         return self._timeline
 
@@ -263,6 +182,15 @@ class FailureMode(FailureModeData):
     @timelines.setter
     def timelines(self, value):
         self._timelines = value
+
+    @property
+    def untreated(self):
+        return self.dists.get("untreated")
+
+    @untreated.setter
+    def untreated(self, dist):
+        dist["name"] = "untreated"
+        self.dists = dict(untreated=dist)
 
     # ************** Set Functions *****************
 
@@ -316,65 +244,21 @@ class FailureMode(FailureModeData):
                         % (self.__class__.__name__)
                     )
 
-    def set_untreated(self, untreated):
-        """
-        Takes a Distribution, a dictionary that represents a Distribution or an iterable of these objects and sets untreated to those objects
-        Usage
+    def set_dists(self, dists):
 
+        untreated = copy.copy(getattr(getattr(self, "_dists", None), "untreated", None))
 
-        set_untreated(Distribution)
-        self.untreated == Distribution
+        self._set_container_attr("_dists", Distribution, value)
 
-        set_untreated(dict(name = Distribution))
-        self.untreated == Distribution
-
-        set_untreated(dict("untreated" = dict("alpha" = 10)))
-        self.untreated.alpha == 10
-
-        set_untreated(dict_data(untreated))
-        self.untreated == Distribution
-        """
-        # Load a distribution object
-        if isinstance(untreated, Distribution):
-            self.untreated = untreated
-
-        # Add a name to the distribution and set create the object
-        elif isinstance(untreated, dict):
-            # is it a dist in a dict
-
-            # does it already exist
-            # if untreat.name is in self.untreated:
-            # if yes update
-            # if no create
-
-            # TODO Illyse, was this commented out block needed?
-            """
-            if self.untreated is not None:
-                self.untreated.update_from_dict(untreated)
-            else:
-                untreated["name"] = "untreated"
-                self.untreated = Distribution.from_dict(untreated)
-            """
-
-            untreated["name"] = "untreated"
-            self.untreated = Distribution.from_dict(untreated)
-
-        else:
-            untreated["name"] = "untreated"
-            self.untreated = Distribution.from_dict(untreated)
-            # print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
-
-        # Set the probability of initiation using the untreated parameters
-        self.set_init_dist()
+        # Check if 'untreated' was updated and if so, call init dist
+        if untreated != self.dists.get("untreated", None):
+            self.set_init_dist()
 
     def set_init_states(self, states):
         # TODO Update this method at the same time as set state
 
         if self.init_states is None:
-            if cf.USE_DEFAULT:
-                self.init_states = {state: False for state in REQUIRED_STATES}
-            else:
-                raise ValueError("Failure Mode - %s - No states provided" % (self.name))
+            self.init_states = {state: False for state in REQUIRED_STATES}
 
         # update from the input argument
         if states is not None:
@@ -628,7 +512,7 @@ class FailureMode(FailureModeData):
         t_initiate = 0
         if not self.is_initiated():
             # TODO this needs to be conditional_sf
-            t_initiate = min(t_end + 1, int(self.init_dist.sample()))
+            t_initiate = min(t_end + 1, int(self.dists["init"].sample()))
             timeline["initiation"][t_initiate:] = 1
 
         # Get condition
@@ -697,7 +581,7 @@ class FailureMode(FailureModeData):
                 t_initiate = min(
                     # TODO this needs to be condiitonal sf
                     t_end,
-                    t_start + int(self.init_dist.sample()),
+                    t_start + int(self.dists["init"].sample()),
                 )  # TODO make this conditional
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True

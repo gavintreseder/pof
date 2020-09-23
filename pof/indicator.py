@@ -21,7 +21,9 @@ if __package__ is None or __package__ == "":
 
 from pof.load import Load
 from pof.helper import str_to_dict
-from config import config as cf
+from config import config
+
+cf = config["Indicator"]
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
@@ -93,25 +95,22 @@ class Indicator(Load):
 
     def set_pf_curve(self, pf_curve):
 
-        if pf_curve in cf.PF_CURVES:
+        if pf_curve in cf['PF_CURVES']:
             self.pf_curve = pf_curve
         else:
-            if cf.USE_DEFAULT:
-                self.pf_curve = cf.PF_CURVES
-            else:
-                raise ValueError("pf_curve must be from: %s" % (cf.PF_CURVES))
+            raise ValueError("pf_curve must be from: %s" % (cf['PF_CURVES']))
 
     def set_pf_interval(self, pf_interval=None):
 
         # TODO add robust testing around pf_interval non negative numbers etc
         if pf_interval is None:
             if self.pf_interval is None:
-                if cf.USE_DEFAULT:
+                if cf['USE_DEFAULT']:
                     print(
                         "%s - %s - pf_interval set to DEFAULT %s"
-                        % (self.__class__.__name__, self.name, cf.PF_INTERVAL)
+                        % (self.__class__.__name__, self.name, cf['PF_INTERVAL'])
                     )
-                    self.pf_interval = cf.PF_INTERVAL
+                    self.pf_interval = cf['PF_INTERVAL']
                 else:
                     raise ValueError(
                         "%s - %s - pf_interval required"
@@ -125,8 +124,8 @@ class Indicator(Load):
 
         if perfect is None:
             if self.perfect is None:
-                if cf.USE_DEFAULT:
-                    self.perfect = cf.PERFECT
+                if cf['USE_DEFAULT']:
+                    self.perfect = cf['PERFECT']
                 else:
                     raise ValueError(
                         "%s - %s - perfect value required"
@@ -137,8 +136,8 @@ class Indicator(Load):
 
         if failed is None:
             if self.failed is None:
-                if cf.USE_DEFAULT:
-                    self.failed = cf.FAILED
+                if cf['USE_DEFAULT']:
+                    self.failed =cf['FAILED']
                 else:
                     raise ValueError(
                         "%s - %s - failed value required"

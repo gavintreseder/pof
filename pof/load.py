@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
 
-from config import config as cf
+from config import config
 
+# Use config for load
+cf = config["Load"]
 
 """
 The load module is used to overload other pof classes so that they can use a common load methods
@@ -29,7 +31,7 @@ class Load:
         try:
             instance = cls.from_dict(details)
         except ValueError as error:
-            if cf.on_error_use_default:
+            if cf.get("on_error_use_default"):
                 logging.info("Error loading %s data - defaults used" % (cls.__name__))
                 instance = cls()
             else:
@@ -51,7 +53,7 @@ class Load:
             }"""
             instance = cls(**details)
         except ValueError as error:
-            if cf.on_error_use_default:
+            if cf.get("on_error_use_default"):
                 logging.info(
                     "Error loading %s data from dictionary - defaults used"
                     % (cls.__name__)
@@ -74,8 +76,11 @@ class Load:
             setattr(self, attr, dict())
 
         try:
+            if value is None:
+                setattr(self, attr, dict())
+
             # Add the value to the dictionary if it is a Distribution
-            if isinstance(value, d_type):
+            elif isinstance(value, d_type):
                 getattr(self, attr)[value.name] = value
 
             # Check if the input is an iterable
@@ -95,7 +100,7 @@ class Load:
                 raise ValueError
 
         except:
-            if value is None and cf.USE_DEFAULT is True:
+            if value is None and cf.get("on_error_use_default") is True:
                 logging.info(
                     "%s (%s) - %s cannot be set from %s - Default Use",
                     self.__class__.__name__,

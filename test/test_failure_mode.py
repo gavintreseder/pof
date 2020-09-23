@@ -1,18 +1,27 @@
+"""
+#TODO add docstring
+"""
+
 import unittest
-import unittest.mock
-from unittest.mock import patch
+from unittest.mock import Mock, MagicMock, patch
 import logging
 import sys
 
 import utils
-
 from pof.failure_mode import FailureMode
+
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
 import fixtures
 
 
 class TestFailureMode(unittest.TestCase):
+    def setUp(self):
+        self.blank_config = MagicMock()
+        self.blank_config.get.return_value = None
+        self.blank_config.getboolean.return_value = None
+        self.blank_config.getint.return_value = None
+
     def test_class_imports_correctly(self):
         self.assertIsNotNone(FailureMode)
 
@@ -20,29 +29,25 @@ class TestFailureMode(unittest.TestCase):
         failure_mode = FailureMode()
         self.assertIsNotNone(failure_mode)
 
-    @patch("pof.failure_mode.cf.USE_DEFAULT", True)
-    def test_class_instantiate_no_input_use_default_true(self):
-        """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
-        failure_mode = FailureMode()
-        self.assertIsNotNone(failure_mode)
+    def test_class_instantiate_without_data_config_none(self):
+        """ Tests the creation of a class instance with all"""
+        with patch("pof.failure_mode.cf", self.blank_config):
+            with self.assertRaises(
+                ValueError,
+                msg="Error expected with invalid input",
+            ):
+                failure_mode = FailureMode()
 
-    @patch("pof.failure_mode.cf.USE_DEFAULT", False)
-    def test_class_instantiate_no_input_use_default_false(self):
-        """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
-        with self.assertRaises(
-            ValueError,
-            msg="Indicator should not be able to link if there isn't an indicator by that name",
-        ):
-            failure_mode = FailureMode()
+    def test_class_instantiate_with_data(self):
+        fm = FailureMode(name="random", untreated=dict(alpha=500, beta=1, gamma=0))
+        self.assertIsNotNone(fm)
 
     def test_from_dict(self):
         try:
             fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
             self.assertIsNotNone(fm)
-        except ValueError:
-            self.fail("ValueError returned")
         except:
-            self.fail("Unknown error")
+            self.fail("Unexpected Error")
 
     def test_from_dict_value_error_exits(self):
 
@@ -50,16 +55,6 @@ class TestFailureMode(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             fm = FailureMode.from_dict(false_data)
-            self.assertIsNotNone(fm)
-
-    def test_class_instantiate_with_data(self):
-        try:
-            fm = FailureMode(name="random", untreated=dict(alpha=500, beta=1, gamma=0))
-            self.assertIsNotNone(fm)
-        except ValueError:
-            self.fail("ValueError returned")
-        except:
-            self.fail("Unknown error")
 
     # ************ Test init_timeline ***********************
 
