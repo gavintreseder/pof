@@ -151,7 +151,9 @@ class Task:
             print("Invalid Consequence")
 
     def set_triggers(self, triggers=None):
-        if triggers is not None:
+        if triggers is None:
+            triggers = dict()
+        else:
             for trigger in ["condition", "state", "time"]:
                 if trigger not in triggers:
                     triggers[trigger] = dict()
@@ -161,14 +163,17 @@ class Task:
 
         self.triggers = triggers
 
-    def set_impacts(self, impacts=dict()):
-        for impact in ["condition", "state", "time"]:
-            if impact not in impacts:
-                impacts[impact] = dict()
+    def set_impacts(self, impacts=None):
+        if impacts is None:
+            impacts = dict()
+        else:
+            for impact in ["condition", "state", "time"]:
+                if impact not in impacts:
+                    impacts[impact] = dict()
 
-        # Recast any ints to bools TODO make more robust
-        for state in impacts["state"]:
-            impacts["state"][state] = bool(impacts["state"][state])
+            # Recast any ints to bools TODO make more robust
+            for state in impacts["state"]:
+                impacts["state"][state] = bool(impacts["state"][state])
 
         self.impacts = impacts
 

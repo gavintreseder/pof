@@ -191,7 +191,7 @@ class FailureMode(FailureModeData):
     def untreated(self, dist):
         if dist is not None:
             dist["name"] = "untreated"
-            self.set_tasks(dist)
+            self.set_dists(dist)
 
     # ************** Set Functions *****************
 
