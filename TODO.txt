@@ -1,13 +1,8 @@
 # 09 Sep -> Illyse Tasks
 
     # Distribution
-        # Create a new method that returns the conditional survival rate based when it is passed a time 
         # change all use of sample method to conditional survival rate
 
-    # Update method
-        #update_from_string
-            -> turn to dict, call update from dict
-        #update_from_dict
 
     # Dash update id methods (see this from above)
         # Change the update methods to use the set functions
@@ -22,7 +17,6 @@
     # Asset_model_loader
         # update rename duplicates so it also checks for duplicates in the asset model (whole list) and in the failure mdoes(no duplicates within comp)
 
-
     # Validation
         # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
 
@@ -34,9 +28,7 @@
 
 # 08 Sep - Gav
 
-
     # Components
-
         # Asset Data
             # Consequence Model
             # Load data from csv file
@@ -44,7 +36,6 @@
 
     # Critical
         # inspection interval onto interface w button
-        # fix termite problem
         # n failures expected for population
             # fleet data
         # asset data
