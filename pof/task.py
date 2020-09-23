@@ -150,14 +150,14 @@ class Task:
         else:
             print("Invalid Consequence")
 
-    def set_triggers(self, triggers=dict()):
+    def set_triggers(self, triggers=None):
+        if triggers is not None:
+            for trigger in ["condition", "state", "time"]:
+                if trigger not in triggers:
+                    triggers[trigger] = dict()
 
-        for trigger in ["condition", "state", "time"]:
-            if trigger not in triggers:
-                triggers[trigger] = dict()
-
-        for state in triggers["state"]:
-            triggers["state"][state] = bool(triggers["state"][state])
+            for state in triggers["state"]:
+                triggers["state"][state] = bool(triggers["state"][state])
 
         self.triggers = triggers
 
