@@ -241,10 +241,8 @@ class Indicator(Load):
 
         for key, value in dict_data.items():
 
-            if key in ["name"]:
+            if key in self.__dict__:
                 self.__dict__[key] = value
-            elif key in ["parent"]:
-                self.component = value
             else:
                 raise KeyError(
                     'ERROR: Cannot update "%s" from dict with key %s'
@@ -520,31 +518,6 @@ class ConditionIndicator(Indicator):
         self._accumulated = dict()
         self._set_accumulated(name=name, accumulated=accumulated)
 
-    def update_from_dict2(self, keys):
-
-        try:
-            super().update_from_dict(keys)
-
-        except KeyError:
-            # Check for condition specific ones
-            for key, value in keys.items():
-                if key in [
-                    "pf_curve",
-                    "pf_interval",
-                    "pf_std",
-                    "perfect",
-                    "failed",
-                    "decreasing",
-                    "threshold_protection",
-                    "threshold_failure",
-                ]:
-                    self.__dict__[key] = value
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" from dict with key %s'
-                        % (self.__class__.__name__, key)
-                    )
-
     def update_from_dict(self, keys):
 
         for key, value in keys.items():
@@ -552,14 +525,9 @@ class ConditionIndicator(Indicator):
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                if (
-                    False
-                ):  # TODO Illyse - the false is just to make the code run, not the acutally condition
-                    # is object then update
-                    # is it a dict
+                if key in self.__dict__:
                     self.__dict__[key] = value
                 else:
-                    # Check for condition specific ones
                     raise KeyError(
                         'ERROR: Cannot update "%s" - %s from dict with key %s'
                         % (self.__class__.__name__, self.name, key)
@@ -638,19 +606,17 @@ class PoleSafetyFactor(Indicator):
 
     def update_from_dict(self, keys):
 
-        try:
-            super().update_from_dict(keys)
-        except KeyError:
-            # Check for condition specific ones
-            for key, value in keys.items():
-                if key in ["component", "decreasing"]:
+        for key, value in keys.items():
+
+            try:
+                super().update_from_dict({key: value})
+            except KeyError:
+                if key in self.__dict__:
                     self.__dict__[key] = value
-                elif key in ["failure"]:
-                    self.threshold_failure = value
                 else:
                     raise KeyError(
-                        'ERROR: Cannot update "%s" from dict with key %s'
-                        % (self.__class__.__name__, keys)
+                        'ERROR: Cannot update "%s" - %s from dict with key %s'
+                        % (self.__class__.__name__, self.name, key)
                     )
 
 
