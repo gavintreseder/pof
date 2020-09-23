@@ -304,16 +304,12 @@ class TestFailureMode(unittest.TestCase):
         test_data_1_fix = fixtures.failure_mode_data["early_life"]
         test_data_2_fix = fixtures.failure_mode_data["random"]
 
-        # Test all the options
         fm1 = FailureMode.from_dict(test_data_1_fix)
         fm2 = FailureMode.from_dict(test_data_2_fix)
 
         fm1.update_from_dict(test_data_2_fix)
 
-        # self.assertEqual(t1.__dict__, t2.__dict__)
-        self.assertEqual(fm1.name, fm2.name)
-        self.assertEqual(fm1.untreated.alpha, fm2.untreated.alpha)
-        self.assertEqual(fm1.conditions["perfect"], fm2.conditions["perfect"])
+        self.assertEqual(fm1, fm2)
 
     def test_set_task_Task(self):
 

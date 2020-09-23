@@ -646,19 +646,15 @@ class TestConditionIndicator(unittest.TestCase):
 
         test_data_1 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
         test_data_1["name"] = "FD"
-        test_data_1["perfect"] = 99
         test_data_1["pf_std"] = 0.25
         test_data_2 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
 
         c1 = ConditionIndicator.from_dict(test_data_1)
         c2 = ConditionIndicator.from_dict(test_data_2)
 
-        c1.update_from_dict({"name": "fast_degrading", "perfect": 100, "pf_std": 0.5})
+        c1.update({"name": "fast_degrading", "pf_std": 0.5})
 
-        # self.assertEqual(c1.__dict__, c2.__dict__)
-        self.assertEqual(c1.name, c2.name)
-        self.assertEqual(c1.perfect, c2.perfect)
-        self.assertEqual(c1.pf_std, c2.pf_std)
+        self.assertEqual(c1, c2)
 
     def test_update_error(self):
 
@@ -667,7 +663,7 @@ class TestConditionIndicator(unittest.TestCase):
         c = ConditionIndicator.from_dict(test_data)
         update = {"alpha": 10, "beta": 5}
 
-        self.assertRaises(KeyError, c.update_from_dict, update)
+        self.assertRaises(KeyError, c.update, update)
 
 
 if __name__ == "__main__":

@@ -134,7 +134,6 @@ class TestInspection(unittest.TestCase):
         test_data_1["triggers"]["condition"]["instant"]["upper"] = 90
         test_data_2 = copy.deepcopy(fixtures.inspection_data["instant"])
 
-        # Test all the options
         t1 = Inspection.from_dict(test_data_1)
         t2 = Inspection.from_dict(test_data_2)
 
@@ -145,7 +144,7 @@ class TestInspection(unittest.TestCase):
             }
         )
 
-        # self.assertEqual(t1.__dict__, t2.__dict__)
+        # self.assertEqual(t1, t2)
         self.assertEqual(t1.cost, t2.cost)
         self.assertEqual(t1.triggers, t2.triggers)
 

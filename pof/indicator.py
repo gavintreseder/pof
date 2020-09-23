@@ -25,6 +25,8 @@ from config import config
 
 cf = config["Indicator"]
 
+PF_CURVES = ["linear", "step"]
+
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
 # TODO robust testing
@@ -94,11 +96,12 @@ class Indicator(Load):
         self._timelines = dict()
 
     def set_pf_curve(self, pf_curve):
-
-        if pf_curve in cf["PF_CURVES"]:
+        # if pf_curve in cf['PF_CURVES']:
+        if pf_curve in PF_CURVES:
             self.pf_curve = pf_curve
         else:
-            raise ValueError("pf_curve must be from: %s" % (cf["PF_CURVES"]))
+            # raise ValueError("pf_curve must be from: %s" % (cf['PF_CURVES']))
+            raise ValueError("pf_curve must be from: %s" % (PF_CURVES))
 
     def set_pf_interval(self, pf_interval=None):
 
