@@ -653,7 +653,7 @@ class TestConditionIndicator(unittest.TestCase):
         c1 = ConditionIndicator.from_dict(test_data_1)
         c2 = ConditionIndicator.from_dict(test_data_2)
 
-        c1.update_from_dict({"name": "fast_degrading", "perfect": 100, "pf_std": 0.5})
+        c1.update({"name": "fast_degrading", "perfect": 100, "pf_std": 0.5})
 
         # self.assertEqual(c1.__dict__, c2.__dict__)
         self.assertEqual(c1.name, c2.name)
@@ -667,7 +667,7 @@ class TestConditionIndicator(unittest.TestCase):
         c = ConditionIndicator.from_dict(test_data)
         update = {"alpha": 10, "beta": 5}
 
-        self.assertRaises(KeyError, c.update_from_dict, update)
+        self.assertRaises(KeyError, c.update, update)
 
 
 if __name__ == "__main__":

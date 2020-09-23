@@ -944,7 +944,7 @@ class FailureMode(FailureModeData):
         plt.show()
 
     def update_from_dict(self, dict_data):
-
+        # before set-method change
         for key, value in dict_data.items():
 
             if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
