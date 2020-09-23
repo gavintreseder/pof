@@ -6,13 +6,12 @@
 """
 
 import unittest
-import unittest.mock.patch
+from unittest.mock import Mock, MagicMock, patch
 import numpy as np
 
 import utils
 
 from pof.load import Load
-from pof.config import Config as cf
 import pof.demo as demo
 
 """

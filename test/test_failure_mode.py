@@ -39,7 +39,10 @@ class TestFailureMode(unittest.TestCase):
                 failure_mode = FailureMode()
 
     def test_class_instantiate_with_data(self):
-        fm = FailureMode(name="random", untreated=dict(alpha=500, beta=1, gamma=0))
+        fm = FailureMode(
+            name="random",
+            dists=dict(untreated=dict(name="untreated", alpha=500, beta=1, gamma=0)),
+        )
         self.assertIsNotNone(fm)
 
     def test_from_dict(self):
@@ -61,7 +64,7 @@ class TestFailureMode(unittest.TestCase):
     def test_init_timeline_condition_step(self):  # TODO full coverage
         t_start = 0
         t_end = 200
-        fm = FailureMode().load(demo.failure_mode_data["random"])
+        fm = FailureMode.load(demo.failure_mode_data["random"])
 
         fm.init_timeline(t_start=0, t_end=200)
 
@@ -105,10 +108,10 @@ class TestFailureMode(unittest.TestCase):
 
         # Check times match
         self.assertEqual(
-            fm.timeline["time"][0], t_start, "First time does not equal t_start"
+            fm.timeline["time"][0], t_start, "First time in timeline should equal _start"
         )
         self.assertEqual(
-            fm.timeline["time"][-1], t_end, "Last time in timeline does not equal t_end"
+            fm.timeline["time"][-1], t_end, "Last time in timeline should equal t_end"
         )
 
         # Check states match

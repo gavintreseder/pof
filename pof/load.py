@@ -46,12 +46,6 @@ class Load:
         Unpacks the dictionary data and creates and object using the constructor
         """
         try:
-            # Add an underscore to the keys to make it work with data classses
-            """details = {
-                "_" + key: val
-                for key, val in details.items()
-                if key in ["dists", "name", "pf_curve", "pf_interval"]
-            }"""
             instance = cls(**details)
         except ValueError as error:
             if cf.get("on_error_use_default"):
@@ -88,7 +82,7 @@ class Load:
             elif isinstance(value, Iterable):
 
                 # Create a
-                if "name" in value:  # TODO Check all keys in function
+                if "name" in value:
                     getattr(self, attr)[value["name"]] = d_type.load(value)
 
                 # Iterate through and create objects using this method
@@ -141,3 +135,6 @@ class Load:
         dict_data = str_to_dict(id_str, value, sep)
 
         self.update_from_dict(dict_data)
+
+    def update_from_dict(self, *args, **kwargs):
+        return "This must be overloaded"
