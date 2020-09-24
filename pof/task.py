@@ -5,11 +5,9 @@ Author: Gavin Treseder
 
 # ************ Packages ********************
 
-import numpy as np
-import pandas as pd
 import math
+import numpy as np
 import scipy.stats as ss
-from scipy.linalg import circulant
 from random import random, seed
 
 if __package__ is None or __package__ == "":

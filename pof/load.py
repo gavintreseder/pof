@@ -33,10 +33,10 @@ class Load:
             instance = cls.from_dict(details)
         except ValueError as error:
             if cf.get("on_error_use_default"):
-                logging.info("Error loading %s data - defaults used" % (cls.__name__))
+                logging.info("Error loading %s data - defaults used", cls.__name__)
                 instance = cls()
             else:
-                logging.warning("Error loading %s data" % (cls.__name__))
+                logging.warning("Error loading %s data", cls.__name__)
                 raise error
         return instance
 
@@ -56,7 +56,7 @@ class Load:
                 instance = cls()
             else:
                 logging.warning(
-                    "Error loading %s data from dictionary" % (cls.__name__)
+                    "Error loading %s data from dictionary",cls.__name__
                 )
                 raise error
 

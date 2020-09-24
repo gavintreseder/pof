@@ -41,7 +41,7 @@ class TestFailureMode(unittest.TestCase):
     def test_class_instantiate_with_data(self):
         fm = FailureMode(
             name="random",
-            dists=dict(untreated=dict(name="untreated", alpha=500, beta=1, gamma=0)),
+            untreated=dict(name="slow_degrading", alpha=500, beta=1, gamma=0),
         )
         self.assertIsNotNone(fm)
 
@@ -227,7 +227,7 @@ class TestFailureMode(unittest.TestCase):
 
     def test_get_dash_id_value(self):
 
-        fm = FailureMode(alpha=50, beta=1.5, gamma=10).set_demo()
+        fm = FailureMode.set_demo()
 
         dash_ids = fm.get_dash_ids()
 

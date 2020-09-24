@@ -146,12 +146,16 @@ class FailureMode(Load):
         self.untreated = untreated
         self.indicators = dict()
         self.set_indicators(indicators)
+        self.conditions = dict()
         self.set_conditions(conditions)
+        self.consequences = dict()
         self.set_consequence(consequence)
+        self.tasks = dict()
         self.set_tasks(tasks)
 
         self.init_states = dict()
         self.set_init_states(states)
+        self.states = dict()
         self.set_states(states)
 
         self.timeline = dict()
@@ -216,22 +220,42 @@ class FailureMode(Load):
 
         self.consequence = Consequence()
 
-    def set_indicators(self, input_indicators=None):
-        self._set_container_attr("indicators", Indicator, input_indicators)
+    def set_indicators(self, var=None):
 
-    def set_conditions(self, input_conditions=None):
+        if var is None:
+            self.indicators = dict()
+        else:
+            # If it is an iterable, link them all
+            if isinstance(var, Iterable):
+                for indicator in var.values():
+                    self.indicators[var.name] = var
+
+            # If there is only one update
+            else:
+                self.conditions[var.name] = var
+
+    def set_conditions(self, var=None):
         """
         Takes a dict of conditions and saves them so they can be used to call indicators
         """
         # TODO Add checks to create the condition if it doesn't exist
         # TODO Make this work for different pf_intervals for different conditions
-        """dict(
-            indicator_name = None,
-            pf_curve = None,
-            pf_interval = None,
-        )"""
 
-        self.conditions = input_conditions
+        if var is None:
+            self.conditions = dict()
+        else:
+            # Create an indicator for any conditions not in the indicator list
+            for cond_name in self.conditions:
+                if cond_name not in self.indicators:
+                    indicator = ConditionIndicator(
+                        name=self.name,
+                        pf_curve="step",
+                        pf_interval=0,
+                        pf_std=0,
+                        perfect=False,
+                        failed=True,
+                    )
+                    self.set_indicators(indicator)
 
     def set_dists(self, dists):
 
@@ -290,21 +314,21 @@ class FailureMode(Load):
         Takes an indicator ojbect, or an iterable list of objects and links condition
         """
 
-        # Link all the indicators so they can be used for tasks
-        self.indicator = (
-            indicator  # TODO eventually replace all conditon with indicator
-        )
+        # TODO dlete
 
-        # If it is an iterable, link them all
-        if isinstance(indicator, Iterable):
-            for indicator in indicator.values():
+        if indicator is None:
+            self.indictors = dict()
+        else:
+            # If it is an iterable, link them all
+            if isinstance(indicator, Iterable):
+                for indicator in indicator.values():
+                    if indicator.name in self.conditions:
+                        self.indicators[indicator.name] = indicator
+
+            # If there is only one update
+            else:
                 if indicator.name in self.conditions:
                     self.conditions[indicator.name] = indicator
-
-        # If there is only one update
-        else:
-            if indicator.name in self.conditions:
-                self.conditions[indicator.name] = indicator
 
     # ************** Get Functions *****************
 
@@ -398,26 +422,25 @@ class FailureMode(Load):
 
         return self.timeline
 
-    def complete_tasks(self, t_now, task_names, verbose=False):
+    def complete_tasks(self, t_now, task_names):
         """ Executes the tasks """
 
         system_impacts = []
         if self.active:
             for task_name in task_names:
-                logging.info(t_now, task_names)
+                logging.info("Time %s - Tasks %s", t_now, task_names)
 
                 # Complete the tasks
                 states = self.tasks[task_name].sim_completion(
                     t_now,
                     timeline=self.timeline,
                     states=self.get_states(),
-                    conditions=self.indicator,
-                    verbose=verbose,
+                    conditions=self.indicators,
                 )
 
                 # Update timeline
                 self.set_states(states)
-                self.update_timeline(t_now + 1, updates=states, verbose=verbose)
+                self.update_timeline(t_now + 1, updates=states)
 
                 # Check if a system impact is triggered
                 system_impacts.append(self.tasks[task_name].system_impact())
@@ -497,7 +520,7 @@ class FailureMode(Load):
 
         return timeline
 
-    def update_timeline(self, t_start, t_end=None, updates=dict(), verbose=False):
+    def update_timeline(self, t_start, t_end=None, updates=dict()):
         """
         Takes a timeline and updates tasks that are impacted
         """
@@ -529,8 +552,11 @@ class FailureMode(Load):
             for cond_name in self.conditions:
                 if "initiation" in updates or condition_name in updates:
                     logging.info(
-                        "condition %s, start %s, initiate %s, end %s"
-                        % (cond_name, t_start, t_initiate, t_end)
+                        "condition %s, start %s, initiate %s, end %s",
+                        cond_name,
+                        t_start,
+                        t_initiate,
+                        t_end,
                     )
                     # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start])
                     # #TODO this should be set earlier using a a better method
