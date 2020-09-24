@@ -83,12 +83,12 @@ class TestConditionIndicator(unittest.TestCase):
     # ********************* Test sim_timeline *********************
 
     def test_sim_timeline(self):
-        cond = ConditionIndicator()
+        cond = ConditionIndicator.from_dict(cid)
         cond.sim_timeline(t_stop=100)
         self.assertIsNotNone(cond)
 
     def test_sim_timeline_no_data(self):
-        cond = ConditionIndicator()
+        cond = ConditionIndicator.from_dict(cid)
         cond.sim_timeline()
         self.assertIsNotNone(cond)
 

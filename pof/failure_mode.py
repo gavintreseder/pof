@@ -10,6 +10,7 @@ import copy
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 from random import random, seed
+import logging
 
 import numpy as np
 import pandas as pd
@@ -35,8 +36,6 @@ from pof.task import (
     Task,
     Inspection,
     ConditionTask,
-    OnConditionRepair,
-    OnConditionReplacement,
     ImmediateMaintenance,
 )
 import pof.demo as demo
@@ -79,7 +78,7 @@ class FailureModeData(Load):
 
     # Set methods used
     dists: Dict = None
-    consequences: Dict = None
+    consequence: Dict = None
     indicators: Dict = None
     conditions: Dict = None
     states: Dict = None
@@ -94,7 +93,7 @@ class FailureModeData(Load):
     untreated: Distribution = None
 
 
-class FailureMode(FailureModeData):
+class FailureMode(Load):
 
     """
     A class that contains the methods for FailureMode object
@@ -121,9 +120,43 @@ class FailureMode(FailureModeData):
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
 
-    def __post_init__(self):
-        # Convert any dictionaries that were input into objects:
-        self.set_dists(self.dists)
+    def __init__(
+        self,
+        name: str = "fm",
+        active: bool = True,
+        pf_curve: str = "step",
+        pf_interval: int = 0,
+        pf_std: int = 0,
+        untreated=None,
+        consequence: Dict = None,
+        indicators: Dict = None,
+        conditions: Dict = None,
+        states: Dict = None,
+        tasks: Dict = None,
+    ):
+
+        # TODO finish all the @setters to check for valid input and handle defaults
+        self.name = name
+        self.active = active
+        self.pf_curve = pf_curve
+        self.pf_interval = pf_interval
+        self.pf_std = pf_std
+
+        self.dists = dict()
+        self.untreated = untreated
+        self.indicators = dict()
+        self.set_indicators(indicators)
+        self.set_conditions(conditions)
+        self.set_consequence(consequence)
+        self.set_tasks(tasks)
+
+        self.init_states = dict()
+        self.set_init_states(states)
+        self.set_states(states)
+
+        self.timeline = dict()
+        self.timelines = dict()
+        self.sim_counter = dict()
 
     @property
     def name(self):
@@ -168,22 +201,6 @@ class FailureMode(FailureModeData):
             raise
 
     @property
-    def timeline(self):
-        return self._timeline
-
-    @timeline.setter
-    def timeline(self, value):
-        self._timeline = value
-
-    @property
-    def timelines(self):
-        return self._timelines
-
-    @timelines.setter
-    def timelines(self, value):
-        self._timelines = value
-
-    @property
     def untreated(self):
         return self.dists["untreated"]
 
@@ -197,54 +214,24 @@ class FailureMode(FailureModeData):
 
     def set_consequence(self, consequence):
 
-        self.cof = Consequence()
+        self.consequence = Consequence()
 
-    # TODO update set conditions
-    def set_conditions(self, input_condition=None):
+    def set_indicators(self, input_indicators=None):
+        self._set_container_attr("indicators", Indicator, input_indicators)
+
+    def set_conditions(self, input_conditions=None):
         """
-        Takes a dictionary of conditions and sets the failure mode conditions
+        Takes a dict of conditions and saves them so they can be used to call indicators
         """
-        if input_condition is None:
-            if cf.FILL_NONE_WITH_DEFAULT == True:
-                # Create a default condition using failure mode parameters
-                print(
-                    "Failure Mode (%s) - No condition provided - Default condition created"
-                    % (self.name)
-                )
-                self.conditions[None] = ConditionIndicator(
-                    pf_curve=self.pf_curve,
-                    pf_interval=self.pf_interval,
-                    pf_std=self.pf_std,
-                )
-            else:
-                raise ValueError(
-                    "Failure Mode (%s) - No condition provided" % (self.name)
-                )
-        else:
-            for cond_name, condition in input_condition.items():
+        # TODO Add checks to create the condition if it doesn't exist
+        # TODO Make this work for different pf_intervals for different conditions
+        """dict(
+            indicator_name = None,
+            pf_curve = None,
+            pf_interval = None,
+        )"""
 
-                # Load a condition object
-                if isinstance(condition, Indicator):
-                    self.conditions[cond_name] = condition
-
-                # Add a name to the distribution and set create the object
-                elif isinstance(condition, dict):
-
-                    # if self.conditions is not None:
-                    #     if isinstance(self.conditions[cond_name], Indicator):
-                    #         self.conditions[cond_name].update_from_dict(condition)
-                    #     else:
-                    #         for key, value in condition.items():
-                    #             self.conditions[key] = value
-
-                    # else:
-                    self.conditions[cond_name] = ConditionIndicator.from_dict(condition)
-
-                else:
-                    print(
-                        'ERROR: Cannot update "%s" condition from dict'
-                        % (self.__class__.__name__)
-                    )
+        self.conditions = input_conditions
 
     def set_dists(self, dists):
 
@@ -343,6 +330,14 @@ class FailureMode(FailureModeData):
 
     # *************** Get methods *******************
 
+    def get_condition(self):
+        """
+        Returns and indicator
+        """
+        NotImplemented
+
+    # *************** Get methods *******************
+
     def set_init_dist(self):  # TODO needs to get passed a condition and a pof
         """
         Convert the probability of failure into a probability of initiation
@@ -380,7 +375,7 @@ class FailureMode(FailureModeData):
             self.sim_timeline(t_end=t_end, t_start=t_start)
             self.save_timeline(i)
 
-    def sim_timeline(self, t_end, t_start=0, verbose=False):
+    def sim_timeline(self, t_end, t_start=0):
 
         timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
@@ -394,7 +389,7 @@ class FailureMode(FailureModeData):
                 t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
                 # Complete those tasks
-                self.complete_tasks(t_now, task_names, verbose=verbose)
+                self.complete_tasks(t_now, task_names)
 
                 t_now = t_now + 1
 
@@ -409,8 +404,7 @@ class FailureMode(FailureModeData):
         system_impacts = []
         if self.active:
             for task_name in task_names:
-                if verbose:
-                    print(t_now, task_names)
+                logging.info(t_now, task_names)
 
                 # Complete the tasks
                 states = self.tasks[task_name].sim_completion(
@@ -464,24 +458,19 @@ class FailureMode(FailureModeData):
             timeline["initiation"][t_initiate:] = 1
 
         # Get condition
-        for condition_name, condition in self.conditions.items():
-            timeline[condition_name] = condition.sim_timeline(
+        for cond_name in self.conditions:
+            timeline[cond_name] = self.indicators[cond_name].sim_timeline(
                 t_start=t_start - t_initiate,
                 t_stop=t_end - t_initiate,
                 pf_interval=self.pf_interval,
                 pf_std=self.pf_std,
             )
 
-        # Get the indicators
-        for indicator in self.indicator.values():
-            if indicator.name not in self.conditions:
-                timeline[indicator.name] = indicator.get_timeline()
-
         # Check failure
         timeline["failure"] = np.full(t_end + 1, self.is_failed())
         if not self.is_failed():
-            for condition in self.conditions.values():
-                tl_f = condition.sim_failure_timeline(
+            for cond_name in self.conditions:
+                tl_f = self.indiators[cond_name].sim_failure_timeline(
                     t_start=t_start - t_initiate,
                     t_stop=t_end - t_initiate,
                     pf_interval=self.pf_interval,
@@ -537,15 +526,17 @@ class FailureMode(FailureModeData):
                 t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
 
             # Check for condition changes
-            for condition_name, condition in self.conditions.items():
+            for cond_name in self.conditions:
                 if "initiation" in updates or condition_name in updates:
-                    if verbose:
-                        print(
-                            "condition %s, start %s, initiate %s, end %s"
-                            % (condition_name, t_start, t_initiate, t_end)
-                        )
-                    # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start]) #TODO this should be set earlier using a a better method
-                    self.timeline[condition_name][t_start:] = condition.sim_timeline(
+                    logging.info(
+                        "condition %s, start %s, initiate %s, end %s"
+                        % (cond_name, t_start, t_initiate, t_end)
+                    )
+                    # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start])
+                    # #TODO this should be set earlier using a a better method
+                    self.timeline[cond_name][t_start:] = self.indicators[
+                        cond_name
+                    ].sim_timeline(
                         t_start=t_start - t_initiate,
                         t_stop=t_end - t_initiate,
                         pf_interval=self.pf_interval,
@@ -559,8 +550,8 @@ class FailureMode(FailureModeData):
             # Check for failure changes
             if "failure" in updates:
                 self.timeline["failure"][t_start:] = updates["failure"]
-                for condition in self.conditions.values():
-                    tl_f = condition.sim_failure_timeline(
+                for cond_name in self.conditions:
+                    tl_f = self.indicators[cond_name].sim_failure_timeline(
                         t_start=t_start - t_initiate, t_stop=t_end - t_initiate
                     )
                     self.timeline["failure"][t_start:] = (
@@ -706,7 +697,7 @@ class FailureMode(FailureModeData):
     def expected_condition(self):
         """Get the expected condition for a failure mode"""
         expected = dict()
-        for cond_name in self.conditions.values():
+        for cond_name in self.conditions:
             expected[cond_name] = np.array(
                 [self._timelines[x][cond_name] for x in self._timelines]
             ).mean(axis=0)
@@ -716,17 +707,17 @@ class FailureMode(FailureModeData):
     def expected_condition_loss(self, stdev=1):
         """Get the expected condition for a failure mode"""
         expected = dict()
-        for cond_name, condition in self.conditions.items():
+        for ind_name, indicator in self.indicators.items():
 
             ec = np.array([self._timelines[x][cond_name] for x in self._timelines])
 
-            mean = condition.perfect - ec.mean(axis=0)
+            mean = indicator.perfect - ec.mean(axis=0)
             sd = ec.std(axis=0)
             upper = mean + sd * stdev
             lower = mean - sd * stdev
 
-            upper[upper > condition.perfect] = condition.perfect
-            lower[lower < condition.failed] = condition.failed
+            upper[upper > indicator.perfect] = indicator.perfect
+            lower[lower < indicator.failed] = indicator.failed
 
             expected[cond_name] = dict(
                 lower=lower,
@@ -789,7 +780,7 @@ class FailureMode(FailureModeData):
                 t_failures.append(np.argmax(timeline["failure"]))
 
         time, cost = np.unique(t_failures, return_counts=True)
-        cost = cost * self.cof.get_cost() / scaling
+        cost = cost * self.consequence.get_cost() / scaling
 
         return dict(time=time, cost=cost)
 
@@ -808,8 +799,8 @@ class FailureMode(FailureModeData):
     def reset_condition(self):
 
         # Reset conditions
-        for condition in self.conditions.values():
-            condition.reset()
+        for indicator in self.indicators.values():
+            indicator.reset()
 
     def reset_for_next_sim(self):
 
@@ -817,8 +808,8 @@ class FailureMode(FailureModeData):
         self.set_states(self.init_states)
 
         # Reset conditions
-        for condition in self.conditions.values():
-            condition.reset()
+        for indicator in self.indicators.values():
+            indicator.reset()
 
     def reset(self):
 
@@ -827,8 +818,8 @@ class FailureMode(FailureModeData):
             task.reset()
 
         # Reset conditions
-        for condition in self.conditions.values():
-            condition.reset()
+        for indicator in self.indicators.values():
+            indicator.reset()
 
         # Reset timelines
         self.timeline = dict()
@@ -877,8 +868,8 @@ class FailureMode(FailureModeData):
         ax_state.set_title("State")
         ax_task.set_title("Task")
 
-        for condition in self.conditions:
-            ax_cond.plot(timeline["time"], timeline[condition], label=condition)
+        for cond_name in self.conditions:
+            ax_cond.plot(timeline["time"], timeline[cond_name], label=condition)
             ax_cond.legend()
 
         for state in self.get_states():

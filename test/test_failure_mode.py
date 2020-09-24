@@ -108,7 +108,9 @@ class TestFailureMode(unittest.TestCase):
 
         # Check times match
         self.assertEqual(
-            fm.timeline["time"][0], t_start, "First time in timeline should equal _start"
+            fm.timeline["time"][0],
+            t_start,
+            "First time in timeline should equal _start",
         )
         self.assertEqual(
             fm.timeline["time"][-1], t_end, "Last time in timeline should equal t_end"
