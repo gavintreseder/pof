@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import scipy.stats as ss
@@ -25,13 +25,10 @@ class DistributionData(Load):
     A class that contains the data for the Distribution object.
     """
 
-    alpha: int = 100
-    beta: int = 1
-    gamma: int = 0
-    name: str = "dist"  # TODO use a config file to store all the defaultscf.get('name', fallback=None)
-    # self.pdf = ss.weibull_min.pdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-    # self.cdf = ss.weibull_min.cdf(X, self.beta, scale=self.alpha, loc=self.gamma)
-    # self.sf = ss.weibull_min.sf(X, self.beta, scale=self.alpha, loc=self.gamma)
+    alpha: int = field(default_factory=lambda: cf.getint("alpha"))
+    beta: int = field(default_factory=lambda: cf.getint("beta"))
+    gamma: int = field(default_factory=lambda: cf.getint("gamma"))
+    name: str = field(default_factory=lambda: cf.get("name"))
 
 
 class Distribution(DistributionData):
@@ -49,12 +46,6 @@ class Distribution(DistributionData):
         Distribution(name=...)
 
     """
-
-    def __str__(self):
-
-        out = "Alpha = %s, Beta = %s, Gamma = %s" % (self.alpha, self.beta, self.gamma)
-
-        return out
 
     def params(self):
         params = dict(

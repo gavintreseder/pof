@@ -13,8 +13,10 @@ import numpy as np
 import utils
 
 from pof.component import Component
-from pof.config import ComponentConfig as cf
+from config import config
 import pof.demo as demo
+
+cf = config["Component"]
 
 
 class TestComponent(unittest.TestCase):

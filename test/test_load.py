@@ -13,8 +13,6 @@ import copy
 import utils
 
 from pof.load import Load
-from config import config
-
 import pof.demo as demo
 import fixtures
 

@@ -71,12 +71,11 @@ class FailureModeData(Load):
     # pylint: disable=too-many-instance-attributes
     # Reasonable in this implementation
 
-    name: str = field(default_factory=lambda: cf.get("name"))
-    active: bool = field(default_factory=lambda: cf.getboolean("active"))
-    pf_curve: str = field(default_factory=lambda: cf.get("pf_curve"))
-    pf_interval: int = field(default_factory=lambda: cf.getint("pf_interval"))
-    pf_std: int = field(default_factory=lambda: cf.getint("pf_std"))
-    untreated: Distribution = None  # Used to avoid breaking untreated set methods
+    name: str = "fm"
+    active: bool = True
+    pf_curve: str = "step"
+    pf_interval: int = 0
+    pf_std: int = 0
 
     # Set methods used
     dists: Dict = None
@@ -91,6 +90,8 @@ class FailureModeData(Load):
     timeline: Dict = field(init=False, default_factory=lambda: dict())
     timelines: Dict = field(init=False, default_factory=lambda: dict())
     sim_counter: int = 0
+
+    untreated: Distribution = None
 
 
 class FailureMode(FailureModeData):
@@ -121,7 +122,6 @@ class FailureMode(FailureModeData):
     # #TODO convert any get/set pairs to properties
 
     def __post_init__(self):
-
         # Convert any dictionaries that were input into objects:
         self.set_dists(self.dists)
 
@@ -157,7 +157,7 @@ class FailureMode(FailureModeData):
     def pf_interval(self, value):
 
         try:
-            if value > 0:
+            if value >= 0:
                 self._pf_interval = value
             else:
                 raise ValueError(
@@ -185,12 +185,13 @@ class FailureMode(FailureModeData):
 
     @property
     def untreated(self):
-        return self.dists.get("untreated")
+        return self.dists["untreated"]
 
     @untreated.setter
     def untreated(self, dist):
-        dist["name"] = "untreated"
-        self.set_dists(dist)
+        if dist is not None:
+            dist["name"] = "untreated"
+            self.set_tasks(dist)
 
     # ************** Set Functions *****************
 
@@ -198,6 +199,7 @@ class FailureMode(FailureModeData):
 
         self.cof = Consequence()
 
+    # TODO update set conditions
     def set_conditions(self, input_condition=None):
         """
         Takes a dictionary of conditions and sets the failure mode conditions
@@ -246,9 +248,9 @@ class FailureMode(FailureModeData):
 
     def set_dists(self, dists):
 
-        untreated = copy.copy(getattr(getattr(self, "_dists", None), "untreated", None))
+        untreated = copy.copy(getattr(getattr(self, "dists", None), "untreated", None))
 
-        self._set_container_attr("_dists", Distribution, dists)
+        self._set_container_attr("dists", Distribution, dists)
 
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
