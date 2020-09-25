@@ -159,8 +159,8 @@ class FailureMode(Load):
         self.set_states(states)
 
         self.timeline = dict()
-        self.timelines = dict()
-        self.sim_counter = dict()
+        self._timelines = dict()
+        self._sim_counter = 0
 
     @property
     def name(self):
@@ -168,7 +168,10 @@ class FailureMode(Load):
 
     @name.setter
     def name(self, name):
-        self._name = name
+        if isinstance(name, str):
+            self._name = name
+        else:
+            raise TypeError("Name must be of type str %s" % (name))
 
     @property
     def pf_curve(self):
@@ -232,7 +235,7 @@ class FailureMode(Load):
 
             # If there is only one update
             else:
-                self.conditions[var.name] = var
+                self.indicators[var.name] = var
 
     def set_conditions(self, var=None):
         """
@@ -243,18 +246,21 @@ class FailureMode(Load):
 
         if var is None:
             self.conditions = dict()
+            indicator = ConditionIndicator(
+                name=self.name,
+                pf_curve="step",
+                pf_interval=0,
+                pf_std=0,
+                perfect=False,
+                failed=True,
+            )
+            self.set_indicators(indicator)
         else:
+            self.conditions = var
             # Create an indicator for any conditions not in the indicator list
-            for cond_name in self.conditions:
+            for cond_name in var:
                 if cond_name not in self.indicators:
-                    indicator = ConditionIndicator(
-                        name=self.name,
-                        pf_curve="step",
-                        pf_interval=0,
-                        pf_std=0,
-                        perfect=False,
-                        failed=True,
-                    )
+                    indicator = ConditionIndicator.load(var[cond_name])
                     self.set_indicators(indicator)
 
     def set_dists(self, dists):
@@ -428,7 +434,7 @@ class FailureMode(Load):
         system_impacts = []
         if self.active:
             for task_name in task_names:
-                logging.info("Time %s - Tasks %s", t_now, task_names)
+                logging.debug("Time %s - Tasks %s", t_now, task_names)
 
                 # Complete the tasks
                 states = self.tasks[task_name].sim_completion(
@@ -493,7 +499,7 @@ class FailureMode(Load):
         timeline["failure"] = np.full(t_end + 1, self.is_failed())
         if not self.is_failed():
             for cond_name in self.conditions:
-                tl_f = self.indiators[cond_name].sim_failure_timeline(
+                tl_f = self.indicators[cond_name].sim_failure_timeline(
                     t_start=t_start - t_initiate,
                     t_stop=t_end - t_initiate,
                     pf_interval=self.pf_interval,
@@ -550,8 +556,8 @@ class FailureMode(Load):
 
             # Check for condition changes
             for cond_name in self.conditions:
-                if "initiation" in updates or condition_name in updates:
-                    logging.info(
+                if "initiation" in updates or cond_name in updates:
+                    logging.debug(
                         "condition %s, start %s, initiate %s, end %s",
                         cond_name,
                         t_start,
@@ -895,7 +901,7 @@ class FailureMode(Load):
         ax_task.set_title("Task")
 
         for cond_name in self.conditions:
-            ax_cond.plot(timeline["time"], timeline[cond_name], label=condition)
+            ax_cond.plot(timeline["time"], timeline[cond_name], label=cond_name)
             ax_cond.legend()
 
         for state in self.get_states():

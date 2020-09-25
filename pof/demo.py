@@ -89,7 +89,7 @@ condition_data = dict(
         name='instant',
         perfect = 1,
         failed = 0,
-        pf_curve = 'linear', #TODO change to step
+        pf_curve = 'step',
         pf_interval=1,
         pf_std = 0,
     )

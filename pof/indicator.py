@@ -51,11 +51,11 @@ class Indicator(Load):
     """
 
     name: str = "indicator"
-    pf_curve: str = None
-    pf_interval: int = None
+    pf_curve: str = "step"
+    pf_interval: int = 0
     pf_std: int = 0
-    perfect: bool = None
-    failed: bool = None
+    perfect: bool = False
+    failed: bool = True
     decreasing: bool = field(init=False)
 
     threshold_detection: int = None
@@ -327,8 +327,11 @@ class ConditionIndicator(Indicator):
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
         if self.pf_curve == "linear":
-
-            m = (failed - perfect) / pf_interval
+            # Preven zero division error
+            if pf_interval <= 0:
+                m = 0
+            else:
+                m = (failed - perfect) / pf_interval
             b = perfect
             y = m * x + b
 

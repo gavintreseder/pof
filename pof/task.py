@@ -32,7 +32,7 @@ from pof.load import Load
 seed(1)
 
 
-class Task:
+class Task(Load):
     """
     Parameters:
                 trigger
@@ -59,7 +59,7 @@ class Task:
     def __init__(
         self,
         name="task",
-        activity="Task",
+        task_type="Task",
         trigger="unknown",
         active=True,
         cost=0,
@@ -77,7 +77,7 @@ class Task:
 
         # Task information
         self.name = name
-        self.activity = activity
+        self.task_type = task_type
         self.trigger = trigger
         self.active = active
 
@@ -122,7 +122,24 @@ class Task:
     @classmethod
     def from_dict(cls, details=None):
         try:
-            task = cls(**details)
+            if details["activity"] == "Task":
+
+                task = Task(**details)
+
+            elif details["activity"] == "ConditionTask":
+
+                task = ConditionTask(**details)
+
+            elif details["activity"] == "ScheduledTask":
+
+                task = ScheduledTask(**details)
+
+            elif details["activity"] == "Inspection":
+
+                task = Inspection(**details)
+            else:
+
+                return ValueError("Invalid Task Type")
         except:
             task = cls()
             print("Error loading %s data from dictionary" % (cls.__name__))
@@ -283,7 +300,7 @@ class Task:
         for key, value in dict_data.items():
             print(self.__dict__)
 
-            if key in ["name", "activity", "active", "p_effective", "cost"]:
+            if key in ["name", "task_type", "active", "p_effective", "cost"]:
                 self.__dict__[key] = value
 
             elif key in ["trigger", "impact"]:
@@ -336,8 +353,9 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     """
 
     def __init__(
-        self, t_interval=100, t_delay=0, name="scheduled_task", *args, **kwargs
-    ):  # TODO fix up defaults
+        self, t_interval=None, t_delay=0, name="scheduled_task", *args, **kwargs
+    ):
+        # TODO fix up defaults
         super().__init__(name=name, *args, **kwargs)
 
         self.trigger = "time"
@@ -423,12 +441,12 @@ class ConditionTask(Task):
     """
 
     def __init__(
-        self, name="condition_task", activity="ConditionTask", *args, **kwargs
+        self, name="condition_task", task_type="ConditionTask", *args, **kwargs
     ):
         super().__init__(name=name, *args, **kwargs)
 
         self.trigger = "condition"
-        self.activity = activity
+        self.task_type = task_type
 
         self.task_type = "immediate"
 
@@ -496,36 +514,6 @@ class ConditionTask(Task):
                         % (self.__class__.__name__, self.name, key)
                     )
 
-    def set_default(self):
-
-        self.triggers = dict(
-            condition=dict(),
-            state=dict(
-                failure=True,
-            ),
-        )
-
-        self.impacts = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    target=1,
-                    method="restore",
-                    axis="condition",
-                ),
-            ),
-            state=dict(
-                initiation=False,
-                detection=False,
-                failure=False,
-            ),
-        )
-
-        self.component_reset = True
-
-        self.cost = 1000
-
-        return self
-
 
 class Inspection(ScheduledTask):
     def __init__(
@@ -535,35 +523,7 @@ class Inspection(ScheduledTask):
         super().__init__(t_interval=t_interval, t_delay=t_delay, *args, **kwargs)
 
         self.name = name
-        self.activity = "Inspection"
-
-    def set_default(self):
-
-        self.cost = 50
-
-        self.t_interval = 5
-        self.t_delay = 10
-
-        self.p_effective = 0.9
-
-        self.triggers = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    lower=0,
-                    upper=90,
-                ),
-            ),
-            state=dict(initiation=True),
-        )
-
-        self.impacts = dict(
-            condition=dict(),
-            state=dict(
-                detection=True,
-            ),
-        )
-
-        return self
+        self.task_type = "Inspection"
 
     # TODO replace is_effective with trigger check
     def is_effective(self, t_now, timeline=None):
@@ -595,11 +555,11 @@ class Inspection(ScheduledTask):
 
 
 class ImmediateMaintenance(ConditionTask):
-    def __init__(self, activity="immediate_maintenance", name="immediate_maintenance"):
+    def __init__(self, task_type="immediate_maintenance", name="immediate_maintenance"):
         super().__init__(self)
 
         self.name = name
-        self.activity = activity
+        self.task_type = task_type
 
     def set_default(self):
 

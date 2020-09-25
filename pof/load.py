@@ -29,16 +29,7 @@ class Load:
         """
         Loads the data
         """
-        try:
-            instance = cls.from_dict(details)
-        except ValueError as error:
-            if cf.get("on_error_use_default"):
-                logging.info("Error loading %s data - defaults used", cls.__name__)
-                instance = cls()
-            else:
-                logging.warning("Error loading %s data", cls.__name__)
-                raise error
-        return instance
+        return cls.from_dict(details)
 
     @classmethod
     def from_dict(cls, details=None):
@@ -48,16 +39,11 @@ class Load:
         try:
             instance = cls(**details)
         except ValueError as error:
+            logging.warning("Error loading %s data from dictionary", cls.__name__)
             if cf.get("on_error_use_default"):
-                logging.info(
-                    "Error loading %s data from dictionary - defaults used"
-                    % (cls.__name__)
-                )
+                logging.info("Defaults used")
                 instance = cls()
             else:
-                logging.warning(
-                    "Error loading %s data from dictionary",cls.__name__
-                )
                 raise error
 
         return instance
@@ -74,7 +60,7 @@ class Load:
             if value is None:
                 setattr(self, attr, dict())
 
-            # Add the value to the dictionary if it is a Distribution
+            # Add the value to the dictionary if it is an object of that type
             elif isinstance(value, d_type):
                 getattr(self, attr)[value.name] = value
 

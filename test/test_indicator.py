@@ -22,19 +22,23 @@ cid = dict(
 
 
 class TestConditionIndicator(unittest.TestCase):
-    def test_class_imports_correctly(self):
-        self.assertTrue(True)
+    def test_imports_correctly(self):
+        pass
 
     def test_instantiate(self):
+        cond = ConditionIndicator()
+        self.assertIsNotNone(cond)
+
+    def test_instantiate_with_data(self):
         try:
-            cond = ConditionIndicator()
+            cond = ConditionIndicator(name="test_name")
             self.assertIsNotNone(cond)
         except ValueError:
             self.fail("ValueError returned")
         except:
             self.fail("Unknown error")
 
-    def test_instantiate_with_data(self):
+    def test_instantiate_with_(self):
         try:
             cond = ConditionIndicator(name="test_name")
             self.assertIsNotNone(cond)
@@ -60,19 +64,22 @@ class TestConditionIndicator(unittest.TestCase):
             cond = ConditionIndicator.from_dict(false_data)
 
     def test_from_dict_with_data(self):
-        try:
-            cond = ConditionIndicator.from_dict(demo.condition_data["instant"])
-            self.assertIsNotNone(cond)
-        except ValueError:
-            self.fail("ValueError returned")
-        except:
-            self.fail("Unknown error")
+
+        cond_data = demo.condition_data["instant"]
+
+        cond = ConditionIndicator.from_dict(cond_data)
+
+        self.assertEqual(cond.name, cond_data["name"])
+        self.assertEqual(cond.pf_curve, cond_data["pf_curve"])
+        self.assertEqual(cond.pf_interval, cond_data["pf_interval"])
+        self.assertEqual(cond.perfect, cond_data["perfect"])
+        self.assertEqual(cond.failed, cond_data["failed"])
 
     # Next test
 
     def test_sim_timeline_two_causes(self):
 
-        cond = ConditionIndicator()
+        cond = ConditionIndicator(perfect=100, failed=0)
 
         cond.sim_timeline(t_stop=200, name="cause_1")
         cond.sim_timeline(t_stop=200, name="cause_2")
