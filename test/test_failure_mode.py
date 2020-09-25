@@ -34,16 +34,16 @@ class TestFailureMode(unittest.TestCase):
         with patch("pof.failure_mode.cf", self.blank_config):
             with self.assertRaises(
                 ValueError,
-                msg="Error expected with invalid input",
+                msg="Error expected with no input",
             ):
                 failure_mode = FailureMode()
 
     def test_class_instantiate_with_data(self):
-        fm = FailureMode(
+        failure_mode = FailureMode(
             name="random",
-            dists=dict(untreated=dict(name="untreated", alpha=500, beta=1, gamma=0)),
+            untreated=dict(name="slow_degrading", alpha=500, beta=1, gamma=0),
         )
-        self.assertIsNotNone(fm)
+        self.assertIsNotNone(failure_mode)
 
     def test_from_dict(self):
         try:
@@ -103,6 +103,7 @@ class TestFailureMode(unittest.TestCase):
         t_start = 0
         t_end = 200
         fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
+        fm2 = FailureMode.load(demo.failure_mode_data["slow_aging"])
 
         fm.init_timeline(t_start=0, t_end=200)
 
@@ -132,7 +133,6 @@ class TestFailureMode(unittest.TestCase):
             fm.is_failed(),
             "First Failure in timeline does not equal current failure",
         )
-        fm = FailureMode(demo.failure_mode_data["slow_aging"])
 
         # Check conditions match
         # TODO move conditions to indicators first copy from previous test
@@ -210,14 +210,13 @@ class TestFailureMode(unittest.TestCase):
         except:
             self.fail("Unknown error")
 
-    def test_load_demo_no_data(self):
-        try:
-            fm = FailureMode.load()
-            self.assertIsNotNone(fm)
-        except ValueError:
-            self.fail("ValueError returned")
-        except:
-            self.fail("Unknown error")
+    def test_load_no_data(self):
+        with patch("pof.failure_mode.cf", self.blank_config):
+            with self.assertRaises(
+                ValueError,
+                msg="Error expected with no input",
+            ):
+                failure_mode = FailureMode.load()
 
     def test_set_demo_some_data(self):
         fm = FailureMode().set_demo()
@@ -227,7 +226,7 @@ class TestFailureMode(unittest.TestCase):
 
     def test_get_dash_id_value(self):
 
-        fm = FailureMode(alpha=50, beta=1.5, gamma=10).set_demo()
+        fm = FailureMode.set_demo()
 
         dash_ids = fm.get_dash_ids()
 

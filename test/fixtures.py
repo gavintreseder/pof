@@ -243,9 +243,7 @@ failure_mode_data = dict(
         name='early_life',
         pf_curve = 'linear',
         pf_interval=10,
-        dists = dict(
-            untreated=distribution_data['early_life'],
-        ),
+        untreated=distribution_data['early_life'],
         conditions=dict(
             instant=condition_data['instant'],
         ),
@@ -259,7 +257,6 @@ failure_mode_data = dict(
     random=dict(
         name='random',
         untreated=distribution_data['random'],
-
         conditions=dict(
             instant=condition_data['instant'],
         ),
@@ -273,7 +270,6 @@ failure_mode_data = dict(
     slow_aging=dict(
         name='slow_aging',
         untreated=distribution_data['slow_aging'],
-
         conditions=dict(
             slow_degrading=condition_data['slow_degrading'],
             fast_degrading=condition_data['fast_degrading']
