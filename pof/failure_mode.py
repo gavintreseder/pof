@@ -55,9 +55,6 @@ cf = config["FailureMode"]
 
 seed(1)
 
-PF_CURVES = ["linear", "step"]
-REQUIRED_STATES = ["initiation", "detection", "failure"]
-
 
 @dataclass(repr=False)
 class FailureModeData(Load):
@@ -120,6 +117,9 @@ class FailureMode(Load):
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
 
+    PF_CURVES = ["linear", "step"]
+    REQUIRED_STATES = ["initiation", "detection", "failure"]
+
     def __init__(
         self,
         name: str = "fm",
@@ -181,12 +181,12 @@ class FailureMode(Load):
     def pf_curve(self, value):
         """ Set the pf_curve to a valid str"""
 
-        if value in PF_CURVES:
+        if value in self.PF_CURVES:
             self._pf_curve = value
         else:
             raise ValueError(
                 "%s (%s) - pf_curve must be from: %s"
-                % (self.__class__.__name__, self.name, PF_CURVES)
+                % (self.__class__.__name__, self.name, self.PF_CURVES)
             )
 
     @property
@@ -277,14 +277,14 @@ class FailureMode(Load):
         # TODO Update this method at the same time as set state
 
         if self.init_states is None:
-            self.init_states = {state: False for state in REQUIRED_STATES}
+            self.init_states = {state: False for state in self.REQUIRED_STATES}
 
         # update from the input argument
         if states is not None:
             self.init_states.update(states)
 
         # Update from required states
-        for state in REQUIRED_STATES:
+        for state in self.REQUIRED_STATES:
             if state not in self.init_states:
                 self.init_states[state] = False
 
@@ -296,7 +296,7 @@ class FailureMode(Load):
         # Set a default value if none has been provided
         if self.states is None:
             if cf.USE_DEFAULT:
-                self.states = {state: False for state in REQUIRED_STATES}
+                self.states = {state: False for state in self.REQUIRED_STATES}
             else:
                 raise ValueError("Failure Mode - %s - No states provided" % (self.name))
 
@@ -305,7 +305,7 @@ class FailureMode(Load):
             self.states.update(states)
 
         # Update from required states
-        for state in REQUIRED_STATES:
+        for state in self.REQUIRED_STATES:
             if state not in self.states:
                 self.states[state] = False
 
@@ -491,8 +491,10 @@ class FailureMode(Load):
             timeline[cond_name] = self.indicators[cond_name].sim_timeline(
                 t_start=t_start - t_initiate,
                 t_stop=t_end - t_initiate,
-                pf_interval=self.pf_interval,
-                pf_std=self.pf_std,
+                pf_interval=self.indicators[cond_name].__dict__.get(
+                    "pf_interval", self.pf_interval
+                ),
+                pf_std=self.indicators[cond_name].__dict__.get("pf_std", self.pf_std),
             )
 
         # Check failure
@@ -502,8 +504,10 @@ class FailureMode(Load):
                 tl_f = self.indicators[cond_name].sim_failure_timeline(
                     t_start=t_start - t_initiate,
                     t_stop=t_end - t_initiate,
-                    pf_interval=self.pf_interval,
-                    pf_std=self.pf_std,
+                    pf_interval=self.indicators[cond_name].__dict__.get(
+                        "pf_interval", self.pf_interval
+                    ),
+                    pf_std=self.indicators[cond_name].__dict__.get("pf_std", self.pf_std),
                 )
                 timeline["failure"] = (timeline["failure"]) | (tl_f)
 
@@ -546,7 +550,7 @@ class FailureMode(Load):
             if "initiation" in updates:
                 t_initiate = min(
                     # TODO this needs to be condiitonal sf
-                    t_end,
+                    t_end + 1,
                     t_start + int(self.dists["init"].sample()),
                 )  # TODO make this conditional
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
@@ -571,8 +575,10 @@ class FailureMode(Load):
                     ].sim_timeline(
                         t_start=t_start - t_initiate,
                         t_stop=t_end - t_initiate,
-                        pf_interval=self.pf_interval,
-                        pf_std=self.pf_std,
+                        pf_interval=self.indicators[cond_name].__dict__.get(
+                            "pf_interval", self.pf_interval
+                        ),
+                        pf_std=self.indicators[cond_name].__dict__.get("pf_std", self.pf_std),
                     )
 
             # Check for detection changes

@@ -35,7 +35,8 @@ from config import config
 
 DEFAULT_ITERATIONS = 100
 
-cf = config['Component']
+cf = config["Component"]
+
 
 @dataclass
 class Component(Load):
@@ -563,37 +564,11 @@ class Component(Load):
 
     # ****************** Demonstration parameters ******************
 
-    def set_demo(self):
+    @classmethod
+    def demo(cls):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        if not self.fm:
-            self.fm = dict(
-                early_life=FailureMode().load(demo.failure_mode_data["early_life"]),
-                random=FailureMode().load(demo.failure_mode_data["random"]),
-                slow_aging=FailureMode().load(demo.failure_mode_data["slow_aging"]),
-                fast_aging=FailureMode().load(demo.failure_mode_data["fast_aging"]),
-            )
-
-        # Trial for indicator
-        # self.indicator["safety_factor"] = PoleSafetyFactor(component=self)
-        self.indicator["slow_degrading"] = ConditionIndicator.from_dict(
-            demo.condition_data["slow_degrading"]
-        )  # TODO fix this call
-        self.indicator["fast_degrading"] = ConditionIndicator.from_dict(
-            demo.condition_data["fast_degrading"]
-        )  # TODO fix this call
-
-        """for fm in self.fm.values():
-            fm.set_conditions(dict(
-                slow_degrading = self.indicator['slow_degrading'],
-                fast_degrading = self.indicator['fast_degrading'],
-            ))"""
-
-        return self
-
-    def set_pole(self):
-
-        NotImplemented
+        return cls.load(demo.component_data["comp"])
 
 
 if __name__ == "__main__":
