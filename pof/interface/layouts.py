@@ -142,7 +142,7 @@ def make_dist_form_inputs(dist, prefix="", sep="-"):
     Takes a Distribution and generates the html form inputs
     """
 
-    prefix = prefix + dist.name + sep  # TODO generalise to all dist
+    prefix = prefix + "dists" + sep + dist.name + sep
 
     param_inputs = []
 

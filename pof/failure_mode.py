@@ -265,7 +265,7 @@ class FailureMode(Load):
 
     def set_dists(self, dists):
 
-        untreated = copy.copy(getattr(getattr(self, "dists", None), "untreated", None))
+        untreated = copy.copy(getattr(self, "dists", None).get("untreated", None))
 
         self._set_container_attr("dists", Distribution, dists)
 
@@ -931,7 +931,7 @@ class FailureMode(Load):
             if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
                 self.__dict__[key] = value
 
-            elif key == "untreated":
+            elif key == "dists":
                 self.set_dists(dict_data[key])
 
             elif key == "conditions":
@@ -1027,7 +1027,7 @@ class FailureMode(Load):
         ]
 
         # Failure Dist
-        fd_ids = self.untreated.get_dash_ids(prefix=prefix)
+        fd_ids = self.untreated.get_dash_ids(prefix=prefix + "dists" + sep)
 
         # Tasks
         task_ids = []
@@ -1046,9 +1046,7 @@ class FailureMode(Load):
 
         # Tasks objects
         prefix = prefix + self.name + sep
-        objects = objects + [
-            prefix + "tasks" + sep + task for task in self.tasks
-        ]
+        objects = objects + [prefix + "tasks" + sep + task for task in self.tasks]
 
         return objects
 

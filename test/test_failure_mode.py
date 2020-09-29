@@ -226,23 +226,25 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode().set_demo()
         self.assertIsNotNone(fm)
 
-    # ************ Test Dash ID Value ***********************
+    # ************ Test get_dash_ids *****************
 
-    def test_get_dash_id_value(self):
+    def test_get_dash_id(self):
 
         fm = FailureMode().set_demo()
 
         dash_ids = fm.get_dash_ids()
 
-        # TODO load data
-
-    # ************ Test get_dash_ids *****************
-
-    def test_get_dash_ids(self):
-
-        fm = FailureMode()
-
     # ************ Test update methods *****************
+
+    def test_update(self):
+
+        fm = FailureMode().set_demo()
+
+        # Test a task
+        fm.update("slow_aging-tasks-inspection-active", False)
+
+        # Test a
+        fm.update("slow_aging-dists-untreated-alpha", 10)
 
     # ************ Test link indicators ***************
 
@@ -315,12 +317,6 @@ class TestFailureMode(unittest.TestCase):
     #     fm1.update_from_dict(test_data_2_fix)
 
     #     self.assertEqual(fm1, fm2)
-
-    def test_update(self):
-
-        fm = FailureMode().set_demo()
-
-        fm.update("FailureMode-slow_aging-tasks-inspection-active", False)
 
     def test_set_task_Task(self):
 
