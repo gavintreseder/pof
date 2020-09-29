@@ -48,8 +48,6 @@ class Load:
 
         return instance
 
-    # TODO overide __setattr__ to make it imporve dypte.load
-
     def _set_container_attr(self, attr, d_type, value):
 
         # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
@@ -67,15 +65,17 @@ class Load:
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
 
-                # Create a
                 if "name" in value:
                     getattr(self, attr)[value["name"]] = d_type.load(value)
 
                 # Iterate through and create objects using this method
                 else:
 
-                    for val in value.values():
-                        self._set_container_attr(attr, d_type, val)
+                    for key, val in value.items():
+                        if key in getattr(self, attr) and not isinstance(val, d_type):
+                            getattr(self, attr)[key].update_from_dict(val)
+                        else:
+                            self._set_container_attr(attr, d_type, val)
 
             else:
                 raise ValueError

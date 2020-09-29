@@ -751,7 +751,7 @@ class FailureMode(Load):
         expected = dict()
         for ind_name, indicator in self.indicators.items():
 
-            ec = np.array([self._timelines[x][cond_name] for x in self._timelines])
+            ec = np.array([self._timelines[x][ind_name] for x in self._timelines])
 
             mean = indicator.perfect - ec.mean(axis=0)
             sd = ec.std(axis=0)
@@ -761,7 +761,7 @@ class FailureMode(Load):
             upper[upper > indicator.perfect] = indicator.perfect
             lower[lower < indicator.failed] = indicator.failed
 
-            expected[cond_name] = dict(
+            expected[ind_name] = dict(
                 lower=lower,
                 mean=mean,
                 upper=upper,

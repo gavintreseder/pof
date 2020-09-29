@@ -216,7 +216,7 @@ class TestFailureMode(unittest.TestCase):
                 ValueError,
                 msg="Error expected with no input",
             ):
-                failure_mode = FailureMode.load()
+                FailureMode.load()
 
     def test_set_demo_some_data(self):
         fm = FailureMode().set_demo()
@@ -226,7 +226,7 @@ class TestFailureMode(unittest.TestCase):
 
     def test_get_dash_id_value(self):
 
-        fm = FailureMode.set_demo()
+        fm = FailureMode().set_demo()
 
         dash_ids = fm.get_dash_ids()
 

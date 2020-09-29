@@ -41,3 +41,32 @@
 
 
 
+
+
+    # TODO overide __setattr__ to make it imporve dypte.load
+
+    def _set_container_attr2(self, attr, d_type, value):
+
+        # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
+        if getattr(self, attr, None) is None:
+            setattr(self, attr, dict())
+
+        if value is None:
+            setattr(self, attr, dict())
+
+        # Make it an iterable if it isn't one
+        if not isinstance(value, Iterable):
+            value = dict(unknown=value)
+
+        for key, val in value.items():
+            # Add the value to the dictionary if it is an object of that type
+            if isinstance(val, d_type):
+                getattr(self, attr)[val.name] = val
+
+            # Update the value if it akready exists
+            elif key in getattr(self, attr):
+                getattr(self, attr)[key].update_from_dict(val)
+
+            # Trye to create an object from the input
+            else:
+                getattr(self, attr)[val["name"]] = d_type.load(val)
