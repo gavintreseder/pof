@@ -72,7 +72,7 @@ class Load:
                 else:
 
                     for key, val in value.items():
-                        if key in getattr(self, attr) and not isinstance(val, d_type):
+                        if key in getattr(self, attr) and isinstance(val, d_type):
                             getattr(self, attr)[key].update_from_dict(val)
                         else:
                             self._set_container_attr(attr, d_type, val)
