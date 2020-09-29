@@ -115,7 +115,9 @@ class Load:
             )
 
     def update_from_str(self, id_str, value, sep="-"):
-
+        """
+        updates a single parameter using a string format
+        """
         id_str = id_str.split(self.name + sep, 1)[1]
 
         dict_data = str_to_dict(id_str, value, sep)

@@ -46,17 +46,20 @@ class TestComponent(unittest.TestCase):
         ):
             comp = Component()
 
+    def test_from_dict(self):
+        comp = Component.from_dict(demo.component_data["comp"])
+
     ## *************** Test set_demo ***********************
 
     def test_set_demo(self):
-        comp = Component().set_demo()
+        comp = Component.demo()
         self.assertIsNotNone(comp)
 
     # *************** Test init_timeline ***********************
 
     def test_init_timeline(self):
         t_end = 200
-        comp = Component().set_demo()
+        comp = Component.demo()
         comp.init_timeline(t_end)
 
         for fm in comp.fm.values():
@@ -71,7 +74,7 @@ class TestComponent(unittest.TestCase):
             slow_aging=["inspection"],
         )
         t_now = 5
-        comp = Component().set_demo()
+        comp = Component.demo()
         comp.init_timeline(200)
         comp.complete_tasks(t_now, fm_next_tasks)
 
@@ -92,7 +95,7 @@ class TestComponent(unittest.TestCase):
             fast_aging=["inspection", "cm"],
         )
         t_now = 5
-        comp = Component().set_demo()
+        comp = Component.demo()
         comp.init_timeline(200)
         comp.complete_tasks(t_now, fm_next_tasks)
 
@@ -120,7 +123,7 @@ class TestComponent(unittest.TestCase):
 
         expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
 
-        comp = Component().set_demo()
+        comp = Component.demo()
 
         for fm_name, fm in comp.fm.items():
             fm.next_tasks = MagicMock(return_value=test_next_task[fm_name])
@@ -148,7 +151,7 @@ class TestComponent(unittest.TestCase):
 
             expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
 
-            comp = Component().set_demo()
+            comp = Component.demo()
 
             for fm_name, fm in comp.fm.items():
                 fm.next_tasks = MagicMock(return_value=test_next_task[fm_name])
@@ -161,22 +164,25 @@ class TestComponent(unittest.TestCase):
     # *************** Test sim_timeline ***********************
 
     def test_sim_timeline_active_all(self):
-        comp = Component().set_demo()
+        comp = Component.demo()
 
         comp.sim_timeline(200)
-        print(comp)
 
     def test_sim_timline_active_one(self):
-        comp = Component().set_demo()
+        comp = Component.demo()
 
         comp.fm[list(comp.fm)[0]].active = False
         comp.sim_timeline(200)
-        print(comp)
+
+    def test_mc_timeline(self):
+        comp = Component.demo()
+
+        comp.mc_timeline(t_end=100)
 
     # ************ Test expected methods *****************
 
     def test_expected_condition_no_timeline(self):
-        comp = Component().set_demo()
+        comp = Component.demo()
         comp.expected_condition()
 
         # TODO add some checks
@@ -187,7 +193,7 @@ class TestComponent(unittest.TestCase):
 
         expected_list = [True]
 
-        comp = Component().set_demo()
+        comp = Component.demo()
         dash_ids = comp.get_dash_ids()
 
         for dash_id in dash_ids:

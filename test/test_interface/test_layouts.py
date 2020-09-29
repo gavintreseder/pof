@@ -1,12 +1,24 @@
+import unittest
+from unittest.mock import MagicMock, Mock, patch
+
+from pof import Component
+from pof.interface.layouts import make_component_layout
 
 
-for ms in ms_fig_update:
+class TestLayout(unittest.TestCase):
+    def test_make_component_layout(self):
+        comp = Component.demo()
+        mcl = make_component_layout(comp)
+
+
+"""for ms in ms_fig_update:
     if not ms in str(mfml):
         print(ms)
 
-
         # Failure Mode Tests
-mfml = make_failure_mode_layout(fm, prefix="fm-")
+mfml = make_failure_mode_layout(fm, prefix="fm-")"""
+
+
 """
 # Task Tests
 task = fm.tasks['ocr']
