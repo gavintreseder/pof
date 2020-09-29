@@ -56,7 +56,7 @@ cf = config["FailureMode"]
 seed(1)
 
 
-@dataclass(repr=False)
+@dataclass
 class FailureModeData(Load):
     """
     A class that contains the data for the FailureMode object.
@@ -83,8 +83,8 @@ class FailureModeData(Load):
     init_states: Dict = None
 
     # Simulation Details
-    timeline: Dict = field(init=False, default_factory=lambda: dict())
-    timelines: Dict = field(init=False, default_factory=lambda: dict())
+    timeline: Dict = field(init=False, repr=False, default_factory=lambda: dict())
+    timelines: Dict = field(init=False, repr=False, default_factory=lambda: dict())
     sim_counter: int = 0
 
     untreated: Distribution = None

@@ -65,6 +65,7 @@ class Load:
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
 
+                # TODO fix this
                 if "name" in value:
                     getattr(self, attr)[value["name"]] = d_type.load(value)
 
@@ -72,8 +73,11 @@ class Load:
                 else:
 
                     for key, val in value.items():
-                        if key in getattr(self, attr) and isinstance(val, d_type):
-                            getattr(self, attr)[key].update_from_dict(val)
+                        if key in getattr(self, attr) and not isinstance(val, d_type):
+                            if "name" in val:
+                                getattr(self, attr)[val["name"]] = d_type.load(val)
+                            else:
+                                getattr(self, attr)[key].update_from_dict(val)
                         else:
                             self._set_container_attr(attr, d_type, val)
 

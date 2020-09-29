@@ -201,6 +201,18 @@ class TestFailureMode(unittest.TestCase):
 
     # ************ Test load ***********************
 
+    def test_load(self):
+        fm = FailureMode.load()
+        self.assertIsNotNone(fm)
+
+    def test_load_no_data_no_config(self):
+        with patch("pof.failure_mode.cf", self.blank_config):
+            with self.assertRaises(
+                ValueError,
+                msg="Error expected with no input",
+            ):
+                FailureMode.load()
+
     def test_load_data_demo_data(self):
         try:
             fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
@@ -209,14 +221,6 @@ class TestFailureMode(unittest.TestCase):
             self.fail("ValueError returned")
         except:
             self.fail("Unknown error")
-
-    def test_load_no_data(self):
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(
-                ValueError,
-                msg="Error expected with no input",
-            ):
-                FailureMode.load()
 
     def test_set_demo_some_data(self):
         fm = FailureMode().set_demo()
@@ -316,7 +320,7 @@ class TestFailureMode(unittest.TestCase):
 
         fm = FailureMode().set_demo()
 
-        fm.update("FailureMode-slow_aging-tasks-Task-inspection-active", False)
+        fm.update("FailureMode-slow_aging-tasks-inspection-active", False)
 
     def test_set_task_Task(self):
 
