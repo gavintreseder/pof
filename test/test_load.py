@@ -57,7 +57,7 @@ class TestLoad(unittest.TestCase):
 
         load = Load()
         test_data = dict(mock_data=dict(name="mock_name"))
-        d_type = Mock()
+        d_type = Mock
         d_type.load.return_value = Mock(name="mock_name")
 
         load._set_container_attr("dummy_att", d_type, test_data)
@@ -68,7 +68,7 @@ class TestLoad(unittest.TestCase):
 
         load = Load()
         test_data = dict(name="mock_name")
-        d_type = Mock()
+        d_type = Mock
         d_type.load.return_value = Mock(name="mock_name")
 
         load._set_container_attr("dummy_att", d_type, test_data)
