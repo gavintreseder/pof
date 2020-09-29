@@ -300,17 +300,23 @@ class TestFailureMode(unittest.TestCase):
 
     # Change all condition, state and task count. Check values change or don't change for each of them
 
+    # def test_update(self):
+
+    #     test_data_1_fix = fixtures.failure_mode_data["early_life"]
+    #     test_data_2_fix = fixtures.failure_mode_data["random"]
+
+    #     fm1 = FailureMode.from_dict(test_data_1_fix)
+    #     fm2 = FailureMode.from_dict(test_data_2_fix)
+
+    #     fm1.update_from_dict(test_data_2_fix)
+
+    #     self.assertEqual(fm1, fm2)
+
     def test_update(self):
 
-        test_data_1_fix = fixtures.failure_mode_data["early_life"]
-        test_data_2_fix = fixtures.failure_mode_data["random"]
+        fm = FailureMode().set_demo()
 
-        fm1 = FailureMode.from_dict(test_data_1_fix)
-        fm2 = FailureMode.from_dict(test_data_2_fix)
-
-        fm1.update_from_dict(test_data_2_fix)
-
-        self.assertEqual(fm1, fm2)
+        fm.update("FailureMode-slow_aging-tasks-Task-inspection-active", False)
 
     def test_set_task_Task(self):
 
