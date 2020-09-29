@@ -317,7 +317,7 @@ class Task(Load):
 
     def get_dash_ids(self, prefix="", sep="-"):
 
-        prefix = prefix + "Task" + sep + self.name + sep
+        prefix = prefix + self.name + sep
 
         # task parameters
         param_list = ["active", "p_effective", "cost"]

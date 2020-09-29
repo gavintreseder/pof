@@ -107,15 +107,15 @@ class Component(Load):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
-        self._set_container_attr('indicator', Indicator, indicator_input)
+        self._set_container_attr("indicator", Indicator, indicator_input)
 
     def set_failure_mode(self, fm_input):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
 
-        self._set_container_attr('fm', FailureMode, fm_input)
-       
+        self._set_container_attr("fm", FailureMode, fm_input)
+
     def link_indicators(self):
 
         for fm in self.fm.values():
@@ -490,7 +490,7 @@ class Component(Load):
         """ Return a list of dash ids for values that can be changed"""
 
         # Component
-        prefix = prefix + "Component" + sep + self.name + sep
+        prefix = prefix + self.name + sep
         comp_ids = [prefix + param for param in ["active"]]
 
         # Tasks
@@ -504,7 +504,7 @@ class Component(Load):
 
     def get_objects(self, prefix="", sep="-"):
 
-        prefix = prefix + "Component" + sep
+        prefix = prefix
         objects = [prefix + self.name]
 
         prefix = prefix + self.name + sep

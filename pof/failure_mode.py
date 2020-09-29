@@ -1019,7 +1019,7 @@ class FailureMode(Load):
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""
 
-        prefix = prefix + "FailureMode" + sep + self.name + sep
+        prefix = prefix + self.name + sep
 
         # Failure modes
         fm_ids = [
@@ -1041,13 +1041,13 @@ class FailureMode(Load):
     def get_objects(self, prefix="", sep="-"):
 
         # Failure mode object
-        prefix = prefix + "FailureMode" + sep
+        prefix = prefix
         objects = [prefix + self.name]
 
         # Tasks objects
         prefix = prefix + self.name + sep
         objects = objects + [
-            prefix + "tasks" + sep + "Task" + sep + task for task in self.tasks
+            prefix + "tasks" + sep + task for task in self.tasks
         ]
 
         return objects
