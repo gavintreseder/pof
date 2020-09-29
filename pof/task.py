@@ -111,15 +111,6 @@ class Task(Load):
     # ************ Load Methods **********************
 
     @classmethod
-    def load(cls, details=None):
-        try:
-            task = cls.from_dict(details)
-        except:
-            task = cls()
-            print("Error loading %s data" % (cls.__name__))
-        return task
-
-    @classmethod
     def from_dict(cls, details=None):
         try:
             if details["activity"] == "Task":
@@ -226,7 +217,9 @@ class Task(Load):
 
     def sim_completion(
         self, t_now, timeline=None, states=dict(), conditions=dict(), verbose=False
-    ):  # TODO maybe split into states
+    ):
+        # TODO maybe split into states
+        # TODO tasks are updating conditions that haven't been changed
         """
         Takes a dictionary of states and dictionary of condition objects and returns the states that have been changed
         """
@@ -241,7 +234,8 @@ class Task(Load):
             if "all" in self.impacts["condition"]:
                 impact = self.impacts["condition"]["all"]
                 for condition in conditions.values():
-                    condition.set_condition(timeline[condition.name][t_now])
+                    if condition.name in timeline:
+                        condition.set_condition(timeline[condition.name][t_now])
 
                     condition.reset_any(
                         target=impact["target"],
@@ -545,11 +539,11 @@ class Inspection(ScheduledTask):
                 # Check if any conditions are within detection threshold
                 if det == True:
                     for trigger, threshold in self.triggers["condition"].items():
-
-                        det = det | (
-                            (timeline[trigger][t_now] >= threshold["lower"])
-                            & (timeline[trigger][t_now] <= threshold["upper"])
-                        )
+                        if trigger in timeline:  # TODO get more efficient check
+                            det = det | (
+                                (timeline[trigger][t_now] >= threshold["lower"])
+                                & (timeline[trigger][t_now] <= threshold["upper"])
+                            )
 
         return det
 

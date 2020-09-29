@@ -61,9 +61,9 @@ class Indicator(Load):
     threshold_detection: int = None
     threshold_failure: int = None
 
-    _profile: Dict = field(init=False)
-    _timeline: Dict = field(init=False)
-    _timelines: Dict = field(init=False)
+    _profile: Dict = field(init=False, repr=False)
+    _timeline: Dict = field(init=False, repr=False)
+    _timelines: Dict = field(init=False, repr=False)
 
     def __post_init__(self):
 
@@ -74,6 +74,25 @@ class Indicator(Load):
         self.set_pf_curve(pf_curve=self.pf_curve)
         self.set_pf_interval(pf_interval=self.pf_interval)
         self.reset()
+
+    @classmethod
+    def from_dict(cls, details=None):
+        try:
+            if details["pf_curve"] in ["linear", "step"]:
+
+                task = ConditionIndicator(**details)
+
+            elif details["pf_cruve"] in ["ssf_calc"]:
+
+                task = PoleSafetyFactor(**details)
+
+            else:
+
+                return ValueError("Invalid Indicator Type")
+        except:
+            task = cls()
+            print("Error loading %s data from dictionary" % (cls.__name__))
+        return task
 
     def sim_indicator_timeline(self):
 

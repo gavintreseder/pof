@@ -107,67 +107,19 @@ class Component(Load):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
-        try:
-            for name, indicator in indicator_input.items():
-
-                # Load a condition object
-                if isinstance(indicator, Indicator):
-                    self.indicator[name] = indicator
-
-                # Create a condition object
-                elif isinstance(indicator, dict):  # TODO add methods for different
-                    if indicator["pf_curve"] in ["step", "linear"]:
-                        self.indicator[name] = ConditionIndicator.from_dict(indicator)
-                    elif indicator["pf_curve"] in ["ssf_calc", "dsf_calc"]:
-                        self.indicator[name] = PoleSafetyFactor.from_dict(indicator)
-        except AttributeError:
-            print(
-                "%s - %s - Indicators cannot be set from %s"
-                % (self.__class__.__name__, self.name, indicator_input)
-            )
+        self._set_container_attr('indicator', Indicator, indicator_input)
 
     def set_failure_mode(self, fm_input):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
-        try:
-            # Load a FailureMode object directly
-            if isinstance(fm_input, FailureMode):
-                self.fm[fm_input.name] = fm_input
 
-            # Load from dicts of FailureModes,
-            elif isinstance(fm_input, dict):
-
-                # Load all the failure modes in the dictionary
-                for name, fm in fm_input.items():
-
-                    # Is the dict item a FailureMode Object
-                    if isinstance(fm_input, FailureMode):
-                        self.fm[fm_input.name] = fm_input
-
-                    # Update with the update method if the FailureMode already exists
-                    elif name in self.fm:
-                        # TODO update method Illyse
-                        NotImplemented
-                    # Create a failure mode from the dictionary
-                    else:
-                        self.fm[name] = FailureMode.load(fm)
-
-            else:
-                raise ValueError(
-                    "%s - %s - Invalid data type %s"
-                    % (self.__class__.__name__, self.name, fm_input)
-                )
-        except ValueError:
-            print(
-                "%s - %s - FailureModes cannot be set from %s"
-                % (self.__class__.__name__, self.name, fm_input)
-            )
-
+        self._set_container_attr('fm', FailureMode, fm_input)
+       
     def link_indicators(self):
 
         for fm in self.fm.values():
-            fm.link_indicator(self.indicator)
+            fm.set_indicators(self.indicator)
 
     # ****************** Set data ******************
 

@@ -8,130 +8,129 @@ demo.distribution.slow_aging
 """
 
 # fmt: off
-
 # *********************** distribution data **********************************
 
 distribution_data = dict(
 
-    early_life = dict(
-        name = "early_life",
-        alpha = 1000000,
-        beta = 0.5,
-        gamma = 0,
+    early_life=dict(
+        name="early_life",
+        alpha=1000000,
+        beta=0.5,
+        gamma=0,
     ),
 
-    random = dict(
-        name = "random",
-        alpha = 1000,
-        beta = 1,
-        gamma = 0,
+    random=dict(
+        name="random",
+        alpha=1000,
+        beta=1,
+        gamma=0,
     ),
 
-    slow_aging = dict(
-        name = "slow_aging",
-        alpha = 100,
-        beta = 2,
-        gamma = 10,
+    slow_aging=dict(
+        name="slow_aging",
+        alpha=100,
+        beta=2,
+        gamma=10,
     ),
 
-    fast_aging = dict(
-        name = "fast_aging",
-        alpha = 100,
-        beta = 3.5,
-        gamma = 10,
+    fast_aging=dict(
+        name="fast_aging",
+        alpha=100,
+        beta=3.5,
+        gamma=10,
     ),
 )
 
 # *********************** condition data **********************************
 
 condition_data = dict(
-    wall__thickness = dict(
+    wall__thickness=dict(
         name='wall_thickness',
-        perfect = 125,
-        failed = 0,
-        pf_curve = 'linear',
-        pf_interval = 10,
-        pf_std = 0.5,
+        perfect=125,
+        failed=0,
+        pf_curve='linear',
+        pf_interval=10,
+        pf_std=0.5,
     ),
-    extneral_diameter = dict(
+    extneral_diameter=dict(
         name='external_diameter',
-        perfect = 250,
-        failed = 0,
-        pf_curve = 'linear',
-        pf_interval = 10,
-        pf_std = 0.5
+        perfect=250,
+        failed=0,
+        pf_curve='linear',
+        pf_interval=10,
+        pf_std=0.5
     ),
-    slow_degrading = dict(
+    slow_degrading=dict(
         name='slow_degrading',
-        perfect = 100,
-        failed = 0,
-        pf_curve = 'linear',
-        pf_interval = 20,
-        pf_std = 0.5
+        perfect=100,
+        failed=0,
+        pf_curve='linear',
+        pf_interval=20,
+        pf_std=0.5
     ),
-    fast_degrading = dict(
-        name = 'fast_degrading',
-        perfect = 100,
-        failed = 0,
-        pf_curve = 'linear',
-        pf_interval = 10,
-        pf_std = 0.5
+    fast_degrading=dict(
+        name='fast_degrading',
+        perfect=100,
+        failed=0,
+        pf_curve='linear',
+        pf_interval=10,
+        pf_std=0.5
     ),
-    uncertain_degrading = dict(
+    uncertain_degrading=dict(
         name='uncertain_degrading',
-        perfect = 100,
-        failed = 0,
-        pf_curve = 'linear',
-        pf_interval = 30,
-        pf_std = 5
+        perfect=100,
+        failed=0,
+        pf_curve='linear',
+        pf_interval=30,
+        pf_std=5
     ),
-    instant = dict(
+    instant=dict(
         name='instant',
-        perfect = 1,
-        failed = 0,
-        pf_curve = 'step',
+        perfect=1,
+        failed=0,
+        pf_curve='linear',  # TODO change to step
         pf_interval=1,
-        pf_std = 0,
+        pf_std=0,
     )
 )
 
 # *********************** task data **********************************
 inspection_data = dict(
-    instant = dict(
-        activity = 'Inspection',
-        name = 'inspection',
-        p_effective = 0.9,
-        cost = 50,
-        t_interval = 5,
-        t_delay = 10,
+    instant=dict(
+        activity='Inspection',
+        name='inspection',
+        p_effective=0.9,
+        cost=50,
+        t_interval=5,
+        t_delay=0,
 
-        triggers = dict(
-            condition = dict(
-                instant = dict(
+        triggers=dict(
+            condition=dict(
+                instant=dict(
                     lower=0,
                     upper=0,
                 )
             ),
-            state = dict(
+            state=dict(
                 initiation=True
             ),
         ),
 
-        impacts = dict(
-            condition = dict(),
-            state = dict(detection=True,)
+        impacts=dict(
+            condition=dict(),
+            state=dict(detection=True,)
         ),
     ),
-    degrading = dict(
-        activity = 'Inspection',
-        name = 'inspection',
-        p_effective = 0.9,
-        cost = 50,
-        t_interval = 5,
-        t_delay = 10,
+    degrading=dict(
+        activity='Inspection',
+        name='inspection',
+        p_effective=0.9,
+        cost=55,
+        t_interval=5,
+        t_delay=10,
 
-        triggers = dict(
-            condition = dict(
+        triggers=dict(
+            condition=dict(
                 fast_degrading=dict(
                     lower=0,
                     upper=90,
@@ -141,25 +140,25 @@ inspection_data = dict(
                     upper=90,
                 ),
             ),
-            state = dict(
+            state=dict(
                 initiation=True
             ),
         ),
 
-        impacts = dict(
-            condition = dict(),
-            state = dict(detection=True,)
+        impacts=dict(
+            condition=dict(),
+            state=dict(detection=True,)
         ),
     ),
 )
 
 on_condition_repair_data = dict(
-    activity = 'ConditionTask',
-    name = 'on_condition_repair',
-    p_effective = 0.7,
-    cost = 100,
+    activity='ConditionTask',
+    name='on_condition_repair',
+    p_effective=0.7,
+    cost=100,
 
-    triggers = dict(
+    triggers=dict(
         condition=dict(
             fast_degrading=dict(lower=20, upper=90,),
             slow_degrading=dict(lower=20, upper=90,)
@@ -167,8 +166,8 @@ on_condition_repair_data = dict(
         state=dict(detection=True),
     ),
 
-    impacts = dict(
-        condition = dict(
+    impacts=dict(
+        condition=dict(
             fast_degrading=dict(
                 target=0.9,
                 method="reduction_factor",
@@ -180,60 +179,55 @@ on_condition_repair_data = dict(
                 axis="condition",
             ),
         ),
-        state = dict(initiation=False, detection=False, failure=False,),
+        state=dict(initiation=False, detection=False, failure=False,),
     ),
-
 )
 
 on_condition_replacement_data = dict(
-    instant = dict(
-        activity = 'ConditionTask',
-        name = 'on_condition_replacement',
-        p_effective = 1,
-        cost = 5000,
+    activity='ConditionTask',
+    name='on_condition_replacement',
+    p_effective=1,
+    cost=5000,
 
-        triggers = dict(
-            condition=dict(
-                instant=dict(lower=True, upper=False,),
-            ),
-            state=dict(detection=True, failure=True),
+    triggers=dict(
+        condition=dict(
+            fast_degrading=dict(lower=0, upper=20,),
+            slow_degrading=dict(lower=0, upper=20,)
         ),
-
-        impacts = dict(
-            condition = dict(
-                all=dict(
-                    target=1,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-            ),
-            state = dict(initiation=False, detection=False, failure=False,),
-        ),
+        state=dict(detection=True, failure=True),
     ),
-    degrading = dict(
-        activity = 'ConditionTask',
-        name = 'on_condition_replacement',
-        p_effective = 1,
-        cost = 5000,
 
-        triggers = dict(
-            condition=dict(
-                fast_degrading=dict(lower=0, upper=20,),
-                slow_degrading=dict(lower=0, upper=20,)
+    impacts=dict(
+        condition=dict(
+            all=dict(
+                target=1,
+                method="reduction_factor",
+                axis="condition",
             ),
-            state=dict(detection=True, failure=True),
         ),
+        state=dict(initiation=False, detection=False, failure=False,),
+    ),
+)
 
-        impacts = dict(
-            condition = dict(
-                all=dict(
-                    target=1,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
+on_condition_failure_data = dict(
+    activity='ConditionTask',
+    name='on_condition_replacement',
+    p_effective=1,
+    cost=5000,
+
+    triggers=dict(
+        state=dict(detection=True, failure=True),
+    ),
+
+    impacts=dict(
+        condition=dict(
+            all=dict(
+                target=1,
+                method="reduction_factor",
+                axis="condition",
             ),
-            state = dict(initiation=False, detection=False, failure=False,),
         ),
+        state=dict(initiation=False, detection=False, failure=False,),
     ),
 )
 
@@ -241,22 +235,22 @@ on_condition_replacement_data = dict(
 # *********************** state data **********************************
 
 state_data = dict(
-    new = dict(
+    new=dict(
         initiation=False,
         detection=False,
         failure=False,
     ),
-    inititated =dict(
+    inititated=dict(
         initiation=True,
         detection=False,
         failure=False,
     ),
-    detected =dict(
+    detected=dict(
         initiation=True,
         detection=True,
         failure=False,
     ),
-    failed =dict(
+    failed=dict(
         initiation=True,
         detection=True,
         failure=True,
@@ -266,61 +260,70 @@ state_data = dict(
 # *********************** failure mode data ********************************** #TODO move condition
 
 failure_mode_data = dict(
-    early_life = dict(
-        name = 'early_life',
+    early_life=dict(
+        name='early_life',
+        pf_curve = 'step',
+        pf_interval=10,
         untreated=distribution_data['early_life'],
-        conditions = dict(
-            instant = condition_data['instant'],
+        conditions=dict(
+            instant=condition_data['instant'],
         ),
 
-        tasks = dict(
-            inspection = inspection_data['instant'],
-            on_condition_replacement = on_condition_replacement_data['instant']
+        tasks=dict(
+            inspection=inspection_data['instant'],
+            on_condition_failure=on_condition_failure_data,
         ),
-        states = state_data['new']
+        states=state_data['new']
     ),
-    random = dict(
-        name = 'random',
+    random=dict(
+        name='random',
+        pf_curve = 'step',
+        pf_interval=10,
         untreated=distribution_data['random'],
-        conditions = dict(
-            instant = condition_data['instant'],
+        conditions=dict(
+            instant=condition_data['instant'],
         ),
 
-        tasks = dict(
-            inspection = inspection_data['instant'],
-            on_condition_replacement = on_condition_replacement_data['instant']
+        tasks=dict(
+            inspection=inspection_data['degrading'],
+            on_condition_failure=on_condition_failure_data,
         ),
-        states = state_data['new']
+        states=state_data['new']
     ),
-    slow_aging = dict(
-        name = 'slow_aging',
+    slow_aging=dict(
+        name='slow_aging',
+        pf_curve = 'linear',
+        pf_interval=10,
         untreated=distribution_data['slow_aging'],
-        conditions = dict(
-            slow_degrading = condition_data['slow_degrading'],
-            fast_degrading = condition_data['fast_degrading']
+        conditions=dict(
+            slow_degrading=condition_data['slow_degrading'],
+            fast_degrading=condition_data['fast_degrading']
         ),
 
-        tasks = dict(
-            inspection = inspection_data['degrading'],
-            on_condition_repair = on_condition_repair_data,
-            on_condition_replacement = on_condition_replacement_data['degrading']
+        tasks=dict(
+            inspection=inspection_data['degrading'],
+            on_condition_repair=on_condition_repair_data,
+            on_condition_replacement=on_condition_replacement_data
         ),
-        states = state_data['new']
+        states=state_data['new']
     ),
-    fast_aging = dict(
-        name = 'fast_aging',
+    fast_aging=dict(
+        name='fast_aging',
+        pf_curve = 'linear',
+        pf_interval=10,
         untreated=distribution_data['fast_aging'],
-        conditions = dict(
-            slow_degrading = condition_data['slow_degrading'],
-            fast_degrading = condition_data['fast_degrading']
+
+        conditions=dict(
+            slow_degrading=condition_data['slow_degrading'],
+            fast_degrading=condition_data['fast_degrading']
         ),
 
-        tasks = dict(
-            inspection = inspection_data['degrading'],
-            on_condition_repair = on_condition_repair_data,
-            on_condition_replacement = on_condition_replacement_data['degrading']
+        tasks=dict(
+            inspection=inspection_data['degrading'],
+            on_condition_repair=on_condition_repair_data,
+            on_condition_replacement=on_condition_replacement_data
         ),
-        states = state_data['new']
+        states=state_data['new']
     )
 )
 
@@ -328,10 +331,19 @@ failure_mode_data = dict(
 
 component_data = dict(
 
-    comp = dict(
-
+    comp=dict(
+        name = 'comp',
+        fm = dict(
+            early_life = failure_mode_data['early_life'],
+            random = failure_mode_data['random'],
+            slow_aging = failure_mode_data['slow_aging'],
+            fast_aging = failure_mode_data['fast_aging'],
+        ),
+        indicator = dict(
+            slow_degrading =condition_data['slow_degrading'],
+            fast_degrading=condition_data['fast_degrading']
+        )
     )
-
 )
 
 """

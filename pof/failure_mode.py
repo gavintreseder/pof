@@ -231,7 +231,7 @@ class FailureMode(Load):
             # If it is an iterable, link them all
             if isinstance(var, Iterable):
                 for indicator in var.values():
-                    self.indicators[var.name] = var
+                    self.indicators[indicator.name] = indicator
 
             # If there is only one update
             else:
@@ -507,7 +507,9 @@ class FailureMode(Load):
                     pf_interval=self.indicators[cond_name].__dict__.get(
                         "pf_interval", self.pf_interval
                     ),
-                    pf_std=self.indicators[cond_name].__dict__.get("pf_std", self.pf_std),
+                    pf_std=self.indicators[cond_name].__dict__.get(
+                        "pf_std", self.pf_std
+                    ),
                 )
                 timeline["failure"] = (timeline["failure"]) | (tl_f)
 
@@ -578,7 +580,9 @@ class FailureMode(Load):
                         pf_interval=self.indicators[cond_name].__dict__.get(
                             "pf_interval", self.pf_interval
                         ),
-                        pf_std=self.indicators[cond_name].__dict__.get("pf_std", self.pf_std),
+                        pf_std=self.indicators[cond_name].__dict__.get(
+                            "pf_std", self.pf_std
+                        ),
                     )
 
             # Check for detection changes

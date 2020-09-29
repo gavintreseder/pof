@@ -183,7 +183,7 @@ def make_cond_form_inputs(condition, prefix="", sep=""):  # Not used
                 dbc.Select(
                     options=[
                         {"label": option, "value": option}
-                        for option in condition.PF_CURVE
+                        for option in condition.PF_CURVES
                     ],
                     id=prefix + "pf_curve",
                     value=str(condition.pf_curve),
@@ -203,7 +203,7 @@ def make_cond_form_inputs(condition, prefix="", sep=""):  # Not used
                     dbc.Input(
                         type="number",
                         id=prefix + param,
-                        value=condition.__dict__[param],
+                        value=getattr(condition, param),
                         min=0,
                         debounce=True,
                     ),
