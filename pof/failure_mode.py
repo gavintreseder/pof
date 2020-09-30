@@ -269,9 +269,13 @@ class FailureMode(Load):
 
         self._set_container_attr("dists", Distribution, dists)
 
+        # TODO Gav
+
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
-            self.set_init_dist()
+            self.dists["init"] = Distribution.from_pf_interval(
+                self.dists["untreated"], self.pf_interval
+            )
 
     def set_init_states(self, states):
         # TODO Update this method at the same time as set state
@@ -367,27 +371,6 @@ class FailureMode(Load):
         NotImplemented
 
     # *************** Get methods *******************
-
-    def set_init_dist(self):  # TODO needs to get passed a condition and a pof
-        """
-        Convert the probability of failure into a probability of initiation
-        """
-        # TODO being moved to Distribution
-
-        # Super simple placeholder # TODO add other methods
-        alpha = self.dists["untreated"].alpha
-        beta = self.dists["untreated"].beta
-        if self.pf_interval is None:
-            gamma = max(0, self.dists["untreated"].gamma)
-        else:
-            gamma = max(0, self.dists["untreated"].gamma - self.pf_interval)
-
-        # TODO add an adjustment to make sure the pfinterval results in a resaonable gamma
-        # self.pf_interval = self.pf_interval - max(self.gamma - self.pf_interval + self.pf_std * 3)
-
-        self.dists["init"] = Distribution(
-            alpha=alpha, beta=beta, gamma=gamma, name="init"
-        )
 
     def get_expected_pof(self):
 

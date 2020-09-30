@@ -23,10 +23,10 @@ filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential En
 
 
 class TestAssetModelLoader(unittest.TestCase):
-    def test_imports_correctly(self):
+    def test_class_imports_correctly(self):
         self.assertTrue(True)
 
-    def test_instantiate(self):
+    def test_class_instantiate(self):
         aml = AssetModelLoader()
         self.assertIsNotNone(aml)
 
