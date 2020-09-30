@@ -122,7 +122,7 @@ class AssetModelLoader:
         mask_dup = df.loc[mask_key, key_cols].ffill().duplicated(keep=False)
 
         mask = mask_key & mask_dup
-        df.loc[mask, keys["failure_model"]] += "." + df[key_cols].loc[
+        df.loc[mask, keys["failure_model"]] += "_" + df[key_cols].loc[
             mask
         ].ffill().groupby(key_cols).cumcount().add(1).astype(str)
 
@@ -132,7 +132,7 @@ class AssetModelLoader:
         mask_dup = df.loc[mask_key, key_cols].ffill().duplicated(keep=False)
 
         mask = mask_key & mask_dup
-        df.loc[mask, keys["task_model"]] += "." + df[key_cols].loc[
+        df.loc[mask, keys["task_model"]] += "_" + df[key_cols].loc[
             mask
         ].ffill().groupby(key_cols).cumcount().add(1).astype(str)
 
