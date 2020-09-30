@@ -124,6 +124,7 @@ class Load:
 
         self.update_from_dict(dict_data)
 
+
     def update_from_dict(self, *args, **kwargs):
         """
         Update_from_dict ist overlaoded in each of the child classes

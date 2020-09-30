@@ -50,6 +50,8 @@ class PolesFleetDataLoader(FleetDataLoader):
         self.df_csq = self.df_csq.rename(columns={"ASSET_ID": "Asset ID"})
         self.df_csq = self.df_csq[csq_columns]
 
+        self.df_csq = self.replace_substring(self.df_csq)
+
     def load_asset_info(self):
         csq_columns = [
             "C_Safety_Dollars",
@@ -75,6 +77,8 @@ class PolesFleetDataLoader(FleetDataLoader):
         intervention = intervention[["Asset ID", "Pseudo Asset ID"]].drop_duplicates()
 
         self.df_asset_info = self.df_asset_info.merge(intervention, on="Asset ID")
+
+        self.df_asset_info = self.replace_substring(self.df_asset_info)
 
     def load_condition_data(self):
         df_condition = self.from_csv(condition_path)
@@ -109,14 +113,25 @@ class PolesFleetDataLoader(FleetDataLoader):
 
         df_condition = df_condition[cond_columns]
 
+        df_condition = self.replace_substring(df_condition)
+
         # create dictionary
-        c_dict = (
-            df_condition.groupby("Asset ID")[df_condition.columns[1:]]
-            .apply(lambda g: g.values.tolist())
-            .to_dict()
+        # c_dict = (
+        #     df_condition.groupby("Asset ID")[df_condition.columns[1:]]
+        #     .apply(lambda g: g.values.tolist())
+        #     .to_dict()
+        # )
+
+        # self.condition_data = c_dict
+        self.condition_data = df_condition
+
+    def replace_substring(self, df, replace="-", replace_with="."):
+
+        df_replaced = df.applymap(
+            lambda s: s.replace(replace, replace_with) if isinstance(s, str) else s
         )
 
-        self.condition_data = c_dict
+        return df_replaced
 
     def get_fleet_data(self):
         """
