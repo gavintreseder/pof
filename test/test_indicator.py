@@ -224,7 +224,9 @@ class TestConditionIndicator(unittest.TestCase):
     def test_sim_timeline_existing_condition_early_start_no_stop(self):
         # TODO revisit which behaviour would be better
         # expected = np.concatenate((np.full(10, 90), np.linspace(90, 50, 41)))
-        expected = np.concatenate((np.full(10, 90), np.linspace(90, 50, 41), (np.full(10, 50))
+        expected = np.concatenate(
+            (np.full(10, 90), np.linspace(90, 50, 41), np.full(10, 50))
+        )
         cond = ConditionIndicator(
             perfect=100, failed=50, pf_interval=50, pf_curve="linear"
         )
