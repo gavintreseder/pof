@@ -9,6 +9,7 @@ import math
 import numpy as np
 import scipy.stats as ss
 from random import random, seed
+import logging
 
 if __package__ is None or __package__ == "":
     import sys
@@ -317,7 +318,7 @@ class Task(Load):
 
     def get_dash_ids(self, prefix="", sep="-"):
 
-        prefix = prefix + "Task" + sep + self.name + sep
+        prefix = prefix + self.name + sep
 
         # task parameters
         param_list = ["active", "p_effective", "cost"]

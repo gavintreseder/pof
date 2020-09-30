@@ -56,7 +56,7 @@ cf = config["FailureMode"]
 seed(1)
 
 
-@dataclass(repr=False)
+@dataclass
 class FailureModeData(Load):
     """
     A class that contains the data for the FailureMode object.
@@ -83,8 +83,8 @@ class FailureModeData(Load):
     init_states: Dict = None
 
     # Simulation Details
-    timeline: Dict = field(init=False, default_factory=lambda: dict())
-    timelines: Dict = field(init=False, default_factory=lambda: dict())
+    timeline: Dict = field(init=False, repr=False, default_factory=lambda: dict())
+    timelines: Dict = field(init=False, repr=False, default_factory=lambda: dict())
     sim_counter: int = 0
 
     untreated: Distribution = None
@@ -265,13 +265,17 @@ class FailureMode(Load):
 
     def set_dists(self, dists):
 
-        untreated = copy.copy(getattr(getattr(self, "dists", None), "untreated", None))
+        untreated = copy.copy(getattr(self, "dists", None).get("untreated", None))
 
         self._set_container_attr("dists", Distribution, dists)
 
+        # TODO Gav
+
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
-            self.set_init_dist()
+            self.dists["init"] = Distribution.from_pf_interval(
+                self.dists["untreated"], self.pf_interval
+            )
 
     def set_init_states(self, states):
         # TODO Update this method at the same time as set state
@@ -367,27 +371,6 @@ class FailureMode(Load):
         NotImplemented
 
     # *************** Get methods *******************
-
-    def set_init_dist(self):  # TODO needs to get passed a condition and a pof
-        """
-        Convert the probability of failure into a probability of initiation
-        """
-        # TODO being moved to Distribution
-
-        # Super simple placeholder # TODO add other methods
-        alpha = self.dists["untreated"].alpha
-        beta = self.dists["untreated"].beta
-        if self.pf_interval is None:
-            gamma = max(0, self.dists["untreated"].gamma)
-        else:
-            gamma = max(0, self.dists["untreated"].gamma - self.pf_interval)
-
-        # TODO add an adjustment to make sure the pfinterval results in a resaonable gamma
-        # self.pf_interval = self.pf_interval - max(self.gamma - self.pf_interval + self.pf_std * 3)
-
-        self.dists["init"] = Distribution(
-            alpha=alpha, beta=beta, gamma=gamma, name="init"
-        )
 
     def get_expected_pof(self):
 
@@ -751,7 +734,7 @@ class FailureMode(Load):
         expected = dict()
         for ind_name, indicator in self.indicators.items():
 
-            ec = np.array([self._timelines[x][cond_name] for x in self._timelines])
+            ec = np.array([self._timelines[x][ind_name] for x in self._timelines])
 
             mean = indicator.perfect - ec.mean(axis=0)
             sd = ec.std(axis=0)
@@ -761,7 +744,7 @@ class FailureMode(Load):
             upper[upper > indicator.perfect] = indicator.perfect
             lower[lower < indicator.failed] = indicator.failed
 
-            expected[cond_name] = dict(
+            expected[ind_name] = dict(
                 lower=lower,
                 mean=mean,
                 upper=upper,
@@ -931,7 +914,7 @@ class FailureMode(Load):
             if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
                 self.__dict__[key] = value
 
-            elif key == "untreated":
+            elif key == "dists":
                 self.set_dists(dict_data[key])
 
             elif key == "conditions":
@@ -1019,7 +1002,7 @@ class FailureMode(Load):
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""
 
-        prefix = prefix + "FailureMode" + sep + self.name + sep
+        prefix = prefix + self.name + sep
 
         # Failure modes
         fm_ids = [
@@ -1027,7 +1010,7 @@ class FailureMode(Load):
         ]
 
         # Failure Dist
-        fd_ids = self.untreated.get_dash_ids(prefix=prefix)
+        fd_ids = self.untreated.get_dash_ids(prefix=prefix + "dists" + sep)
 
         # Tasks
         task_ids = []
@@ -1041,14 +1024,12 @@ class FailureMode(Load):
     def get_objects(self, prefix="", sep="-"):
 
         # Failure mode object
-        prefix = prefix + "FailureMode" + sep
+        prefix = prefix
         objects = [prefix + self.name]
 
         # Tasks objects
         prefix = prefix + self.name + sep
-        objects = objects + [
-            prefix + "tasks" + sep + "Task" + sep + task for task in self.tasks
-        ]
+        objects = objects + [prefix + "tasks" + sep + task for task in self.tasks]
 
         return objects
 

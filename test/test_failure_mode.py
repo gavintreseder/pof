@@ -25,39 +25,45 @@ class TestFailureMode(unittest.TestCase):
     def test_class_imports_correctly(self):
         self.assertIsNotNone(FailureMode)
 
-    def test_class_instantiate(self):
+    def test_class_instantiate_no_data(self):
         failure_mode = FailureMode()
         self.assertIsNotNone(failure_mode)
 
-    def test_class_instantiate_without_data_config_none(self):
-        """ Tests the creation of a class instance with all"""
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(
-                ValueError,
-                msg="Error expected with no input",
-            ):
-                failure_mode = FailureMode()
-
-    def test_class_instantiate_with_data(self):
+    def test_class_instantiate_with_valid_data(self):
         failure_mode = FailureMode(
             name="random",
             untreated=dict(name="slow_degrading", alpha=500, beta=1, gamma=0),
         )
         self.assertIsNotNone(failure_mode)
 
-    def test_from_dict(self):
-        try:
-            fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
-            self.assertIsNotNone(fm)
-        except:
-            self.fail("Unexpected Error")
+    def test_class_instantiate_with_invalid_data(self):
 
-    def test_from_dict_value_error_exits(self):
-
-        false_data = dict(pf_curve="invalid_value")
+        invalid_data = dict(pf_curve="incorrect_value", invalid_input="invalid_value")
 
         with self.assertRaises(ValueError):
-            fm = FailureMode.from_dict(false_data)
+            FailureMode.from_dict(invalid_data)
+
+    def test_from_dict_no_data(self):
+        with self.assertRaises(TypeError):
+            FailureMode.from_dict()
+
+    def test_from_dict_with_valid_data(self):
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+        self.assertIsNotNone(fm)
+
+    def test_from_dict_with_invalid_data_config_default(self):
+        #TODO Mock cf.get_boolean('on_error_default')
+        invalid_data = dict(pf_curve="invalid_value")
+        with patch("pof.failure_mode.cf", Mock()):
+            with self.assertRaises(ValueError):
+                FailureMode.from_dict(invalid_data)
+
+    def test_from_dict_with_invalid_data_config_none(self):
+
+        invalid_data = dict(pf_curve="invalid_value")
+        with patch("pof.failure_mode.cf", self.blank_config):
+            with self.assertRaises(ValueError):
+                FailureMode.from_dict(invalid_data)
 
     # ************ Test init_timeline ***********************
 
@@ -201,6 +207,18 @@ class TestFailureMode(unittest.TestCase):
 
     # ************ Test load ***********************
 
+    def test_load(self):
+        fm = FailureMode.load()
+        self.assertIsNotNone(fm)
+
+    def test_load_no_data_no_config(self):
+        with patch("pof.failure_mode.cf", self.blank_config):
+            with self.assertRaises(
+                ValueError,
+                msg="Error expected with no input",
+            ):
+                FailureMode.load()
+
     def test_load_data_demo_data(self):
         try:
             fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
@@ -210,35 +228,29 @@ class TestFailureMode(unittest.TestCase):
         except:
             self.fail("Unknown error")
 
-    def test_load_no_data(self):
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(
-                ValueError,
-                msg="Error expected with no input",
-            ):
-                failure_mode = FailureMode.load()
-
     def test_set_demo_some_data(self):
         fm = FailureMode().set_demo()
         self.assertIsNotNone(fm)
 
-    # ************ Test Dash ID Value ***********************
+    # ************ Test get_dash_ids *****************
 
-    def test_get_dash_id_value(self):
+    def test_get_dash_id(self):
 
-        fm = FailureMode.set_demo()
+        fm = FailureMode().set_demo()
 
         dash_ids = fm.get_dash_ids()
 
-        # TODO load data
-
-    # ************ Test get_dash_ids *****************
-
-    def test_get_dash_ids(self):
-
-        fm = FailureMode()
-
     # ************ Test update methods *****************
+
+    def test_update(self):
+
+        fm = FailureMode().set_demo()
+
+        # Test a task
+        fm.update("slow_aging-tasks-inspection-active", False)
+
+        # Test a
+        fm.update("slow_aging-dists-untreated-alpha", 10)
 
     # ************ Test link indicators ***************
 
@@ -311,12 +323,6 @@ class TestFailureMode(unittest.TestCase):
     #     fm1.update_from_dict(test_data_2_fix)
 
     #     self.assertEqual(fm1, fm2)
-
-    def test_update(self):
-
-        fm = FailureMode().set_demo()
-
-        fm.update("FailureMode-slow_aging-tasks-Task-inspection-active", False)
 
     def test_set_task_Task(self):
 

@@ -96,7 +96,7 @@ class Distribution(DistributionData):
 
     def get_dash_ids(self, prefix="", sep="-"):
 
-        prefix = prefix + "Distribution" + sep + self.name + sep
+        prefix = prefix + self.name + sep
         return [prefix + param for param in ["alpha", "beta", "gamma"]]
 
     def load_demo(self, scenario=None):

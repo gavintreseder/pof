@@ -4,10 +4,10 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from typing import Dict
 import collections
+import logging
 
 import numpy as np
 import scipy.stats as ss
@@ -24,8 +24,6 @@ from pof.helper import str_to_dict
 from config import config
 
 cf = config["Indicator"]
-
-PF_CURVES = ["linear", "step"]
 
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
@@ -49,6 +47,8 @@ class Indicator(Load):
         sim_failure_timeline()
 
     """
+
+    PF_CURVES = ["linear", "step"]
 
     name: str = "indicator"
     pf_curve: str = "step"
@@ -77,35 +77,36 @@ class Indicator(Load):
 
     @classmethod
     def from_dict(cls, details=None):
-        try:
-            if details["pf_curve"] in ["linear", "step"]:
 
-                task = ConditionIndicator(**details)
+        if details["pf_curve"] in ["linear", "step"]:
 
-            elif details["pf_cruve"] in ["ssf_calc"]:
+            task = ConditionIndicator(**details)
 
-                task = PoleSafetyFactor(**details)
+        elif details["pf_curve"] in ["ssf_calc", "dsf_calc"]:
 
-            else:
+            task = PoleSafetyFactor(**details)
 
-                return ValueError("Invalid Indicator Type")
-        except:
-            task = cls()
-            print("Error loading %s data from dictionary" % (cls.__name__))
+        else:
+            logging.warning("Error loading %s data from dictionary", cls.__name__)
+            raise ValueError("Invalid Indicator Type")
+            
         return task
 
-    def sim_indicator_timeline(self):
-
-        # Overloaded
+    def sim_indicator_timeline(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
         NotImplemented
 
-    def sim_failure_timeline(self):
+    def sim_failure_timeline(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
 
-        # Overloaded
         NotImplemented
 
-    def restore(self):
+    def restore(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
+        NotImplemented
 
+    def reset_any(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
         NotImplemented
 
     def reset(self):
@@ -115,12 +116,10 @@ class Indicator(Load):
         self._timelines = dict()
 
     def set_pf_curve(self, pf_curve):
-        # if pf_curve in cf['PF_CURVES']:
-        if pf_curve in PF_CURVES:
+        if pf_curve in self.PF_CURVES:
             self.pf_curve = pf_curve
         else:
-            # raise ValueError("pf_curve must be from: %s" % (cf['PF_CURVES']))
-            raise ValueError("pf_curve must be from: %s" % (PF_CURVES))
+            raise ValueError("pf_curve must be from: %s" % (self.PF_CURVES))
 
     def set_pf_interval(self, pf_interval=None):
 
@@ -273,6 +272,9 @@ class Indicator(Load):
 
 @dataclass
 class ConditionIndicator(Indicator):
+
+    # Class Variables
+    PF_CURVES = ["linear", "step"]
 
     name: str = "ConditionIndicator"
 
@@ -560,6 +562,9 @@ class ConditionIndicator(Indicator):
 
 @dataclass
 class PoleSafetyFactor(Indicator):
+
+    # Class Variables
+    PF_CURVES = ["ssf_calc", "dsf_calc"]
 
     failed: int = 1
     decreasing: int = True

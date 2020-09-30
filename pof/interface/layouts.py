@@ -56,7 +56,7 @@ SCALING = cf.scaling
 def make_component_layout(component, prefix="", sep="-"):
     """"""
 
-    prefix = prefix + "Component" + sep + component.name + sep
+    prefix = prefix + component.name + sep
 
     # Get tasks layout
     fms_layout = []
@@ -94,7 +94,7 @@ def make_component_layout(component, prefix="", sep="-"):
 def make_failure_mode_layout(fm, prefix="", sep="-"):
     """"""
 
-    prefix = prefix + "FailureMode" + sep + fm.name + sep
+    prefix = prefix + fm.name + sep
 
     # Get failure mode form
     cond_inputs = make_cond_form_inputs(fm, prefix=prefix, sep=sep)
@@ -142,9 +142,7 @@ def make_dist_form_inputs(dist, prefix="", sep="-"):
     Takes a Distribution and generates the html form inputs
     """
 
-    prefix = (
-        prefix + "Distribution" + sep + dist.name + sep
-    )  # TODO generalise to all dist
+    prefix = prefix + "dists" + sep + dist.name + sep
 
     param_inputs = []
 
@@ -168,7 +166,7 @@ def make_dist_form_inputs(dist, prefix="", sep="-"):
     return param_inputs
 
 
-def make_cond_form_inputs(condition, prefix="", sep=""):  # Not used
+def make_cond_form_inputs(condition, prefix="", sep="-"):  # Not used
     """
     Takes a Condition and generates the form inputs
     """
@@ -220,7 +218,7 @@ def make_cond_form_inputs(condition, prefix="", sep=""):  # Not used
 
 def make_task_layout(task, prefix="", sep="-"):
     """"""
-    prefix = prefix + "Task" + sep + task.name + sep
+    prefix = prefix + task.name + sep
 
     task_form = make_task_form(task=task, prefix=prefix)
     trigger_layout = make_task_trigger_layout(task.triggers, prefix=prefix)

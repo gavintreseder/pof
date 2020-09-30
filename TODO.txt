@@ -5,8 +5,6 @@
 
 
     # Dash update id methods (see this from above)
-        # Change the update methods to use the set functions
-            # The thing that we are trying to fix here is to make sure that an init dist gets recalculated every time we make a change to untreated
         # Complete tests for each of them
 
     # Testing
@@ -27,6 +25,9 @@
     
 
 # 08 Sep - Gav
+
+    # Combine condition and indicator
+
 
     # Components
         # Asset Data
