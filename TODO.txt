@@ -26,6 +26,9 @@
 
 # 08 Sep - Gav
 
+    # Combine condition and indicator
+
+
     # Components
         # Asset Data
             # Consequence Model

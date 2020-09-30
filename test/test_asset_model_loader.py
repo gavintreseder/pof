@@ -74,10 +74,10 @@ class TestAssetModelLoader(unittest.TestCase):
         fm = FailureMode.load(data["pole"]["fm"]["termites"])
 
         # Change the condition so that the termite powder should be triggered straight away #TODO replace this with asset data
-        fm.set_init_state({"initiation": True})
+        fm.set_init_states({"initiation": True})
         fm.set_states({"initiation": True})
-        for cond in fm.conditions.values():
-            cond.update_from_dict(
+        for ind in fm.indicators.values():
+            ind.update_from_dict(
                 dict(
                     pf_interval=100,
                     condition=49,

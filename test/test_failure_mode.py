@@ -25,39 +25,45 @@ class TestFailureMode(unittest.TestCase):
     def test_class_imports_correctly(self):
         self.assertIsNotNone(FailureMode)
 
-    def test_class_instantiate(self):
+    def test_class_instantiate_no_data(self):
         failure_mode = FailureMode()
         self.assertIsNotNone(failure_mode)
 
-    def test_class_instantiate_without_data_config_none(self):
-        """ Tests the creation of a class instance with all"""
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(
-                ValueError,
-                msg="Error expected with no input",
-            ):
-                failure_mode = FailureMode()
-
-    def test_class_instantiate_with_data(self):
+    def test_class_instantiate_with_valid_data(self):
         failure_mode = FailureMode(
             name="random",
             untreated=dict(name="slow_degrading", alpha=500, beta=1, gamma=0),
         )
         self.assertIsNotNone(failure_mode)
 
-    def test_from_dict(self):
-        try:
-            fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
-            self.assertIsNotNone(fm)
-        except:
-            self.fail("Unexpected Error")
+    def test_class_instantiate_with_invalid_data(self):
 
-    def test_from_dict_value_error_exits(self):
-
-        false_data = dict(pf_curve="invalid_value")
+        invalid_data = dict(pf_curve="incorrect_value", invalid_input="invalid_value")
 
         with self.assertRaises(ValueError):
-            fm = FailureMode.from_dict(false_data)
+            FailureMode.from_dict(invalid_data)
+
+    def test_from_dict_no_data(self):
+        with self.assertRaises(TypeError):
+            FailureMode.from_dict()
+
+    def test_from_dict_with_valid_data(self):
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
+        self.assertIsNotNone(fm)
+
+    def test_from_dict_with_invalid_data_config_default(self):
+        #TODO Mock cf.get_boolean('on_error_default')
+        invalid_data = dict(pf_curve="invalid_value")
+        with patch("pof.failure_mode.cf", Mock()):
+            with self.assertRaises(ValueError):
+                FailureMode.from_dict(invalid_data)
+
+    def test_from_dict_with_invalid_data_config_none(self):
+
+        invalid_data = dict(pf_curve="invalid_value")
+        with patch("pof.failure_mode.cf", self.blank_config):
+            with self.assertRaises(ValueError):
+                FailureMode.from_dict(invalid_data)
 
     # ************ Test init_timeline ***********************
 

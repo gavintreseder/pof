@@ -77,21 +77,19 @@ class Indicator(Load):
 
     @classmethod
     def from_dict(cls, details=None):
-        try:
-            if details["pf_curve"] in ["linear", "step"]:
 
-                task = ConditionIndicator(**details)
+        if details["pf_curve"] in ["linear", "step"]:
 
-            elif details["pf_curve"] in ["ssf_calc", "dsf_calc"]:
+            task = ConditionIndicator(**details)
 
-                task = PoleSafetyFactor(**details)
+        elif details["pf_curve"] in ["ssf_calc", "dsf_calc"]:
 
-            else:
+            task = PoleSafetyFactor(**details)
 
-                raise ValueError("Invalid Indicator Type")
-        except:
-            task = cls()
-            print("Error loading %s data from dictionary" % (cls.__name__))
+        else:
+            logging.warning("Error loading %s data from dictionary", cls.__name__)
+            raise ValueError("Invalid Indicator Type")
+            
         return task
 
     def sim_indicator_timeline(self, *args, **kwargs):
