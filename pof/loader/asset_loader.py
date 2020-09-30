@@ -23,21 +23,74 @@ class AssetData:
     def __init__(self):
         NotImplemented
 
-    def get(self, attribute=None):
-        # for particular asset??
-        # assuming dataframe of condition information
-        # if 'condition':
-        # get condition data
+    def get(self, data, attribute, key):
 
-        # if 'wall_thickness':
-        # filter for wall_thickness data
+        if data == "condition":
+            if attribute == "external_diameter":
+                value = self.get_external_diameter(key)
 
-        # if 'current':
-        # get most recent condition value
-        # if 'perfect':
-        # get maximum condiiton value
+            elif attribute == "wall_thickness":
+                value = self.get_wall_thickness(key)
 
-        return attribute
+            else:
+                raise ValueError(
+                    "Condition attribute must be 'external_diameter' or 'wall_thickness'"
+                )
+
+        return value
+
+    def get_external_diameter(self, key):
+        condition = self.condition_data.copy()
+
+        if key == "perfect":
+            c = condition[condition["Detail Code"] == "DAGD"]
+            # gets max value in either before or after
+            external_diameter = max(
+                [
+                    c[c["Before Value"] == c["Before Value"].max()][
+                        "Before Value"
+                    ].values[0],
+                    c[c["After Value"] == c["After Value"].max()]["After Value"].values[
+                        0
+                    ],
+                ]
+            )
+        elif key == "current":
+            c = condition[condition["Detail Code"] == "DCZD"]
+            # gets after value from most recent
+            external_diameter = c[c["Date Changed"] == c["Date Changed"].max()][
+                "After Value"
+            ].values[0]
+        else:
+            raise ValueError("External Diameter key must be 'perfect' or 'current'")
+
+        return external_diameter
+
+    def get_wall_thickness(self, key):
+        condition = self.condition_data.copy()
+        c = condition[condition["Detail Code"] == "DPWT"]
+
+        if key == "perfect":
+            # gets max value in either before or after
+            wall_thickness = max(
+                [
+                    c[c["Before Value"] == c["Before Value"].max()][
+                        "Before Value"
+                    ].values[0],
+                    c[c["After Value"] == c["After Value"].max()]["After Value"].values[
+                        0
+                    ],
+                ]
+            )
+        elif key == "current":
+            # gets after value from most recent
+            wall_thickness = c[c["Date Changed"] == c["Date Changed"].max()][
+                "After Value"
+            ].values[0]
+        else:
+            raise ValueError("Wall Thickness key must be 'perfect' or 'current'")
+
+        return wall_thickness
 
 
 # Comments
