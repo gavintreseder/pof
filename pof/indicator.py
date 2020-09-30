@@ -4,10 +4,10 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from typing import Dict
 import collections
+import logging
 
 import numpy as np
 import scipy.stats as ss
@@ -82,30 +82,33 @@ class Indicator(Load):
 
                 task = ConditionIndicator(**details)
 
-            elif details["pf_curve"] in ["ssf_calc"]:
+            elif details["pf_curve"] in ["ssf_calc", "dsf_calc"]:
 
                 task = PoleSafetyFactor(**details)
 
             else:
 
-                return ValueError("Invalid Indicator Type")
+                raise ValueError("Invalid Indicator Type")
         except:
             task = cls()
             print("Error loading %s data from dictionary" % (cls.__name__))
         return task
 
-    def sim_indicator_timeline(self):
-
-        # Overloaded
+    def sim_indicator_timeline(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
         NotImplemented
 
-    def sim_failure_timeline(self):
+    def sim_failure_timeline(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
 
-        # Overloaded
         NotImplemented
 
-    def restore(self):
+    def restore(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
+        NotImplemented
 
+    def reset_any(self, *args, **kwargs):
+        logging.info("Non overloaded function called")
         NotImplemented
 
     def reset(self):

@@ -9,6 +9,7 @@ import math
 import numpy as np
 import scipy.stats as ss
 from random import random, seed
+import logging
 
 if __package__ is None or __package__ == "":
     import sys

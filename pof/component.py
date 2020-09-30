@@ -4,9 +4,9 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from typing import Dict
+import logging
 
 import numpy as np
 import pandas as pd
@@ -21,6 +21,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from config import config
 from pof.failure_mode import FailureMode
 from pof.condition import Condition
 from pof.distribution import Distribution
@@ -28,7 +29,7 @@ from pof.helper import fill_blanks, id_update
 from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
 from pof.load import Load
 import pof.demo as demo
-from config import config
+
 
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO create get, set, del and add methods
@@ -475,16 +476,21 @@ class Component(Load):
 
     # ****************** Interface ******************
 
-    def update(self, dash_id, value, sep="-"):
-        """Updates the component class using the dash componenet ID"""
+    def update_from_dict(self, dict_data):
 
-        try:
-            id_update(
-                self, id_str=dash_id, value=value, sep=sep, children=[FailureMode]
-            )
+        for key, value in dict_data.items():
 
-        except:
-            print("Invalid ID")
+            if key in ["name", "active"]:
+                self.__dict__[key] = value
+
+            elif key == "fm":
+                self.set_failure_mode(dict_data[key])
+
+            elif key == "indicator":
+                self.set_indicator(dict_data[key])
+
+            else:
+                logging.warning('Cannot update "%s" from dict', self.__class__.__name__)
 
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""

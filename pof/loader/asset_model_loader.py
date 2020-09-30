@@ -244,8 +244,8 @@ class AssetModelLoader:
     def _get_dist_data(self, df_fm):
 
         df_dist = df_fm["failure_model"].dropna(how="all")
-        df_dist.columns = df_dist.columns.droplevel()
-
+        df_dist = df_dist["distribution"]
+        df_dist["name"] = df_dist.index
         try:
             dist_data = df_dist.iloc[0].to_dict()
         except IndexError:

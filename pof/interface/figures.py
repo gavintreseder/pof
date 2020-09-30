@@ -155,7 +155,9 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
         )
     except:
         fig = go.Figure(
-            layout=go.Layout(title=go.layout.Title(text="Error Producing Condition"))
+            layout=go.Layout(
+                title=go.layout.Title(text="Error Producing Inspection Interval")
+            )
         )
 
     return fig

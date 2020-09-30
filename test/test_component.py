@@ -51,7 +51,7 @@ class TestComponent(unittest.TestCase):
 
     ## *************** Test set_demo ***********************
 
-    def test_set_demo(self):
+    def test_demo(self):
         comp = Component.demo()
         self.assertIsNotNone(comp)
 
@@ -188,6 +188,13 @@ class TestComponent(unittest.TestCase):
         # TODO add some checks
 
     # ************ Test update methods *****************
+
+    def test_update(self):
+        # TODO test all values
+        comp = Component.demo()
+
+        comp.update("comp-fm-slow_aging-active", False)
+        self.assertEqual(comp.fm["slow_aging"].active, False)
 
     def test_update_from_str(self):
 
