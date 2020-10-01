@@ -89,7 +89,7 @@ class Indicator(Load):
         else:
             logging.warning("Error loading %s data from dictionary", cls.__name__)
             raise ValueError("Invalid Indicator Type")
-            
+
         return task
 
     def sim_indicator_timeline(self, *args, **kwargs):
@@ -268,6 +268,64 @@ class Indicator(Load):
                     'ERROR: Cannot update "%s" from dict with key %s'
                     % (self.__class__.__name__, key)
                 )
+
+    def expected_condition(self, stdev=1):  # TODO make work for all condition levels
+
+        expected = dict()
+
+        ec = np.array([self._timelines[x][self.name] for x in self._timelines])
+
+        if self.name in expected:
+            expected[self.name] = expected[self.name] + ec
+        else:
+            expected[self.name] = ec
+
+        for ind_name, ecl in expected.items():
+            mean = ecl.mean(axis=0)
+            sd = ecl.std(axis=0)
+            upper = mean + sd * stdev
+            lower = mean - sd * stdev
+
+            upper[upper > self.perfect] = self.perfect
+            lower[lower < self.failed] = self.failed
+
+            expected[ind_name] = dict(
+                lower=lower,
+                mean=mean,
+                upper=upper,
+            )
+
+        return expected
+
+    def expected_condition_loss(self, stdev=1):
+
+        expected = dict()
+
+        ec = self.expected_condition()
+        for c in ec:
+            ec[c] = self.perfect - ec[c]
+
+        if self.name in expected:
+            expected[self.name] = expected[self.name] + ec
+        else:
+            expected[self.name] = ec
+
+        for ind_name, ecl in expected.items():
+            mean = ecl.mean(axis=0)
+            sd = ecl.std(axis=0)
+            upper = mean + sd * stdev
+            lower = mean - sd * stdev
+
+            upper[upper > self.perfect] = self.perfect
+            lower[lower < self.failed] = self.failed
+
+            expected[ind_name] = dict(
+                lower=lower,
+                mean=mean,
+                upper=upper,
+            )
+
+        return expected
 
 
 @dataclass
