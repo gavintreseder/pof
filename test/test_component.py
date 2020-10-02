@@ -16,7 +16,13 @@ from pof.component import Component
 from config import config
 import pof.demo as demo
 
+from pof.interface.figures import update_condition_fig
+
+
 cf = config["Component"]
+
+comp = Component.demo()
+comp.mc_timeline(50)
 
 
 class TestComponent(unittest.TestCase):
@@ -216,6 +222,10 @@ class TestComponent(unittest.TestCase):
     def test_expected_inspection_interval(self):
 
         NotImplemented
+
+    def test_delete_after(self):
+
+        fig = update_condition_fig(comp)
 
 
 if __name__ == "__main__":
