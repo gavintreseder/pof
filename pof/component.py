@@ -474,6 +474,10 @@ class Component(Load):
 
         return objects
 
+    def get_timeline(self):
+
+        print(NotImplemented)
+
     # ****************** Demonstration parameters ******************
 
     @classmethod
