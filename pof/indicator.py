@@ -275,25 +275,19 @@ class Indicator(Load):
 
         ec = np.array([self._timelines[x][self.name] for x in self._timelines])
 
-        if self.name in expected:
-            expected[self.name] = expected[self.name] + ec
-        else:
-            expected[self.name] = ec
+        mean = ecl.mean(axis=0)
+        sd = ecl.std(axis=0)
+        upper = mean + sd * stdev
+        lower = mean - sd * stdev
 
-        for ind_name, ecl in expected.items():
-            mean = ecl.mean(axis=0)
-            sd = ecl.std(axis=0)
-            upper = mean + sd * stdev
-            lower = mean - sd * stdev
+        upper[upper > self.perfect] = self.perfect
+        lower[lower < self.failed] = self.failed
 
-            upper[upper > self.perfect] = self.perfect
-            lower[lower < self.failed] = self.failed
-
-            expected[ind_name] = dict(
-                lower=lower,
-                mean=mean,
-                upper=upper,
-            )
+        expected = dict(
+            lower=lower,
+            mean=mean,
+            upper=upper,
+        )
 
         return expected
 
@@ -305,25 +299,19 @@ class Indicator(Load):
         for c in ec:
             ec[c] = self.perfect - ec[c]
 
-        if self.name in expected:
-            expected[self.name] = expected[self.name] + ec
-        else:
-            expected[self.name] = ec
+        mean = ecl.mean(axis=0)
+        sd = ecl.std(axis=0)
+        upper = mean + sd * stdev
+        lower = mean - sd * stdev
 
-        for ind_name, ecl in expected.items():
-            mean = ecl.mean(axis=0)
-            sd = ecl.std(axis=0)
-            upper = mean + sd * stdev
-            lower = mean - sd * stdev
+        upper[upper > self.perfect] = self.perfect
+        lower[lower < self.failed] = self.failed
 
-            upper[upper > self.perfect] = self.perfect
-            lower[lower < self.failed] = self.failed
-
-            expected[ind_name] = dict(
-                lower=lower,
-                mean=mean,
-                upper=upper,
-            )
+        expected = dict(
+            lower=lower,
+            mean=mean,
+            upper=upper,
+        )
 
         return expected
 
