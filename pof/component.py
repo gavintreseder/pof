@@ -327,33 +327,11 @@ class Component(Load):
 
         expected = dict()
 
-        for fm in self.fm.values():
-            # Get the expected condition loss for the failure mode
+        for ind in self.indicator.values():
 
-            if fm.active:
-                for cond_name, condition in fm.conditions.items():
+            e = ind.expected_condition()
 
-                    ec = np.array([fm._timelines[x][cond_name] for x in fm._timelines])
-
-                    if cond_name in expected:
-                        expected[cond_name] = expected[cond_name] + ec
-                    else:
-                        expected[cond_name] = ec
-
-        for cond_name, ecl in expected.items():
-            mean = ecl.mean(axis=0)
-            sd = ecl.std(axis=0)
-            upper = mean + sd * stdev
-            lower = mean - sd * stdev
-
-            upper[upper > condition.perfect] = condition.perfect
-            lower[lower < condition.failed] = condition.failed
-
-            expected[cond_name] = dict(
-                lower=lower,
-                mean=mean,
-                upper=upper,
-            )
+            expected[ind.name] = e
 
         return expected
 
@@ -383,35 +361,11 @@ class Component(Load):
         # TODO move this back out so that condition works as an indpendent class
         expected = dict()
 
-        for fm in self.fm.values():
-            # Get the expected condition loss for the failure mode
+        for ind in self.indicator.values():
 
-            if fm.active:
-                for cond_name, condition in fm.conditions.items():
+            e = ind.expected_condition_loss()
 
-                    ec = condition.perfect - np.array(
-                        [fm._timelines[x][cond_name] for x in fm._timelines]
-                    )
-
-                    if cond_name in expected:
-                        expected[cond_name] = expected[cond_name] + ec
-                    else:
-                        expected[cond_name] = ec
-
-        for cond_name, ecl in expected.items():
-            mean = ecl.mean(axis=0)
-            sd = ecl.std(axis=0)
-            upper = mean + sd * stdev
-            lower = mean - sd * stdev
-
-            upper[upper > condition.perfect] = condition.perfect
-            lower[lower < condition.failed] = condition.failed
-
-            expected[cond_name] = dict(
-                lower=lower,
-                mean=mean,
-                upper=upper,
-            )
+            expected[ind.name] = e
 
         return expected
 
