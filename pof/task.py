@@ -7,7 +7,6 @@ Author: Gavin Treseder
 
 import math
 import numpy as np
-import scipy.stats as ss
 from random import random, seed
 import logging
 
@@ -134,7 +133,8 @@ class Task(Load):
                 return ValueError("Invalid Task Type")
         except:
             task = cls()
-            print("Error loading %s data from dictionary" % (cls.__name__))
+            logging.warning("Error loading %s data from dictionary" % (cls.__name__))
+            raise
         return task
 
     # ************ Set Methods **********************
@@ -155,7 +155,7 @@ class Task(Load):
         elif consequence is None:
             self.consequence = Consequence()  # TODO make this a load with zero
         else:
-            print("Invalid Consequence")
+            logging.info("Invalid Consequence")
 
     def set_triggers(self, triggers=None):
         if triggers is None:
@@ -216,9 +216,7 @@ class Task(Load):
 
     # ********************* timeline methods ******************
 
-    def sim_completion(
-        self, t_now, timeline=None, states=dict(), conditions=dict(), verbose=False
-    ):
+    def sim_completion(self, t_now, timeline=None, states=dict(), conditions=dict()):
         # TODO maybe split into states
         # TODO tasks are updating conditions that haven't been changed
         """
@@ -245,8 +243,7 @@ class Task(Load):
                     )
             else:
                 for condition_name, impact in self.impacts["condition"].items():
-                    if verbose:
-                        print("Updating condition - %s" % (condition_name))
+                    logging.debug("Updating condition - %s" % (condition_name))
 
                     conditions[condition_name].set_condition(
                         timeline[condition_name][t_now]
@@ -293,7 +290,6 @@ class Task(Load):
     def update_from_dict(self, dict_data):
 
         for key, value in dict_data.items():
-            print(self.__dict__)
 
             if key in ["name", "task_type", "active", "p_effective", "cost"]:
                 self.__dict__[key] = value
@@ -460,7 +456,7 @@ class ConditionTask(Task):
                 try:
                     tl_ct = (tl_ct) & (timeline[state][t_start:t_end] == trigger)
                 except KeyError:
-                    print("%s not found" % (state))
+                    logging.warning("%s not found" % (state))
 
             # Check the condition triggers have been met
             for condition, trigger in self.triggers["condition"].items():
@@ -474,7 +470,7 @@ class ConditionTask(Task):
                             timeline[condition][t_start:t_end] < trigger["upper"]
                         )
                 except KeyError:
-                    print("%s not found" % (condition))
+                    logging.warning("%s not found" % (condition))
 
             tl_ct = tl_ct.astype(int)
 
