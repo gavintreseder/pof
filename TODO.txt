@@ -26,7 +26,14 @@
 
 # 08 Sep - Gav
 
-    # Combine condition and indicator
+    # Options
+        # PF_interval on load
+        # Combine condition and indicator
+        # Replace on failure
+        # Replace higher level asset
+        # Timeline inside object
+        # Sensitivity Analysis
+        # Threading
 
 
     # Components
@@ -104,8 +111,6 @@ fm2.plot_timeline()
         # Asset details in interface
 
     # Nice to have
-        # AssetModelLoader
-            # Check to fill with defaults or rasie error
         # Interface improvements
             # Task Schedule
         # Make layout a class
@@ -124,20 +129,14 @@ fm2.plot_timeline()
 
     # Add methods for'max', 'any', 'min', etc
 
-    # figure out how to load a failure mode with kwargs is the init as well
-
     # Change task to trigger
 
 
-
-Add Inspection Interval into interface
 Add starting condition
 Load with pole failure modes
 
 
 # TODO later
-    # move condition from failure mode to component and use pf_interval to create a condition_loss class
-    # Sort out the boundary between failure mode and condition
 
     # connect system impact for failure modes
 

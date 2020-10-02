@@ -190,7 +190,7 @@ class AssetModelLoader:
 
     def _get_failure_mode_data(self, df_comp):
 
-        fms_data = dict()  # TODO
+        fms_data = dict()
         fm_key = ("failure_model", "failure_mode", "name")
         failure_modes = df_comp[fm_key].unique()
         df_fms = df_comp[
@@ -207,6 +207,13 @@ class AssetModelLoader:
 
             df_fm = df_fms.loc[[fm]]
 
+            fm_data = (
+                df_fm["failure_model"]["failure_mode"]
+                .dropna(how="all")
+                .iloc[0]
+                .to_dict()
+            )
+
             # Get the Task information
             tasks_data = self._get_task_data(df_fm)
 
@@ -216,11 +223,13 @@ class AssetModelLoader:
             # Get the Condition information
             condition_data = self._get_condition_data(df_fm)
 
-            fm_data = dict(
-                name=fm,
-                conditions=condition_data,
-                tasks=tasks_data,
-                untreated=dist_data,
+            fm_data.update(
+                dict(
+                    name=fm,
+                    conditions=condition_data,
+                    tasks=tasks_data,
+                    untreated=dist_data,
+                )
             )
             fms_data.update(
                 {
