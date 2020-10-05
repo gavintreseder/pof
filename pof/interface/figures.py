@@ -83,7 +83,10 @@ def update_condition_fig(local):
         ecl = local.expected_condition_loss()
 
         fig = make_subplots(
-            rows=len(ecl), shared_xaxes=True, vertical_spacing=0.05, title="Condition"
+            rows=len(ecl),
+            shared_xaxes=True,
+            vertical_spacing=0.05,
+            subplot_titles="Condition",
         )
 
         cmap = px.colors.qualitative.Safe

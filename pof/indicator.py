@@ -273,10 +273,10 @@ class Indicator(Load):
 
         expected = dict()
 
-        ec = np.array([self._timelines[x][self.name] for x in self._timelines])
+        ec = np.array([self._timelines[x] for x in self._timelines])
 
-        mean = ecl.mean(axis=0)
-        sd = ecl.std(axis=0)
+        mean = ec.mean(axis=0)
+        sd = ec.std(axis=0)
         upper = mean + sd * stdev
         lower = mean - sd * stdev
 
@@ -295,12 +295,10 @@ class Indicator(Load):
 
         expected = dict()
 
-        ec = self.expected_condition()
-        for c in ec:
-            ec[c] = self.perfect - ec[c]
+        ec = self.perfect - np.array([self._timelines[x] for x in self._timelines])
 
-        mean = ecl.mean(axis=0)
-        sd = ecl.std(axis=0)
+        mean = ec.mean(axis=0)
+        sd = ec.std(axis=0)
         upper = mean + sd * stdev
         lower = mean - sd * stdev
 
