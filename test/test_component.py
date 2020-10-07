@@ -190,6 +190,11 @@ class TestComponent(unittest.TestCase):
 
         # TODO add some checks
 
+    def test_expected_condition_with_timelines(self):
+        comp = Component.demo()
+        comp.mc_timeline(10)
+        comp.expected_condition()
+
     # ************ Test update methods *****************
 
     def test_update(self):

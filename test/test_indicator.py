@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock
 import numpy as np
 import copy
+from random import randint
 
 import utils
 
@@ -22,6 +23,10 @@ cid = dict(
 
 
 class TestConditionIndicator(unittest.TestCase):
+    def setUp(self):
+        cond_data = demo.condition_data["instant"]
+        self.cond = ConditionIndicator.load(cond_data)
+
     def test_class_imports_correctly(self):
         pass
 
@@ -554,6 +559,85 @@ class TestConditionIndicator(unittest.TestCase):
         update = {"alpha": 10, "beta": 5}
 
         self.assertRaises(KeyError, c.update, update)
+
+    def test_agg_timelines_no_cause(self):
+        """
+        Check that the timelines aggregate correctly and do not exceed the limits
+        """
+        expected = np.concatenate(
+            [np.linspace(100, 51, 50), np.linspace(50, 0, 26), np.full(125, 0)]
+        )
+
+        cond = ConditionIndicator(
+            pf_curve="linear", perfect=100, failed=0, pf_interval=100
+        )
+
+        cond.save_timeline()
+
+        agg_timeline = cond.agg_timelines()
+
+        np.testing.assert_array_equal(agg_timeline, expected)
+
+    def test_agg_timelines_mutliple_timelines(self):
+        """
+        Check that the timelines aggregate correctly and do not exceed the limits
+        """
+        expected = np.tile(
+            np.concatenate(
+                [np.linspace(100, 51, 50), np.linspace(50, 0, 26), np.full(125, 0)]
+            ),
+            (2, 1),
+        )
+
+        cond = ConditionIndicator(
+            pf_curve="linear", perfect=100, failed=0, pf_interval=100
+        )
+
+        cond.sim_timeline(name="cause_1", t_start=0, t_stop=200)
+        cond.sim_timeline(name="cause_2", t_start=-50, t_stop=150)
+        cond.save_timeline(1)
+        cond.save_timeline(2)
+
+        agg_timeline = cond.agg_timelines()
+
+        np.testing.assert_array_equal(agg_timeline, expected)
+
+    def test_agg_timeline_mutltiple_causes(self):
+        """
+        Check that the causes aggregate correctly and do not exceed the limits
+        """
+        expected = np.concatenate(
+            [np.linspace(100, 51, 50), np.linspace(50, 0, 26), np.full(125, 0)]
+        )
+
+        cond = ConditionIndicator(
+            pf_curve="linear", perfect=100, failed=0, pf_interval=100
+        )
+
+        cond.sim_timeline(name="cause_1", t_start=0, t_stop=200)
+        cond.sim_timeline(name="cause_2", t_start=-50, t_stop=150)
+        cond.save_timeline()
+
+        agg_timeline = cond.agg_timeline()
+
+        np.testing.assert_array_equal(agg_timeline, expected)
+
+    def test_expected_condition_one_timeline(self):
+
+    def test_expected_condition(self):
+
+        cond = ConditionIndicator(
+            pf_curve="linear", perfect=100, failed=0, pf_interval=100
+        )
+
+        for i in range(100):
+            pf_interval = randint(100, 300)
+            cond.sim_timeline(
+                name="cause_1", t_start=0, t_stop=200, pf_interval=pf_interval
+            )
+            cond.save_timeline()
+
+        ec = cond.expected_condition()
 
 
 if __name__ == "__main__":

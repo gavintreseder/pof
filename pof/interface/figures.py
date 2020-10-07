@@ -80,7 +80,7 @@ def update_condition_fig(local):
 
     try:
 
-        ecl = local.expected_condition_loss()
+        ecl = local.expected_condition()
 
         fig = make_subplots(
             rows=len(ecl),
