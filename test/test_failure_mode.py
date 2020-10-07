@@ -52,7 +52,7 @@ class TestFailureMode(unittest.TestCase):
         self.assertIsNotNone(fm)
 
     def test_from_dict_with_invalid_data_config_default(self):
-        #TODO Mock cf.get_boolean('on_error_default')
+        # TODO Mock cf.get_boolean('on_error_default')
         invalid_data = dict(pf_curve="invalid_value")
         with patch("pof.failure_mode.cf", Mock()):
             with self.assertRaises(ValueError):
@@ -244,13 +244,26 @@ class TestFailureMode(unittest.TestCase):
 
     def test_update(self):
 
-        fm = FailureMode().set_demo()
+        test_data_1 = fixtures.failure_mode_data["early_life"]
+        test_data_2 = fixtures.failure_mode_data["slow_aging"]
+
+        fm1 = FailureMode.from_dict(test_data_1)
+        fm2 = FailureMode.from_dict(test_data_2)
 
         # Test a task
-        fm.update("slow_aging-tasks-inspection-active", False)
+        # fm.update("slow_aging-tasks-inspection-active", False)
 
         # Test a
-        fm.update("slow_aging-dists-untreated-alpha", 10)
+        # fm.update("slow_aging-dists-untreated-alpha", 10)
+
+        # update var by var
+        for var, val in test_data_2.items():
+            d = {}
+            d[var] = val
+
+            fm1.update(d)
+
+            # self.assertEqual(fm1.var, val)
 
     # ************ Test link indicators ***************
 

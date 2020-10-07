@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
+import pandas as pd
 
 from pof.helper import str_to_dict
 from config import config
@@ -66,6 +67,7 @@ class Load:
             elif isinstance(value, Iterable):
 
                 # TODO fix this
+                # If this doesn't exist yet create it
                 if "name" in value:
                     getattr(self, attr)[value["name"]] = d_type.load(value)
 
@@ -74,10 +76,11 @@ class Load:
 
                     for key, val in value.items():
                         if key in getattr(self, attr) and not isinstance(val, d_type):
-                            if "name" in val:
-                                getattr(self, attr)[val["name"]] = d_type.load(val)
-                            else:
-                                getattr(self, attr)[key].update_from_dict(val)
+                            getattr(self, attr)[key].update_from_dict(val)
+                            # if "name" in val:
+                            #     getattr(self, attr)[val["name"]] = d_type.load(val)
+                            # else:
+                            #     getattr(self, attr)[key].update_from_dict(val)
                         else:
                             self._set_container_attr(attr, d_type, val)
 
@@ -128,9 +131,39 @@ class Load:
 
         self.update_from_dict(dict_data)
 
-
     def update_from_dict(self, *args, **kwargs):
         """
         Update_from_dict ist overlaoded in each of the child classes
         """
         return "This must be overloaded"
+
+    def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):
+        """"""
+        # TODO add an optimal onto this
+        rc = dict()
+        self.reset()
+
+        var = var_name.split("-")[-1]
+
+        for i in range(max(1, lower), upper, step):
+
+            self.update(var_name, i)
+
+            self.mc_timeline(t_end=100, n_iterations=n_iterations)
+
+            rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+            rc[i][var] = i
+
+            # Reset component
+            self.reset()
+
+        df = (
+            pd.DataFrame()
+            .from_dict(rc, orient="index")
+            .rename(columns={"risk": "risk_cost"})
+        )
+        df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
+        df["total"] = df["direct_cost"] + df["risk_cost"]
+        df = df[[var, "direct_cost", "risk_cost", "total"]]
+
+        return df

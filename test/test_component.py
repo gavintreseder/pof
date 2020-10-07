@@ -21,9 +21,6 @@ from pof.interface.figures import update_condition_fig
 
 cf = config["Component"]
 
-comp = Component.demo()
-comp.mc_timeline(50)
-
 
 class TestComponent(unittest.TestCase):
     """
@@ -223,9 +220,17 @@ class TestComponent(unittest.TestCase):
 
         NotImplemented
 
-    def test_delete_after(self):
+    # ************ Test reset methods *****************
 
-        fig = update_condition_fig(comp)
+    def test_reset(self):
+
+        expected = 0
+
+        comp = Component.demo()
+        comp.mc_timeline(5)
+        comp.reset()
+
+        self.assertEqual(comp._sim_counter, expected)
 
 
 if __name__ == "__main__":

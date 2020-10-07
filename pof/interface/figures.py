@@ -166,6 +166,34 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
     return fig
 
 
+def make_sensitivity_fig(local, var_name, lower=0, upper=10, step=1, n_iterations=10):
+
+    var = var_name.split("-")[-1]
+
+    try:
+        df = local.sensitivity(
+            var_name=var_name,
+            lower=lower,
+            upper=upper,
+            step=step,
+            n_iterations=n_iterations,
+        )
+        df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
+        fig = px.line(
+            df_plot,
+            x=var,
+            y="Cost",
+            color="source",
+            title="Risk v Cost at different " + var,
+        )
+    except:
+        fig = go.Figure(
+            layout=go.Layout(title=go.layout.Title(text="Error Producing " + var))
+        )
+
+    return fig
+
+
 def humanise(data):
     # Not used
     if isinstance(pd.DataFrame):

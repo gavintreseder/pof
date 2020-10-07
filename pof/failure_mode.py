@@ -848,10 +848,10 @@ class FailureMode(Load):
 
         # Reset timelines
         self.timeline = dict()
-        self.timelines = dict()
+        self._timelines = dict()
 
         # Reset counters
-        self.sim_counter = 0
+        self._sim_counter = 0
 
     # ****************** Optimise routines ***********
 
@@ -911,7 +911,14 @@ class FailureMode(Load):
 
         for key, value in dict_data.items():
 
-            if key in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
+            if key in [
+                "name",
+                "active",
+                "pf_curve",
+                "pf_interval",
+                "pf_std",
+                "untreated",
+            ]:
                 self.__dict__[key] = value
 
             elif key == "dists":
@@ -1034,8 +1041,8 @@ class FailureMode(Load):
         return objects
 
     # ****************** Demonstration ***********
-
-    def set_demo(self):
+    @classmethod
+    def demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
 
 
