@@ -65,6 +65,73 @@ class Load:
 
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
+                """
+                x object
+                dict to update -> same as dict of dicts
+                dict to create
+                x dict of objects
+                dict of dicts to update
+                dict of dicts to create
+
+                """
+                try:
+                    for key, val in value.items():
+
+                        # dict of objects
+                        if isinstance(val, d_type):
+                            getattr(self, attr)[val.name] = val
+
+                        # dict to update
+                        elif key in getattr(self, attr):
+                            getattr(self, attr)[key].update_from_dict(val)
+
+                        else:
+                            new_object = d_type.load(val)
+                            getattr(self, attr)[new_object.name] = new_object
+                except (TypeError, ValueError):
+                    # Try and load it with the full value instead
+                    new_object = d_type.load(value)
+                    getattr(self, attr)[new_object.name] = new_object
+
+            else:
+                raise ValueError
+
+        except:
+            if value is None and cf.get("on_error_use_default") is True:
+                logging.info(
+                    "%s (%s) - %s cannot be set from %s - Default Use",
+                    self.__class__.__name__,
+                    self.name,
+                    attr,
+                    value,
+                )
+            else:
+                raise ValueError(
+                    "%s (%s) - %s cannot be set from %s"
+                    % (
+                        self.__class__.__name__,
+                        self.name,
+                        attr,
+                        value,
+                    )
+                )
+
+    def _set_container_attr_legacy(self, attr, d_type, value):
+
+        # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
+        if getattr(self, attr, None) is None:
+            setattr(self, attr, dict())
+
+        try:
+            if value is None:
+                setattr(self, attr, dict())
+
+            # Add the value to the dictionary if it is an object of that type
+            elif isinstance(value, d_type):
+                getattr(self, attr)[value.name] = value
+
+            # Check if the input is an iterable
+            elif isinstance(value, Iterable):
 
                 # TODO fix this
                 # If this doesn't exist yet create it

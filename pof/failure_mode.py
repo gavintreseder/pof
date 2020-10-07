@@ -215,7 +215,8 @@ class FailureMode(Load):
     def untreated(self, dist):
         if dist is not None:
             dist["name"] = "untreated"
-            self.set_dists(dist)
+            dists = dict(untreated=dist)
+            self.set_dists(dists)
 
     # ************** Set Functions *****************
 
