@@ -921,11 +921,10 @@ class FailureMode(Load):
                 "pf_curve",
                 "pf_interval",
                 "pf_std",
-                "untreated",
             ]:
                 self.__dict__[key] = value
 
-            elif key == "dists":
+            elif key in ["untreated", "dists"]:
                 self.set_dists(dict_data[key])
 
             elif key == "conditions":
