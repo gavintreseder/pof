@@ -125,6 +125,9 @@ class Indicator(Load):
         self._timeline = dict()
         self._timelines = dict()
 
+    def reset_for_next_sim(self):
+        None
+
     def set_pf_curve(self, pf_curve):
         if pf_curve in self.PF_CURVES:
             self.pf_curve = pf_curve
@@ -383,8 +386,6 @@ class ConditionIndicator(Indicator):
         Returns the timeline that considers all the accumulated degradation and save timeline
         """
         # TODO make the t_delay more elegeant and remove duplication from failure_mode
-
-
 
         if name not in self._timeline:
             self._timeline[name] = self._sim_timeline(
@@ -684,20 +685,12 @@ class PoleSafetyFactor(Indicator):
     failed: int = 1
     decreasing: int = True
 
-    def sim_failure_timeline(self):
+    def sim_timeline(self):
         """
-        Determine if the indicator hsa failed
+        Overload safety factor
         """
-        # Get the timeline
-        timeline = self.safety_factor()
-
-        # Check
-        if self.decreasing == True:
-            timeline = timeline <= self.threshold_failure
-        else:
-            timeline = timeline >= self.threshold_failure
-
-        return timeline
+        self._timeline[None] = self.safety_factor()
+        return self._timeline
 
     def safety_factor(self, method="simple"):
 

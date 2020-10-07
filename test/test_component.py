@@ -225,10 +225,6 @@ class TestComponent(unittest.TestCase):
 
         NotImplemented
 
-    def test_delete_after(self):
-
-        fig = update_condition_fig(comp)
-
 
 if __name__ == "__main__":
     unittest.main()

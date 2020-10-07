@@ -67,6 +67,11 @@ class TestAssetModelLoader(unittest.TestCase):
         except:
             self.fail(msg="Component cannot mc_timline after being loaded")
 
+        try:
+            comp.expected_condition()
+        except:
+            self.fail(msg="Component cannot get expected_condition after being loaded")
+
     def test_load_failure_mode_condition_tasks(self):
         aml = AssetModelLoader()
         data = aml.load(filename)
