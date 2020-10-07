@@ -323,40 +323,6 @@ class Component(Load):
 
         return expected
 
-    def expected_condition_loss_legacy(self):
-        """Get the expected condition loss for a component"""
-        expected = dict()
-
-        for fm in self.fm.values():
-            # Get the expected condition loss for the failure mode
-            ec = fm.expected_condition_loss()
-            for c in ec:
-                if c in expected:
-                    expected[c]["mean"] = expected[c]["mean"] + ec[c]["mean"]
-                    # TODO change this to a pooled variance method
-                    expected[c]["sd"] = (
-                        expected[c]["sd"] ** 2 + ec[c]["sd"] ** 2
-                    ) ** 0.5
-                    expected[c]["lower"] = expected[c]["mean"] - expected[c]["sd"]
-                    expected[c]["upper"] = expected[c]["mean"] + expected[c]["sd"]
-                else:
-                    expected[c] = ec[c]
-
-        return expected
-
-    def expected_condition_loss(self, stdev=1):
-        """Get the expected condition loss for a component"""
-        # TODO move this back out so that condition works as an indpendent class
-        expected = dict()
-
-        for ind in self.indicator.values():
-
-            ecl = ind.expected_condition_loss()
-
-            expected[ind.name] = ecl
-
-        return expected
-
     # Cost
 
     # ****************** Optimal? ******************
