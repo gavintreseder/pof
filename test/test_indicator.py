@@ -623,6 +623,7 @@ class TestConditionIndicator(unittest.TestCase):
         np.testing.assert_array_equal(agg_timeline, expected)
 
     def test_expected_condition_one_timeline(self):
+        NotImplemented #TODO
 
     def test_expected_condition(self):
 
@@ -639,6 +640,11 @@ class TestConditionIndicator(unittest.TestCase):
 
         ec = cond.expected_condition()
 
+
+class TestPoleSafetyFactor(unittest:TestCase):
+
+    def test_sim_timeline(self):
+        NotImplemented
 
 if __name__ == "__main__":
     unittest.main()

@@ -122,6 +122,12 @@ class Component(Load):
         for fm in self.fm.values():
             fm.set_indicators(self.indicator)
 
+        # TODO move this logic of an indicator manager
+        for ind in self.indicator.values():
+            if ind.__class__.__name__ == "PoleSafetyFactor":
+                ind.link_component(self)
+
+
     # ****************** Set data ******************
 
     def mc(self, t_end, t_start, n_iterations):

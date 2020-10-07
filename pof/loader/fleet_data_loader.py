@@ -8,10 +8,22 @@ class FleetDataLoader:
 
     # file_paths
     # file_types
+    def from_file(self, path: str):
+        if path.endswith(".txt"):
+            df = self.from_txt(path)
+        elif path.endswith(".csv"):
+            df = self.from_csv(path)
+        else:
+            raise ValueError("Invalid path/filetype")
+        return df
 
     def from_txt(self, path):
-        df = pd.read_csv(path, delimiter="\t")
-        # df = pd.read_csv(path + ".txt", delimiter="\t", encoding='utf-16') # for consequence model
+        try:
+            df = pd.read_csv(path, delimiter="\t")
+        except UnicodeDecodeError:
+            df = pd.read_csv(
+                path, delimiter="\t", encoding="utf-16"
+            )  # for consequence model
         return df
 
         NotImplemented
