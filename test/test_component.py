@@ -21,9 +21,6 @@ from pof.interface.figures import update_condition_fig
 
 cf = config["Component"]
 
-comp = Component.demo()
-comp.mc_timeline(50)
-
 
 class TestComponent(unittest.TestCase):
     """
@@ -192,6 +189,11 @@ class TestComponent(unittest.TestCase):
         comp.expected_condition()
 
         # TODO add some checks
+
+    def test_expected_condition_with_timelines(self):
+        comp = Component.demo()
+        comp.mc_timeline(10)
+        comp.expected_condition()
 
     # ************ Test update methods *****************
 

@@ -386,7 +386,9 @@ class FailureMode(Load):
 
         for i in tqdm(range(n_iterations)):
             self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.increment_counter()
             self.save_timeline(i)
+            self.reset_for_next_sim()
 
     def sim_timeline(self, t_end, t_start=0):
 
@@ -405,9 +407,6 @@ class FailureMode(Load):
                 self.complete_tasks(t_now, task_names)
 
                 t_now = t_now + 1
-
-            self.increment_counter()
-            self.reset_for_next_sim()
 
         return self.timeline
 
@@ -472,6 +471,7 @@ class FailureMode(Load):
         # Get condition
         for cond_name in self.conditions:
             timeline[cond_name] = self.indicators[cond_name].sim_timeline(
+                t_delay=t_start,
                 t_start=t_start - t_initiate,
                 t_stop=t_end - t_initiate,
                 pf_interval=self.indicators[cond_name].__dict__.get(
@@ -558,6 +558,7 @@ class FailureMode(Load):
                     self.timeline[cond_name][t_start:] = self.indicators[
                         cond_name
                     ].sim_timeline(
+                        t_delay=t_start,
                         t_start=t_start - t_initiate,
                         t_stop=t_end - t_initiate,
                         pf_interval=self.indicators[cond_name].__dict__.get(
@@ -589,7 +590,7 @@ class FailureMode(Load):
                 # Update time based tasks
                 if task.trigger == "time" and task_name in updates:
                     self.timeline[task_name][t_start:] = task.sim_timeline(
-                        s_tart=t_start, t_end=t_end, timeline=self.timeline
+                        t_start=t_start, t_end=t_end, timeline=self.timeline
                     )
 
                 # Update condition based tasks if the failure mode initiation has changed
@@ -636,6 +637,9 @@ class FailureMode(Load):
 
     def save_timeline(self, i):
         self._timelines[i] = self.timeline
+
+        for ind in self.indicators.values():
+            ind.save_timeline(i)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
@@ -832,9 +836,9 @@ class FailureMode(Load):
         # Reset state
         self.set_states(self.init_states)
 
-        # Reset conditions
-        for indicator in self.indicators.values():
-            indicator.reset()
+        # Reset indicators
+        for ind in self.indicators.values():
+            ind.reset_for_next_sim()
 
     def reset(self):
 

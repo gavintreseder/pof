@@ -138,10 +138,9 @@ class Component(Load):
         for i in tqdm(range(n_iterations)):
             self.sim_timeline(t_end=t_end, t_start=t_start)
 
-            for fm in self.fm.values():
-                fm.save_timeline(i)
-
-            self._sim_counter = self._sim_counter + 1
+            self.save_timeline(i)
+            self.increment_counter()
+            self.reset_for_next_sim()
 
     def sim_timeline(self, t_end, t_start=0):
         """ Simulates the timelines for all failure modes attached to this component"""
@@ -158,9 +157,6 @@ class Component(Load):
             self.complete_tasks(t_next, next_fm_tasks)
 
             t_now = t_next + 1
-
-        self.increment_counter()
-        self.reset_for_next_sim()
 
     def init_timeline(self, t_end, t_start=0):
         """ Initilialise the timeline"""
@@ -211,6 +207,13 @@ class Component(Load):
 
         for fm in self.fm.values():
             fm.increment_counter()
+
+    def save_timeline(self, idx):
+        for fm in self.fm.values():
+            fm.save_timeline(idx)
+
+        for ind in self.indicator.values():
+            ind.save_timeline(idx)
 
     # ****************** Expected ******************
 
@@ -308,28 +311,13 @@ class Component(Load):
 
         return ec
 
-    def expected_indicators(self):
-
-        ei = dict()
-
-        for indicator in self.indicator.values():
-
-            indicator.expected()
-
-        NotImplemented
-        return ei
-
-    def expected_condition(self, stdev=1):  # TODO make work for all condition levels
-
-        """ec = self.expected_condition_loss()
-        for c in ec:
-            ec[c] = 100 - ec[c]"""
+    def expected_condition(self, conf=0.95):
 
         expected = dict()
 
         for ind in self.indicator.values():
 
-            e = ind.expected_condition()
+            e = ind.expected_condition(conf=conf)
 
             expected[ind.name] = e
 
@@ -363,9 +351,9 @@ class Component(Load):
 
         for ind in self.indicator.values():
 
-            e = ind.expected_condition_loss()
+            ecl = ind.expected_condition_loss()
 
-            expected[ind.name] = e
+            expected[ind.name] = ecl
 
         return expected
 

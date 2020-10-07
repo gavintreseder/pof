@@ -7,9 +7,11 @@
 from dataclasses import dataclass, field
 from typing import Dict
 import collections
+import copy
 import logging
 
 import numpy as np
+import pandas as pd
 import scipy.stats as ss
 from matplotlib import pyplot as plt
 
@@ -25,6 +27,8 @@ from config import config
 
 cf = config["Indicator"]
 
+
+# TODO move timeline to indicator
 # TODO overload methods to avoid if statements and improve speed
 # TODO make sure everything works for conditions in both direction
 # TODO robust testing
@@ -61,6 +65,8 @@ class Indicator(Load):
     threshold_detection: int = None
     threshold_failure: int = None
 
+    initial: int = None
+
     _profile: Dict = field(init=False, repr=False)
     _timeline: Dict = field(init=False, repr=False)
     _timelines: Dict = field(init=False, repr=False)
@@ -71,12 +77,16 @@ class Indicator(Load):
         self.set_threshold(
             detection=self.threshold_detection, failure=self.threshold_failure
         )
+        self.set_initial(initial=self.initial)
         self.set_pf_curve(pf_curve=self.pf_curve)
         self.set_pf_interval(pf_interval=self.pf_interval)
         self.reset()
 
     @classmethod
     def from_dict(cls, details=None):
+        """
+        Overloaded factory for creating indicators
+        """
 
         if details["pf_curve"] in ["linear", "step"]:
 
@@ -175,6 +185,17 @@ class Indicator(Load):
 
         self.upper = abs(self.perfect - self.failed)
 
+    def set_initial(self, initial=None):
+
+        # TODO add checks to make sure it is a valid value
+
+        if initial is None:
+            self.initial = self.perfect
+            self.initial_accumulated = 0
+        else:
+            self.initial = initial
+            self.initial_accumulated = abs(self.perfect - self.initial)
+
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
             if self.threshold_detection is None:
@@ -203,6 +224,27 @@ class Indicator(Load):
             ).sum(axis=0)
             timeline[timeline > self.failed] = self.failed
         return timeline
+
+    def agg_timelines(self):
+        """
+        Takes a dictionary of timelines and returns the aggregated timelines
+        """
+        agg_timeline = []
+        for timeline in self._timelines.values():
+            if self.decreasing:
+                etl = self.perfect - (
+                    self.perfect - np.array(list(timeline.values()))
+                ).sum(axis=0)
+                etl[etl < self.failed] = self.failed
+            else:
+                etl = self.perfect + (
+                    np.array(list(timeline.values())) - self.perfect
+                ).sum(axis=0)
+                etl[etl > self.failed] = self.failed
+
+            agg_timeline.append(etl)
+
+        return np.stack(agg_timeline)
 
     def get_timeline(self, name=None):
         """ Returns the timeline for a name if it is in the key or if no key is passed and None is not a key, it aggregates all timelines"""
@@ -269,19 +311,34 @@ class Indicator(Load):
                     % (self.__class__.__name__, key)
                 )
 
-    def expected_condition(self, stdev=1):  # TODO make work for all condition levels
+    def expected_condition(self, conf=0.5):
+        """
+        Returns the expected condition based
+        """
+        # TODO make work for all condition levels loss:bool=False
 
-        expected = dict()
-
-        ec = np.array([self._timelines[x] for x in self._timelines])
+        ec = self.agg_timelines()
 
         mean = ec.mean(axis=0)
-        sd = ec.std(axis=0)
-        upper = mean + sd * stdev
-        lower = mean - sd * stdev
+        sigma = ec.std(axis=0)
 
-        upper[upper > self.perfect] = self.perfect
-        lower[lower < self.failed] = self.failed
+        # TODO maybe add np.sqr(len(ec)) to make it stderr
+
+        # Calculate bounds
+        upper = ss.norm.ppf((1 - (1 - conf) / 2), loc=mean, scale=sigma)
+        lower = ss.norm.ppf(((1 - conf) / 2), loc=mean, scale=sigma)
+
+        # Adjust upper and lower to the mean if there is not variance
+        no_variance = pd.isna(sigma) | (sigma == 0)
+        upper[no_variance] = mean[no_variance]
+        lower[no_variance] = mean[no_variance]
+
+        if self.decreasing:
+            upper[upper > self.perfect] = self.perfect
+            lower[lower < self.failed] = self.failed
+        else:
+            upper[upper > self.failed] = self.failed
+            lower[lower < self.perfect] = self.perfect
 
         expected = dict(
             lower=lower,
@@ -291,27 +348,8 @@ class Indicator(Load):
 
         return expected
 
-    def expected_condition_loss(self, stdev=1):
-
-        expected = dict()
-
-        ec = self.perfect - np.array([self._timelines[x] for x in self._timelines])
-
-        mean = ec.mean(axis=0)
-        sd = ec.std(axis=0)
-        upper = mean + sd * stdev
-        lower = mean - sd * stdev
-
-        upper[upper > self.perfect] = self.perfect
-        lower[lower < self.failed] = self.failed
-
-        expected = dict(
-            lower=lower,
-            mean=mean,
-            upper=upper,
-        )
-
-        return expected
+    def save_timeline(self, idx=None):
+        self._timelines[idx] = copy.deepcopy(self._timeline)
 
 
 @dataclass
@@ -333,6 +371,37 @@ class ConditionIndicator(Indicator):
     # ********************** Timeline methods ******************************
 
     def sim_timeline(
+        self,
+        t_delay=0,
+        t_stop=None,
+        t_start=0,
+        pf_interval=None,
+        pf_std=None,
+        name=None,
+    ):
+        """
+        Returns the timeline that considers all the accumulated degradation and save timeline
+        """
+        # TODO make the t_delay more elegeant and remove duplication from failure_mode
+
+
+
+        if name not in self._timeline:
+            self._timeline[name] = self._sim_timeline(
+                t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
+            )
+
+        else:
+            if t_delay is None:
+                t_delay = 0
+
+            self._timeline[name][t_delay:] = self._sim_timeline(
+                t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
+            )
+
+        return self._timeline[name][t_delay:]
+
+    def _sim_timeline(
         self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
     ):
         """
@@ -355,11 +424,11 @@ class ConditionIndicator(Indicator):
             self._set_profile(pf_interval=pf_interval, name=name)
 
         # Get the timeline
-        self._timeline[name] = self._acc_timeline(
+        timeline = self._acc_timeline(
             t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
         )
 
-        return self._timeline[name]
+        return timeline
 
     def _set_profile(
         self, perfect=None, failed=None, pf_interval=None, pf_std=None, name=None
@@ -449,12 +518,13 @@ class ConditionIndicator(Indicator):
 
     def sim_failure_timeline(
         self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
-    ):  # TODO this probably needs a delay? and can combine with condtion profile to make it simpler
+    ):
+        # TODO this probably needs a delay? and can combine with condtion profile to make it simpler
         """
         Return a sample failure schedule for the condition
         """
 
-        profile = self.sim_timeline(
+        profile = self._sim_timeline(
             t_stop=t_stop,
             t_start=t_start,
             pf_interval=pf_interval,
@@ -468,10 +538,6 @@ class ConditionIndicator(Indicator):
             tl_f = profile >= self.threshold_failure
 
         return tl_f
-
-    def restore(self):
-
-        NotImplemented
 
     # ************** Simulate Condition ***************
 
@@ -546,6 +612,9 @@ class ConditionIndicator(Indicator):
         super().reset()
         self._reset_accumulated()
 
+    def reset_for_next_sim(self):
+        self._reset_accumulated(accumulated=self.initial)
+
     def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
@@ -589,7 +658,9 @@ class ConditionIndicator(Indicator):
         self._set_accumulated(name=name, accumulated=accumulated)
 
     def update_from_dict(self, keys):
-
+        """
+        Takes a dict of key values and updates an attribute in indicator
+        """
         for key, value in keys.items():
 
             try:
@@ -612,9 +683,6 @@ class PoleSafetyFactor(Indicator):
 
     failed: int = 1
     decreasing: int = True
-
-    def __post_init__(self):
-        super().__post_init__()
 
     def sim_failure_timeline(self):
         """
