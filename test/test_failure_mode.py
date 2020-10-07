@@ -250,12 +250,6 @@ class TestFailureMode(unittest.TestCase):
         fm1 = FailureMode.from_dict(test_data_1)
         fm2 = FailureMode.from_dict(test_data_2)
 
-        # Test a task
-        fm.update("slow_aging-tasks-inspection-active", False)
-
-        # Test a
-        fm.update("slow_aging-dists-untreated-alpha", 10)
-
         # update var by var
         for var, val in test_data_2.items():
             d = {}

@@ -923,7 +923,7 @@ class FailureMode(Load):
                 "pf_interval",
                 "pf_std",
             ]:
-                self.__dict__[key] = value
+                setattr(self, key, value)
 
             elif key in ["untreated", "dists"]:
                 self.set_dists(dict_data[key])
