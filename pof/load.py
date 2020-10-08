@@ -40,6 +40,7 @@ class Load:
         try:
             instance = cls(**details)
         except ValueError as error:
+            logging.warning(error)
             logging.warning("Error loading %s data from dictionary", cls.__name__)
             if cf.get("on_error_use_default"):
                 logging.info("Defaults used")
@@ -65,15 +66,7 @@ class Load:
 
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
-                """
-                x object
-                dict to update -> same as dict of dicts
-                dict to create
-                x dict of objects
-                dict of dicts to update
-                dict of dicts to create
 
-                """
                 try:
                     for key, val in value.items():
 
@@ -82,12 +75,15 @@ class Load:
                             getattr(self, attr)[val.name] = val
 
                         # dict to update
-                        elif key in getattr(self, attr):
+                        elif key in getattr(self, attr) and isinstance(
+                            getattr(self, attr)[key], d_type
+                        ):
                             getattr(self, attr)[key].update_from_dict(val)
 
                         else:
                             new_object = d_type.load(val)
                             getattr(self, attr)[new_object.name] = new_object
+
                 except (TypeError, ValueError):
                     # Try and load it with the full value instead
                     new_object = d_type.load(value)
@@ -200,9 +196,9 @@ class Load:
 
     def update_from_dict(self, *args, **kwargs):
         """
-        Update_from_dict ist overlaoded in each of the child classes
+        Update_from_dict is overloaded in each of the child classes
         """
-        return "This must be overloaded"
+        raise NotImplementedError()
 
     def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):
         """"""
@@ -234,3 +230,6 @@ class Load:
         df = df[[var, "direct_cost", "risk_cost", "total"]]
 
         return df
+
+        def expected_risk_cost_df(self):
+            raise NotImplementedError()

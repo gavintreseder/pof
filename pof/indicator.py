@@ -375,11 +375,11 @@ class ConditionIndicator(Indicator):
 
     def sim_timeline(
         self,
-        t_delay=0,
         t_stop=None,
+        t_delay=0,
         t_start=0,
         pf_interval=None,
-        pf_std=None,
+        pf_std=0,
         name=None,
     ):
         """
@@ -397,7 +397,11 @@ class ConditionIndicator(Indicator):
                 t_delay = 0
 
             self._timeline[name][t_delay:] = self._sim_timeline(
-                t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
+                t_start=t_start,
+                t_stop=t_stop,
+                pf_interval=pf_interval,
+                pf_std=pf_std,
+                name=name,
             )
 
         return self._timeline[name][t_delay:]
@@ -676,6 +680,9 @@ class ConditionIndicator(Indicator):
                     )
 
 
+# TODO overload get method so the None key isnt' needed for _timeline
+
+
 @dataclass
 class PoleSafetyFactor(Indicator):
 
@@ -684,13 +691,26 @@ class PoleSafetyFactor(Indicator):
 
     failed: int = 1
     decreasing: int = True
+    component = None
+
+    def link_component(self, component):
+        self.component = component
 
     def sim_timeline(self):
         """
         Overload safety factor
         """
-        self._timeline[None] = self.safety_factor()
+        self._timeline[None] = self.safety_factor("simple")
         return self._timeline
+
+    def sim_failure_timeline(self):
+
+        if self.decreasing == True:
+            tl_f = self._timeline[None] <= self.threshold_failure
+        else:
+            tl_f = self._timeline[None] >= self.threshold_failure
+
+        return tl_f
 
     def safety_factor(self, method="simple"):
 
@@ -704,9 +724,9 @@ class PoleSafetyFactor(Indicator):
 
         elif method == "actual":
             sf = self._safety_factor(
-                agd=self.component.conditions["external_diameter"].perfect,
-                czd=self.component.conditions["external_diameter"],
-                wt=self.component.conditions["wall_thickness"],
+                agd=self.component.indicator["external_diameter"].perfect,
+                czd=self.component.indicator["external_diameter"],
+                wt=self.component.indicator["wall_thickness"],
                 pole_load=self.component.info["pole_load"],
                 pole_strength=self.component.info["pole_strength"],
             )

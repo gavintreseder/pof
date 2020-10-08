@@ -38,10 +38,16 @@ class TestFailureMode(unittest.TestCase):
 
     def test_class_instantiate_with_invalid_data(self):
 
-        invalid_data = dict(pf_curve="incorrect_value", invalid_input="invalid_value")
+        invalid_data_type = dict(invalid_input="invalid_value")
+        invalid_data_value = dict(pf_curve="incorrect_value")
 
+        with self.assertRaises(TypeError):
+            FailureMode.from_dict(invalid_data_type)
+
+        # TODO patch this method of on error use default
+        """with patch("pof.failure_mode.cf")
         with self.assertRaises(ValueError):
-            FailureMode.from_dict(invalid_data)
+            FailureMode.from_dict(invalid_data_value)"""
 
     def test_from_dict_no_data(self):
         with self.assertRaises(TypeError):
@@ -54,6 +60,7 @@ class TestFailureMode(unittest.TestCase):
     def test_from_dict_with_invalid_data_config_default(self):
         # TODO Mock cf.get_boolean('on_error_default')
         invalid_data = dict(pf_curve="invalid_value")
+
         with patch("pof.failure_mode.cf", Mock()):
             with self.assertRaises(ValueError):
                 FailureMode.from_dict(invalid_data)
@@ -62,8 +69,9 @@ class TestFailureMode(unittest.TestCase):
 
         invalid_data = dict(pf_curve="invalid_value")
         with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(ValueError):
-                FailureMode.from_dict(invalid_data)
+            with patch("pof.load.cf", self.blank_config):
+                with self.assertRaises(ValueError):
+                    FailureMode.from_dict(invalid_data)
 
     # ************ Test init_timeline ***********************
 

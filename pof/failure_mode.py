@@ -352,6 +352,22 @@ class FailureMode(Load):
         if self.pof is not None:
             return self.pof.sf(t_start, t_end)
 
+    def get_pf_interval(self, cond_name=None):
+        if cond_name is None:
+            return self.pf_interval
+        elif cond_name is not None and cond_name in self.conditions:
+            return self.conditions[cond_name]['pf_interval']
+        else:
+            return None
+
+    def get_pf_std(self, cond_name=None):
+        if cond_name is None:
+            return self.pf_std
+        elif cond_name is not None and cond_name in self.conditions:
+            return self.conditions[cond_name]['pf_std']
+        else:
+            return None
+
     # ************** Is Function *******************
 
     def is_failed(self):
@@ -362,14 +378,6 @@ class FailureMode(Load):
 
     def is_detected(self):
         return self.states["detection"]
-
-    # *************** Get methods *******************
-
-    def get_condition(self):
-        """
-        Returns and indicator
-        """
-        NotImplemented
 
     # *************** Get methods *******************
 
@@ -471,14 +479,13 @@ class FailureMode(Load):
 
         # Get condition
         for cond_name in self.conditions:
+
             timeline[cond_name] = self.indicators[cond_name].sim_timeline(
                 t_delay=t_start,
                 t_start=t_start - t_initiate,
                 t_stop=t_end - t_initiate,
-                pf_interval=self.indicators[cond_name].__dict__.get(
-                    "pf_interval", self.pf_interval
-                ),
-                pf_std=self.indicators[cond_name].__dict__.get("pf_std", self.pf_std),
+                pf_interval=self.get_pf_interval(cond_name),
+                pf_std=self.get_pf_std(cond_name),
             )
 
         # Check failure
@@ -488,12 +495,8 @@ class FailureMode(Load):
                 tl_f = self.indicators[cond_name].sim_failure_timeline(
                     t_start=t_start - t_initiate,
                     t_stop=t_end - t_initiate,
-                    pf_interval=self.indicators[cond_name].__dict__.get(
-                        "pf_interval", self.pf_interval
-                    ),
-                    pf_std=self.indicators[cond_name].__dict__.get(
-                        "pf_std", self.pf_std
-                    ),
+                    pf_interval=self.get_pf_interval(cond_name),
+                    pf_std=self.get_pf_std(cond_name),
                 )
                 timeline["failure"] = (timeline["failure"]) | (tl_f)
 
@@ -562,12 +565,8 @@ class FailureMode(Load):
                         t_delay=t_start,
                         t_start=t_start - t_initiate,
                         t_stop=t_end - t_initiate,
-                        pf_interval=self.indicators[cond_name].__dict__.get(
-                            "pf_interval", self.pf_interval
-                        ),
-                        pf_std=self.indicators[cond_name].__dict__.get(
-                            "pf_std", self.pf_std
-                        ),
+                        pf_interval=self.get_pf_interval(cond_name),
+                        pf_std=self.get_pf_std(cond_name),
                     )
 
             # Check for detection changes

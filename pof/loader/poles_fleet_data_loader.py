@@ -16,9 +16,9 @@ except:
     file_path = askdirectory(initialdir=os.getcwd())
 
 # I don't think this is right..
-asset_path = file_path + "\\ACS - Poles - Asset Details.csv"
-condition_path = file_path + "\\ACS - Poles - Condition History.csv"
-csq_path = file_path + "\\ACS - Poles - Consequence Model Output.csv"
+asset_path = file_path + "\\ACS - Poles - Asset Details.txt"
+condition_path = file_path + "\\ACS - Poles - Condition History.txt"
+csq_path = file_path + "\\ACS - Poles - Consequence Model Output.txt"
 intervention_path = file_path + "\\ACS - Poles - Intervention History.csv"
 
 
@@ -46,7 +46,7 @@ class PolesFleetDataLoader(FleetDataLoader):
             "Travel Time to Pole (hrs)",
         ]
 
-        self.df_csq = self.from_csv(csq_path)
+        self.df_csq = self.from_file(csq_path)
         self.df_csq = self.df_csq.rename(columns={"ASSET_ID": "Asset ID"})
         self.df_csq = self.df_csq[csq_columns]
 
@@ -62,18 +62,18 @@ class PolesFleetDataLoader(FleetDataLoader):
             "Total Consequence $",
         ]
 
-        self.df_asset_info = self.from_csv(asset_path)
+        self.df_asset_info = self.from_file(asset_path)
         self.df_asset_info["Date Installed"] = pd.to_datetime(
             self.df_asset_info["Date Installed"], format="%Y%m%d", errors="coerce"
         )
 
-        csq = self.from_csv(csq_path)
+        csq = self.from_file(csq_path)
         csq = csq.rename(columns={"ASSET_ID": "Asset ID"})
         csq = csq[csq_columns]
 
         self.df_asset_info = self.df_asset_info.merge(csq, on="Asset ID")
 
-        intervention = self.from_csv(intervention_path)
+        intervention = self.from_file(intervention_path)
         intervention = intervention[["Asset ID", "Pseudo Asset ID"]].drop_duplicates()
 
         self.df_asset_info = self.df_asset_info.merge(intervention, on="Asset ID")
@@ -81,7 +81,7 @@ class PolesFleetDataLoader(FleetDataLoader):
         self.df_asset_info = self.replace_substring(self.df_asset_info)
 
     def load_condition_data(self):
-        df_condition = self.from_csv(condition_path)
+        df_condition = self.from_file(condition_path)
         df_condition["Date Changed"] = pd.to_datetime(
             df_condition["Date Changed"], format="%Y-%m-%d %H:%M:%S"
         ).dt.normalize()
@@ -89,7 +89,7 @@ class PolesFleetDataLoader(FleetDataLoader):
         # used to drop additional columns later
         cond_columns = df_condition.columns
 
-        df_intervention = self.from_csv(intervention_path)
+        df_intervention = self.from_file(intervention_path)
         df_intervention = df_intervention[
             ["Asset ID", "Pseudo Asset ID"]
         ].drop_duplicates()
