@@ -45,9 +45,9 @@ class TestFailureMode(unittest.TestCase):
             FailureMode.from_dict(invalid_data_type)
 
         # TODO patch this method of on error use default
-        """with patch("pof.failure_mode.cf")
-        with self.assertRaises(ValueError):
-            FailureMode.from_dict(invalid_data_value)"""
+        with patch("pof.load.cf", self.blank_config):
+            with self.assertRaises(ValueError):
+                FailureMode.from_dict(invalid_data_value)
 
     def test_from_dict_no_data(self):
         with self.assertRaises(TypeError):

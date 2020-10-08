@@ -470,7 +470,7 @@ class ConditionTask(Task):
                             timeline[condition][t_start:t_end] < trigger["upper"]
                         )
                 except KeyError:
-                    logging.warning("%s not found" % (condition))
+                    logging.warning("%s not found", condition)
 
             tl_ct = tl_ct.astype(int)
 

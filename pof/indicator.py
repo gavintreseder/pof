@@ -56,7 +56,7 @@ class Indicator(Load):
 
     name: str = "indicator"
     pf_curve: str = "step"
-    pf_interval: int = 0
+    pf_interval: int = 0  # TODO change pf_interval to None?
     pf_std: int = 0
     perfect: bool = False
     failed: bool = True

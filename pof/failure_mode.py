@@ -353,20 +353,14 @@ class FailureMode(Load):
             return self.pof.sf(t_start, t_end)
 
     def get_pf_interval(self, cond_name=None):
-        if cond_name is None:
-            return self.pf_interval
-        elif cond_name is not None and cond_name in self.conditions:
-            return self.conditions[cond_name]['pf_interval']
-        else:
-            return None
+        return self.conditions.get(cond_name, {}).get(
+                "pf_interval", self.pf_interval
+            )
 
     def get_pf_std(self, cond_name=None):
-        if cond_name is None:
-            return self.pf_std
-        elif cond_name is not None and cond_name in self.conditions:
-            return self.conditions[cond_name]['pf_std']
-        else:
-            return None
+        return self.conditions.get(cond_name, {}).get(
+                "pf_std", self.pf_std
+            )
 
     # ************** Is Function *******************
 
