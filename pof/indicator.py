@@ -140,16 +140,19 @@ class Indicator(Load):
         if pf_interval is None:
             if self.pf_interval is None:
                 if cf.getboolean("use_default"):
-                    print(
-                        "%s - %s - pf_interval set to DEFAULT %s"
-                        % (self.__class__.__name__, self.name, cf["PF_INTERVAL"])
+                    logging.warning(
+                        "%s - %s - pf_interval set to DEFAULT %s",
+                        self.__class__.__name__,
+                        self.name,
+                        cf["PF_INTERVAL"],
                     )
                     self.pf_interval = cf["PF_INTERVAL"]
                 else:
-                    raise ValueError(
-                        "%s - %s - pf_interval required"
-                        % (self.__class__.__name__, self.name)
-                    )
+                    if False:  # TODO revist whether pf_interval is required
+                        raise ValueError(
+                            "%s - %s - pf_interval required"
+                            % (self.__class__.__name__, self.name)
+                        )
         else:
             self.pf_interval = pf_interval
 
@@ -475,7 +478,7 @@ class ConditionIndicator(Indicator):
             y = m * x + b
 
         elif self.pf_curve == "step":
-            y = np.full(self.pf_interval, self.perfect)
+            y = np.full(pf_interval, self.perfect)
 
         elif self.pf_curve == "exponential" or self.pf_curve == "exp":
             NotImplemented
@@ -522,25 +525,23 @@ class ConditionIndicator(Indicator):
         return profile
 
     def sim_failure_timeline(
-        self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
+        self,
+        t_delay=0,
+        t_stop=None,
+        t_start=0,
+        pf_interval=None,
+        pf_std=None,
+        name=None,
     ):
         # TODO this probably needs a delay? and can combine with condtion profile to make it simpler
         """
         Return a sample failure schedule for the condition
         """
 
-        profile = self._sim_timeline(
-            t_stop=t_stop,
-            t_start=t_start,
-            pf_interval=pf_interval,
-            pf_std=pf_std,
-            name=name,
-        )
-
         if self.decreasing == True:
-            tl_f = profile <= self.threshold_failure
+            tl_f = self._timeline[name][t_delay:] <= self.threshold_failure
         else:
-            tl_f = profile >= self.threshold_failure
+            tl_f = self._timeline[name][t_delay:] >= self.threshold_failure
 
         return tl_f
 

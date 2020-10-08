@@ -353,14 +353,15 @@ class FailureMode(Load):
             return self.pof.sf(t_start, t_end)
 
     def get_pf_interval(self, cond_name=None):
-        return self.conditions.get(cond_name, {}).get(
-                "pf_interval", self.pf_interval
-            )
+        pf_interval = self.conditions.get(cond_name, {}).get(
+            "pf_interval", self.pf_interval
+        )
+        if pf_interval is None:
+            pf_interval = self.pf_interval
+        return pf_interval
 
     def get_pf_std(self, cond_name=None):
-        return self.conditions.get(cond_name, {}).get(
-                "pf_std", self.pf_std
-            )
+        return self.conditions.get(cond_name, {}).get("pf_std", self.pf_std)
 
     # ************** Is Function *******************
 
@@ -487,6 +488,7 @@ class FailureMode(Load):
         if not self.is_failed():
             for cond_name in self.conditions:
                 tl_f = self.indicators[cond_name].sim_failure_timeline(
+                    t_delay=t_start,
                     t_start=t_start - t_initiate,
                     t_stop=t_end - t_initiate,
                     pf_interval=self.get_pf_interval(cond_name),
@@ -572,7 +574,9 @@ class FailureMode(Load):
                 self.timeline["failure"][t_start:] = updates["failure"]
                 for cond_name in self.conditions:
                     tl_f = self.indicators[cond_name].sim_failure_timeline(
-                        t_start=t_start - t_initiate, t_stop=t_end - t_initiate
+                        t_delay=t_start,
+                        t_start=t_start - t_initiate,
+                        t_stop=t_end - t_initiate,
                     )
                     self.timeline["failure"][t_start:] = (
                         self.timeline["failure"][t_start:]

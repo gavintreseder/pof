@@ -251,7 +251,7 @@ class TestFailureMode(unittest.TestCase):
     # ************ Test update methods *****************
 
     def test_update(self):
-
+        # TODO This will be causing errors because new values are being created
         test_data_1 = fixtures.failure_mode_data["early_life"]
         test_data_2 = fixtures.failure_mode_data["slow_aging"]
 

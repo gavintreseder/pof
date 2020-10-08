@@ -50,6 +50,28 @@ SCALING = cf.scaling
 # axis
 # reduction_factor / target
 
+#
+
+# ******************* Validation ******************
+
+def validate_layout(pof_obj, layout):
+
+    objs = pof_obj.get_objects()
+    collapse = [id + '-collapse' for id in objs if id + '-collapse' not in layout]
+    collapse_button = [id + '-collapse-button'for id in objs if id + '-collapse-button' not in layout]
+
+    params = pof_obj.get_dash_ids()
+
+    layout_objects = collapse + collapse_button + params
+
+    missing_objects = [obj for obj in layout_objects if obj not in layout]
+
+    if len(missing_objects) == 0:
+        return True
+    else:
+        return missing_objects
+
+
 # ******************* Component ******************
 
 

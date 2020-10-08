@@ -50,7 +50,7 @@ class Load:
         if isinstance(details, dict):
             return cls(**details)
         else:
-            raise ValueError("Dictionary expected")
+            raise TypeError("Dictionary expected")
 
     def _set_container_attr(self, attr, d_type, value):
 
