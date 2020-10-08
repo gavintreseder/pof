@@ -237,14 +237,14 @@ class TestFailureMode(unittest.TestCase):
             self.fail("Unknown error")
 
     def test_set_demo_some_data(self):
-        fm = FailureMode().set_demo()
+        fm = FailureMode.demo()
         self.assertIsNotNone(fm)
 
     # ************ Test get_dash_ids *****************
 
     def test_get_dash_id(self):
 
-        fm = FailureMode().set_demo()
+        fm = FailureMode.demo()
 
         dash_ids = fm.get_dash_ids()
 

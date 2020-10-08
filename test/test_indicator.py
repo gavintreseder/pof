@@ -564,16 +564,17 @@ class TestConditionIndicator(unittest.TestCase):
         """
         Check that the timelines aggregate correctly and do not exceed the limits
         """
-        expected = np.concatenate(
-            [np.linspace(100, 51, 50), np.linspace(50, 0, 26), np.full(125, 0)]
+        expected = np.reshape(
+            np.concatenate([np.linspace(100, 0, 101), np.full(100, 0)]), (1, 201)
         )
 
         cond = ConditionIndicator(
             pf_curve="linear", perfect=100, failed=0, pf_interval=100
         )
 
+        cond.sim_timeline(t_start=0, t_stop=200)
         cond.save_timeline()
-
+        cond.save_timeline()
         agg_timeline = cond.agg_timelines()
 
         np.testing.assert_array_equal(agg_timeline, expected)
@@ -623,7 +624,7 @@ class TestConditionIndicator(unittest.TestCase):
         np.testing.assert_array_equal(agg_timeline, expected)
 
     def test_expected_condition_one_timeline(self):
-        NotImplemented #TODO
+        NotImplemented  # TODO
 
     def test_expected_condition(self):
 
@@ -641,10 +642,10 @@ class TestConditionIndicator(unittest.TestCase):
         ec = cond.expected_condition()
 
 
-class TestPoleSafetyFactor(unittest:TestCase):
-
+class TestPoleSafetyFactor(unittest.TestCase):
     def test_sim_timeline(self):
         NotImplemented
+
 
 if __name__ == "__main__":
     unittest.main()
