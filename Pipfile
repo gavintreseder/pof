@@ -9,6 +9,7 @@ ipykernel = "*"
 pypiwin32 = "*"
 jupyter-dash = "*"
 black = "*"
+nose = "*"
 
 [packages]
 pandas = "*"

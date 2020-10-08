@@ -284,6 +284,7 @@ class Task(Load):
         Resets the logs for a task
         """
         self.t_completion = []
+        self.cost_complete = []
 
     # ********************* interface methods ******************
 
@@ -441,7 +442,9 @@ class ConditionTask(Task):
 
         self.task_type = "immediate"
 
-    def sim_timeline(self, t_end, timeline, t_start=0, t_delay=NotImplemented):
+    def sim_timeline(
+        self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
+    ):
         """
         If state and condition triggers are met return the timeline met then
         """
@@ -463,11 +466,15 @@ class ConditionTask(Task):
                 try:
                     if trigger["lower"] != "min":
                         tl_ct = (tl_ct) & (
-                            timeline[condition][t_start:t_end] > trigger["lower"]
+                            indicators[condition].get_timeline()[t_start:]
+                            > trigger["lower"]
+                            # timeline[condition][t_start:t_end] > trigger["lower"]
                         )
                     if trigger["upper"] != "max":
                         tl_ct = (tl_ct) & (
-                            timeline[condition][t_start:t_end] < trigger["upper"]
+                            indicators[condition].get_timeline()[t_start:]
+                            < trigger["upper"]
+                            # timeline[condition][t_start:t_end] < trigger["upper"]
                         )
                 except KeyError:
                     logging.warning("%s not found", condition)

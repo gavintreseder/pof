@@ -16,5 +16,8 @@
     "python.pipenvPath": ".venv\\Scripts\\pipenv.exe",
     "python.dataScience.jupyterServerURI": "local",
     "python.formatting.provider": "black",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "python.testing.nosetestArgs": [
+        "test"
+    ]
 }

@@ -253,6 +253,7 @@ class Indicator(Load):
         return np.stack(agg_timeline)
 
     def get_timeline(self, name=None):
+        # maybe add t_start?
         """ Returns the timeline for a name if it is in the key or if no key is passed and None is not a key, it aggregates all timelines"""
         try:
             timeline = self._timeline[name]
@@ -629,7 +630,8 @@ class ConditionIndicator(Indicator):
         # Error with time reset, different method required.
 
         if method == "reduction_factor":
-            accumulated = (abs(self.perfect - self.get_accumulated())) * (1 - target)
+            # accumulated = (abs(self.perfect - self.get_accumulated())) * (1 - target)
+            accumulated = self.get_accumulated() * (1 - target)
 
         elif method == "reverse":
 

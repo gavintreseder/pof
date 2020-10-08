@@ -500,7 +500,9 @@ class FailureMode(Load):
         for task in self.tasks.values():
 
             if task.trigger == "time":
-                timeline[task.name] = task.sim_timeline(t_end)
+                timeline[task.name] = task.sim_timeline(
+                    t_end
+                )
 
         # Initialised detection
         timeline["detection"] = np.full(t_end - t_start + 1, self.is_detected())
@@ -509,7 +511,7 @@ class FailureMode(Load):
         for task_name, task in self.tasks.items():
 
             if task.trigger == "condition":
-                timeline[task_name] = task.sim_timeline(t_end, timeline)
+                timeline[task_name] = task.sim_timeline(t_end, timeline, indicators=self.indicators)
 
         self.timeline = timeline
 
@@ -594,7 +596,7 @@ class FailureMode(Load):
                 # Update condition based tasks if the failure mode initiation has changed
                 if task.trigger == "condition":
                     self.timeline[task_name][t_start:] = task.sim_timeline(
-                        t_start=t_start, t_end=t_end, timeline=self.timeline
+                        t_start=t_start, t_end=t_end, timeline=self.timeline, indicators=self.indicators
                     )
 
         return self.timeline
