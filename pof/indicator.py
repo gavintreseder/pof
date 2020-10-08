@@ -647,10 +647,10 @@ class ConditionIndicator(Indicator):
 
         elif axis == "condition":
 
-            if self.decreasing:
+            """if self.decreasing:
                 accumulated = min(max(self.failed, accumulated), self.perfect)
             else:
-                accumulated = max(min(self.failed, accumulated), self.perfect)
+                accumulated = max(min(self.failed, accumulated), self.perfect)"""
 
             self._reset_accumulated(accumulated, permanent=permanent)
 
