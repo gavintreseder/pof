@@ -128,6 +128,9 @@ class Indicator(Load):
     def reset_for_next_sim(self):
         None
 
+    def reset_to_perfect(self):
+        None
+
     def set_pf_curve(self, pf_curve):
         if pf_curve in self.PF_CURVES:
             self.pf_curve = pf_curve
@@ -622,6 +625,9 @@ class ConditionIndicator(Indicator):
     def reset_for_next_sim(self):
         self._reset_accumulated(accumulated=self.initial)
 
+    def reset_to_perfect(self):
+        self._reset_accumulated(accumulated=0)
+
     def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
@@ -699,14 +705,14 @@ class PoleSafetyFactor(Indicator):
     def link_component(self, component):
         self.component = component
 
-    def sim_timeline(self):
+    def sim_timeline(self, *args, **kwargs):
         """
         Overload safety factor
         """
         self._timeline[None] = self.safety_factor("simple")
         return self._timeline
 
-    def sim_failure_timeline(self):
+    def sim_failure_timeline(self, *args, **kwargs):
 
         if self.decreasing == True:
             tl_f = self._timeline[None] <= self.threshold_failure

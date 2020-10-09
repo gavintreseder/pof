@@ -191,10 +191,16 @@ class Task(Load):
 
         return self.impacts
 
-    def get_triggers(self):
+    def get_triggers(self, trigger_type=None):
         """ Return a trigger dictionary"""  # TODO maybe change to object type
-
-        return self.triggers
+        if trigger_type is None:
+            return self.triggers
+        else:
+            try:
+                return self.triggers[trigger_type]
+            except:
+                return self.triggers
+    
 
     def is_effective(self, t_now=None, timeline=None):
 

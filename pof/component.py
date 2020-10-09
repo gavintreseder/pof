@@ -127,7 +127,6 @@ class Component(Load):
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
 
-
     # ****************** Set data ******************
 
     def mc(self, t_end, t_start, n_iterations):
@@ -204,16 +203,22 @@ class Component(Load):
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
             if system_impact:
+
+                # Reset all the indicators to perfect
+                for ind in self.indicator.values():
+                    ind.reset_to_perfect()
+
+                # Reset all the timelines
                 for fm in self.fm.values():
+                    state_after_replacement = dict(
+                        initation=False, detection=False, failure=False
+                    )
+                    fm.update_timeline(
+                        t_start=t_next + 1, updates=state_after_replacement
+                    )
 
-                
-                logging.info('Component %s reset by FailureMode %s', self.name, fm_name)
+                logging.debug("Component %s reset by FailureMode %s", self.name, fm_name)
                 break
-
-            """ if system_impact != False:
-
-                self.reset_condition()
-                #TODO add impact on other systems for complex systems"""
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
