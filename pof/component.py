@@ -205,8 +205,9 @@ class Component(Load):
             if system_impact:
                 for fm in self.fm.values():
 
-                
-                logging.info('Component %s reset by FailureMode %s', self.name, fm_name)
+                    logging.info(
+                        "Component %s reset by FailureMode %s", self.name, fm_name
+                    )
                 break
 
             """ if system_impact != False:
