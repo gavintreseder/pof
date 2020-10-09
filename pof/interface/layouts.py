@@ -54,11 +54,14 @@ SCALING = cf.scaling
 
 # ******************* Validation ******************
 
+
 def validate_layout(pof_obj, layout):
 
     objs = pof_obj.get_objects()
-    collapse = [id + '-collapse' for id in objs if id + '-collapse' not in layout]
-    collapse_button = [id + '-collapse-button'for id in objs if id + '-collapse-button' not in layout]
+    collapse = [id + "-collapse" for id in objs if id + "-collapse" not in layout]
+    collapse_button = [
+        id + "-collapse-button" for id in objs if id + "-collapse-button" not in layout
+    ]
 
     params = pof_obj.get_dash_ids()
 
@@ -91,7 +94,8 @@ def make_component_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=True), addon_type="prepend"
+                dbc.Checkbox(id=prefix + "active", checked=component.active),
+                addon_type="prepend",
             ),
             dbc.Button(
                 component.name,
@@ -136,7 +140,8 @@ def make_failure_mode_layout(fm, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=True), addon_type="prepend"
+                dbc.Checkbox(id=prefix + "active", checked=fm.active),
+                addon_type="prepend",
             ),
             dbc.Button(
                 fm.name,
@@ -249,7 +254,8 @@ def make_task_layout(task, prefix="", sep="-"):
     task_layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=True), addon_type="prepend"
+                dbc.Checkbox(id=prefix + "active", checked=task.active),
+                addon_type="prepend",
             ),
             dbc.Button(
                 task.name,
