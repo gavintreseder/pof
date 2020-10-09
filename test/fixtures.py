@@ -10,6 +10,25 @@ demo.distribution.slow_aging
 # fmt: off
 # *********************** distribution data **********************************
 
+
+dist_update_test_1 = dict(
+    dist = dict(
+        name='dist',
+        alpha = 1,
+        beta = 1,
+        gamma = 1
+    )
+)
+
+dist_update_test_2 = dict(
+    dist = dict(
+        name='dist_2',
+        alpha = 2,
+        beta = 2,
+        gamma = 2
+    )
+)
+
 distribution_data = dict(
 
     early_life=dict(

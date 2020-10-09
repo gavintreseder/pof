@@ -5,6 +5,7 @@
 """
 
 import pandas as pd
+import numpy as np
 
 from config import config
 
@@ -76,6 +77,9 @@ class AssetModelLoader:
             # ('trigger_model', 'condition', 'name'), #TODO revist this one
             # ('impact_model', 'condition', 'name'),
         )
+
+        # Replace nan with None
+        df = df.replace({np.nan: None})
 
         # Drop rows with no data
         df = df.dropna(how="all")

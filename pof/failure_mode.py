@@ -220,7 +220,7 @@ class FailureMode(Load):
 
     # ************** Set Functions *****************
 
-    def set_consequence(self, consequence):
+    def set_consequence(self, consequence=NotImplemented):
 
         self.consequence = Consequence()
 
@@ -353,20 +353,15 @@ class FailureMode(Load):
             return self.pof.sf(t_start, t_end)
 
     def get_pf_interval(self, cond_name=None):
-        if cond_name is None:
-            return self.pf_interval
-        elif cond_name is not None and cond_name in self.conditions:
-            return self.conditions[cond_name]["pf_interval"]
-        else:
-            return None
+        pf_interval = self.conditions.get(cond_name, {}).get(
+            "pf_interval", self.pf_interval
+        )
+        if pf_interval is None:
+            pf_interval = self.pf_interval
+        return pf_interval
 
     def get_pf_std(self, cond_name=None):
-        if cond_name is None:
-            return self.pf_std
-        elif cond_name is not None and cond_name in self.conditions:
-            return self.conditions[cond_name]["pf_std"]
-        else:
-            return None
+        return self.conditions.get(cond_name, {}).get("pf_std", self.pf_std)
 
     # ************** Is Function *******************
 
@@ -493,6 +488,7 @@ class FailureMode(Load):
         if not self.is_failed():
             for cond_name in self.conditions:
                 tl_f = self.indicators[cond_name].sim_failure_timeline(
+                    t_delay=t_start,
                     t_start=t_start - t_initiate,
                     t_stop=t_end - t_initiate,
                     pf_interval=self.get_pf_interval(cond_name),
@@ -513,7 +509,9 @@ class FailureMode(Load):
         for task_name, task in self.tasks.items():
 
             if task.trigger == "condition":
-                timeline[task_name] = task.sim_timeline(t_end, timeline)
+                timeline[task_name] = task.sim_timeline(
+                    t_end, timeline, indicators=self.indicators
+                )
 
         self.timeline = timeline
 
@@ -578,7 +576,9 @@ class FailureMode(Load):
                 self.timeline["failure"][t_start:] = updates["failure"]
                 for cond_name in self.conditions:
                     tl_f = self.indicators[cond_name].sim_failure_timeline(
-                        t_start=t_start - t_initiate, t_stop=t_end - t_initiate
+                        t_delay=t_start,
+                        t_start=t_start - t_initiate,
+                        t_stop=t_end - t_initiate,
                     )
                     self.timeline["failure"][t_start:] = (
                         self.timeline["failure"][t_start:]
@@ -596,7 +596,10 @@ class FailureMode(Load):
                 # Update condition based tasks if the failure mode initiation has changed
                 if task.trigger == "condition":
                     self.timeline[task_name][t_start:] = task.sim_timeline(
-                        t_start=t_start, t_end=t_end, timeline=self.timeline
+                        t_start=t_start,
+                        t_end=t_end,
+                        timeline=self.timeline,
+                        indicators=self.indicators,
                     )
 
         return self.timeline

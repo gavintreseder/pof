@@ -28,18 +28,11 @@ class Load:
     @classmethod
     def load(cls, details=None):
         """
-        Loads the data
-        """
-        return cls.from_dict(details)
-
-    @classmethod
-    def from_dict(cls, details=None):
-        """
-        Unpacks the dictionary data and creates and object using the constructor
+        Loads the data with extra error checking and default logic
         """
         try:
-            instance = cls(**details)
-        except ValueError as error:
+            instance = cls.from_dict(details)
+        except (ValueError, TypeError) as error:
             logging.warning(error)
             logging.warning("Error loading %s data from dictionary", cls.__name__)
             if cf.get("on_error_use_default"):
@@ -47,8 +40,17 @@ class Load:
                 instance = cls()
             else:
                 raise error
-
         return instance
+
+    @classmethod
+    def from_dict(cls, details=None):
+        """
+        Unpacks the dictionary data and creates and object using the constructor
+        """
+        if isinstance(details, dict):
+            return cls(**details)
+        else:
+            raise TypeError("Dictionary expected")
 
     def _set_container_attr(self, attr, d_type, value):
 
@@ -81,7 +83,7 @@ class Load:
                             getattr(self, attr)[key].update_from_dict(val)
 
                         else:
-                            new_object = d_type.load(val)
+                            new_object = d_type.from_dict(val)
                             getattr(self, attr)[new_object.name] = new_object
 
                 except (TypeError, ValueError):

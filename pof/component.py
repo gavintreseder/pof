@@ -164,7 +164,7 @@ class Component(Load):
             t_now = t_next + 1
 
     def init_timeline(self, t_end, t_start=0):
-        """ Initilialise the timeline"""
+        """ Initialise the timeline"""
         for fm in self.fm.values():
             fm.init_timeline(t_start=t_start, t_end=t_end)
 
@@ -201,6 +201,13 @@ class Component(Load):
 
         for fm_name, task_names in fm_tasks.items():
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
+
+            if system_impact:
+                for fm in self.fm.values():
+
+                
+                logging.info('Component %s reset by FailureMode %s', self.name, fm_name)
+                break
 
             """ if system_impact != False:
 

@@ -4,11 +4,11 @@ import numpy as np
 import copy
 from random import randint
 
-import utils
+from nose2.tools import params
 
+import utils
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
-
 import fixtures
 
 
@@ -20,6 +20,10 @@ cid = dict(
     pf_interval=100,
     pf_std=None,
 )
+
+
+params_perfect_failed_int = [(0, 100), (100, 0), (50, 100)]
+params_perfect_failed_bool = [(True, False), (False, True)]
 
 
 class TestConditionIndicator(unittest.TestCase):
@@ -498,39 +502,101 @@ class TestConditionIndicator(unittest.TestCase):
         cond.reset()
         self.assertEqual(cond.get_condition(), 100)
 
+    def test_reset_after_executing_methods(self):
+        # Arrange
+        expected = ConditionIndicator(
+            perfect=100, failed=0, pf_curve="linear", pf_interval=10
+        )
+
+        cond = ConditionIndicator(
+            perfect=100, failed=0, pf_curve="linear", pf_interval=10
+        )
+
+        cond.sim_timeline(100)
+        cond.reset_any(target=0.5, method="reduction_factor", axis="condition")
+
+        # Act
+        cond.reset()
+
+        # Assert
+        self.assertEqual(cond, expected)
+
     # **************** Test the reset_any functions ***********************
 
     def test_reset_any_reduction_factor_all(self):
-        cond = ConditionIndicator(
-            perfect=100, failed=0, pf_curve="linear", pf_interval=10
-        )
 
-        cond.set_condition(50)
-        cond.reset_any(target=1, method="reduction_factor", axis="condition")
-        condition = cond.get_condition()
+        param_list = [(100, 0, 20), (0, 100, 80), (110, 10, 30), (10, 110, 90)]
 
-        self.assertEqual(condition, 100)
+        for perfect, failed, initial in param_list:
+            with self.subTest():
+                # Arrange
+                cond = ConditionIndicator(
+                    perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
+                )
+                cond.set_condition(initial)
+
+                for expected in range(4):
+                    # Act
+                    cond.reset_any(
+                        target=1, method="reduction_factor", axis="condition"
+                    )
+                    condition = cond.get_condition()
+
+                    # Assert
+                    self.assertEqual(condition, perfect)
 
     def test_reset_any_reduction_factor_half(self):
-        cond = ConditionIndicator(
-            perfect=100, failed=0, pf_curve="linear", pf_interval=10
-        )
-        cond.set_condition(50)
-        cond.reset_any(target=0.5, method="reduction_factor", axis="condition")
-        condition = cond.get_condition()
 
-        self.assertEqual(condition, 75)
+        param_list = [
+            (100, 0, 20, [60, 80, 90, 95]),
+            (0, 100, 80, [40, 20, 10, 5]),
+            (110, 10, 30, [70, 90, 100, 105]),
+            (10, 110, 90, [50, 30, 20, 15]),
+        ]
+
+        for perfect, failed, initial, results in param_list:
+            with self.subTest():
+                # Arrange
+                cond = ConditionIndicator(
+                    perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
+                )
+                cond.set_condition(initial)
+
+                for expected in results:
+                    # Act
+                    cond.reset_any(
+                        target=0.5, method="reduction_factor", axis="condition"
+                    )
+                    condition = cond.get_condition()
+
+                    # Assert
+                    self.assertEqual(condition, expected)
 
     def test_reset_any_reduction_factor_none(self):
-        cond = ConditionIndicator(
-            perfect=100, failed=0, pf_curve="linear", pf_interval=10
-        )
+        param_list = [
+            (100, 0, 20),
+            (0, 100, 80),
+            (110, 10, 30),
+            (10, 110, 90),
+        ]
 
-        cond.set_condition(50)
-        cond.reset_any(target=0, method="reduction_factor", axis="condition")
-        condition = cond.get_condition()
+        for perfect, failed, initial in param_list:
+            with self.subTest():
+                # Arrange
+                cond = ConditionIndicator(
+                    perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
+                )
+                cond.set_condition(initial)
 
-        self.assertEqual(condition, 50)
+                for expected in results:
+                    # Act
+                    cond.reset_any(
+                        target=0, method="reduction_factor", axis="condition"
+                    )
+                    condition = cond.get_condition()
+
+                    # Assert
+                    self.assertEqual(condition, initial)
 
     # ************** Test the accumulation functions ******************
 
@@ -564,16 +630,17 @@ class TestConditionIndicator(unittest.TestCase):
         """
         Check that the timelines aggregate correctly and do not exceed the limits
         """
-        expected = np.concatenate(
-            [np.linspace(100, 51, 50), np.linspace(50, 0, 26), np.full(125, 0)]
+        expected = np.reshape(
+            np.concatenate([np.linspace(100, 0, 101), np.full(100, 0)]), (1, 201)
         )
 
         cond = ConditionIndicator(
             pf_curve="linear", perfect=100, failed=0, pf_interval=100
         )
 
+        cond.sim_timeline(t_start=0, t_stop=200)
         cond.save_timeline()
-
+        cond.save_timeline()
         agg_timeline = cond.agg_timelines()
 
         np.testing.assert_array_equal(agg_timeline, expected)
@@ -623,7 +690,7 @@ class TestConditionIndicator(unittest.TestCase):
         np.testing.assert_array_equal(agg_timeline, expected)
 
     def test_expected_condition_one_timeline(self):
-        NotImplemented #TODO
+        NotImplemented  # TODO
 
     def test_expected_condition(self):
 
@@ -641,10 +708,10 @@ class TestConditionIndicator(unittest.TestCase):
         ec = cond.expected_condition()
 
 
-class TestPoleSafetyFactor(unittest:TestCase):
-
+class TestPoleSafetyFactor(unittest.TestCase):
     def test_sim_timeline(self):
         NotImplemented
+
 
 if __name__ == "__main__":
     unittest.main()

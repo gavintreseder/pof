@@ -45,9 +45,9 @@ class TestFailureMode(unittest.TestCase):
             FailureMode.from_dict(invalid_data_type)
 
         # TODO patch this method of on error use default
-        """with patch("pof.failure_mode.cf")
-        with self.assertRaises(ValueError):
-            FailureMode.from_dict(invalid_data_value)"""
+        with patch("pof.load.cf", self.blank_config):
+            with self.assertRaises(ValueError):
+                FailureMode.from_dict(invalid_data_value)
 
     def test_from_dict_no_data(self):
         with self.assertRaises(TypeError):
@@ -237,21 +237,21 @@ class TestFailureMode(unittest.TestCase):
             self.fail("Unknown error")
 
     def test_set_demo_some_data(self):
-        fm = FailureMode().set_demo()
+        fm = FailureMode.demo()
         self.assertIsNotNone(fm)
 
     # ************ Test get_dash_ids *****************
 
     def test_get_dash_id(self):
 
-        fm = FailureMode().set_demo()
+        fm = FailureMode.demo()
 
         dash_ids = fm.get_dash_ids()
 
     # ************ Test update methods *****************
 
     def test_update(self):
-
+        # TODO This will be causing errors because new values are being created
         test_data_1 = fixtures.failure_mode_data["early_life"]
         test_data_2 = fixtures.failure_mode_data["slow_aging"]
 
