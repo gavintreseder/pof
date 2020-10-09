@@ -127,7 +127,6 @@ class Component(Load):
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
 
-
     # ****************** Set data ******************
 
     def mc(self, t_end, t_start, n_iterations):
@@ -365,36 +364,36 @@ class Component(Load):
 
         return df
 
-    def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):
-        """"""
-        # TODO add an optimal onto this
-        rc = dict()
-        self.reset()
+    # def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):
+    #     """"""
+    #     # TODO add an optimal onto this
+    #     rc = dict()
+    #     self.reset()
 
-        var = var_name.split("-")[-1]
+    #     var = var_name.split("-")[-1]
 
-        for i in range(max(1, lower), upper, step):
+    #     for i in range(max(1, lower), upper, step):
 
-            self.update(var_name, i)
+    #         self.update(var_name, i)
 
-            self.mc_timeline(t_end=100, n_iterations=n_iterations)
+    #         self.mc_timeline(t_end=100, n_iterations=n_iterations)
 
-            rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-            rc[i][var] = i
+    #         rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+    #         rc[i][var] = i
 
-            # Reset component
-            self.reset()
+    #         # Reset component
+    #         self.reset()
 
-        df = (
-            pd.DataFrame()
-            .from_dict(rc, orient="index")
-            .rename(columns={"risk": "risk_cost"})
-        )
-        df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
-        df["total"] = df["direct_cost"] + df["risk_cost"]
-        df = df[[var, "direct_cost", "risk_cost", "total"]]
+    #     df = (
+    #         pd.DataFrame()
+    #         .from_dict(rc, orient="index")
+    #         .rename(columns={"risk": "risk_cost"})
+    #     )
+    #     df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
+    #     df["total"] = df["direct_cost"] + df["risk_cost"]
+    #     df = df[[var, "direct_cost", "risk_cost", "total"]]
 
-        return df
+    #     return df
 
     # ****************** Reset ******************
 

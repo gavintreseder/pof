@@ -356,7 +356,7 @@ class FailureMode(Load):
         if cond_name is None:
             return self.pf_interval
         elif cond_name is not None and cond_name in self.conditions:
-            return self.conditions[cond_name]['pf_interval']
+            return self.conditions[cond_name]["pf_interval"]
         else:
             return None
 
@@ -364,7 +364,7 @@ class FailureMode(Load):
         if cond_name is None:
             return self.pf_std
         elif cond_name is not None and cond_name in self.conditions:
-            return self.conditions[cond_name]['pf_std']
+            return self.conditions[cond_name]["pf_std"]
         else:
             return None
 
@@ -1045,7 +1045,7 @@ class FailureMode(Load):
 
     # ****************** Demonstration ***********
     @classmethod
-    def demo(self):
+    def set_demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
 
 
