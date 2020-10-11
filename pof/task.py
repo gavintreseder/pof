@@ -200,7 +200,6 @@ class Task(Load):
                 return self.triggers[trigger_type]
             except:
                 return self.triggers
-    
 
     def is_effective(self, t_now=None, timeline=None):
 
@@ -240,7 +239,7 @@ class Task(Load):
                 impact = self.impacts["condition"]["all"]
                 for condition in conditions.values():
                     if condition.name in timeline:
-                        condition.set_condition(timeline[condition.name][t_now])
+                        condition.set_condition(t=t_now)
 
                     condition.reset_any(
                         target=impact["target"],
@@ -251,8 +250,7 @@ class Task(Load):
                 for condition_name, impact in self.impacts["condition"].items():
                     logging.debug("Updating condition - %s" % (condition_name))
 
-                    conditions[condition_name].set_condition(
-                        timeline[condition_name][t_now]
+                    conditions[condition_name].set_condition(t=t_now
                     )
 
                     conditions[condition_name].reset_any(

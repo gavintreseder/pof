@@ -604,8 +604,10 @@ class ConditionIndicator(Indicator):
             accumulated, abs(self.perfect - self.failed) - current - accumulated
         )
 
-    def set_condition(self, condition, t_now=None, name=None):
+    def set_condition(self, t, name=None):
         # TODO consider impact of other impacts
+
+        condition = self._timeline[name][t]
 
         if self.decreasing:
             self._accumulated[name] = min(
@@ -702,17 +704,18 @@ class PoleSafetyFactor(Indicator):
     component = None
 
     def set_condition(self, *args, **kwargs):
+        """No actions required"""
         None
 
     def link_component(self, component):
         self.component = component
 
-    def sim_timeline(self, *args, **kwargs):
+    def sim_timeline(self, t_delay=0, *args, **kwargs):
         """
         Overload safety factor
         """
         self._timeline[None] = self.safety_factor("simple")
-        return self._timeline
+        return self._timeline[None][t_delay:]
 
     def sim_failure_timeline(self, t_delay=0, *args, **kwargs):
 
