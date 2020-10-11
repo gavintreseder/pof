@@ -264,7 +264,6 @@ class FailureMode(Load):
                 if cond_name not in self.indicators:
                     indicator = ConditionIndicator.load(var[cond_name])
                     self.set_indicators(indicator)
-                    
 
     def set_dists(self, dists):
 
