@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
 import pandas as pd
+import numpy as np
 
 from pof.helper import str_to_dict
 from config import config
@@ -202,18 +203,18 @@ class Load:
         """
         raise NotImplementedError()
 
-    def sensitivity(self, var_name, lower, upper, n_increments=1, n_iterations=10):
+    def sensitivity(self, var_name, lower, upper, n_increments=1, n_iterations=100):
         """"""
         # TODO add an optimal onto this
         rc = dict()
         self.reset()
 
+        if n_increments % 2 == 0:
+            n_increments = n_increments + 1
+
         var = var_name.split("-")[-1]
 
-        for i in range(
-            int(round(lower)), int(round(upper)), step
-        ):  # change to np.linspace
-
+        for i in np.linspace(lower, upper, n_increments):
             try:
                 self.update(var_name, i)
             except Exception as e:
@@ -235,6 +236,7 @@ class Load:
         df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
         df["total"] = df["direct_cost"] + df["risk_cost"]
         df = df[[var, "direct_cost", "risk_cost", "total"]]  # drop earlier
+        df = df.rename(columns = {var:'value'}) # target
 
         return df
 
