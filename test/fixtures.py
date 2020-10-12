@@ -281,7 +281,7 @@ failure_mode_data = dict(
         ),
 
         tasks=dict(
-            inspection=inspection_data['degrading'],
+            inspection=inspection_data['instant'],
             on_condition_replacement=on_condition_replacement_data
         ),
         states=state_data['new']

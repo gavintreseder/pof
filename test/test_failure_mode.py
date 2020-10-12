@@ -213,6 +213,17 @@ class TestFailureMode(unittest.TestCase):
         # Check tasks match
         # TODO rewrite time function in tasks first
 
+    def test_sim_timeline_on_condition_task_triggered(self):
+        # Arrange
+        fm = FailureMode.demo()
+        fm.indicators["slow_degrading"].set_condition(20)
+
+        # Act
+        fm.sim_timeline(200)
+
+        # Assert
+        # self.assertEqual()
+
     # ************ Test load ***********************
 
     def test_load(self):
