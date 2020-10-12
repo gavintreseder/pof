@@ -321,9 +321,9 @@ class Indicator(Load):
                     % (self.__class__.__name__, key)
                 )
 
-    def expected_condition(self, conf=0.5):
+    """def expected_condition(self, conf=0.5):
         ec = self.get_timeline()
-        return self._expected_condition(ec, conf)
+        return self._expected_condition(ec, conf)"""
 
     def _expected_condition(self, ec, conf):
         """
@@ -535,8 +535,8 @@ class ConditionIndicator(Indicator):
 
     def sim_failure_timeline(
         self,
-        t_delay=0,
         t_stop=None,
+        t_delay=0,
         t_start=0,
         pf_interval=None,
         pf_std=None,
@@ -701,7 +701,7 @@ class ConditionIndicator(Indicator):
                         % (self.__class__.__name__, self.name, key)
                     )
 
-    def expected_condition(self, conf=0.5)
+    def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
 
@@ -805,10 +805,10 @@ class PoleSafetyFactor(Indicator):
                         % (self.__class__.__name__, self.name, key)
                     )
 
-    def expected_condition(self, conf=0.5)
+    def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
-        
+
 # class ActualSafetyFactor(PoleSafetyFactor):
 
 

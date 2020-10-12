@@ -406,6 +406,13 @@ class TestFailureMode(unittest.TestCase):
             test_data["cost"],
         )
 
+    # ------------------ Test Expected Risk ------------------------
+
+    def test_mc_timeline_risk_is_accurate(self):
+        fm = FailureMode.demo()
+
+        fm.mc_timeline(200)
+
 
 if __name__ == "__main__":
     unittest.main()

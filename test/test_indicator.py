@@ -4,8 +4,6 @@ import numpy as np
 import copy
 from random import randint
 
-from nose2.tools import params
-
 import utils
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
@@ -708,45 +706,52 @@ class TestConditionIndicator(unittest.TestCase):
 
         ec = cond.expected_condition()
 
-    def test_sim_failure_timeline_step(self):
+    def test_sim_failure_timeline(self):
         """Checks that a failure timeline returns the correct values"""
         param_t_delay = [0, 10]
-        param_pf_curve = ["step", "linear"]
+        param_pf_curve = ["linear", "step"]
         param_list = [
-            (100, 0, 100),
+            (100, 0, 1),
             (100, 0, 50),
-            (100, 0, 100),
-            (0, 100, 0),
+            (100, 0, 99),
+            (0, 100, 1),
             (0, 100, 50),
-            (0, 100, 100),
+            (0, 100, 99),
             (False, True, True),
             (True, False, False),
         ]
         pf_interval = 100
 
         for t_delay in param_t_delay:
-            for pf_curve in param_pf_curve:
-                for perfect, failed, threshold_failure in param_list:
+            for perfect, failed, threshold_failure in param_list:
+                for pf_curve in param_pf_curve:
+                    # expected
+                    if pf_curve == "linear":
+                        n_ok = int(
+                            abs(perfect - threshold_failure)
+                            / abs(perfect - failed)
+                            * pf_interval
+                        )
+                    elif pf_curve == "step":
+                        n_ok = pf_interval
+                    else:
+                        self.fail()
+
+                    n_failure = pf_interval - n_ok + 1
+                    expected = np.concatenate(
+                        [np.full(n_ok, False), np.full(n_failure, True)]
+                    )
+                    expected = expected[t_delay:]
+
                     with self.subTest():
                         # Arrange
-                        ind = Indicator(
+                        ind = ConditionIndicator(
                             perfect=perfect,
                             failed=failed,
                             threshold_failure=threshold_failure,
                             pf_interval=pf_interval,
                             pf_curve=pf_curve,
                         )
-
-                        n_ok = int(
-                            abs(perfect - threshold_failure)
-                            / abs(perfect - failed)
-                            * pf_interval
-                        )
-                        n_failure = pf_interval - n_ok + 1
-                        expected = np.concatenate(
-                            [np.full(n_ok, False), np.full(n_failure, True)]
-                        )
-                        expected = expected[t_delay:]
 
                         # Act
                         ind.sim_timeline(t_stop=100)

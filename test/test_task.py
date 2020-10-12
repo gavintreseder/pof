@@ -106,8 +106,6 @@ class TestConditionTask(unittest.TestCase):
 
         self.assertRaises(KeyError, t.update_from_dict, update)
 
-    def test_
-
 
 class TestInspection(unittest.TestCase):
     def test_imports_correctly(self):
