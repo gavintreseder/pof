@@ -59,6 +59,7 @@ class PolesFleetDataLoader(FleetDataLoader):
 
     def load_asset_info(self):
         csq_columns = [
+            "Asset ID",
             "C_Safety_Dollars",
             "C_Network_Dollars",
             "C_Bushfire_Dollars",

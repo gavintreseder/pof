@@ -295,7 +295,14 @@ class Task(Load):
 
         for key, value in dict_data.items():
 
-            if key in ["name", "task_type", "active", "p_effective", "cost"]:
+            if key in [
+                "activity",
+                "name",
+                "task_type",
+                "active",
+                "p_effective",
+                "cost",
+            ]:
                 self.__dict__[key] = value
 
             elif key in ["trigger", "impact"]:

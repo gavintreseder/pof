@@ -935,11 +935,10 @@ class FailureMode(Load):
                 "pf_curve",
                 "pf_interval",
                 "pf_std",
-                "untreated",
             ]:
-                self.__dict__[key] = value
+                setattr(self, key, value)
 
-            elif key == "dists":
+            elif key in ["untreated", "dists"]:
                 self.set_dists(dict_data[key])
 
             elif key == "conditions":
@@ -1060,7 +1059,7 @@ class FailureMode(Load):
 
     # ****************** Demonstration ***********
     @classmethod
-    def demo(self):
+    def set_demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
 
 
