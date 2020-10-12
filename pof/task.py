@@ -239,7 +239,7 @@ class Task(Load):
                 impact = self.impacts["condition"]["all"]
                 for condition in conditions.values():
                     if condition.name in timeline:
-                        condition.set_condition(t=t_now)
+                        condition.set_t_condition(t=t_now)
 
                     condition.reset_any(
                         target=impact["target"],
@@ -250,8 +250,7 @@ class Task(Load):
                 for condition_name, impact in self.impacts["condition"].items():
                     logging.debug("Updating condition - %s" % (condition_name))
 
-                    conditions[condition_name].set_condition(t=t_now
-                    )
+                    conditions[condition_name].set_t_condition(t=t_now)
 
                     conditions[condition_name].reset_any(
                         target=impact["target"],

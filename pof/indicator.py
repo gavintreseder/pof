@@ -607,13 +607,15 @@ class ConditionIndicator(Indicator):
         current = self.get_accumulated()
 
         self._accumulated[name] = min(
-            accumulated, abs(self.perfect - self.failed) - current - accumulated
+            accumulated, abs(self.perfect - self.failed) - current
         )
 
-    def set_condition(self, t, name=None):
-        # TODO consider impact of other impacts
+    def set_t_condition(self, t, name=None):
+        condition = float(self._timeline[name][t])
+        self.set_condition(condition)
 
-        condition = self._timeline[name][t]
+    def set_condition(self, condition, name=None):
+        # TODO consider impact of other impacts
 
         if self.decreasing:
             self._accumulated[name] = min(

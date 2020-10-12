@@ -263,7 +263,7 @@ class FailureMode(Load):
                 perfect=False,
                 failed=True,
             )
-            self.conditions = {self.name: None}
+            self.conditions = {self.name: {}}
             self.set_indicators(indicator)
 
     def set_dists(self, dists):
