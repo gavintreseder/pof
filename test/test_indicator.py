@@ -708,6 +708,53 @@ class TestConditionIndicator(unittest.TestCase):
 
         ec = cond.expected_condition()
 
+    def test_sim_failure_timeline_step(self):
+        """Checks that a failure timeline returns the correct values"""
+        param_t_delay = [0, 10]
+        param_pf_curve = ["step", "linear"]
+        param_list = [
+            (100, 0, 100),
+            (100, 0, 50),
+            (100, 0, 100),
+            (0, 100, 0),
+            (0, 100, 50),
+            (0, 100, 100),
+            (False, True, True),
+            (True, False, False),
+        ]
+        pf_interval = 100
+
+        for t_delay in param_t_delay:
+            for pf_curve in param_pf_curve:
+                for perfect, failed, threshold_failure in param_list:
+                    with self.subTest():
+                        # Arrange
+                        ind = Indicator(
+                            perfect=perfect,
+                            failed=failed,
+                            threshold_failure=threshold_failure,
+                            pf_interval=pf_interval,
+                            pf_curve=pf_curve,
+                        )
+
+                        n_ok = int(
+                            abs(perfect - threshold_failure)
+                            / abs(perfect - failed)
+                            * pf_interval
+                        )
+                        n_failure = pf_interval - n_ok + 1
+                        expected = np.concatenate(
+                            [np.full(n_ok, False), np.full(n_failure, True)]
+                        )
+                        expected = expected[t_delay:]
+
+                        # Act
+                        ind.sim_timeline(t_stop=100)
+                        ft = ind.sim_failure_timeline(t_stop=100, t_delay=t_delay)
+
+                        # Assert
+                        np.testing.assert_array_equal(ft, expected)
+
 
 class TestPoleSafetyFactor(unittest.TestCase):
     def test_sim_timeline(self):

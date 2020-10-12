@@ -200,10 +200,8 @@ class Indicator(Load):
 
         if initial is None:
             self.initial = self.perfect
-            self.initial_accumulated = 0
         else:
             self.initial = initial
-            self.initial_accumulated = abs(self.perfect - self.initial)
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
@@ -324,12 +322,14 @@ class Indicator(Load):
                 )
 
     def expected_condition(self, conf=0.5):
+        ec = self.get_timeline()
+        return self._expected_condition(ec, conf)
+
+    def _expected_condition(self, ec, conf):
         """
         Returns the expected condition based
         """
         # TODO make work for all condition levels loss:bool=False
-
-        ec = self.agg_timelines()
 
         mean = ec.mean(axis=0)
         sigma = ec.std(axis=0)
@@ -475,7 +475,7 @@ class ConditionIndicator(Indicator):
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
         if self.pf_curve == "linear":
-            # Preven zero division error
+            # Prevent zero division error
             if pf_interval <= 0:
                 m = 0
             else:
@@ -606,8 +606,12 @@ class ConditionIndicator(Indicator):
         # check accumulated will not exceed the maximum allowable condition
         current = self.get_accumulated()
 
+        # max accumulation - current - initial
         self._accumulated[name] = min(
-            accumulated, abs(self.perfect - self.failed) - current
+            accumulated,
+            abs(self.perfect - self.failed)
+            - current
+            - abs(self.perfect - self.initial),
         )
 
     def set_t_condition(self, t, name=None):
@@ -697,6 +701,9 @@ class ConditionIndicator(Indicator):
                         % (self.__class__.__name__, self.name, key)
                     )
 
+    def expected_condition(self, conf=0.5)
+        ec = self.agg_timelines()
+        return self._expected_condition(ec, conf)
 
 # TODO overload get method so the None key isnt' needed for _timeline
 
@@ -711,7 +718,7 @@ class PoleSafetyFactor(Indicator):
     decreasing: int = True
     component = None
 
-    def set_condition(self, *args, **kwargs):
+    def set_t_condition(self, *args, **kwargs):
         """No actions required"""
         None
 
@@ -798,7 +805,10 @@ class PoleSafetyFactor(Indicator):
                         % (self.__class__.__name__, self.name, key)
                     )
 
-
+    def expected_condition(self, conf=0.5)
+        ec = self.agg_timelines()
+        return self._expected_condition(ec, conf)
+        
 # class ActualSafetyFactor(PoleSafetyFactor):
 
 

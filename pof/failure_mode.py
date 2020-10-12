@@ -141,7 +141,7 @@ class FailureMode(Load):
         self.pf_curve = pf_curve
         self.pf_interval = pf_interval
         self.pf_std = pf_std
-        self.conditions_to_update = set()
+        self.conditions_to_update = set()  # not used yet
 
         self.dists = dict()
         self.untreated = untreated
@@ -443,7 +443,10 @@ class FailureMode(Load):
 
     def init_timeline(self, t_end, t_start=0):
 
+        self._init_timeline(t_end, t_start)
+
         if self.active:
+
             updates = dict(
                 initiation=self.is_initiated(),
                 detection=self.is_detected(),
@@ -452,16 +455,7 @@ class FailureMode(Load):
             for task in self.tasks.values():
                 updates[task.name] = None
 
-            self._init_timeline(t_end, t_start)
             self.update_timeline(t_start=t_start, t_end=t_end, updates=updates)
-
-        else:
-            self.timeline = dict(
-                time=np.linspace(t_start, t_end, t_end - t_start + 1, dtype=int),
-                intiation=np.full(t_end + 1, False),
-                dectection=np.full(t_end + 1, False),
-                failure=np.full(t_end + 1, False),
-            )
 
         return self.timeline
 
@@ -474,9 +468,9 @@ class FailureMode(Load):
 
         timeline = dict(
             time=np.linspace(t_start, t_end, increments, dtype=int),
-            initiation=np.zeros(increments, dtype=bool),
-            detection=np.zeros(increments, dtype=bool),
-            failure=np.zeros(increments, dtype=bool),
+            initiation=np.full(increments, False),
+            detection=np.full(increments, False),
+            failure=np.full(increments, False),
         )
 
         # Update conditions for failure_mode and any conditions that trigger tasks
@@ -485,11 +479,11 @@ class FailureMode(Load):
             cond_to_update = cond_to_update | set(task.get_triggers("condition"))
 
         for cond_name in cond_to_update:
-            timeline[cond_name] = np.zeros(increments, dtype=int)
+            timeline[cond_name] = np.full(increments, -1)
 
         # Tasks
         for task in self.tasks.values():
-            timeline[task.name] = np.zeros(increments, dtype=int)
+            timeline[task.name] = np.full(increments, -1)
 
         self.timeline = timeline
 
@@ -520,6 +514,7 @@ class FailureMode(Load):
                 self.timeline["initiation"][t_initiate:] = True
             else:
                 t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
+                # TODO make sure this is needed and works
 
             # Update conditions for failure_mode and any conditions that trigger tasks
             cond_to_update = set(self.conditions)

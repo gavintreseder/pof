@@ -115,6 +115,9 @@ inspection_data = dict(
                 initiation=True
             ),
         ),
+        impacts=dict(
+            state=dict(detection=True,)
+        ),
     ),
     degrading=dict(
         activity='Inspection',
@@ -141,7 +144,6 @@ inspection_data = dict(
         ),
 
         impacts=dict(
-            condition=dict(),
             state=dict(detection=True,)
         ),
     ),

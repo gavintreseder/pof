@@ -200,7 +200,6 @@ on_condition_repair_data = dict(
         ),
         state=dict(initiation=False, detection=False, failure=False,),
     ),
-
 )
 
 on_condition_replacement_data = dict(

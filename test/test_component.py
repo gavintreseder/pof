@@ -171,7 +171,7 @@ class TestComponent(unittest.TestCase):
 
         comp.sim_timeline(200)
 
-    def test_sim_timline_active_one(self):
+    def test_sim_timeline_active_one(self):
         comp = Component.demo()
 
         comp.fm[list(comp.fm)[0]].active = False
@@ -229,13 +229,22 @@ class TestComponent(unittest.TestCase):
 
     def test_reset(self):
 
-        expected = 0
-
         comp = Component.demo()
         comp.mc_timeline(5)
         comp.reset()
 
-        self.assertEqual(comp._sim_counter, expected)
+        self.assertEqual(comp._sim_counter, 0)
+        self.assertEqual(comp.indicator["slow_degrading"].get_accumulated(), 0)
+
+    def test_reset_for_next_sim(self):
+
+        comp = Component.demo()
+        comp.indicator["slow_degrading"].set_initial(20)
+
+        comp.mc_timeline(10)
+        comp.reset()
+
+        self.assertEqual(comp.indicator["slow_degrading"].get_accumulated(), 20)
 
 
 if __name__ == "__main__":
