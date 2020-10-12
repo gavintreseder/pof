@@ -102,17 +102,21 @@ class Indicator(Load):
 
         return task
 
+    def sim_timeline(self, *args):
+        logging.debug("Non overloaded function called")
+        NotImplemented
+
     def sim_failure_timeline(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+        logging.debug("Non overloaded function called")
 
         NotImplemented
 
     def restore(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+        logging.debug("Non overloaded function called")
         NotImplemented
 
     def reset_any(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+        logging.debug("Non overloaded function called")
         NotImplemented
 
     def reset(self):
@@ -215,6 +219,8 @@ class Indicator(Load):
                 self.threshold_failure = failure
 
     # ****************** Get methods **************
+
+    # TODO split out into conditionIndicator and simplify this method for Indicator to make it faster
 
     def agg_timeline(self):
 

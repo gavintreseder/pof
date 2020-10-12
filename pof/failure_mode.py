@@ -246,8 +246,15 @@ class FailureMode(Load):
         # TODO Add checks to create the condition if it doesn't exist
         # TODO Make this work for different pf_intervals for different conditions
 
-        if var is None:
-            self.conditions = dict()
+        if bool(var):
+            self.conditions = var
+            # Create an indicator for any conditions not in the indicator list
+            for cond_name in var:
+                if cond_name not in self.indicators:
+                    indicator = ConditionIndicator.load(var[cond_name])
+                    self.set_indicators(indicator)
+        else:
+            # Create a simple indicator
             indicator = ConditionIndicator(
                 name=self.name,
                 pf_curve="step",
@@ -256,14 +263,8 @@ class FailureMode(Load):
                 perfect=False,
                 failed=True,
             )
+            self.conditions = {self.name: None}
             self.set_indicators(indicator)
-        else:
-            self.conditions = var
-            # Create an indicator for any conditions not in the indicator list
-            for cond_name in var:
-                if cond_name not in self.indicators:
-                    indicator = ConditionIndicator.load(var[cond_name])
-                    self.set_indicators(indicator)
 
     def set_dists(self, dists):
 
