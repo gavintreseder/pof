@@ -527,15 +527,15 @@ class TestConditionIndicator(unittest.TestCase):
 
         param_list = [(100, 0, 20), (0, 100, 80), (110, 10, 30), (10, 110, 90)]
 
-        for perfect, failed, initial in param_list:
+        for perfect, failed, current in param_list:
             with self.subTest():
                 # Arrange
                 cond = ConditionIndicator(
                     perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
                 )
-                cond.set_condition(initial)
+                cond.set_condition(current)
 
-                for expected in range(4):
+                for expected in range(2):
                     # Act
                     cond.reset_any(
                         target=1, method="reduction_factor", axis="condition"
@@ -554,13 +554,13 @@ class TestConditionIndicator(unittest.TestCase):
             (10, 110, 90, [50, 30, 20, 15]),
         ]
 
-        for perfect, failed, initial, results in param_list:
+        for perfect, failed, current, results in param_list:
             with self.subTest():
                 # Arrange
                 cond = ConditionIndicator(
                     perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
                 )
-                cond.set_condition(initial)
+                cond.set_condition(current)
 
                 for expected in results:
                     # Act
@@ -573,6 +573,7 @@ class TestConditionIndicator(unittest.TestCase):
                     self.assertEqual(condition, expected)
 
     def test_reset_any_reduction_factor_none(self):
+
         param_list = [
             (100, 0, 20),
             (0, 100, 80),
@@ -580,15 +581,15 @@ class TestConditionIndicator(unittest.TestCase):
             (10, 110, 90),
         ]
 
-        for perfect, failed, initial in param_list:
+        for perfect, failed, current in param_list:
             with self.subTest():
                 # Arrange
                 cond = ConditionIndicator(
                     perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
                 )
-                cond.set_condition(initial)
+                cond.set_condition(current)
 
-                for expected in results:
+                for expected in range(2):
                     # Act
                     cond.reset_any(
                         target=0, method="reduction_factor", axis="condition"
@@ -596,7 +597,7 @@ class TestConditionIndicator(unittest.TestCase):
                     condition = cond.get_condition()
 
                     # Assert
-                    self.assertEqual(condition, initial)
+                    self.assertEqual(condition, current)
 
     # ************** Test the accumulation functions ******************
 

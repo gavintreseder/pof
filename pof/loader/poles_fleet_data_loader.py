@@ -15,11 +15,16 @@ try:
 except:
     file_path = askdirectory(initialdir=os.getcwd())
 
-# I don't think this is right..
+# TODO Illyse changed file pathsI don't think this is right..
 asset_path = file_path + "\\ACS - Poles - Asset Details.txt"
 condition_path = file_path + "\\ACS - Poles - Condition History.txt"
 csq_path = file_path + "\\ACS - Poles - Consequence Model Output.txt"
 intervention_path = file_path + "\\ACS - Poles - Intervention History.csv"
+
+
+# Constant
+prohibbited_characters = [".", ";", "-"]
+replacement_character = ["_"]
 
 
 class PolesFleetDataLoader(FleetDataLoader):

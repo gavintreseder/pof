@@ -102,21 +102,21 @@ class Indicator(Load):
 
         return task
 
-    def sim_indicator_timeline(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+    def sim_timeline(self, *args):
+        logging.debug("Non overloaded function called")
         NotImplemented
 
     def sim_failure_timeline(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+        logging.debug("Non overloaded function called")
 
         NotImplemented
 
     def restore(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+        logging.debug("Non overloaded function called")
         NotImplemented
 
     def reset_any(self, *args, **kwargs):
-        logging.info("Non overloaded function called")
+        logging.debug("Non overloaded function called")
         NotImplemented
 
     def reset(self):
@@ -126,6 +126,9 @@ class Indicator(Load):
         self._timelines = dict()
 
     def reset_for_next_sim(self):
+        None
+
+    def reset_to_perfect(self):
         None
 
     def set_pf_curve(self, pf_curve):
@@ -216,6 +219,8 @@ class Indicator(Load):
                 self.threshold_failure = failure
 
     # ****************** Get methods **************
+
+    # TODO split out into conditionIndicator and simplify this method for Indicator to make it faster
 
     def agg_timeline(self):
 
@@ -479,7 +484,10 @@ class ConditionIndicator(Indicator):
             y = m * x + b
 
         elif self.pf_curve == "step":
-            y = np.full(pf_interval, self.perfect)
+            if pf_interval == 0:
+                y = np.full(1, self.failed)
+            else:
+                y = np.full(pf_interval, self.perfect)
 
         elif self.pf_curve == "exponential" or self.pf_curve == "exp":
             NotImplemented
@@ -599,8 +607,12 @@ class ConditionIndicator(Indicator):
         current = self.get_accumulated()
 
         self._accumulated[name] = min(
-            accumulated, abs(self.perfect - self.failed) - current - accumulated
+            accumulated, abs(self.perfect - self.failed) - current
         )
+
+    def set_t_condition(self, t, name=None):
+        condition = float(self._timeline[name][t])
+        self.set_condition(condition)
 
     def set_condition(self, condition, name=None):
         # TODO consider impact of other impacts
@@ -621,6 +633,9 @@ class ConditionIndicator(Indicator):
 
     def reset_for_next_sim(self):
         self._reset_accumulated(accumulated=self.initial)
+
+    def reset_to_perfect(self):
+        self._reset_accumulated(accumulated=0)
 
     def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
@@ -696,22 +711,26 @@ class PoleSafetyFactor(Indicator):
     decreasing: int = True
     component = None
 
+    def set_condition(self, *args, **kwargs):
+        """No actions required"""
+        None
+
     def link_component(self, component):
         self.component = component
 
-    def sim_timeline(self):
+    def sim_timeline(self, t_delay=0, *args, **kwargs):
         """
         Overload safety factor
         """
         self._timeline[None] = self.safety_factor("simple")
-        return self._timeline
+        return self._timeline[None][t_delay:]
 
-    def sim_failure_timeline(self):
+    def sim_failure_timeline(self, t_delay=0, *args, **kwargs):
 
         if self.decreasing == True:
-            tl_f = self._timeline[None] <= self.threshold_failure
+            tl_f = self._timeline[None][t_delay:] <= self.threshold_failure
         else:
-            tl_f = self._timeline[None] >= self.threshold_failure
+            tl_f = self._timeline[None][t_delay:] >= self.threshold_failure
 
         return tl_f
 
@@ -757,7 +776,10 @@ class PoleSafetyFactor(Indicator):
 
             margin = pole_strength / pole_load
 
-        sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (agd ** 3 * czd)
+        # Supress divide by zero error and fill na with zero
+        with np.errstate(divide="ignore", invalid="ignore"):
+            sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (agd ** 3 * czd)
+            sf[np.isnan(sf)] = 0
 
         return sf
 
@@ -777,11 +799,8 @@ class PoleSafetyFactor(Indicator):
                     )
 
 
-"""
-ConditionIndicator
-SafetyFactorIndicator
+# class ActualSafetyFactor(PoleSafetyFactor):
 
-"""
 
 if __name__ == "__main__":
     indicator = Indicator()

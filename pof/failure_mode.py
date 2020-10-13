@@ -141,6 +141,7 @@ class FailureMode(Load):
         self.pf_curve = pf_curve
         self.pf_interval = pf_interval
         self.pf_std = pf_std
+        self.conditions_to_update = set()
 
         self.dists = dict()
         self.untreated = untreated
@@ -245,8 +246,15 @@ class FailureMode(Load):
         # TODO Add checks to create the condition if it doesn't exist
         # TODO Make this work for different pf_intervals for different conditions
 
-        if var is None:
-            self.conditions = dict()
+        if bool(var):
+            self.conditions = var
+            # Create an indicator for any conditions not in the indicator list
+            for cond_name in var:
+                if cond_name not in self.indicators:
+                    indicator = ConditionIndicator.load(var[cond_name])
+                    self.set_indicators(indicator)
+        else:
+            # Create a simple indicator
             indicator = ConditionIndicator(
                 name=self.name,
                 pf_curve="step",
@@ -255,14 +263,8 @@ class FailureMode(Load):
                 perfect=False,
                 failed=True,
             )
+            self.conditions = {self.name: {}}
             self.set_indicators(indicator)
-        else:
-            self.conditions = var
-            # Create an indicator for any conditions not in the indicator list
-            for cond_name in var:
-                if cond_name not in self.indicators:
-                    indicator = ConditionIndicator.load(var[cond_name])
-                    self.set_indicators(indicator)
 
     def set_dists(self, dists):
 
@@ -415,7 +417,7 @@ class FailureMode(Load):
         return self.timeline
 
     def complete_tasks(self, t_now, task_names):
-        """ Executes the tasks """
+        """ Executes the tasks and returns the system impact """
 
         system_impacts = []
         if self.active:
@@ -465,15 +467,19 @@ class FailureMode(Load):
         )
 
         # Get intiaition
-        timeline["initiation"] = np.full(t_end + 1, self.is_initiated())
+        timeline["initiation"] = np.full(t_end - t_start + 1, self.is_initiated())
         t_initiate = 0
         if not self.is_initiated():
             # TODO this needs to be conditional_sf
-            t_initiate = min(t_end + 1, int(self.dists["init"].sample()))
+            t_initiate = min(t_end + 1, t_start + int(self.dists["init"].sample()))
             timeline["initiation"][t_initiate:] = 1
 
-        # Get condition
-        for cond_name in self.conditions:
+        # Update conditions for failure_mode and any conditions that trigger tasks
+        cond_to_update = set(self.conditions)
+        for task in self.tasks.values():
+            cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+
+        for cond_name in cond_to_update:
 
             timeline[cond_name] = self.indicators[cond_name].sim_timeline(
                 t_delay=t_start,
@@ -486,7 +492,7 @@ class FailureMode(Load):
         # Check failure
         timeline["failure"] = np.full(t_end + 1, self.is_failed())
         if not self.is_failed():
-            for cond_name in self.conditions:
+            for cond_name in cond_to_update:
                 tl_f = self.indicators[cond_name].sim_failure_timeline(
                     t_delay=t_start,
                     t_start=t_start - t_initiate,
@@ -545,8 +551,13 @@ class FailureMode(Load):
             else:
                 t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
 
+            # Update conditions for failure_mode and any conditions that trigger tasks
+            cond_to_update = set(self.conditions)
+            for task in self.tasks.values():
+                cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+
             # Check for condition changes
-            for cond_name in self.conditions:
+            for cond_name in cond_to_update:
                 if "initiation" in updates or cond_name in updates:
                     logging.debug(
                         "condition %s, start %s, initiate %s, end %s",
@@ -574,7 +585,7 @@ class FailureMode(Load):
             # Check for failure changes
             if "failure" in updates:
                 self.timeline["failure"][t_start:] = updates["failure"]
-                for cond_name in self.conditions:
+                for cond_name in cond_to_update:
                     tl_f = self.indicators[cond_name].sim_failure_timeline(
                         t_delay=t_start,
                         t_start=t_start - t_initiate,

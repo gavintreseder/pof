@@ -4,7 +4,6 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
-from dataclasses import dataclass, field
 from typing import Dict
 import logging
 
@@ -203,17 +202,24 @@ class Component(Load):
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
             if system_impact:
+
+                # Reset all the indicators to perfect
+                for ind in self.indicator.values():
+                    ind.reset_to_perfect()
+
+                # Reset all the timelines
                 for fm in self.fm.values():
-
-                    logging.info(
-                        "Component %s reset by FailureMode %s", self.name, fm_name
+                    state_after_replacement = dict(
+                        initation=False, detection=False, failure=False
                     )
+                    fm.update_timeline(
+                        t_start=t_next + 1, updates=state_after_replacement
+                    )
+
+                logging.debug(
+                    "Component %s reset by FailureMode %s", self.name, fm_name
+                )
                 break
-
-            """ if system_impact != False:
-
-                self.reset_condition()
-                #TODO add impact on other systems for complex systems"""
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
