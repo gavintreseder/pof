@@ -115,9 +115,7 @@ inspection_data = dict(
                 initiation=True
             ),
         ),
-
         impacts=dict(
-            condition=dict(),
             state=dict(detection=True,)
         ),
     ),
@@ -146,7 +144,6 @@ inspection_data = dict(
         ),
 
         impacts=dict(
-            condition=dict(),
             state=dict(detection=True,)
         ),
     ),
@@ -206,6 +203,7 @@ on_condition_replacement_data = dict(
             ),
         ),
         state=dict(initiation=False, detection=False, failure=False,),
+        system=['component']
     ),
 )
 
@@ -228,6 +226,7 @@ on_condition_failure_data = dict(
             ),
         ),
         state=dict(initiation=False, detection=False, failure=False,),
+        system=['component'],
     ),
 )
 
@@ -285,7 +284,7 @@ failure_mode_data = dict(
         ),
 
         tasks=dict(
-            inspection=inspection_data['degrading'],
+            inspection=inspection_data['instant'],
             on_condition_failure=on_condition_failure_data,
         ),
         states=state_data['new']

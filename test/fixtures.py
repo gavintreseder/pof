@@ -200,7 +200,6 @@ on_condition_repair_data = dict(
         ),
         state=dict(initiation=False, detection=False, failure=False,),
     ),
-
 )
 
 on_condition_replacement_data = dict(
@@ -281,7 +280,7 @@ failure_mode_data = dict(
         ),
 
         tasks=dict(
-            inspection=inspection_data['degrading'],
+            inspection=inspection_data['instant'],
             on_condition_replacement=on_condition_replacement_data
         ),
         states=state_data['new']

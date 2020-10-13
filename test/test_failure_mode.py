@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import Mock, MagicMock, patch
 import logging
 import sys
+import numpy as np
 
 import utils
 from pof.failure_mode import FailureMode
@@ -213,6 +214,17 @@ class TestFailureMode(unittest.TestCase):
         # Check tasks match
         # TODO rewrite time function in tasks first
 
+    def test_sim_timeline_on_condition_task_triggered(self):
+        # Arrange
+        fm = FailureMode.demo()
+        fm.indicators["slow_degrading"].set_condition(20)
+
+        # Act
+        fm.sim_timeline(200)
+
+        # Assert
+        # self.assertEqual()
+
     # ************ Test load ***********************
 
     def test_load(self):
@@ -394,6 +406,23 @@ class TestFailureMode(unittest.TestCase):
             fm.tasks["inspection"].cost,
             test_data["cost"],
         )
+
+    # ------------------ Test Expected Risk ------------------------
+
+    def test_mc_timeline_risk_is_accurate(self):
+        fm = FailureMode.demo()
+
+        fm.mc_timeline(200)
+
+    def test_expected_risk(self):
+
+        fm = FailureMode.demo()
+
+        fm._timeline["failure"] = np.full(False, 200)
+
+        er = fm._expected_risk()
+
+        np.testing.assert_array_equal(er["time"], [])
 
 
 if __name__ == "__main__":

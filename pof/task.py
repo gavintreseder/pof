@@ -70,7 +70,6 @@ class Task(Load):
         p_effective=1,
         triggers=None,
         impacts=None,
-        component_reset=False,
         *args,
         **kwargs
     ):
@@ -97,8 +96,6 @@ class Task(Load):
         self.p_effective = p_effective
         self.set_triggers(triggers)
         self.set_impacts(impacts)
-
-        self.component_reset = component_reset
 
         # Time to execute
         self.state = NotImplemented
@@ -177,6 +174,9 @@ class Task(Load):
             for impact in ["condition", "state", "time"]:
                 if impact not in impacts:
                     impacts[impact] = dict()
+
+            if "system" not in impacts:
+                impacts["system"] = []
 
             # Recast any ints to bools TODO make more robust
             for state in impacts["state"]:
@@ -265,8 +265,7 @@ class Task(Load):
             return dict()
 
     def system_impact(self):
-        # maybe change to impacts['system']
-        return self.component_reset
+        return self.impacts["system"]
 
     def record(self, t_start, timeline):
         """
@@ -399,14 +398,14 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         return self
 
     def sim_timeline(
-        self, t_stop, t_delay=0, t_start=0, timeline=NotImplemented
+        self, t_end, t_delay=0, t_start=0, timeline=NotImplemented
     ):  # TODO Stubbed out to only work for trigger time and simple tile
         # TODO make it work like arange (start, stop, delay)
 
         if self.active:
             schedule = np.tile(
                 np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
-                math.ceil((t_stop - t_delay) / self.t_interval),
+                math.ceil((t_end - t_delay) / self.t_interval),
             )
 
             if t_delay > 0:
@@ -414,10 +413,10 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
                 schedule = np.concatenate((sched_start, schedule))
 
             schedule = np.concatenate(([schedule[0] + 1], schedule))[
-                t_start : t_stop + 1
+                t_start : t_end + 1
             ]
         else:
-            schedule = np.full(t_stop - t_start + 1, -1)
+            schedule = np.full(t_end - t_start + 1, -1)
 
         return schedule
 
@@ -477,13 +476,13 @@ class ConditionTask(Task):
                     if trigger["lower"] != "min":
                         tl_ct = (tl_ct) & (
                             indicators[condition].get_timeline()[t_start:]
-                            > trigger["lower"]
+                            >= trigger["lower"]
                             # timeline[condition][t_start:t_end] > trigger["lower"]
                         )
                     if trigger["upper"] != "max":
                         tl_ct = (tl_ct) & (
                             indicators[condition].get_timeline()[t_start:]
-                            < trigger["upper"]
+                            <= trigger["upper"]
                             # timeline[condition][t_start:t_end] < trigger["upper"]
                         )
                 except KeyError:
