@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import Mock, MagicMock, patch
 import logging
 import sys
+import numpy as np
 
 import utils
 from pof.failure_mode import FailureMode
@@ -412,6 +413,16 @@ class TestFailureMode(unittest.TestCase):
         fm = FailureMode.demo()
 
         fm.mc_timeline(200)
+
+    def test_expected_risk(self):
+
+        fm = FailureMode.demo()
+
+        fm._timeline["failure"] = np.full(False, 200)
+
+        er = fm._expected_risk()
+
+        np.testing.assert_array_equal(er["time"], [])
 
 
 if __name__ == "__main__":

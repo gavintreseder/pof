@@ -195,7 +195,7 @@ class Indicator(Load):
         self.upper = abs(self.perfect - self.failed)
 
     def set_initial(self, initial=None):
-
+        """ Set the intial """
         # TODO add checks to make sure it is a valid value
 
         if initial is None:
@@ -379,8 +379,17 @@ class ConditionIndicator(Indicator):
 
         # Current accumulation
         self._accumulated = dict()
+        self._set_accumulated(
+            accumulated=abs(self.perfect - self.initial), name="initial"
+        )
 
     # ********************** Timeline methods ******************************
+
+    def mc_timeline(self, t_end, t_start=0, n_iterations=100):
+        for i in range(n_iterations):
+            self.sim_timeline(t_start=t_start, t_stop=t_end)
+            self.save_timeline()
+            self.reset_for_next_sim()
 
     def sim_timeline(
         self,
@@ -575,6 +584,9 @@ class ConditionIndicator(Indicator):
     def get_timeline(self, name=None):
         return self._timeline[name]
 
+    def get_timelines(self):
+        return self._timelines
+
     def get_accumulated(self, name=None):  # TODO make this work for arrays of names
 
         if name is None:
@@ -601,34 +613,40 @@ class ConditionIndicator(Indicator):
 
     # ********************* Set Methods **********************
 
-    def _set_accumulated(self, accumulated, name=None):
-
-        # check accumulated will not exceed the maximum allowable condition
-        current = self.get_accumulated()
-
-        # max accumulation - current - initial
-        self._accumulated[name] = min(
-            accumulated,
-            abs(self.perfect - self.failed)
-            - current
-            - abs(self.perfect - self.initial),
-        )
-
     def set_t_condition(self, t, name=None):
+        """ Set the condition base on a time t"""
         condition = float(self._timeline[name][t])
         self.set_condition(condition)
 
     def set_condition(self, condition, name=None):
+        """ Set the condition based on a condition"""
         # TODO consider impact of other impacts
 
         if self.decreasing:
-            self._accumulated[name] = min(
+            accumulated = min(
                 max(0, self.perfect - condition), self.perfect - self.failed
             )
         else:
-            self._accumulated[name] = min(
+            accumulated = min(
                 max(0, condition - self.perfect), self.failed - self.perfect
             )
+
+        self._set_accumulated(accumulated=accumulated, name=name)
+
+    def _set_accumulated(self, accumulated, name=None):
+        """
+        Add the accumulated degradation checking that it won't exceed the limits given intial condition
+        """
+        # check accumulated will not exceed the maximum allowable condition
+        current = (
+            self.get_accumulated()
+        )  # TODO is this needed - self.get_accumulated(name=name)
+
+        # max accumulation - current - initial
+        self._accumulated[name] = min(
+            accumulated,
+            abs(self.perfect - self.failed) - current,
+        )
 
     def reset(self):
 
@@ -636,10 +654,12 @@ class ConditionIndicator(Indicator):
         self._reset_accumulated()
 
     def reset_for_next_sim(self):
-        self._reset_accumulated(accumulated=self.initial)
+        self._reset_accumulated(
+            accumulated=abs(self.perfect - self.initial), name="initial"
+        )
 
     def reset_to_perfect(self):
-        self._reset_accumulated(accumulated=0)
+        self._reset_accumulated()
 
     def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
@@ -674,11 +694,13 @@ class ConditionIndicator(Indicator):
             self._reset_accumulated(accumulated, permanent=permanent)
 
     def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
+        """
+        Reset the accumulated condition with an option to add permanent condition loss
+        """
 
         # Maintain permanent condition loss if set
         if permanent:
-            existing_permanent = self._accumulated.get("permanent", 0)
-            accumulated = permanent + existing_permanent
+            accumulated = accumulated + self._accumulated.get("permanent", 0)
             name = "permanent"
 
         self._accumulated = dict()
@@ -704,6 +726,7 @@ class ConditionIndicator(Indicator):
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
+
 
 # TODO overload get method so the None key isnt' needed for _timeline
 
@@ -808,6 +831,7 @@ class PoleSafetyFactor(Indicator):
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
+
 
 # class ActualSafetyFactor(PoleSafetyFactor):
 

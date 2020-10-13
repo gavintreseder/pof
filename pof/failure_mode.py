@@ -437,9 +437,11 @@ class FailureMode(Load):
                 self.update_timeline(t_now + 1, updates=states)
 
                 # Check if a system impact is triggered
-                system_impacts.append(self.tasks[task_name].system_impact())
+                system_impacts = system_impacts + self.tasks[task_name].system_impact()
 
         return system_impacts
+
+
 
     def init_timeline(self, t_end, t_start=0):
 
@@ -580,6 +582,22 @@ class FailureMode(Load):
                     )
 
         return self.timeline
+
+    def replace(self, t_replace):
+        """
+        Update timeline 
+        """
+        state_after_replace = dict(initation=False, detection=False, failure=False)
+        self.update_timeline(t_start=t_replace, updates = state_after_replace)
+
+    def failure(self):
+        """
+        Change state and remove all future tasks from timeline
+        """
+        #TODO create a version that stays failed
+
+        state_after_failure = dict(initation=False, detection=False, failure=True)
+        #fm.timeli
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """

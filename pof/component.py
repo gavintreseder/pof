@@ -202,25 +202,30 @@ class Component(Load):
         for fm_name, task_names in fm_tasks.items():
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
-            if system_impact:
+            if bool(system_impact):
 
-                # Reset all the indicators to perfect
-                for ind in self.indicator.values():
-                    ind.reset_to_perfect()
-
-                # Reset all the timelines
-                for fm in self.fm.values():
-                    state_after_replacement = dict(
-                        initation=False, detection=False, failure=False
-                    )
-                    fm.update_timeline(
-                        t_start=t_next + 1, updates=state_after_replacement
-                    )
+                # TODO add flag around replace or leave failed
+                self.replace(t_replace=t_next + 1)
 
                 logging.debug(
                     "Component %s reset by FailureMode %s", self.name, fm_name
                 )
                 break
+
+    def replace(self, t_replace):
+        """
+        Reset indicators and update failure mode timelines after a component is reset
+        """
+
+        # Reset the indicators
+        for ind in self.indicator.values():
+            ind.reset_to_perfect()
+
+        # Reset the failuremodes
+        for fm in self.fm.values():
+            fm.replace(t_replace)
+
+        self._replacement.append(t_replace)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
@@ -432,6 +437,7 @@ class Component(Load):
 
         # Reset counters
         self._sim_counter = 0
+        self._replacement = []
 
     # ****************** Interface ******************
 

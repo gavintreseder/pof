@@ -246,6 +246,9 @@ class TestComponent(unittest.TestCase):
 
         self.assertEqual(comp.indicator["slow_degrading"].get_accumulated(), 20)
 
+    def test_replace(self):
+        NotImplemented
+
 
 if __name__ == "__main__":
     unittest.main()

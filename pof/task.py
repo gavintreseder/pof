@@ -70,7 +70,6 @@ class Task(Load):
         p_effective=1,
         triggers=None,
         impacts=None,
-        component_reset=False,
         *args,
         **kwargs
     ):
@@ -97,8 +96,6 @@ class Task(Load):
         self.p_effective = p_effective
         self.set_triggers(triggers)
         self.set_impacts(impacts)
-
-        self.component_reset = component_reset
 
         # Time to execute
         self.state = NotImplemented
@@ -177,6 +174,9 @@ class Task(Load):
             for impact in ["condition", "state", "time"]:
                 if impact not in impacts:
                     impacts[impact] = dict()
+
+            if "system" not in impacts:
+                impacts["system"] = []
 
             # Recast any ints to bools TODO make more robust
             for state in impacts["state"]:
@@ -265,8 +265,7 @@ class Task(Load):
             return dict()
 
     def system_impact(self):
-        # maybe change to impacts['system']
-        return self.component_reset
+        return self.impacts["system"]
 
     def record(self, t_start, timeline):
         """
