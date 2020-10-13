@@ -217,16 +217,14 @@ class Load:
         for i in np.linspace(lower, upper, n_increments):
             try:
                 self.update(var_name, i)
+                self.mc_timeline(t_end=100, n_iterations=n_iterations)
+                rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+                rc[i][var] = i
+
+                # Reset component
+                self.reset()
             except Exception as e:
                 logging.error("Error at %s", exc_info=e)
-
-            self.mc_timeline(t_end=100, n_iterations=n_iterations)
-
-            rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-            rc[i][var] = i
-
-            # Reset component
-            self.reset()
 
         df = (
             pd.DataFrame()
@@ -236,7 +234,7 @@ class Load:
         df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
         df["total"] = df["direct_cost"] + df["risk_cost"]
         df = df[[var, "direct_cost", "risk_cost", "total"]]  # drop earlier
-        df = df.rename(columns = {var:'value'}) # target
+        df = df.rename(columns={var: "value"})  # target
 
         return df
 
