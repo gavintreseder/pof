@@ -217,7 +217,8 @@ class TestFailureMode(unittest.TestCase):
     def test_sim_timeline_on_condition_task_triggered(self):
         # Arrange
         fm = FailureMode(
-            indicators={
+            untreated=fixtures.distribution_data["slow_aging"],
+            conditions={
                 "slow_degrading": fixtures.condition_data["slow_degrading"],
                 "fast_degrading": fixtures.condition_data["fast_degrading"],
             },

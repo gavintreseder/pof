@@ -227,17 +227,7 @@ class FailureMode(Load):
 
     def set_indicators(self, var=None):
 
-        if var is None:
-            self.indicators = dict()
-        else:
-            # If it is an iterable, link them all
-            if isinstance(var, Iterable):
-                for indicator in var.values():
-                    self.indicators[indicator.name] = indicator
-
-            # If there is only one update
-            else:
-                self.indicators[var.name] = var
+        self._set_container_attr("indicators", Indicator, var)
 
     def set_conditions(self, var=None):
         """
@@ -477,11 +467,7 @@ class FailureMode(Load):
         )
 
         # Update conditions for failure_mode and any conditions that trigger tasks
-        cond_to_update = set(self.conditions)
-        for task in self.tasks.values():
-            cond_to_update = cond_to_update | set(task.get_triggers("condition"))
-
-        for cond_name in cond_to_update:
+        for cond_name in self._cond_to_update():
             timeline[cond_name] = np.full(increments, -1)
 
         # Tasks
@@ -489,6 +475,12 @@ class FailureMode(Load):
             timeline[task.name] = np.full(increments, -1)
 
         self.timeline = timeline
+
+    def _cond_to_update(self):
+        cond_to_update = set(self.conditions)
+        for task in self.tasks.values():
+            cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+        return cond_to_update
 
     def update_timeline(self, t_start, t_end=None, updates=dict()):
         """
@@ -508,24 +500,24 @@ class FailureMode(Load):
 
             # Check for initiation changes
             if "initiation" in updates:
-                t_initiate = min(
-                    # TODO this needs to be condiitonal sf
-                    t_end + 1,
-                    t_start + int(self.dists["init"].sample()),
-                )  # TODO make this conditional
+                if updates["initiation"]:
+                    t_initiate = t_start
+                else:
+                    # TODO make this conditionalsf
+                    t_initiate = min(
+                        t_end + 1,
+                        t_start + int(self.dists["init"].sample()),
+                    )
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True
             else:
-                t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
-                # TODO make sure this is needed and works
-
-            # Update conditions for failure_mode and any conditions that trigger tasks
-            cond_to_update = set(self.conditions)
-            for task in self.tasks.values():
-                cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+                if self.timeline["initiation"][t_start:].any():
+                    t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
+                else:
+                    t_initiate = t_end
 
             # Check for condition changes
-            for cond_name in cond_to_update:
+            for cond_name in self._cond_to_update():
                 if "initiation" in updates or cond_name in updates:
                     logging.debug(
                         "condition %s, start %s, initiate %s, end %s",
@@ -549,7 +541,7 @@ class FailureMode(Load):
             # Check for failure changes
             if "failure" in updates:
                 self.timeline["failure"][t_start:] = updates["failure"]
-                for cond_name in cond_to_update:
+                for cond_name in self._cond_to_update():
                     tl_f = self.indicators[cond_name].sim_failure_timeline(
                         t_delay=t_start,
                         t_start=t_start - t_initiate,

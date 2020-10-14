@@ -91,7 +91,23 @@ condition_data = dict(
         name='instant',
         perfect=1,
         failed=0,
-        pf_curve='step',  # TODO change to step
+        pf_curve='step',
+        pf_interval=1,
+        pf_std=0,
+    ),
+    instant_10=dict(
+        name='instant',
+        perfect=1,
+        failed=0,
+        pf_curve='step',
+        pf_interval=10,
+        pf_std=0,
+    ),
+    instant_1=dict(
+        name='instant',
+        perfect=1,
+        failed=0,
+        pf_curve='step',
         pf_interval=1,
         pf_std=0,
     )
@@ -312,6 +328,8 @@ state_data = dict(
 )
 
 # *********************** failure mode data ********************************** #TODO move condition
+
+# Early Life -> Step 
 
 failure_mode_data = dict(
     early_life=dict(
