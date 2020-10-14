@@ -539,17 +539,16 @@ class FailureMode(Load):
                     )
 
             # Check for failure changes
-            if "failure" in updates:
-                self.timeline["failure"][t_start:] = updates["failure"]
-                for cond_name in self._cond_to_update():
-                    tl_f = self.indicators[cond_name].sim_failure_timeline(
-                        t_delay=t_start,
-                        t_start=t_start - t_initiate,
-                        t_stop=t_end - t_initiate,
-                    )
-                    self.timeline["failure"][t_start:] = (
-                        self.timeline["failure"][t_start:]
-                    ) | (tl_f)
+            self.timeline["failure"][t_start:] = updates["failure"]
+            for cond_name in self._cond_to_update():
+                tl_f = self.indicators[cond_name].sim_failure_timeline(
+                    t_delay=t_start,
+                    t_start=t_start - t_initiate,
+                    t_stop=t_end - t_initiate,
+                )
+                self.timeline["failure"][t_start:] = (
+                    self.timeline["failure"][t_start:]
+                ) | (tl_f)
 
             # Update time based tasks
             for task_name, task in self.tasks.items():

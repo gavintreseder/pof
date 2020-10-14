@@ -232,6 +232,8 @@ class TestFailureMode(unittest.TestCase):
         fm.sim_timeline(200)
 
         # Assert
+        fm
+
         # self.assertEqual()
 
     # ************ Test load ***********************
