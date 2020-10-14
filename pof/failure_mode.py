@@ -410,9 +410,12 @@ class FailureMode(Load):
                 t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
                 # Complete those tasks
-                self.complete_tasks(t_now, task_names)
+                system_impact = self.complete_tasks(t_now, task_names)
 
                 t_now = t_now + 1
+
+                if "fm" in system_impact:
+                    self.reset_to_perfect(t_now)
 
         return self.timeline
 
@@ -440,8 +443,6 @@ class FailureMode(Load):
                 system_impacts = system_impacts + self.tasks[task_name].system_impact()
 
         return system_impacts
-
-
 
     def init_timeline(self, t_end, t_start=0):
 
@@ -583,21 +584,18 @@ class FailureMode(Load):
 
         return self.timeline
 
-    def replace(self, t_replace):
+    def reset_to_perfect(self, t_replace):
         """
-        Update timeline 
+        Update timeline
         """
-        state_after_replace = dict(initation=False, detection=False, failure=False)
-        self.update_timeline(t_start=t_replace, updates = state_after_replace)
-
-    def failure(self):
-        """
-        Change state and remove all future tasks from timeline
-        """
-        #TODO create a version that stays failed
-
-        state_after_failure = dict(initation=False, detection=False, failure=True)
-        #fm.timeli
+        if cf.getboolean("remain_failed"):
+            # Cancel future tasks
+            for task in self.tasks.values():
+                # TODO move timeline to the task and make sure task timeline canges to zero
+                self.timeline[task.name][t_replace:] = -1
+        else:
+            state_after_replace = dict(initation=False, detection=False, failure=False)
+            self.update_timeline(t_start=t_replace, updates=state_after_replace)
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """

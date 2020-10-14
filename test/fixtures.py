@@ -63,22 +63,6 @@ distribution_data = dict(
 # *********************** condition data **********************************
 
 condition_data = dict(
-    wall__thickness=dict(
-        name='wall_thickness',
-        perfect=125,
-        failed=0,
-        pf_curve='linear',
-        pf_interval=10,
-        pf_std=0.5,
-    ),
-    extneral_diameter=dict(
-        name='external_diameter',
-        perfect=250,
-        failed=0,
-        pf_curve='linear',
-        pf_interval=10,
-        pf_std=0.5
-    ),
     slow_degrading=dict(
         name='slow_degrading',
         perfect=100,
@@ -107,7 +91,7 @@ condition_data = dict(
         name='instant',
         perfect=1,
         failed=0,
-        pf_curve='linear',  # TODO change to step
+        pf_curve='step',  # TODO change to step
         pf_interval=1,
         pf_std=0,
     )
@@ -229,6 +213,79 @@ on_condition_replacement_data = dict(
 )
 
 
+replacement_data =dict(
+    instant = dict(
+        activity='ConditionTask',
+        name='on_condition_replacement',
+        p_effective=1,
+        cost=5000,
+
+        triggers=dict(
+            condition=dict(
+                instant=condition_data['instant']
+            ),
+            state=dict(detection=True, failure=True),
+        ),
+
+        impacts=dict(
+            condition=dict(
+                all=dict(
+                    target=1,
+                    method="reduction_factor",
+                    axis="condition",
+                ),
+            ),
+            state=dict(initiation=False, detection=False, failure=False,),
+        ),
+    ),
+    on_condition = dict(
+        activity='ConditionTask',
+        name='on_condition_replacement',
+        p_effective=1,
+        cost=5000,
+
+        triggers=dict(
+            condition=dict(
+                fast_degrading=dict(lower=0, upper=20,),
+                slow_degrading=dict(lower=0, upper=20,)
+            ),
+            state=dict(detection=True, failure=True),
+        ),
+
+        impacts=dict(
+            condition=dict(
+                all=dict(
+                    target=1,
+                    method="reduction_factor",
+                    axis="condition",
+                ),
+            ),
+            state=dict(initiation=False, detection=False, failure=False,),
+        ),
+    ),
+    on_failure = dict(
+        activity='ConditionTask',
+        name='on_failure_replacement',
+        p_effective=1,
+        cost=5000,
+
+        triggers=dict(
+            state=dict(failure=True),
+        ),
+
+        impacts=dict(
+            condition=dict(
+                all=dict(
+                    target=1,
+                    method="reduction_factor",
+                    axis="condition",
+                ),
+            ),
+            state=dict(initiation=False, detection=False, failure=False,),
+        ),
+    ),
+)
+
 # *********************** state data **********************************
 
 state_data = dict(
@@ -268,7 +325,7 @@ failure_mode_data = dict(
 
         tasks=dict(
             inspection=inspection_data['instant'],
-            on_condition_replacement=on_condition_replacement_data
+            on_condition_replacement=replacement_data['instant']
         ),
         states=state_data['new']
     ),
@@ -281,7 +338,7 @@ failure_mode_data = dict(
 
         tasks=dict(
             inspection=inspection_data['instant'],
-            on_condition_replacement=on_condition_replacement_data
+            on_condition_replacement=replacement_data['instant']
         ),
         states=state_data['new']
     ),
@@ -296,7 +353,7 @@ failure_mode_data = dict(
         tasks=dict(
             inspection=inspection_data['degrading'],
             on_condition_repair=on_condition_repair_data,
-            on_condition_replacement=on_condition_replacement_data
+            on_condition_replacement=replacement_data['on_condition']
         ),
         states=state_data['new']
     ),
@@ -312,7 +369,7 @@ failure_mode_data = dict(
         tasks=dict(
             inspection=inspection_data['degrading'],
             on_condition_repair=on_condition_repair_data,
-            on_condition_replacement=on_condition_replacement_data
+            on_condition_replacement=replacement_data['on_condition']
         ),
         states=state_data['new']
     )
