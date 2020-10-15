@@ -363,42 +363,8 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         self.t_delay = t_delay
         self.t_interval = t_interval
 
-    def set_params(
-        self,
-        t_interval=None,
-        t_delay=None,
-        p_effective=None,
-        state_triggers=dict(),
-        condition_triggers=dict(),
-        state_impacts=dict(),
-        condition_impacts=dict(),
-    ):
-
-        if t_interval is not None:
-            self.t_interval = t_interval
-
-        if t_delay is not None:
-            self.t_delay = t_delay
-
-        if p_effective is not None:
-            self.p_effective = p_effective
-
-        if not state_triggers:
-            self.triggers["state"] = state_triggers
-
-        if not condition_triggers:
-            self.triggers["condition"] = condition_triggers
-
-        if not state_impacts:
-            self.impacts["state"] = state_impacts
-
-        if not condition_impacts:
-            self.impacts["condition"] = condition_impacts
-
-        return self
-
     def sim_timeline(
-        self, t_end, t_delay=0, t_start=0, timeline=NotImplemented
+        self, t_end, t_start=0, t_delay=0, timeline=NotImplemented
     ):  # TODO Stubbed out to only work for trigger time and simple tile
         # TODO make it work like arange (start, stop, delay)
 
@@ -523,9 +489,8 @@ class ConditionTask(Task):
 
 
 class Inspection(ScheduledTask):
-    def __init__(
-        self, t_interval=100, t_delay=0, name="inspection", *args, **kwargs
-    ):  # TODO fix up the defaults
+    def __init__(self, t_interval=100, t_delay=0, name="inspection", *args, **kwargs):
+        # TODO fix up the defaults
 
         super().__init__(t_interval=t_interval, t_delay=t_delay, *args, **kwargs)
 
