@@ -1,21 +1,31 @@
 import unittest
+from unittest.mock import Mock, MagicMock, patch
 import copy
 
 import utils
 
-from pof.task import Task, ConditionTask, Inspection
+from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
 
 import fixtures
 
 
-class TestTask(unittest.TestCase):
-    def test_imports_correctly(self):
-        self.assertTrue(True)
+class TestCommon(unittest.TestCase):
+    def setUp(self):
+        self._class = Mock(return_value=None)
 
-    def test_instantiate(self):
-        task = Task()
+    def test_class_imports_correctly(self):
+        self.assertIsNotNone(self._class)
+
+    def test_class_instantiate(self):
+        task = self._class()
         self.assertIsNotNone(task)
+
+
+class TestTask(make_test_case(Task)):
+    def setUp(self):
+        super().setUp()
+        self._class = Task
 
     # **************** test_load ***********************
 
@@ -59,101 +69,14 @@ class TestTask(unittest.TestCase):
         self.assertRaises(KeyError, t.update_from_dict, update)
 
 
-class TestConditionTask(unittest.TestCase):
-    def test_imports_correctly(self):
-        self.assertTrue(True)
-
-    def test_instantiate(self):
-        task = ConditionTask()
-        self.assertIsNotNone(task)
-
-    # **************** test_load ***********************
-
-    def test_load_empty(self):
-        task = ConditionTask.load()
-        self.assertIsNotNone(task)
-
-    def test_load_valid_dict(self):
-        task = ConditionTask.load(demo.on_condition_replacement_data)
-        self.assertIsNotNone(task)
-
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.on_condition_replacement_data)
-        test_data_1["cost"] = 0
-        test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.on_condition_replacement_data)
-
-        # Test all the options
-        t1 = ConditionTask.from_dict(test_data_1)
-        t2 = ConditionTask.from_dict(test_data_2)
-
-        t1.update_from_dict(
-            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}}
-        )
-
-        # self.assertEqual(t1.__dict__, t2.__dict__)
-        self.assertEqual(t1.cost, t2.cost)
-        self.assertEqual(t1.triggers, t2.triggers)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.on_condition_replacement_data)
-
-        t = ConditionTask.from_dict(test_data)
-
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, t.update_from_dict, update)
+class TestScheduledTask(make_test_case(ScheduledTask)):
+    def setUp(self):
+        #super().setUp()
+        #self._class = ScheduledTask
+        pass
 
 
-class TestInspection(unittest.TestCase):
-    def test_imports_correctly(self):
-        self.assertTrue(True)
+del TestCommon
 
-    def test_instantiate(self):
-        task = Inspection()
-        self.assertIsNotNone(task)
-
-    # **************** test_load ***********************
-
-    def test_load_empty(self):
-        task = Inspection.load()
-        self.assertIsNotNone(task)
-
-    def test_load_valid_dict(self):
-        task = Inspection.load(demo.inspection_data["instant"])
-        self.assertIsNotNone(task)
-
-    # **************** test_update ***********************
-
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.inspection_data["instant"])
-        test_data_1["cost"] = 0
-        test_data_1["triggers"]["condition"]["instant"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.inspection_data["instant"])
-
-        t1 = Inspection.from_dict(test_data_1)
-        t2 = Inspection.from_dict(test_data_2)
-
-        t1.update_from_dict(
-            {
-                "cost": 50,
-                "trigger": {"condition": {"instant": {"upper": 0}}},
-            }
-        )
-
-        # self.assertEqual(t1, t2)
-        self.assertEqual(t1.cost, t2.cost)
-        self.assertEqual(t1.triggers, t2.triggers)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.inspection_data["instant"])
-
-        t = Inspection.from_dict(test_data)
-
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, t.update_from_dict, update)
+if __name__ == "__main__":
+    unittest.main()

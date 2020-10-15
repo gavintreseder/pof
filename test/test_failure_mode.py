@@ -18,7 +18,7 @@ import fixtures
 
 class TestFailureMode(unittest.TestCase):
     def setUp(self):
-        self.blank_config = MagicMock()
+        self.blank_config = Mock()
         self.blank_config.get.return_value = None
         self.blank_config.getboolean.return_value = None
         self.blank_config.getint.return_value = None
@@ -216,13 +216,24 @@ class TestFailureMode(unittest.TestCase):
 
     def test_sim_timeline_on_condition_task_triggered(self):
         # Arrange
-        fm = FailureMode.demo()
-        fm.indicators["slow_degrading"].set_condition(20)
+        fm = FailureMode(
+            untreated=fixtures.distribution_data["slow_aging"],
+            conditions={
+                "slow_degrading": fixtures.condition_data["slow_degrading"],
+                "fast_degrading": fixtures.condition_data["fast_degrading"],
+            },
+            tasks={"insepction": fixtures.replacement_data["on_condition"]},
+        )
+        fm.set_states({"initiation": True})
+        fm.indicators["slow_degrading"].set_condition(10)
+        fm.indicators["fast_degrading"].set_condition(10)
 
         # Act
         fm.sim_timeline(200)
 
         # Assert
+        fm
+
         # self.assertEqual()
 
     # ************ Test load ***********************

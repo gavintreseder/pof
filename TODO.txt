@@ -27,6 +27,7 @@
 # 08 Sep - Gav
 
     # Trigger active doesn't do anything
+    # All task triggers acting as AND rather than or
 
     # Options
         # PF_interval on load

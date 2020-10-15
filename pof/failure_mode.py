@@ -227,17 +227,7 @@ class FailureMode(Load):
 
     def set_indicators(self, var=None):
 
-        if var is None:
-            self.indicators = dict()
-        else:
-            # If it is an iterable, link them all
-            if isinstance(var, Iterable):
-                for indicator in var.values():
-                    self.indicators[indicator.name] = indicator
-
-            # If there is only one update
-            else:
-                self.indicators[var.name] = var
+        self._set_container_attr("indicators", Indicator, var)
 
     def set_conditions(self, var=None):
         """
@@ -410,9 +400,12 @@ class FailureMode(Load):
                 t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
                 # Complete those tasks
-                self.complete_tasks(t_now, task_names)
+                system_impact = self.complete_tasks(t_now, task_names)
 
                 t_now = t_now + 1
+
+                if "fm" in system_impact:
+                    self.reset_to_perfect(t_now)
 
         return self.timeline
 
@@ -440,8 +433,6 @@ class FailureMode(Load):
                 system_impacts = system_impacts + self.tasks[task_name].system_impact()
 
         return system_impacts
-
-
 
     def init_timeline(self, t_end, t_start=0):
 
@@ -476,11 +467,7 @@ class FailureMode(Load):
         )
 
         # Update conditions for failure_mode and any conditions that trigger tasks
-        cond_to_update = set(self.conditions)
-        for task in self.tasks.values():
-            cond_to_update = cond_to_update | set(task.get_triggers("condition"))
-
-        for cond_name in cond_to_update:
+        for cond_name in self._cond_to_update():
             timeline[cond_name] = np.full(increments, -1)
 
         # Tasks
@@ -488,6 +475,12 @@ class FailureMode(Load):
             timeline[task.name] = np.full(increments, -1)
 
         self.timeline = timeline
+
+    def _cond_to_update(self):
+        cond_to_update = set(self.conditions)
+        for task in self.tasks.values():
+            cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+        return cond_to_update
 
     def update_timeline(self, t_start, t_end=None, updates=dict()):
         """
@@ -507,24 +500,24 @@ class FailureMode(Load):
 
             # Check for initiation changes
             if "initiation" in updates:
-                t_initiate = min(
-                    # TODO this needs to be condiitonal sf
-                    t_end + 1,
-                    t_start + int(self.dists["init"].sample()),
-                )  # TODO make this conditional
+                if updates["initiation"]:
+                    t_initiate = t_start
+                else:
+                    # TODO make this conditionalsf
+                    t_initiate = min(
+                        t_end + 1,
+                        t_start + int(self.dists["init"].sample()),
+                    )
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True
             else:
-                t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
-                # TODO make sure this is needed and works
-
-            # Update conditions for failure_mode and any conditions that trigger tasks
-            cond_to_update = set(self.conditions)
-            for task in self.tasks.values():
-                cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+                if self.timeline["initiation"][t_start:].any():
+                    t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
+                else:
+                    t_initiate = t_end
 
             # Check for condition changes
-            for cond_name in cond_to_update:
+            for cond_name in self._cond_to_update():
                 if "initiation" in updates or cond_name in updates:
                     logging.debug(
                         "condition %s, start %s, initiate %s, end %s",
@@ -546,17 +539,16 @@ class FailureMode(Load):
                     )
 
             # Check for failure changes
-            if "failure" in updates:
-                self.timeline["failure"][t_start:] = updates["failure"]
-                for cond_name in cond_to_update:
-                    tl_f = self.indicators[cond_name].sim_failure_timeline(
-                        t_delay=t_start,
-                        t_start=t_start - t_initiate,
-                        t_stop=t_end - t_initiate,
-                    )
-                    self.timeline["failure"][t_start:] = (
-                        self.timeline["failure"][t_start:]
-                    ) | (tl_f)
+            self.timeline["failure"][t_start:] = updates["failure"]
+            for cond_name in self._cond_to_update():
+                tl_f = self.indicators[cond_name].sim_failure_timeline(
+                    t_delay=t_start,
+                    t_start=t_start - t_initiate,
+                    t_stop=t_end - t_initiate,
+                )
+                self.timeline["failure"][t_start:] = (
+                    self.timeline["failure"][t_start:]
+                ) | (tl_f)
 
             # Update time based tasks
             for task_name, task in self.tasks.items():
@@ -583,21 +575,18 @@ class FailureMode(Load):
 
         return self.timeline
 
-    def replace(self, t_replace):
+    def reset_to_perfect(self, t_replace):
         """
-        Update timeline 
+        Update timeline
         """
-        state_after_replace = dict(initation=False, detection=False, failure=False)
-        self.update_timeline(t_start=t_replace, updates = state_after_replace)
-
-    def failure(self):
-        """
-        Change state and remove all future tasks from timeline
-        """
-        #TODO create a version that stays failed
-
-        state_after_failure = dict(initation=False, detection=False, failure=True)
-        #fm.timeli
+        if cf.getboolean("remain_failed"):
+            # Cancel future tasks
+            for task in self.tasks.values():
+                # TODO move timeline to the task and make sure task timeline canges to zero
+                self.timeline[task.name][t_replace:] = -1
+        else:
+            state_after_replace = dict(initation=False, detection=False, failure=False)
+            self.update_timeline(t_start=t_replace, updates=state_after_replace)
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """

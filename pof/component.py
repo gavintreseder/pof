@@ -206,13 +206,28 @@ class Component(Load):
 
             if bool(system_impact):
 
-                # TODO add flag around replace or leave failed
-                self.replace(t_replace=t_next + 1)
+                if cf.get_boolean["allow_system_impact"]:
+                    self.renew(t_replace=t_next + 1)
 
-                logging.debug(
-                    "Component %s reset by FailureMode %s", self.name, fm_name
-                )
+                    logging.debug(
+                        "Component %s reset by FailureMode %s", self.name, fm_name
+                    )
+                else:
+                    F
                 break
+
+    def fail(self, t_fail):
+        """ Reset indicators """
+
+        # Reset the indicators
+        for ind in self.indicator.values():
+            ind.reset_to_perfect()
+
+        # Reset the failuremodes
+        for fm in self.fm.values():
+            fm.renew(t_renew)
+
+        self._replacement.append(t_renew)
 
     def replace(self, t_replace):
         """
@@ -225,9 +240,9 @@ class Component(Load):
 
         # Reset the failuremodes
         for fm in self.fm.values():
-            fm.replace(t_replace)
+            fm.renew(t_renew)
 
-        self._replacement.append(t_replace)
+        self._replacement.append(t_renew)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
