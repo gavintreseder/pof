@@ -3,6 +3,9 @@ from collections.abc import Iterable
 import logging
 import pandas as pd
 import numpy as np
+import scipy.stats as ss
+import plotly.graph_objects as go
+import plotly.express as px
 
 from pof.helper import str_to_dict
 from config import config
@@ -203,9 +206,90 @@ class Load:
         """
         raise NotImplementedError()
 
-    def sensitivity(self, var_name, lower, upper, n_increments=1, n_iterations=100):
-        """"""
-        # TODO add an optimal onto this
+    def sensitivity(
+        self,
+        var_name,
+        conf=0.9,
+        lower=None,
+        upper=None,
+        n_increments=1,
+        n_iterations=100,
+    ):
+        """
+        Returns dataframe of sensitivity data for a given variable name or dataframe of variables using a given confidence.
+        """
+
+        if isinstance(var_name, str):
+            df = self._sensitivity_single(
+                var_name=var_name,
+                lower=lower,
+                upper=upper,
+                n_increments=n_increments,
+                n_iterations=n_iterations,
+            )
+
+        elif isinstance(var_name, pd.DataFrame):
+            df = self._sensitivity_many(
+                df=var_name,
+                conf=conf,
+                n_increments=n_increments,
+                n_iterations=n_iterations,
+            )
+
+        else:
+            print(
+                'ERROR: Cannot get "%s" sensitivity from string or dataframe'
+                % (self.__class__.__name__)
+            )
+
+        return df
+
+    def _sensitivity_many(self, df, conf, n_increments=1, n_iterations=100):
+        """
+        Returns dataframe of sensitivity data for a dataframe of variables using a given confidence.
+        """
+
+        d_all = {}
+
+        for index, row in df.iterrows():
+
+            [lower, upper] = ss.norm.interval(
+                alpha=conf, loc=row["mean"], scale=row["sd"]
+            )
+
+            df_sens = self._sensitivity_single(
+                var_name=row["name"],
+                lower=lower,
+                upper=upper,
+                n_increments=n_increments,
+                n_iterations=n_iterations,
+            )
+            df_sens = df_sens.reset_index(drop=True)
+
+            # Scale everything to the mean
+            cols = [("agg", "direct_cost"), ("agg", "risk_cost"), ("agg", "total")]
+            mean_idx = list(df_sens.index)[int((len(list(df_sens.index)) - 1) / 2)]
+            df_sens.loc[:, cols] = df_sens[cols] / df_sens.loc[mean_idx, cols]
+
+            df_sens["percent_change"] = df_sens["value"] / df_sens["value"][mean_idx]
+            df_sens["conf"] = ss.norm.cdf(
+                df_sens["value"], loc=row["mean"], scale=row["sd"]
+            )
+            df_sens["conf"] = df_sens["conf"].round(2)
+            df_sens["var_name"] = row["name"]
+
+            d_all[row["name"]] = df_sens
+
+        df_all = pd.concat(d_all.values(), ignore_index=True)
+
+        return df_all
+
+    def _sensitivity_single(
+        self, var_name, lower, upper, n_increments=1, n_iterations=100
+    ):
+        """
+        Returns dataframe of sensitivity data for a given variable name using a given confidence.
+        """
         rc = dict()
         self.reset()
 
@@ -218,11 +302,20 @@ class Load:
             try:
                 self.update(var_name, i)
                 self.mc_timeline(t_end=100, n_iterations=n_iterations)
-                rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+                agg = self.expected_risk_cost_df()
+                agg["failure_mode"] = "agg"
+                agg = agg.groupby(by=["failure_mode", "task"])["cost"].sum()
+                rc[i] = (
+                    self.expected_risk_cost_df()
+                    .groupby(by=["failure_mode", "task"])["cost"]
+                    .sum()
+                )
+                rc[i] = rc[i].append(agg)
                 rc[i][var] = i
 
                 # Reset component
                 self.reset()
+
             except Exception as e:
                 logging.error("Error at %s", exc_info=e)
 
@@ -231,12 +324,60 @@ class Load:
             .from_dict(rc, orient="index")
             .rename(columns={"risk": "risk_cost"})
         )
-        df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
-        df["total"] = df["direct_cost"] + df["risk_cost"]
-        df = df[[var, "direct_cost", "risk_cost", "total"]]  # drop earlier
-        df = df.rename(columns={var: "value"})  # target
+        df[("agg", "direct_cost")] = df[("agg")].sum(axis=1)
+        df[("agg", "direct_cost")] = df[("agg", "direct_cost")] - df[var]
+        df[("agg", "direct_cost")] = (
+            df[("agg", "direct_cost")] - df[("agg", "risk_cost")]
+        )
+        df[("agg", "total")] = df[("agg", "direct_cost")] + df[("agg", "direct_cost")]
+
+        df = df.rename(columns={var: "value"})
 
         return df
+
+    def make_sensitivity_plot(
+        self, data, x_axis, y_axis, plot_type, failure_mode="agg", z_axis=None
+    ):
+        """
+        Creates a sensitivity line plot or heatmap using the given sensitivity data.
+        """
+        if plot_type == "line":
+
+            fig = px.line(
+                data[(failure_mode)], x=data[x_axis], y=y_axis, color=data["var_name"]
+            )
+            fig.update_layout(
+                autosize=False,
+                width=1000,
+                height=500,
+                title="Cost affect on " + y_axis,
+                xaxis_title=x_axis,
+                legend_title="changing variable",
+            )
+
+        elif plot_type == "heatmap":
+
+            fig = go.Figure(
+                data=go.Heatmap(
+                    x=data[x_axis],
+                    y=data[y_axis],
+                    z=data[(failure_mode, z_axis)],
+                    hoverongaps=False,
+                    colorscale="fall",
+                )
+            )
+            fig.update_layout(
+                autosize=False,
+                width=1000,
+                height=500,
+                title="Cost affect on " + z_axis,
+                xaxis_title=x_axis,
+                legend_title=z_axis,
+            )
+        else:
+            print("ERROR: Cannot plot")
+
+        return fig.show()
 
         def expected_risk_cost_df(self):
             raise NotImplementedError()

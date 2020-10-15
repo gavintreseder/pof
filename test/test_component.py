@@ -252,7 +252,13 @@ class TestComponent(unittest.TestCase):
         NotImplemented
 
     def test_delete(self):
+        import fixtures
+
+        # comp = Component.from_dict(fixtures.component_data_slow["comp"])
         comp = Component().demo()
+        # comp.fm.pop("fast_aging")
+        # comp.fm.pop("early_life")
+        # comp.fm.pop("random")
 
         d = {}
         d_split = {}
@@ -393,7 +399,7 @@ class TestComponent(unittest.TestCase):
         ]
         df_inspection_slow["sd"] = df_inspection_slow["mean"] * 0.2
         conf = 0.9
-        n_increments = 3
+        n_increments = 10
         # if it's even add one
 
         # empty dict
