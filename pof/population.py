@@ -13,7 +13,10 @@ def get_population_failures(comp, population_of_interest, fleet_data):
     return df_failures
 
 
-def get_population_summary(attribute, trait, time_frame=1):
+def get_population_summary(attribute, time_frame=1):
+
+    #
+
     """
 
     Challenges categorial v numerical
@@ -49,6 +52,12 @@ def get_population_summary(attribute, trait, time_frame=1):
 
     col_values = ["CCA", "Natural Round"]
 
+    attributes = {
+        "material_type": ["timber"],
+        "treatment_type": ["CCA", "NR"],
+        "age": [],
+    }
+
     # df filterning magic
 
     # Summary
@@ -74,3 +83,32 @@ Numerical att
     ss.dist.norm(....)
 
 """
+
+
+# Test Data function
+
+
+def gen_fleet_data(n_assets):
+
+    params = NotImplemented
+    return FleetData(params)
+
+
+# Fleet Data
+
+
+fd = gen_fleet_data(1000)
+
+fd.field_types
+
+dict(
+    material_type="categorical",
+    age="numerical",
+)
+
+"""Transformer Volatge
+11
+66
+195"""
+
+str, int, float
