@@ -1,11 +1,21 @@
-from dataclasses import dataclass
+"""
+    Filename: indicator.py
+    Description: Contains the code for implementing a load class
+    Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
+"""
+
+
+# from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
-import pandas as pd
+
+from dataclass_property import dataclass, field_property
 import numpy as np
+import pandas as pd
 import scipy.stats as ss
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
+
 
 from pof.helper import str_to_dict
 from config import config
@@ -20,14 +30,28 @@ The load module is used to overload other pof classes so that they can use a com
 # TODO add more robust error checking for types other than value error
 
 
-@dataclass(repr=False)
+@dataclass
 class Load:
     """
     A class with methods for loading data that
     """
 
-    # Overriden in children classes
-    name: str = None
+    name: str = field_property(default=None)
+
+    @field_property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, value):
+
+        if isinstance(value, str):
+            # probhitted = ["-"] #TODO expand list
+            # if any(x in a_string for x in matches):
+            self._name = value
+
+        else:
+            raise TypeError("name must be a string")
 
     @classmethod
     def load(cls, details=None):
@@ -52,9 +76,11 @@ class Load:
         Unpacks the dictionary data and creates and object using the constructor
         """
         if isinstance(details, dict):
-            return cls(**details)
+            instance = cls(**details)
         else:
             raise TypeError("Dictionary expected")
+
+        return instance
 
     def _set_container_attr(self, attr, d_type, value):
 

@@ -70,8 +70,6 @@ class Task(Load):
         p_effective=1,
         triggers=None,
         impacts=None,
-        *args,
-        **kwargs
     ):
 
         # Task information
@@ -109,29 +107,33 @@ class Task(Load):
 
     @classmethod
     def from_dict(cls, details=None):
-        try:
-            if details["activity"] == "Task":
+        """
+        Factory method for loading a Task
+        """
+        if isinstance(details, dict):
 
+            activity = details.get("activity", None)
+
+            if activity == "Task":
                 task = Task(**details)
 
-            elif details["activity"] == "ConditionTask":
-
+            elif activity == "ConditionTask":
                 task = ConditionTask(**details)
 
-            elif details["activity"] == "ScheduledTask":
-
+            elif activity == "ScheduledTask":
                 task = ScheduledTask(**details)
 
-            elif details["activity"] == "Inspection":
-
+            elif activity == "Inspection":
                 task = Inspection(**details)
-            else:
 
-                return ValueError("Invalid Task Type")
-        except:
-            task = cls()
-            logging.warning("Error loading %s data from dictionary" % (cls.__name__))
-            raise
+            elif activity is None:
+                task = Task(**details)
+
+            else:
+                raise ValueError("Invalid Task Type")
+        else:
+            raise TypeError("Dictionary expected")
+
         return task
 
     # ************ Set Methods **********************
@@ -361,21 +363,33 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         self.trigger = "time"
         self.t_delay = t_delay
-        self.t_interval = t_interval
+        self._t_interval = t_interval
 
-    def sim_timeline(
-        self, t_end, t_start=0, t_delay=0, timeline=NotImplemented
-    ):  # TODO Stubbed out to only work for trigger time and simple tile
+    @property
+    def t_interval(self):
+        return self._t_interval
+
+    @t_interval.setter
+    def t_interval(self, value):
+
+        self._t_interval = int(value)
+
+        if math.ceil(value) != value:
+            logging.warning("t_interval must be an integer - %s", value)
+
+    def sim_timeline(self, t_end, t_start=0, *args, **kwargs):
+
+        # TODO Stubbed out to only work for trigger time and simple tile
         # TODO make it work like arange (start, stop, delay)
 
         if self.active:
             schedule = np.tile(
                 np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
-                math.ceil((t_end - t_delay) / self.t_interval),
+                math.ceil((t_end - self.t_delay) / self.t_interval),
             )
 
-            if t_delay > 0:
-                sched_start = np.linspace(t_delay, 0, t_delay + 1)
+            if self.t_delay > 0:
+                sched_start = np.linspace(self.t_delay, 0, self.t_delay + 1)
                 schedule = np.concatenate((sched_start, schedule))
 
             schedule = np.concatenate(([schedule[0] + 1], schedule))[
@@ -680,5 +694,5 @@ Task
 
 
 if __name__ == "__main__":
-    task = Task()
+    tsk = Task()
     print("Task - Ok")

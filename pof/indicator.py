@@ -87,20 +87,27 @@ class Indicator(Load):
         """
         Overloaded factory for creating indicators
         """
+        if isinstance(details, dict):
+            pf_curve = details.get("pf_curve", None)
 
-        if details["pf_curve"] in ["linear", "step"]:
+            if pf_curve in ["linear", "step"]:
 
-            task = ConditionIndicator(**details)
+                ind = ConditionIndicator(**details)
 
-        elif details["pf_curve"] in ["ssf_calc", "dsf_calc"]:
+            elif pf_curve in ["ssf_calc", "dsf_calc"]:
 
-            task = PoleSafetyFactor(**details)
+                ind = PoleSafetyFactor(**details)
 
+            elif pf_curve is None:
+                ind = Indicator(**details)
+
+            else:
+                raise ValueError("Invalid Indicator Type")
+        
         else:
-            logging.warning("Error loading %s data from dictionary", cls.__name__)
-            raise ValueError("Invalid Indicator Type")
+            raise TypeError("Dictionary expected")
 
-        return task
+        return ind
 
     def sim_timeline(self, *args):
         logging.debug("Non overloaded function called")
