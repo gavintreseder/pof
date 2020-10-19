@@ -27,9 +27,13 @@ class TestLoad(unittest.TestCase):
         self.pof_obj.name = "mock_name"
         self.pof_obj.load.return_value = Mock()
 
+    # ------------ set_containter_attr with empty container -----------
+
     def test_set_container_attr_from_dict(self):
 
         load = Load()
+        load.data = None
+
         test_data = dict(name="test")
         expected = Load(name="test")
 
@@ -37,25 +41,15 @@ class TestLoad(unittest.TestCase):
 
         self.assertEqual(load.data[expected.name], expected)
 
-    # def test_set_container_attr_from_dict(self):
-
-    #     load = Load()
-    #     test_data = dict(name="test")
-    #     expected = Load(name="test")
-
-    #     load._set_container_attr("name", Load, test_data)
-
-    #     self.assertEqual(load.name[expected.name], expected)
-
     def test_set_container_attr_from_dict_of_dicts(self):
 
         load = Load()
         test_data = dict(pof_object=dict(name="test"))
         expected = Load(name="test")
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
 
-        self.assertEqual(load.name[expected.name], expected)
+        self.assertEqual(load.data[expected.name], expected)
 
     def test_set_container_attr_from_dict_of_objects(self):
 
@@ -63,9 +57,9 @@ class TestLoad(unittest.TestCase):
         test_data = dict(pof_object=Load(name="test"))
         expected = Load(name="test")
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
 
-        self.assertEqual(load.name[expected.name], expected)
+        self.assertEqual(load.data[expected.name], expected)
 
     def test_set_container_attr_from_object(self):
 
@@ -73,53 +67,59 @@ class TestLoad(unittest.TestCase):
         test_data = Load(name="test")
         expected = Load(name="test")
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
 
-        self.assertEqual(load.name[expected.name], expected)
+        self.assertEqual(load.data[expected.name], expected)
+
+    # ------------ set_containter_attr with existing data -----------
 
     def test_set_container_attr_existing_data_from_dict(self):
 
-        load = Load(name=dict(test=Load(name="this_should_change")))
+        load = Load()
+        load.data = dict(test=Load(name="this_should_change"))
         test_data = dict(name="test")
         expected = Load(name="test")
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
 
-        self.assertEqual(load.name[expected.name], expected)
+        self.assertEqual(load.data[expected.name], expected)
 
     def test_set_container_attr_existing_data_from_dict_of_dicts(self):
 
-        load = Load(name=dict(test=Load(name="this_should_change")))
+        load = Load()
+        load.data = dict(test=Load(name="this_should_change"))
         test_data = dict(pof_object=Load(name="test"))
         expected = Load(name="test")
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
 
-        self.assertEqual(load.name[expected.name], expected)
+        self.assertEqual(load.data[expected.name], expected)
 
     def test_set_container_attr_existing_data_from_dict_of_objects(self):
 
-        load = Load(name=dict(test=Load(name="this_should_change")))
+        load = Load()
+        load.data = dict(test=Load(name="this_should_change"))
         test_data = dict(pof_object=Load(name="test"))
         expected = Load(name="after_update")
         key_before_update = "test"
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
         test_data["pof_object"].name = "after_update"
 
-        self.assertEqual(load.name[key_before_update], expected)
+        self.assertEqual(load.data[key_before_update], expected)
 
     def test_set_container_attr_existing_data_from_object(self):
 
-        load = Load(name=dict(test=Load(name="this_should_change")))
+        load = Load()
+        load.data = dict(test=Load(name="this_should_change"))
         test_data = Load(name="test")
         expected = Load(name="after_update")
         key_before_update = "test"
 
-        load._set_container_attr("name", Load, test_data)
+        load._set_container_attr("data", Load, test_data)
         test_data.name = "after_update"
 
-        self.assertEqual(load.name[key_before_update], expected)
+        self.assertEqual(load.data[key_before_update], expected)
 
 
 class TestInstantiate(unittest.TestCase):

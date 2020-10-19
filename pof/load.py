@@ -36,14 +36,14 @@ class Load:
     A class with methods for loading data that
     """
 
-    name: str = field_property(default=None)
+    name: str = field_property(default="Load")
 
-    @field_property
+    @name.getter
     def name(self) -> str:
         return self._name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: str):
 
         if isinstance(value, str):
             # probhitted = ["-"] #TODO expand list
