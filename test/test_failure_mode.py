@@ -4,78 +4,34 @@
 
 import unittest
 from unittest.mock import Mock, MagicMock, patch
-import logging
-import sys
+
 import numpy as np
 
-import utils
+import fixtures
+import testconfig
+from test_load import TestPofBase
 from pof.failure_mode import FailureMode
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
-import fixtures
 
 
-class TestFailureMode(unittest.TestCase):
+class TestFailureMode(TestPofBase, unittest.TestCase):
     def setUp(self):
-        self.blank_config = Mock()
-        self.blank_config.get.return_value = None
-        self.blank_config.getboolean.return_value = None
-        self.blank_config.getint.return_value = None
 
-    def test_class_imports_correctly(self):
-        self.assertIsNotNone(FailureMode)
+        super().setUp()
 
-    def test_class_instantiate_no_data(self):
-        failure_mode = FailureMode()
-        self.assertIsNotNone(failure_mode)
+        # TestIntantiate
+        self._class = FailureMode
 
-    def test_class_instantiate_with_valid_data(self):
-        failure_mode = FailureMode(
-            name="random",
-            untreated=dict(name="slow_degrading", alpha=500, beta=1, gamma=0),
-        )
-        self.assertIsNotNone(failure_mode)
-
-    def test_class_instantiate_with_invalid_data(self):
-
-        invalid_data_type = dict(invalid_input="invalid_value")
-        invalid_data_value = dict(pf_curve="incorrect_value")
-
-        with self.assertRaises(TypeError):
-            FailureMode.from_dict(invalid_data_type)
-
-        # TODO patch this method of on error use default
-        with patch("pof.load.cf", self.blank_config):
-            with self.assertRaises(ValueError):
-                FailureMode.from_dict(invalid_data_value)
-
-    def test_from_dict_no_data(self):
-        with self.assertRaises(TypeError):
-            FailureMode.from_dict()
-
-    def test_from_dict_with_valid_data(self):
-        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
-        self.assertIsNotNone(fm)
-
-    def test_from_dict_with_invalid_data_config_default(self):
-        # TODO Mock cf.get_boolean('on_error_default')
-        invalid_data = dict(pf_curve="invalid_value")
-
-        with patch("pof.failure_mode.cf", Mock()):
-            with self.assertRaises(ValueError):
-                FailureMode.from_dict(invalid_data)
-
-    def test_from_dict_with_invalid_data_config_none(self):
-
-        invalid_data = dict(pf_curve="invalid_value")
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with patch("pof.load.cf", self.blank_config):
-                with self.assertRaises(ValueError):
-                    FailureMode.from_dict(invalid_data)
+        # TestFromDict
+        self._data_valid = dict(name="TestFailureMode")
+        self._data_invalid_values = [{"pf_curve": "invalid_value"}]
+        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
 
     # ************ Test init_timeline ***********************
 
-    def test_init_timeline_condition_step(self):  # TODO full coverage
+    def test_init_timeline_condition_step(self):
+        # TODO full coverage
         t_start = 0
         t_end = 200
         fm = FailureMode.load(demo.failure_mode_data["random"])
@@ -117,7 +73,6 @@ class TestFailureMode(unittest.TestCase):
         t_start = 0
         t_end = 200
         fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
-        fm2 = FailureMode.load(demo.failure_mode_data["slow_aging"])
 
         fm.init_timeline(t_start=0, t_end=200)
 
@@ -234,29 +189,6 @@ class TestFailureMode(unittest.TestCase):
         fm
 
         # self.assertEqual()
-
-    # ************ Test load ***********************
-
-    def test_load(self):
-        fm = FailureMode.load()
-        self.assertIsNotNone(fm)
-
-    def test_load_no_data_no_config(self):
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(
-                ValueError,
-                msg="Error expected with no input",
-            ):
-                FailureMode.load()
-
-    def test_load_data_demo_data(self):
-        try:
-            fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
-            self.assertIsNotNone(fm)
-        except ValueError:
-            self.fail("ValueError returned")
-        except:
-            self.fail("Unknown error")
 
     def test_set_demo_some_data(self):
         fm = FailureMode.demo()

@@ -1,7 +1,8 @@
 import unittest
+
 import scipy.stats as ss
 
-import utils
+import testconfig
 from pof.distribution import Distribution
 
 

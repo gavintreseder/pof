@@ -8,14 +8,122 @@
 
 import unittest
 from unittest.mock import Mock, patch
-import copy
 
-import numpy as np
-
-from pof.load import Load
-import pof.demo as demo
 import fixtures
-import utils
+import testconfig
+from pof.load import Load
+
+
+class TestPofBase(object):
+    """
+    An abstract test class that contains a collection of tests to test a from_dict method for a pof object
+
+    Needs to include a setUp() method that includes:
+        self._class
+                        Used for calling class methods
+
+        self._class_name
+                        Used for patching config
+
+        self._data_valid
+        self._data_invalid_values
+        self._data_invalid_types
+
+    """
+
+    def setUp(self):
+        """
+        Set up the test so errors are returned if test data is not overloaded
+        """
+
+        # Config for checking default behaviour
+        self.blank_config = Mock()
+        self.blank_config.get.return_value = None
+        self.blank_config.getboolean.return_value = None
+        self.blank_config.getint.return_value = None
+
+        # Class data
+        self._class = Mock(return_value=None)
+        self._class.from_dict.return_value = None
+
+        # Valid and invalid Data that will cause errors if not overloaded
+        self._data_valid = Mock(return_value=None)
+        self._data_invalid_values = [{"name": "name"}]
+        self._data_invalid_types = [{"name": "name"}]
+
+    # ---------------- Class Instantiate ------------------------
+
+    def test_class_instantiate_with_no_data(self):
+        instance = self._class()
+        self.assertIsNotNone(instance)
+
+    def test_class_instantiate_with_valid_data(self):
+        instance = self._class(**self._data_valid)
+        self.assertIsNotNone(instance)
+
+    # ---------------- Load from_dict ----------------
+
+    def test_from_dict_no_data(self):
+        with self.assertRaises(TypeError):
+            self._class.from_dict()
+
+    def test_from_dict_with_valid_data(self):
+        instance = self._class.from_dict(self._data_valid)
+        self.assertIsNotNone(instance)
+
+    def test_from_dict_with_invalid_data_config_default(self):
+
+        # TODO Mock cf.get_boolean('on_error_default')
+        # Arrange
+        class_config = self._class.__module__ + ".cf"
+
+        with patch(class_config, Mock()):
+            self.from_dict_invalid_data()
+
+    def test_from_dict_with_invalid_data_config_none(self):
+
+        # Arrange
+        class_config = self._class.__module__ + ".cf"
+        load_config = "pof.load.cf"  # TODO make this work for any namespace
+
+        with patch(class_config, self.blank_config):
+            with patch(load_config, self.blank_config):
+
+                # Act / Assert
+                self.from_dict_invalid_data()
+
+    def from_dict_invalid_data(self):
+        """Check invalid data"""
+        for invalid_type in self._data_invalid_types:
+            with self.assertRaises(TypeError):
+                self._class.from_dict(invalid_type)
+
+        for invalid_value in self._data_invalid_values:
+            with self.assertRaises(ValueError):
+                self._class.from_dict(invalid_value)
+
+    # ************ Test load ***********************
+
+    # def test_load(self):
+    #     fm = FailureMode.load()
+    #     self.assertIsNotNone(fm)
+
+    # def test_load_no_data_no_config(self):
+    #     with patch("pof.failure_mode.cf", self.blank_config):
+    #         with self.assertRaises(
+    #             ValueError,
+    #             msg="Error expected with no input",
+    #         ):
+    #             FailureMode.load()
+
+    # def test_load_data_demo_data(self):
+    #     try:
+    #         fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
+    #         self.assertIsNotNone(fm)
+    #     except ValueError:
+    #         self.fail("ValueError returned")
+    #     except:
+    #         self.fail("Unknown error")
 
 
 class TestLoad(unittest.TestCase):
@@ -119,109 +227,3 @@ class TestLoad(unittest.TestCase):
         test_data.name = "after_update"
 
         self.assertEqual(load.data[key_before_update], expected)
-
-
-class TestInstantiate(unittest.TestCase):
-    """
-    An abstract test class that contains a collection of tests to test a from_dict method for a pof object
-    """
-
-    def setUp(self):
-
-        self._class = Mock(return_value=None)
-
-        self._data_valid = Mock(return_value=None)
-
-    # ---------------- Class Instantiate ------------------------
-
-    def test_class_instantiate_with_no_data(self):
-        instance = self._class()
-        self.assertIsNotNone(instance)
-
-    def test_class_instantiate_with_valid_data(self):
-        instance = self._class(**self._data_valid)
-        self.assertIsNotNone(instance)
-
-
-class TestLoadFromDict(unittest.TestCase):
-    """
-    An abstract test class that contains a collection of tests to test a from_dict method for a pof object
-
-    Needs to include a setUp() method that includes:
-        self._class
-                        Used for calling class methods
-
-        self._class_name
-                        Used for patching config
-
-        self._data_valid
-        self._data_invalid_values
-        self._data_invalid_types
-
-    """
-
-    def setUp(self):
-        """
-        Set up the test so errors are returned if test data is not overloaded
-        """
-
-        # Config for checking default behaviour
-        self.blank_config = Mock()
-        self.blank_config.get.return_value = None
-        self.blank_config.getboolean.return_value = None
-        self.blank_config.getint.return_value = None
-
-        # Class data
-        self._class = Mock(return_value=None)
-        self._class.from_dict.return_value = None
-
-        # Valid and invalid Data that will cause errors if not overloaded
-        self._data_valid = Mock(return_value=None)
-        self._data_invalid_values = [{"name": "name"}]
-        self._data_invalid_types = [{"name": "name"}]
-
-    # ---------------- Load from_dict ----------------
-
-    def test_from_dict_no_data(self):
-        with self.assertRaises(TypeError):
-            self._class.from_dict()
-
-    def test_from_dict_with_valid_data(self):
-        instance = self._class.from_dict(self._data_valid)
-        self.assertIsNotNone(instance)
-
-    def test_from_dict_with_invalid_data_config_default(self):
-
-        # TODO Mock cf.get_boolean('on_error_default')
-        # Arrange
-        class_config = self._class.__module__ + ".cf"
-
-        with patch(class_config, Mock()):
-            self.from_dict_invalid_data()
-
-    def test_from_dict_with_invalid_data_config_none(self):
-
-        # Arrange
-        class_config = self._class.__module__ + ".cf"
-        load_config = "pof.load.cf"  # TODO make this work for any namespace
-
-        with patch(class_config, self.blank_config):
-            with patch(load_config, self.blank_config):
-
-                # Act / Assert
-                self.from_dict_invalid_data()
-
-    def from_dict_invalid_data(self):
-        """Check invalid data"""
-        for invalid_type in self._data_invalid_types:
-            with self.assertRaises(TypeError):
-                self._class.from_dict(invalid_type)
-
-        for invalid_value in self._data_invalid_values:
-            with self.assertRaises(ValueError):
-                self._class.from_dict(invalid_value)
-
-
-# Delete the tests so they are not discovered
-# del TestLoadFromDict
-# del TestInstantiate

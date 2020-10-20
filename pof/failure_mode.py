@@ -112,7 +112,9 @@ class FailureMode(Load):
         >>> FailureMode()
         <failure_mode.FailureMode object at 0x...>
 
-    """  # TODO check why failure_mode is included
+    """
+
+    # TODO check why failure_mode is included
 
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
@@ -1033,10 +1035,6 @@ class FailureMode(Load):
     def demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
 
-
-def doctest_setup():
-    from pof.failure_mode import FailureMode
-    from pof.distribution import Distribution
 
 
 if __name__ == "__main__":

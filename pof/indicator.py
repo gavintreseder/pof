@@ -645,15 +645,27 @@ class ConditionIndicator(Indicator):
         Add the accumulated degradation checking that it won't exceed the limits given intial condition
         """
         # check accumulated will not exceed the maximum allowable condition
-        current = (
-            self.get_accumulated()
-        )  # TODO is this needed - self.get_accumulated(name=name)
+        current = self.get_accumulated()
+        # TODO is this needed - self.get_accumulated(name=name)
 
         # max accumulation - current - initial
         self._accumulated[name] = min(
             accumulated,
             abs(self.perfect - self.failed) - current,
         )
+
+    def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
+        """
+        Reset the accumulated condition with an option to add permanent condition loss
+        """
+
+        # Maintain permanent condition loss if set
+        if permanent:
+            accumulated = accumulated + self._accumulated.get("permanent", 0)
+            name = "permanent"
+
+        self._accumulated = dict()
+        self._set_accumulated(name=name, accumulated=accumulated)
 
     def reset(self):
 
@@ -699,19 +711,6 @@ class ConditionIndicator(Indicator):
                 accumulated = max(min(self.failed, accumulated), self.perfect)"""
 
             self._reset_accumulated(accumulated, permanent=permanent)
-
-    def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
-        """
-        Reset the accumulated condition with an option to add permanent condition loss
-        """
-
-        # Maintain permanent condition loss if set
-        if permanent:
-            accumulated = accumulated + self._accumulated.get("permanent", 0)
-            name = "permanent"
-
-        self._accumulated = dict()
-        self._set_accumulated(name=name, accumulated=accumulated)
 
     def update_from_dict(self, keys):
         """

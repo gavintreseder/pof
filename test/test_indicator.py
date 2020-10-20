@@ -1,14 +1,18 @@
 import unittest
 from unittest.mock import Mock
-import numpy as np
 import copy
 from random import randint
 
-import utils
+import numpy as np
+
+import fixtures
+import testconfig
+from test_load import TestPofBase
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
-import fixtures
 
+
+# TODO fix up data sources from a single location
 
 cid = dict(
     name="test",
@@ -19,56 +23,24 @@ cid = dict(
     pf_std=None,
 )
 
-
 params_perfect_failed_int = [(0, 100), (100, 0), (50, 100)]
 params_perfect_failed_bool = [(True, False), (False, True)]
 
 
-class TestConditionIndicator(unittest.TestCase):
+class TestConditionIndicator(TestPofBase, unittest.TestCase):
     def setUp(self):
+        super().setUp()
+
+        # TestInstantiate
+        self._class = ConditionIndicator
+
+        # TestLoadFromdict
+        self._data_valid = dict(name="TestConditionIndicator", pf_curve="step")
+        self._data_invalid_values = [{"pf_curve": "invalid_value"}]
+        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+
         cond_data = demo.condition_data["instant"]
         self.cond = ConditionIndicator.load(cond_data)
-
-    def test_class_imports_correctly(self):
-        pass
-
-    def test_class_instantiate(self):
-        cond = ConditionIndicator()
-        self.assertIsNotNone(cond)
-
-    def test_class_instantiate_with_valid_data(self):
-        cond = ConditionIndicator(name="test_name")
-        self.assertIsNotNone(cond)
-
-    def test_class_instantiate_with_invalid_data(self):
-
-        invalid_data = dict(pf_curve="incorrect_value", invalid_input="invalid_value")
-
-        with self.assertRaises(ValueError):
-            ConditionIndicator.from_dict(invalid_data)
-
-    def test_from_dict_with_no_data(self):
-        with self.assertRaises(TypeError):
-            ConditionIndicator.from_dict()
-
-    def test_from_dict_with_invalid_data(self):
-
-        invalid_data = dict(pf_curve="incorrect_value")
-
-        with self.assertRaises(ValueError):
-            ConditionIndicator.from_dict(invalid_data)
-
-    def test_from_dict_with_valid_data(self):
-
-        cond_data = demo.condition_data["instant"]
-
-        cond = ConditionIndicator.from_dict(cond_data)
-
-        self.assertEqual(cond.name, cond_data["name"])
-        self.assertEqual(cond.pf_curve, cond_data["pf_curve"])
-        self.assertEqual(cond.pf_interval, cond_data["pf_interval"])
-        self.assertEqual(cond.perfect, cond_data["perfect"])
-        self.assertEqual(cond.failed, cond_data["failed"])
 
     # Next test
 
@@ -585,49 +557,51 @@ class TestConditionIndicator(unittest.TestCase):
                         # Assert
                         self.assertEqual(result, expected)
 
-    def test_sim_timeline_with_accumulated(self):
-        """Check that the appropriate areas are reset correctly for the next simulation"""
-        param_set_up = [(100, 0), (0, 100)]
-        param_pf_curve = ["linear"]
-        param_initial = [0, 25, 50, 75, 100]
-        param_accumulated = [0, 25, 50, 75, 100]
-        param_name = [None, "cause_1"]
-        param_permanent = [False, True]
+    # TODO add robust tests for accumulated
 
-        for pf_curve in param_pf_curve:
-            for perfect, failed in param_set_up:
-                for initial in param_initial:
-                    for accumulated in param_accumulated:
-                        for name in param_name:
-                            for permanent in param_permanent:
-                                # with self.subTest():
-                                # Arrange
-                                ind = ConditionIndicator(
-                                    perfect=perfect,
-                                    failed=failed,
-                                    pf_curve=pf_curve,
-                                    initial=initial,
-                                    pf_interval=100,
-                                )
+    # def test_sim_timeline_with_accumulated(self):
+    #     """Check that the appropriate areas are reset correctly for the next simulation"""
+    #     param_set_up = [(100, 0), (0, 100)]
+    #     param_pf_curve = ["linear"]
+    #     param_initial = [0, 25, 50, 75, 100]
+    #     param_accumulated = [0, 25, 50, 75, 100]
+    #     param_name = [None, "cause_1"]
+    #     param_permanent = [False, True]
 
-                                expected = abs(perfect - initial)
+    #     for pf_curve in param_pf_curve:
+    #         for perfect, failed in param_set_up:
+    #             for initial in param_initial:
+    #                 for accumulated in param_accumulated:
+    #                     for name in param_name:
+    #                         for permanent in param_permanent:
+    #                             # with self.subTest():
+    #                             # Arrange
+    #                             ind = ConditionIndicator(
+    #                                 perfect=perfect,
+    #                                 failed=failed,
+    #                                 pf_curve=pf_curve,
+    #                                 initial=initial,
+    #                                 pf_interval=100,
+    #                             )
 
-                                # Act
-                                ind.sim_timeline(t_start=0, t_stop=0)
-                                ind._reset_accumulated(
-                                    accumulated=accumulated,
-                                    name=name,
-                                    permanent=permanent,
-                                )
+    #                             expected = abs(perfect - initial)
 
-                                # Assert
-                                self.assertEqual(
-                                    ind.get_accumulated(),
-                                    expected,
-                                    "accumulated should equal initial",
-                                )
+    #                             # Act
+    #                             ind.sim_timeline(t_start=0, t_stop=0)
+    #                             ind._reset_accumulated(
+    #                                 accumulated=accumulated,
+    #                                 name=name,
+    #                                 permanent=permanent,
+    #                             )
 
-    def test_reset_accumulated_with_name(self):
+    #                             # Assert
+    #                             self.assertEqual(
+    #                                 ind.get_accumulated(),
+    #                                 expected,
+    #                                 "accumulated should equal initial",
+    #                             )
+
+    def test_reset_for_next_sim_complex(self):
         """Check that the appropriate areas are reset correctly for the next simulation"""
         param_set_up = [(100, 0), (0, 100)]
         param_pf_curve = ["linear", "step"]
@@ -653,10 +627,7 @@ class TestConditionIndicator(unittest.TestCase):
                             expected = abs(perfect - initial)
 
                             # Act
-                            ind._reset_accumulated(
-                                accumulated=accumulated,
-                                name=name,
-                            )
+                            ind.reset_for_next_sim()
 
                             # Assert
                             self.assertEqual(

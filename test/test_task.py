@@ -6,39 +6,36 @@
         Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
 """
 
+import copy
 import unittest
 from unittest.mock import Mock
 
-import copy
 import numpy as np
 
-import utils
-from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import fixtures
-from test_load import TestLoadFromDict, TestInstantiate
+import testconfig
+from test_load import TestPofBase
+from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 
 
-class TestBase(TestLoadFromDict, TestInstantiate, unittest.TestCase):
+class TestTaskCommon(TestPofBase):
     """
     A base class for tests that are expected to work with all Task objects
     """
 
     def setUp(self):
 
-        # Data for testing instantiate and from_dict
-        self._data_valid = dict(name="Base")
+        super().setUp()
+
+        # TestPofBase
+        self._class = self._class
+        self._data_valid = self._data_valid
         self._data_invalid_types = ["string", True]
         self._data_invalid_types = [dict(invalid_input="invalid_input")]
         self._data_invalid_values = []
 
-        # Config for checking default behaviour
-        self.blank_config = Mock()
-        self.blank_config.get.return_value = None
-        self.blank_config.getboolean.return_value = None
-        self.blank_config.getint.return_value = None
 
-
-class TestTask(TestBase, unittest.TestCase):
+class TestTask(TestTaskCommon, unittest.TestCase):
     def setUp(self):
         super().setUp()
 
@@ -87,16 +84,16 @@ class TestTask(TestBase, unittest.TestCase):
         self.assertRaises(KeyError, t.update_from_dict, update)
 
 
-class TestScheduledTask(TestBase, TestLoadFromDict, unittest.TestCase):
+class TestScheduledTask(TestTaskCommon, unittest.TestCase):
     """
-    Tests the functionality of the ScheduledTask class including all common tests written in TestBase
+    Tests the functionality of the ScheduledTask class including all common tests written in TestTaskCommon
     """
 
     def setUp(self):
         super().setUp()
-        self._class = ScheduledTask
 
-        self._data_valid = dict(name="TaskTest", activity="ScheduledTask")
+        self._class = ScheduledTask
+        self._data_valid = dict(name="ScheduledTaskTest", activity="ScheduledTask")
 
     def test_sim_timeline(self):
         """Check the a scheduled task returns the correct time"""
@@ -140,17 +137,13 @@ class TestScheduledTask(TestBase, TestLoadFromDict, unittest.TestCase):
                     np.testing.assert_array_equal(expected, schedule)
 
 
-class TestConditionTask(TestBase, unittest.TestCase):
+class TestConditionTask(TestTaskCommon, unittest.TestCase):
     def setUp(self):
         super().setUp()
+
+        # TestTaskCommon Setup
         self._class = ConditionTask
-
-    def test_imports_correctly(self):
-        self.assertTrue(True)
-
-    def test_instantiate(self):
-        task = ConditionTask()
-        self.assertIsNotNone(task)
+        self._data_valid = dict(name="TestInspection", activity="ConditionTask")
 
     # **************** test_load ***********************
 
@@ -192,16 +185,13 @@ class TestConditionTask(TestBase, unittest.TestCase):
         self.assertRaises(KeyError, t.update_from_dict, update)
 
 
-class TestInspection(TestBase, unittest.TestCase):
+class TestInspection(TestTaskCommon, unittest.TestCase):
     def setUp(self):
         super().setUp()
 
-        # TestBase Setup
+        # TestTaskCommon Setup
         self._class = Inspection
-
         self._data_valid = dict(name="TestInspection", activity="Inspection")
-        self._data_invalid_types = [dict(invalid_input="invalid_input")]
-        self._data_invalid_values = []
 
     # **************** test_load ***********************
 
@@ -240,8 +230,6 @@ class TestInspection(TestBase, unittest.TestCase):
 
         self.assertRaises(KeyError, t.update_from_dict, update)
 
-
-del TestBase
 
 if __name__ == "__main__":
     unittest.main()
