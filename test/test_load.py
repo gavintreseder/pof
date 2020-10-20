@@ -1,22 +1,21 @@
 """
     Filename: test_load.py
     Description: Contains the code for testing the Constructor class
-    Author: 
+    Author:
         Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
         Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
- 
 """
 
 import unittest
-from unittest.mock import Mock, MagicMock, patch
-import numpy as np
+from unittest.mock import Mock, patch
 import copy
 
-import utils
+import numpy as np
 
 from pof.load import Load
 import pof.demo as demo
 import fixtures
+import utils
 
 
 class TestLoad(unittest.TestCase):
@@ -140,7 +139,7 @@ class TestInstantiate(unittest.TestCase):
         self.assertIsNotNone(instance)
 
     def test_class_instantiate_with_valid_data(self):
-        instance = self._class(self._data_valid)
+        instance = self._class(**self._data_valid)
         self.assertIsNotNone(instance)
 
 
@@ -224,5 +223,5 @@ class TestLoadFromDict(unittest.TestCase):
 
 
 # Delete the tests so they are not discovered
-del TestLoadFromDict
-del TestInstantiate
+# del TestLoadFromDict
+# del TestInstantiate

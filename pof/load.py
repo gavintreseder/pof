@@ -405,5 +405,11 @@ class Load:
 
         return fig.show()
 
-        def expected_risk_cost_df(self):
-            raise NotImplementedError()
+    def expected_risk_cost_df(self):
+        raise NotImplementedError()
+
+    def reset(self):
+        raise NotImplementedError()
+
+    def mc_timeline(self):
+        raise NotImplementedError()

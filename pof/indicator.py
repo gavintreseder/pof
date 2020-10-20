@@ -103,7 +103,7 @@ class Indicator(Load):
 
             else:
                 raise ValueError("Invalid Indicator Type")
-        
+
         else:
             raise TypeError("Dictionary expected")
 

@@ -530,24 +530,24 @@ class TestConditionIndicator(unittest.TestCase):
             for perfect, failed in param_set_up:
                 for initial in param_initial:
 
-                    with self.subTest():
-                        # Arrange
-                        ind = ConditionIndicator(
-                            perfect=perfect, failed=failed, pf_curve=pf_curve
-                        )
-                        ind.set_initial(initial)
-                        expected = abs(perfect - initial)
+                    # with self.subTest():
+                    # Arrange
+                    ind = ConditionIndicator(
+                        perfect=perfect, failed=failed, pf_curve=pf_curve
+                    )
+                    ind.set_initial(initial)
+                    expected = abs(perfect - initial)
 
-                        # Act
-                        ind.mc_timeline(t_end=100, t_start=0, n_iterations=iterations)
-                        ind.reset_for_next_sim()
+                    # Act
+                    ind.mc_timeline(t_end=100, t_start=0, n_iterations=iterations)
+                    ind.reset_for_next_sim()
 
-                        # Assert
-                        self.assertEqual(
-                            ind.get_accumulated(),
-                            expected,
-                            "accumulated should equal intial",
-                        )
+                    # Assert
+                    self.assertEqual(
+                        ind.get_accumulated(),
+                        expected,
+                        "accumulated should equal intial",
+                    )
 
     # **************** Test the _set_accumulated  ***********************
 
@@ -562,28 +562,28 @@ class TestConditionIndicator(unittest.TestCase):
                 for accumulated in param_accumulated:
                     for name in param_name:
 
-                        with self.subTest():
+                        # with self.subTest():
 
-                            # Arrange
-                            ind = ConditionIndicator(
-                                perfect=perfect,
-                                failed=failed,
-                                pf_curve="linear",
-                                initial=initial,
-                                pf_interval=100,
-                            )
+                        # Arrange
+                        ind = ConditionIndicator(
+                            perfect=perfect,
+                            failed=failed,
+                            pf_curve="linear",
+                            initial=initial,
+                            pf_interval=100,
+                        )
 
-                            expected = min(
-                                accumulated + abs(perfect - initial),
-                                abs(perfect - failed),
-                            )
+                        expected = min(
+                            accumulated + abs(perfect - initial),
+                            abs(perfect - failed),
+                        )
 
-                            # Act
-                            ind._set_accumulated(accumulated=accumulated, name=name)
-                            result = ind.get_accumulated()
+                        # Act
+                        ind._set_accumulated(accumulated=accumulated, name=name)
+                        result = ind.get_accumulated()
 
-                            # Assert
-                            self.assertEqual(result, expected)
+                        # Assert
+                        self.assertEqual(result, expected)
 
     def test_sim_timeline_with_accumulated(self):
         """Check that the appropriate areas are reset correctly for the next simulation"""
@@ -600,32 +600,32 @@ class TestConditionIndicator(unittest.TestCase):
                     for accumulated in param_accumulated:
                         for name in param_name:
                             for permanent in param_permanent:
-                                with self.subTest():
-                                    # Arrange
-                                    ind = ConditionIndicator(
-                                        perfect=perfect,
-                                        failed=failed,
-                                        pf_curve=pf_curve,
-                                        initial=initial,
-                                        pf_interval=100,
-                                    )
+                                # with self.subTest():
+                                # Arrange
+                                ind = ConditionIndicator(
+                                    perfect=perfect,
+                                    failed=failed,
+                                    pf_curve=pf_curve,
+                                    initial=initial,
+                                    pf_interval=100,
+                                )
 
-                                    expected = abs(perfect - initial)
+                                expected = abs(perfect - initial)
 
-                                    # Act
-                                    ind.sim_timeline(t_start=0, t_stop=0)
-                                    ind._reset_accumulated(
-                                        accumulated=accumulated,
-                                        name=name,
-                                        permanent=permanent,
-                                    )
+                                # Act
+                                ind.sim_timeline(t_start=0, t_stop=0)
+                                ind._reset_accumulated(
+                                    accumulated=accumulated,
+                                    name=name,
+                                    permanent=permanent,
+                                )
 
-                                    # Assert
-                                    self.assertEqual(
-                                        ind.get_accumulated(),
-                                        expected,
-                                        "accumulated should equal initial",
-                                    )
+                                # Assert
+                                self.assertEqual(
+                                    ind.get_accumulated(),
+                                    expected,
+                                    "accumulated should equal initial",
+                                )
 
     def test_reset_accumulated_with_name(self):
         """Check that the appropriate areas are reset correctly for the next simulation"""
@@ -635,35 +635,35 @@ class TestConditionIndicator(unittest.TestCase):
         param_accumulated = [0, 25, 50, 75, 100]
         param_name = [None, "cause_1"]
 
-        for pf_curve in param_pf_curve:
-            for perfect, failed in param_set_up:
+        for perfect, failed in param_set_up:
+            for pf_curve in param_pf_curve:
                 for initial in param_initial:
                     for accumulated in param_accumulated:
                         for name in param_name:
 
-                            with self.subTest():
-                                # Arrange
-                                ind = ConditionIndicator(
-                                    perfect=perfect,
-                                    failed=failed,
-                                    pf_curve=pf_curve,
-                                    initial=initial,
-                                )
+                            # with self.subTest():
+                            # Arrange
+                            ind = ConditionIndicator(
+                                perfect=perfect,
+                                failed=failed,
+                                pf_curve=pf_curve,
+                                initial=initial,
+                            )
 
-                                expected = abs(perfect - initial)
+                            expected = abs(perfect - initial)
 
-                                # Act
-                                ind._reset_accumulated(
-                                    accumulated=accumulated,
-                                    name=name,
-                                )
+                            # Act
+                            ind._reset_accumulated(
+                                accumulated=accumulated,
+                                name=name,
+                            )
 
-                                # Assert
-                                self.assertEqual(
-                                    ind.get_accumulated(),
-                                    expected,
-                                    "accumulated should equal intial",
-                                )
+                            # Assert
+                            self.assertEqual(
+                                ind.get_accumulated(),
+                                expected,
+                                "accumulated should equal intial",
+                            )
 
     # **************** Test the reset_any functions ***********************
 
@@ -672,22 +672,20 @@ class TestConditionIndicator(unittest.TestCase):
         param_list = [(100, 0, 20), (0, 100, 80), (110, 10, 30), (10, 110, 90)]
 
         for perfect, failed, current in param_list:
-            with self.subTest():
-                # Arrange
-                cond = ConditionIndicator(
-                    perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
-                )
-                cond.set_condition(current)
+            # with self.subTest():
+            # Arrange
+            cond = ConditionIndicator(
+                perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
+            )
+            cond.set_condition(current)
 
-                for expected in range(2):
-                    # Act
-                    cond.reset_any(
-                        target=1, method="reduction_factor", axis="condition"
-                    )
-                    condition = cond.get_condition()
+            for expected in range(2):
+                # Act
+                cond.reset_any(target=1, method="reduction_factor", axis="condition")
+                condition = cond.get_condition()
 
-                    # Assert
-                    self.assertEqual(condition, perfect)
+                # Assert
+                self.assertEqual(condition, perfect)
 
     def test_reset_any_reduction_factor_half(self):
 
@@ -699,22 +697,20 @@ class TestConditionIndicator(unittest.TestCase):
         ]
 
         for perfect, failed, current, results in param_list:
-            with self.subTest():
-                # Arrange
-                cond = ConditionIndicator(
-                    perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
-                )
-                cond.set_condition(current)
+            # with self.subTest():
+            # Arrange
+            cond = ConditionIndicator(
+                perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
+            )
+            cond.set_condition(current)
 
-                for expected in results:
-                    # Act
-                    cond.reset_any(
-                        target=0.5, method="reduction_factor", axis="condition"
-                    )
-                    condition = cond.get_condition()
+            for expected in results:
+                # Act
+                cond.reset_any(target=0.5, method="reduction_factor", axis="condition")
+                condition = cond.get_condition()
 
-                    # Assert
-                    self.assertEqual(condition, expected)
+                # Assert
+                self.assertEqual(condition, expected)
 
     def test_reset_any_reduction_factor_none(self):
 
@@ -726,22 +722,20 @@ class TestConditionIndicator(unittest.TestCase):
         ]
 
         for perfect, failed, current in param_list:
-            with self.subTest():
-                # Arrange
-                cond = ConditionIndicator(
-                    perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
-                )
-                cond.set_condition(current)
+            # with self.subTest():
+            # Arrange
+            cond = ConditionIndicator(
+                perfect=perfect, failed=failed, pf_curve="linear", pf_interval=10
+            )
+            cond.set_condition(current)
 
-                for expected in range(2):
-                    # Act
-                    cond.reset_any(
-                        target=0, method="reduction_factor", axis="condition"
-                    )
-                    condition = cond.get_condition()
+            for expected in range(2):
+                # Act
+                cond.reset_any(target=0, method="reduction_factor", axis="condition")
+                condition = cond.get_condition()
 
-                    # Assert
-                    self.assertEqual(condition, current)
+                # Assert
+                self.assertEqual(condition, current)
 
     # ************** Test the accumulation functions ******************
 
@@ -889,22 +883,22 @@ class TestConditionIndicator(unittest.TestCase):
                     )
                     expected = expected[t_delay:]
 
-                    with self.subTest():
-                        # Arrange
-                        ind = ConditionIndicator(
-                            perfect=perfect,
-                            failed=failed,
-                            threshold_failure=threshold_failure,
-                            pf_interval=pf_interval,
-                            pf_curve=pf_curve,
-                        )
+                    # with self.subTest():
+                    # Arrange
+                    ind = ConditionIndicator(
+                        perfect=perfect,
+                        failed=failed,
+                        threshold_failure=threshold_failure,
+                        pf_interval=pf_interval,
+                        pf_curve=pf_curve,
+                    )
 
-                        # Act
-                        ind.sim_timeline(t_stop=100)
-                        ft = ind.sim_failure_timeline(t_stop=100, t_delay=t_delay)
+                    # Act
+                    ind.sim_timeline(t_stop=100)
+                    ft = ind.sim_failure_timeline(t_stop=100, t_delay=t_delay)
 
-                        # Assert
-                        np.testing.assert_array_equal(ft, expected)
+                    # Assert
+                    np.testing.assert_array_equal(ft, expected)
 
 
 class TestPoleSafetyFactor(unittest.TestCase):

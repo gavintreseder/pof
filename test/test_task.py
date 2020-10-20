@@ -7,13 +7,14 @@
 """
 
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import copy
 import numpy as np
 
+import utils
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
-from test import utils, fixtures
+import fixtures
 from test_load import TestLoadFromDict, TestInstantiate
 
 
@@ -42,7 +43,7 @@ class TestTask(TestBase, unittest.TestCase):
         super().setUp()
 
         self._class = Task
-        self._data_valid = dict(name="TaskTest", actiivty="Task")
+        self._data_valid = dict(name="TaskTest", activity="Task")
 
     # **************** test_load ***********************
 
@@ -194,7 +195,13 @@ class TestConditionTask(TestBase, unittest.TestCase):
 class TestInspection(TestBase, unittest.TestCase):
     def setUp(self):
         super().setUp()
-        self._task = Inspection
+
+        # TestBase Setup
+        self._class = Inspection
+
+        self._data_valid = dict(name="TestInspection", activity="Inspection")
+        self._data_invalid_types = [dict(invalid_input="invalid_input")]
+        self._data_invalid_values = []
 
     # **************** test_load ***********************
 

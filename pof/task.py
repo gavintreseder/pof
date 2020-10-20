@@ -70,6 +70,7 @@ class Task(Load):
         p_effective=1,
         triggers=None,
         impacts=None,
+        activity=NotImplemented,
     ):
 
         # Task information

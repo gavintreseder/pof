@@ -10,7 +10,6 @@ import numpy as np
 
 import utils
 from pof.failure_mode import FailureMode
-
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
 import fixtures
