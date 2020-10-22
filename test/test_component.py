@@ -174,7 +174,6 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
     def test_sim_timeline_active_all(self):
         comp = Component.demo()
-
         comp.sim_timeline(200)
 
     def test_sim_timeline_active_one(self):
@@ -190,7 +189,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
     # ************ Test expected methods *****************
 
-    def test_expected_condition_no_timeline(self):
+        def test_expected_condition_no_timeline(self):
         comp = Component.demo()
         comp.expected_condition()
 

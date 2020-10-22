@@ -674,7 +674,9 @@ class ConditionIndicator(Indicator):
 
     def reset_for_next_sim(self):
         self._reset_accumulated(
-            accumulated=abs(self.perfect - self.initial), name="initial"
+            accumulated=abs(self.perfect - self.initial),
+            name="initial",
+            permanent=False,
         )
 
     def reset_to_perfect(self):

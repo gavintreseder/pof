@@ -109,6 +109,36 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # Check tasks match
         # TODO rewrite time function in tasks first copy from previous test
 
+    # ------------ Test update_timeline --------------------
+
+    def test_update_timeline(self):
+
+        # Arrange
+        fm = FailureMode.demo()
+
+        fm.update_timeline(t_start=10, updates=dict(initiation=False))
+
+        fm.update_timeline(t_start=5, updates=dict(initiation=False))
+
+
+    # -------------Test sim_timleine ----------------------
+
+    def test_sim_timeline_task_trigger_conditions_met(self):
+        
+        # Arrange so replacement should occur immediately
+        fm = FailureMode.demo()
+        fm.indicators['slow_degrading'].set_condition(10)
+        fm.indicators['fast_degrading'].set_condition(10)
+        fm.set_states(dict(detection=True))
+
+        # Act
+        fm.sim_timeline(200)
+
+        # Assert
+        self.assertEqual(fm.timeline['intiation'][0], True)
+        self.assertEqual(fm.timeline['on_condition_replacement'][0], 0)
+
+
     # ************ Test sim_timeline ***********************
 
     def test_sim_timeline_condition_step(self):  # TODO full coverage
@@ -186,11 +216,10 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         fm.sim_timeline(200)
 
         # Assert
-        fm
 
         # self.assertEqual()
 
-    def test_set_demo_some_data(self):
+    def test_demo(self):
         fm = FailureMode.demo()
         self.assertIsNotNone(fm)
 

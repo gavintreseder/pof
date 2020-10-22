@@ -264,8 +264,6 @@ class FailureMode(Load):
 
         self._set_container_attr("dists", Distribution, dists)
 
-        # TODO Gav
-
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
             self.dists["init"] = Distribution.from_pf_interval(
@@ -541,16 +539,19 @@ class FailureMode(Load):
                     )
 
             # Check for failure changes
-            self.timeline["failure"][t_start:] = updates["failure"]
-            for cond_name in self._cond_to_update():
-                tl_f = self.indicators[cond_name].sim_failure_timeline(
-                    t_delay=t_start,
-                    t_start=t_start - t_initiate,
-                    t_stop=t_end - t_initiate,
-                )
-                self.timeline["failure"][t_start:] = (
-                    self.timeline["failure"][t_start:]
-                ) | (tl_f)
+            if any(
+                state in updates for state in ["initiation", "detection", "failure"]
+            ):
+                self.timeline["failure"][t_start:] = updates.get("failure", False)
+                for cond_name in self._cond_to_update():
+                    tl_f = self.indicators[cond_name].sim_failure_timeline(
+                        t_delay=t_start,
+                        t_start=t_start - t_initiate,
+                        t_stop=t_end - t_initiate,
+                    )
+                    self.timeline["failure"][t_start:] = (
+                        self.timeline["failure"][t_start:]
+                    ) | (tl_f)
 
             # Update time based tasks
             for task_name, task in self.tasks.items():
@@ -581,7 +582,7 @@ class FailureMode(Load):
         """
         Update timeline
         """
-        if cf.getboolean("remain_failed"):
+        if config.getboolean("FailureMode", "remain_failed"):
             # Cancel future tasks
             for task in self.tasks.values():
                 # TODO move timeline to the task and make sure task timeline canges to zero
@@ -1034,7 +1035,6 @@ class FailureMode(Load):
     @classmethod
     def demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
-
 
 
 if __name__ == "__main__":

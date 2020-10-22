@@ -31,7 +31,6 @@
 
     # Options
         # PF_interval on load
-        # Combine condition and indicator
         # Replace on failure
         # Replace higher level asset
         # Timeline inside object

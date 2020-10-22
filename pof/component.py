@@ -206,15 +206,18 @@ class Component(Load):
 
             if bool(system_impact):
 
-                if cf.get_boolean["allow_system_impact"]:
+                if config.getboolean("Component", "allow_system_impact"):
                     self.renew(t_replace=t_next + 1)
 
                     logging.debug(
                         "Component %s reset by FailureMode %s", self.name, fm_name
                     )
-                else:
-                    F
+
+                # TODO does this need another option here
+
                 break
+
+    # Replace, renew, fail
 
     def fail(self, t_fail):
         """ Reset indicators """
