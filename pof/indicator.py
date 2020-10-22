@@ -667,17 +667,19 @@ class ConditionIndicator(Indicator):
         self._accumulated = dict()
         self._set_accumulated(name=name, accumulated=accumulated)
 
-    def reset(self):
+    def reset(self, name=None):
 
         super().reset()
         self._reset_accumulated()
+        self._timeline = dict()
 
-    def reset_for_next_sim(self):
+    def reset_for_next_sim(self, name=None):
         self._reset_accumulated(
             accumulated=abs(self.perfect - self.initial),
             name="initial",
             permanent=False,
         )
+        self._timeline = dict()
 
     def reset_to_perfect(self):
         self._reset_accumulated()

@@ -207,7 +207,7 @@ class Component(Load):
             if bool(system_impact):
 
                 if config.getboolean("Component", "allow_system_impact"):
-                    self.renew(t_replace=t_next + 1)
+                    self.renew(t_renew=t_next + 1)
 
                     logging.debug(
                         "Component %s reset by FailureMode %s", self.name, fm_name
@@ -232,7 +232,7 @@ class Component(Load):
 
         self._replacement.append(t_renew)
 
-    def replace(self, t_replace):
+    def renew(self, t_renew):
         """
         Reset indicators and update failure mode timelines after a component is reset
         """

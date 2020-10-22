@@ -227,6 +227,7 @@ replacement_data =dict(
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
+            system=['component']
         ),
     ),
     on_condition = dict(
@@ -252,6 +253,7 @@ replacement_data =dict(
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
+            system=['component']
         ),
     ),
     on_failure = dict(
@@ -273,6 +275,7 @@ replacement_data =dict(
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
+            system=['component']
         ),
     ),
 )

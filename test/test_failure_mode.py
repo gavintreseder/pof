@@ -138,8 +138,40 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         # Assert task is triggered and reset occurs
         self.assertEqual(fm.timeline["on_condition_replacement"][0], 0, "no triggered")
-        for state, value in fm.tasks["on_condition_replacement"].impacts["state"].items():
+        for state, value in (
+            fm.tasks["on_condition_replacement"].impacts["state"].items()
+        ):
             self.assertEqual(fm.timeline[state][1], value, "impact not completed")
+
+    def test_sim_timeline_on_failure_replacement(self):
+        # Arrange
+        fm = FailureMode(
+            untreated=fixtures.distribution_data["slow_aging"],
+            conditions={
+                "slow_degrading": fixtures.condition_data["slow_degrading"],
+                "fast_degrading": fixtures.condition_data["fast_degrading"],
+            },
+            tasks={"insepction": fixtures.replacement_data["on_failure"]},
+        )
+        fm.set_states({"initiation": True})
+        fm.indicators["slow_degrading"].set_condition(10)
+        fm.indicators["fast_degrading"].set_condition(10)
+
+        # Act
+        fm.sim_timeline(200)
+
+        # Assert task is triggered and reset occurs
+        self.assertEqual(
+            fm.timeline["on_condition_failure"][0], -1, "should not be failed yet"
+        )
+
+        for state, value in (
+            fm.tasks["on_condition_replacement"].impacts["state"].items()
+        ):
+            self.assertEqual(fm.timeline[state][1], value, "impact not completed")
+
+    def test_sim_timeline_remain_failed(self):
+        NotImplemented
 
     # ************ Test sim_timeline ***********************
 
@@ -200,30 +232,24 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # Check tasks match
         # TODO rewrite time function in tasks first
 
-    def test_sim_timeline_on_condition_task_triggered(self):
-        # Arrange
-        fm = FailureMode(
-            untreated=fixtures.distribution_data["slow_aging"],
-            conditions={
-                "slow_degrading": fixtures.condition_data["slow_degrading"],
-                "fast_degrading": fixtures.condition_data["fast_degrading"],
-            },
-            tasks={"insepction": fixtures.replacement_data["on_condition"]},
-        )
-        fm.set_states({"initiation": True})
-        fm.indicators["slow_degrading"].set_condition(10)
-        fm.indicators["fast_degrading"].set_condition(10)
-
-        # Act
-        fm.sim_timeline(200)
-
-        # Assert
-
-        # self.assertEqual()
-
     def test_demo(self):
         fm = FailureMode.demo()
         self.assertIsNotNone(fm)
+
+    # ------------ Test mc_timeline ------------------
+
+    def test_mc_timeline(self):
+
+        # Arrange
+        fm = FailureMode.demo()
+
+        # Act
+        fm.mc_timeline(t_end=20, n_iterations=10)
+
+    def test_mc_timeline_risk_is_accurate(self):
+        fm = FailureMode.demo()
+
+        fm.mc_timeline(200)
 
     # ************ Test get_dash_ids *****************
 

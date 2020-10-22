@@ -199,10 +199,7 @@ class Task(Load):
         if trigger_type is None:
             return self.triggers
         else:
-            try:
-                return self.triggers[trigger_type]
-            except:
-                return self.triggers
+            return self.triggers.get(trigger_type, {})
 
     def is_effective(self, t_now=None, timeline=None):
 
@@ -305,7 +302,7 @@ class Task(Load):
                 "p_effective",
                 "cost",
             ]:
-                self.__dict__[key] = value
+                setattr(self, key, value)
 
             elif key in ["trigger", "impact"]:
 
@@ -408,8 +405,8 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                if key in self.__dict__:
-                    self.__dict__[key] = value
+                if hasattr(self, key):
+                    setattr(self, key, value)
                 else:
                     raise KeyError(
                         'ERROR: Cannot update "%s" - %s from dict with key %s'
@@ -494,8 +491,8 @@ class ConditionTask(Task):
             try:
                 super().update_from_dict({key: value})
             except KeyError:
-                if key in self.__dict__:
-                    self.__dict__[key] = value
+                if hasattr(self, key):
+                    setattr(self, key, value)
                 else:
                     raise KeyError(
                         'ERROR: Cannot update "%s" - %s from dict with key %s'
