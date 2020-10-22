@@ -189,7 +189,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
     # ************ Test expected methods *****************
 
-        def test_expected_condition_no_timeline(self):
+    def test_expected_condition_no_timeline(self):
         comp = Component.demo()
         comp.expected_condition()
 

@@ -56,10 +56,10 @@ class TestTask(TestTaskCommon, unittest.TestCase):
 
     def test_update(self):
 
-        test_data_1 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_1 = copy.deepcopy(fixtures.replacement_data["on_condition"])
         test_data_1["cost"] = 0
         test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_2 = copy.deepcopy(fixtures.replacement_data["on_condition"])
 
         # Test all the options
         t1 = Task.from_dict(test_data_1)
@@ -75,7 +75,7 @@ class TestTask(TestTaskCommon, unittest.TestCase):
 
     def test_update_error(self):
 
-        test_data = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data = copy.deepcopy(fixtures.replacement_data["on_condition"])
 
         t = Task.from_dict(test_data)
 
@@ -152,15 +152,15 @@ class TestConditionTask(TestTaskCommon, unittest.TestCase):
         self.assertIsNotNone(task)
 
     def test_load_valid_dict(self):
-        task = ConditionTask.load(fixtures.on_condition_replacement_data)
+        task = ConditionTask.load(fixtures.replacement_data["on_condition"])
         self.assertIsNotNone(task)
 
     def test_update(self):
 
-        test_data_1 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_1 = copy.deepcopy(fixtures.replacement_data["on_condition"])
         test_data_1["cost"] = 0
         test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_2 = copy.deepcopy(fixtures.replacement_data["on_condition"])
 
         # Test all the options
         t1 = ConditionTask.from_dict(test_data_1)
@@ -176,7 +176,7 @@ class TestConditionTask(TestTaskCommon, unittest.TestCase):
 
     def test_update_error(self):
 
-        test_data = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data = copy.deepcopy(fixtures.replacement_data["on_condition"])
 
         t = ConditionTask.from_dict(test_data)
 
@@ -203,10 +203,10 @@ class TestInspection(TestTaskCommon, unittest.TestCase):
 
     def test_update(self):
 
-        test_data_1 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_1 = copy.deepcopy(fixtures.replacement_data["on_condition"])
         test_data_1["cost"] = 0
         test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.on_condition_replacement_data)
+        test_data_2 = copy.deepcopy(fixtures.replacement_data["on_condition"])
 
         # Test all the options
         t1 = ConditionTask.from_dict(test_data_1)

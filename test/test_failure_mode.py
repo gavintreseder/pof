@@ -120,24 +120,26 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         fm.update_timeline(t_start=5, updates=dict(initiation=False))
 
-
     # -------------Test sim_timleine ----------------------
 
-    def test_sim_timeline_task_trigger_conditions_met(self):
-        
+    def test_sim_timeline_task_on_condition_replacement(self):
+        """
+        Check an on condition replacement task is triggered when the conditions are met
+        """
+
         # Arrange so replacement should occur immediately
         fm = FailureMode.demo()
-        fm.indicators['slow_degrading'].set_condition(10)
-        fm.indicators['fast_degrading'].set_condition(10)
-        fm.set_states(dict(detection=True))
+        fm.indicators["slow_degrading"].set_condition(10)
+        fm.indicators["fast_degrading"].set_condition(10)
+        fm.set_states(dict(initiation=True, detection=True))
 
         # Act
         fm.sim_timeline(200)
 
-        # Assert
-        self.assertEqual(fm.timeline['intiation'][0], True)
-        self.assertEqual(fm.timeline['on_condition_replacement'][0], 0)
-
+        # Assert task is triggered and reset occurs
+        self.assertEqual(fm.timeline["on_condition_replacement"][0], 0, "no triggered")
+        for state, value in fm.tasks["on_condition_replacement"].impacts["state"].items():
+            self.assertEqual(fm.timeline[state][1], value, "impact not completed")
 
     # ************ Test sim_timeline ***********************
 
