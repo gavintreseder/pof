@@ -131,11 +131,14 @@ class PolesFleetDataLoader(FleetDataLoader):
         # self.condition_data = c_dict
         self.condition_data = df_condition
 
-    def replace_substring(self, df, replace="-", replace_with="."):
+    def replace_substring(
+        self, df, replace=prohibbited_characters, replace_with=replacement_character
+    ):
 
-        df_replaced = df.applymap(
-            lambda s: s.replace(replace, replace_with) if isinstance(s, str) else s
-        )
+        for r in replace:
+            df_replaced = df.applymap(
+                lambda s: s.replace(r, replace_with[0]) if isinstance(s, str) else s
+            )
 
         return df_replaced
 
