@@ -112,7 +112,9 @@ class FailureMode(Load):
         >>> FailureMode()
         <failure_mode.FailureMode object at 0x...>
 
-    """  # TODO check why failure_mode is included
+    """
+
+    # TODO check why failure_mode is included
 
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
@@ -262,8 +264,6 @@ class FailureMode(Load):
 
         self._set_container_attr("dists", Distribution, dists)
 
-        # TODO Gav
-
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
             self.dists["init"] = Distribution.from_pf_interval(
@@ -381,7 +381,7 @@ class FailureMode(Load):
         self.reset()  # TODO ditch this
 
         for i in tqdm(range(n_iterations)):
-            self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.sim_timeline(t_end=t_end + i, t_start=t_start)
             self.increment_counter()
             self.save_timeline(i)
             self.reset_for_next_sim()
@@ -405,7 +405,7 @@ class FailureMode(Load):
                 t_now = t_now + 1
 
                 if "fm" in system_impact:
-                    self.reset_to_perfect(t_now)
+                    self.renew(t_now)
 
         return self.timeline
 
@@ -539,16 +539,19 @@ class FailureMode(Load):
                     )
 
             # Check for failure changes
-            self.timeline["failure"][t_start:] = updates["failure"]
-            for cond_name in self._cond_to_update():
-                tl_f = self.indicators[cond_name].sim_failure_timeline(
-                    t_delay=t_start,
-                    t_start=t_start - t_initiate,
-                    t_stop=t_end - t_initiate,
-                )
-                self.timeline["failure"][t_start:] = (
-                    self.timeline["failure"][t_start:]
-                ) | (tl_f)
+            if any(
+                state in updates for state in ["initiation", "detection", "failure"]
+            ):
+                self.timeline["failure"][t_start:] = updates.get("failure", False)
+                for cond_name in self._cond_to_update():
+                    tl_f = self.indicators[cond_name].sim_failure_timeline(
+                        t_delay=t_start,
+                        t_start=t_start - t_initiate,
+                        t_stop=t_end - t_initiate,
+                    )
+                    self.timeline["failure"][t_start:] = (
+                        self.timeline["failure"][t_start:]
+                    ) | (tl_f)
 
             # Update time based tasks
             for task_name, task in self.tasks.items():
@@ -575,18 +578,31 @@ class FailureMode(Load):
 
         return self.timeline
 
-    def reset_to_perfect(self, t_replace):
+    def renew(self, t_renew):
         """
         Update timeline
         """
-        if cf.getboolean("remain_failed"):
-            # Cancel future tasks
-            for task in self.tasks.values():
-                # TODO move timeline to the task and make sure task timeline canges to zero
-                self.timeline[task.name][t_replace:] = -1
+        if config.getboolean("FailureMode", "remain_failed"):
+            self.fail(t_renew)
         else:
-            state_after_replace = dict(initation=False, detection=False, failure=False)
-            self.update_timeline(t_start=t_replace, updates=state_after_replace)
+            self.replace(t_renew)
+
+    def fail(self, t_fail):
+        """ Cut the timeline short and prevent any more tasks from triggering"""
+
+        # Make timelines shorter
+        for state in ["time", "initiation", "detection", "failure"]:
+            self.timeline[state] = self.timeline[state][:t_fail]
+
+        # Cancel future tasks
+        for task in self.tasks.values():
+            # TODO consider moving timeline to the task and make sure task timeline canges to zero
+            self.timeline[task.name][t_fail:] = -1
+
+    def replace(self, t_replace):
+        """ Update the asset to a perfect asset """
+        state_after_replace = dict(initation=False, detection=False, failure=False)
+        self.update_timeline(t_start=t_replace, updates=state_after_replace)
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
         """
@@ -766,7 +782,7 @@ class FailureMode(Load):
         return df.reset_index()
 
     def expected_risk_cost(self, scaling=None):
-        if scaling == None:
+        if scaling is None:
             scaling = self._sim_counter
 
         profile = self._expected_cost(scaling=scaling)
@@ -798,6 +814,15 @@ class FailureMode(Load):
 
         return dict(time=time, cost=cost)
 
+    def _expected_life(self):
+        """ Get the expected life from each timeline"""
+
+        expected_life = []
+        for timeline in self._timelines.items():
+            expected_life.append(timeline["time"][-1])
+
+        return expected_life
+
     def expected_tasks(self):
 
         task_count = dict()
@@ -823,7 +848,7 @@ class FailureMode(Load):
 
         # Reset indicators
         for ind in self.indicators.values():
-            ind.reset_for_next_sim()
+            ind.reset_for_next_sim(name=self.name)
 
     def reset(self):
 
@@ -833,7 +858,7 @@ class FailureMode(Load):
 
         # Reset conditions
         for indicator in self.indicators.values():
-            indicator.reset()
+            indicator.reset(name=self.name)
 
         # Reset timelines
         self.timeline = dict()
@@ -1032,11 +1057,6 @@ class FailureMode(Load):
     @classmethod
     def demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
-
-
-def doctest_setup():
-    from pof.failure_mode import FailureMode
-    from pof.distribution import Distribution
 
 
 if __name__ == "__main__":

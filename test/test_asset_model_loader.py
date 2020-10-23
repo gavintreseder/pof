@@ -6,10 +6,10 @@
 """
 
 import unittest
+
 import numpy as np
 
-import utils
-
+import testconfig
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.component import Component
 from pof.failure_mode import FailureMode

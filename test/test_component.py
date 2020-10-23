@@ -6,28 +6,35 @@
 """
 
 import unittest
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
 
-import utils
-
+import fixtures
+import testconfig
+from test_load import TestPofBase
 from pof.component import Component
 from config import config
 import pof.demo as demo
 
 from pof.interface.figures import update_condition_fig
 
-
 cf = config["Component"]
 
 
-class TestComponent(unittest.TestCase):
+class TestComponent(TestPofBase, unittest.TestCase):
     """
     Unit tests for the Component class
     """
+
+    def setUp(self):
+        super().setUp()
+
+        # TestPofBase Setup
+        self._class = Component
+        self._data_valid = dict(name="TestComponent")
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
@@ -50,9 +57,6 @@ class TestComponent(unittest.TestCase):
             msg="Indicator should not be able to link if there isn't an indicator by that name",
         ):
             comp = Component()
-
-    def test_from_dict(self):
-        comp = Component.from_dict(demo.component_data["comp"])
 
     ## *************** Test set_demo ***********************
 
@@ -131,7 +135,7 @@ class TestComponent(unittest.TestCase):
         comp = Component.demo()
 
         for fm_name, fm in comp.fm.items():
-            fm.next_tasks = MagicMock(return_value=test_next_task[fm_name])
+            fm.next_tasks = Mock(return_value=test_next_task[fm_name])
 
         t_next, next_task = comp.next_tasks(t_now)
 
@@ -159,7 +163,7 @@ class TestComponent(unittest.TestCase):
             comp = Component.demo()
 
             for fm_name, fm in comp.fm.items():
-                fm.next_tasks = MagicMock(return_value=test_next_task[fm_name])
+                fm.next_tasks = Mock(return_value=test_next_task[fm_name])
 
             t_next, next_task = comp.next_tasks(t_now)
 
@@ -170,7 +174,6 @@ class TestComponent(unittest.TestCase):
 
     def test_sim_timeline_active_all(self):
         comp = Component.demo()
-
         comp.sim_timeline(200)
 
     def test_sim_timeline_active_one(self):

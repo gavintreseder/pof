@@ -6,22 +6,26 @@
 """
 
 import unittest
+
 import numpy as np
 
-import utils
-
+import testconfig
 from pof.trigger import Trigger
 
-class TestTrigger(unittest.TestCase):
 
+class TestTrigger(unittest.TestCase):
     def get_test_triggers(self, triggers_to_keep):
         """
         A function to make it easier to get test data
         """
 
         triggers = dict(
-            conditions = {k: v for (k, v) in self.cond_options.items() if k in triggers_to_keep},
-            states = {k: v for (k, v) in self.state_options.items() if k in triggers_to_keep},
+            conditions={
+                k: v for (k, v) in self.cond_options.items() if k in triggers_to_keep
+            },
+            states={
+                k: v for (k, v) in self.state_options.items() if k in triggers_to_keep
+            },
         )
 
         return triggers
@@ -29,29 +33,31 @@ class TestTrigger(unittest.TestCase):
     def setUp(self):
 
         self.timeline = dict(
-            time = np.linspace(0, 100, 101),
-            condition_1 = np.linspace(100, 0 , 101),
-            condition_2 = np.linspace(100, 0 , 101),
-            state_1 = np.concatenate((np.full(10,False), np.full(81, True), np.full(10, False))),
-            state_2 = np.concatenate((np.full(20,False), np.full(61, True), np.full(20, False))),
+            time=np.linspace(0, 100, 101),
+            condition_1=np.linspace(100, 0, 101),
+            condition_2=np.linspace(100, 0, 101),
+            state_1=np.concatenate(
+                (np.full(10, False), np.full(81, True), np.full(10, False))
+            ),
+            state_2=np.concatenate(
+                (np.full(20, False), np.full(61, True), np.full(20, False))
+            ),
         )
 
         self.cond_options = dict(
-                condition_1 = dict(
-                    lower = 50,
-                    upper = 100,
-                ),
-                condition_2 = dict(
-                    lower = 70,
-                    upper = 90, 
-                ),
-        
+            condition_1=dict(
+                lower=50,
+                upper=100,
+            ),
+            condition_2=dict(
+                lower=70,
+                upper=90,
+            ),
         )
         self.state_options = dict(
-                state_1 = True,
-                state_2 = True,
+            state_1=True,
+            state_2=True,
         )
-    
 
     def test_class_imports_correctly(self):
         self.assertTrue(True)
@@ -67,7 +73,11 @@ class TestTrigger(unittest.TestCase):
 
         for test_logic in t.VALID_LOGIC:
 
-            t.set_logic(condition_logic=test_logic, state_logic=test_logic, overall_logic=test_logic)
+            t.set_logic(
+                condition_logic=test_logic,
+                state_logic=test_logic,
+                overall_logic=test_logic,
+            )
 
             self.assertEqual(test_logic, t._condition_logic)
             self.assertEqual(test_logic, t._state_logic)
@@ -77,7 +87,9 @@ class TestTrigger(unittest.TestCase):
         t = Trigger()
         test_logic = None
 
-        t.set_logic(condition_logic=test_logic, state_logic=test_logic, overall_logic=test_logic)
+        t.set_logic(
+            condition_logic=test_logic, state_logic=test_logic, overall_logic=test_logic
+        )
 
         self.assertEqual(t.DEFAULT_LOGIC, t._condition_logic)
         self.assertEqual(t.DEFAULT_LOGIC, t._state_logic)
@@ -85,27 +97,26 @@ class TestTrigger(unittest.TestCase):
 
     def test_set_logic_invalid(self):
         t = Trigger()
-        test_logic = str(t.DEFAULT_LOGIC).join('_invalid')
+        test_logic = str(t.DEFAULT_LOGIC).join("_invalid")
 
-        t.set_logic(condition_logic=test_logic, state_logic=test_logic, overall_logic=test_logic)
+        t.set_logic(
+            condition_logic=test_logic, state_logic=test_logic, overall_logic=test_logic
+        )
 
         self.assertEqual(t.DEFAULT_LOGIC, t._condition_logic)
         self.assertEqual(t.DEFAULT_LOGIC, t._state_logic)
         self.assertEqual(t.DEFAULT_LOGIC, t._overall_logic)
-    
+
     # *************** Test Check Condition ***********************
 
     def test_check_condition_and_one_condition(self):
 
-        expected = np.concatenate((
-            np.full(51,True),
-            np.full(50, False)
-        ))
+        expected = np.concatenate((np.full(51, True), np.full(50, False)))
 
-        triggers = self.get_test_triggers(['condition_1'])
+        triggers = self.get_test_triggers(["condition_1"])
 
         t = Trigger()
-        t.set_logic(condition_logic='and')
+        t.set_logic(condition_logic="and")
         t.set_triggers_all(triggers)
         output = t.check_condition(self.timeline, t_start=0, t_end=101)
 
@@ -113,16 +124,14 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_condition_and_two_condition(self):
 
-        expected = np.concatenate((
-            np.full(10, False),
-            np.full(21,True),
-            np.full(70, False)
-        ))
+        expected = np.concatenate(
+            (np.full(10, False), np.full(21, True), np.full(70, False))
+        )
 
-        triggers = self.get_test_triggers(['condition_1', 'condition_2'])
+        triggers = self.get_test_triggers(["condition_1", "condition_2"])
 
         t = Trigger()
-        t.set_logic(condition_logic='and')
+        t.set_logic(condition_logic="and")
         t.set_triggers_all(triggers)
         output = t.check_condition(self.timeline, t_start=0, t_end=101)
 
@@ -130,15 +139,12 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_condition_or_one_condition(self):
 
-        expected = np.concatenate((
-            np.full(51,True),
-            np.full(50, False)
-        ))
+        expected = np.concatenate((np.full(51, True), np.full(50, False)))
 
-        triggers = self.get_test_triggers(['condition_1'])
+        triggers = self.get_test_triggers(["condition_1"])
 
         t = Trigger()
-        t.set_logic(condition_logic='or')
+        t.set_logic(condition_logic="or")
         t.set_triggers_all(triggers)
         output = t.check_condition(self.timeline, t_start=0, t_end=101)
 
@@ -146,15 +152,12 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_condition_or_two_condition(self):
 
-        expected = np.concatenate((
-            np.full(51,True),
-            np.full(50, False)
-        ))
+        expected = np.concatenate((np.full(51, True), np.full(50, False)))
 
-        triggers = self.get_test_triggers(['condition_1', 'condition_2'])
+        triggers = self.get_test_triggers(["condition_1", "condition_2"])
 
         t = Trigger()
-        t.set_logic(condition_logic='or')
+        t.set_logic(condition_logic="or")
         t.set_triggers_all(triggers)
         output = t.check_condition(self.timeline, t_start=0, t_end=101)
 
@@ -164,16 +167,14 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_state_and_one_state(self):
 
-        expected = np.concatenate((
-            np.full(10,False),
-            np.full(81, True),
-            np.full(10, False)
-        ))
+        expected = np.concatenate(
+            (np.full(10, False), np.full(81, True), np.full(10, False))
+        )
 
-        triggers = self.get_test_triggers(['state_1'])
+        triggers = self.get_test_triggers(["state_1"])
 
         t = Trigger()
-        t.set_logic(state_logic='and')
+        t.set_logic(state_logic="and")
         t.set_triggers_all(triggers)
         output = t.check_state(self.timeline, t_start=0, t_end=101)
 
@@ -181,16 +182,14 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_state_and_two_state(self):
 
-        expected = np.concatenate((
-            np.full(20,False),
-            np.full(61, True),
-            np.full(20, False)
-        ))
+        expected = np.concatenate(
+            (np.full(20, False), np.full(61, True), np.full(20, False))
+        )
 
-        triggers = self.get_test_triggers(['state_1', 'state_2'])
+        triggers = self.get_test_triggers(["state_1", "state_2"])
 
         t = Trigger()
-        t.set_logic(state_logic='and')
+        t.set_logic(state_logic="and")
         t.set_triggers_all(triggers)
         output = t.check_state(self.timeline, t_start=0, t_end=101)
 
@@ -198,16 +197,14 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_state_or_one_state(self):
 
-        expected = np.concatenate((
-            np.full(10, False),
-            np.full(81, True),
-            np.full(10, False)
-        ))
+        expected = np.concatenate(
+            (np.full(10, False), np.full(81, True), np.full(10, False))
+        )
 
-        triggers = self.get_test_triggers(['state_1'])
+        triggers = self.get_test_triggers(["state_1"])
 
         t = Trigger()
-        t.set_logic(state_logic='or')
+        t.set_logic(state_logic="or")
         t.set_triggers_all(triggers)
         output = t.check_state(self.timeline, t_start=0, t_end=101)
 
@@ -215,35 +212,33 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_state_or_two_state(self):
 
-        expected = np.concatenate((
-            np.full(10,False),
-            np.full(81, True),
-            np.full(10, False)
-        ))
+        expected = np.concatenate(
+            (np.full(10, False), np.full(81, True), np.full(10, False))
+        )
 
-        triggers = self.get_test_triggers(['state_1', 'state_2'])
+        triggers = self.get_test_triggers(["state_1", "state_2"])
 
         t = Trigger()
-        t.set_logic(state_logic='or')
+        t.set_logic(state_logic="or")
         t.set_triggers_all(triggers)
         output = t.check_state(self.timeline, t_start=0, t_end=101)
 
         np.testing.assert_array_equal(expected, output)
 
-# *************** Test Check ***********************
+    # *************** Test Check ***********************
 
     def test_check_overall_and_state_and_condition_and(self):
 
-        expected = np.concatenate((
-            np.full(20,False),
-            np.full(11, True),
-            np.full(70, False)
-        ))
+        expected = np.concatenate(
+            (np.full(20, False), np.full(11, True), np.full(70, False))
+        )
 
-        triggers = self.get_test_triggers(['state_1', 'state_2', 'condition_1', 'condition_2'])
+        triggers = self.get_test_triggers(
+            ["state_1", "state_2", "condition_1", "condition_2"]
+        )
 
         t = Trigger()
-        t.set_logic(state_logic='and', condition_logic='and', overall_logic='and')
+        t.set_logic(state_logic="and", condition_logic="and", overall_logic="and")
         t.set_triggers_all(triggers)
         output = t.check(self.timeline)
 
@@ -251,20 +246,25 @@ class TestTrigger(unittest.TestCase):
 
     def test_check_overall_or_state_and_condition_and(self):
 
-        expected = np.concatenate((
-            np.full(20,False),
-            np.full(11, True),
-            np.full(70, False),
-        ))
+        expected = np.concatenate(
+            (
+                np.full(20, False),
+                np.full(11, True),
+                np.full(70, False),
+            )
+        )
 
-        triggers = self.get_test_triggers(['state_1', 'state_2', 'condition_1', 'condition_2'])
+        triggers = self.get_test_triggers(
+            ["state_1", "state_2", "condition_1", "condition_2"]
+        )
 
         t = Trigger()
-        t.set_logic(state_logic='and', condition_logic='and', overall_logic='and')
+        t.set_logic(state_logic="and", condition_logic="and", overall_logic="and")
         t.set_triggers_all(triggers)
         output = t.check(self.timeline)
 
         np.testing.assert_array_equal(expected, output)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -4,7 +4,8 @@
         "-s",
         "./test",
         "-p",
-        "*test*.py"
+        "test_*.py",
+        "-t"
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.nosetestsEnabled": false,
@@ -17,7 +18,4 @@
     "python.dataScience.jupyterServerURI": "local",
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
-    "python.testing.nosetestArgs": [
-        "test"
-    ]
 }

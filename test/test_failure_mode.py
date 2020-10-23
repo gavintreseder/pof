@@ -4,79 +4,34 @@
 
 import unittest
 from unittest.mock import Mock, MagicMock, patch
-import logging
-import sys
+
 import numpy as np
 
-import utils
+import fixtures
+import testconfig
+from test_load import TestPofBase
 from pof.failure_mode import FailureMode
-
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
-import fixtures
 
 
-class TestFailureMode(unittest.TestCase):
+class TestFailureMode(TestPofBase, unittest.TestCase):
     def setUp(self):
-        self.blank_config = Mock()
-        self.blank_config.get.return_value = None
-        self.blank_config.getboolean.return_value = None
-        self.blank_config.getint.return_value = None
 
-    def test_class_imports_correctly(self):
-        self.assertIsNotNone(FailureMode)
+        super().setUp()
 
-    def test_class_instantiate_no_data(self):
-        failure_mode = FailureMode()
-        self.assertIsNotNone(failure_mode)
+        # TestIntantiate
+        self._class = FailureMode
 
-    def test_class_instantiate_with_valid_data(self):
-        failure_mode = FailureMode(
-            name="random",
-            untreated=dict(name="slow_degrading", alpha=500, beta=1, gamma=0),
-        )
-        self.assertIsNotNone(failure_mode)
-
-    def test_class_instantiate_with_invalid_data(self):
-
-        invalid_data_type = dict(invalid_input="invalid_value")
-        invalid_data_value = dict(pf_curve="incorrect_value")
-
-        with self.assertRaises(TypeError):
-            FailureMode.from_dict(invalid_data_type)
-
-        # TODO patch this method of on error use default
-        with patch("pof.load.cf", self.blank_config):
-            with self.assertRaises(ValueError):
-                FailureMode.from_dict(invalid_data_value)
-
-    def test_from_dict_no_data(self):
-        with self.assertRaises(TypeError):
-            FailureMode.from_dict()
-
-    def test_from_dict_with_valid_data(self):
-        fm = FailureMode.from_dict(fixtures.failure_mode_data["early_life"])
-        self.assertIsNotNone(fm)
-
-    def test_from_dict_with_invalid_data_config_default(self):
-        # TODO Mock cf.get_boolean('on_error_default')
-        invalid_data = dict(pf_curve="invalid_value")
-
-        with patch("pof.failure_mode.cf", Mock()):
-            with self.assertRaises(ValueError):
-                FailureMode.from_dict(invalid_data)
-
-    def test_from_dict_with_invalid_data_config_none(self):
-
-        invalid_data = dict(pf_curve="invalid_value")
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with patch("pof.load.cf", self.blank_config):
-                with self.assertRaises(ValueError):
-                    FailureMode.from_dict(invalid_data)
+        # TestFromDict
+        self._data_valid = dict(name="TestFailureMode")
+        self._data_invalid_values = [{"pf_curve": "invalid_value"}]
+        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
 
     # ************ Test init_timeline ***********************
 
-    def test_init_timeline_condition_step(self):  # TODO full coverage
+    def test_init_timeline_condition_step(self):
+        # TODO full coverage
         t_start = 0
         t_end = 200
         fm = FailureMode.load(demo.failure_mode_data["random"])
@@ -118,7 +73,6 @@ class TestFailureMode(unittest.TestCase):
         t_start = 0
         t_end = 200
         fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
-        fm2 = FailureMode.load(demo.failure_mode_data["slow_aging"])
 
         fm.init_timeline(t_start=0, t_end=200)
 
@@ -154,6 +108,70 @@ class TestFailureMode(unittest.TestCase):
 
         # Check tasks match
         # TODO rewrite time function in tasks first copy from previous test
+
+    # ------------ Test update_timeline --------------------
+
+    def test_update_timeline(self):
+
+        # Arrange
+        fm = FailureMode.demo()
+
+        fm.update_timeline(t_start=10, updates=dict(initiation=False))
+
+        fm.update_timeline(t_start=5, updates=dict(initiation=False))
+
+    # -------------Test sim_timleine ----------------------
+
+    def test_sim_timeline_task_on_condition_replacement(self):
+        """
+        Check an on condition replacement task is triggered when the conditions are met
+        """
+
+        # Arrange so replacement should occur immediately
+        fm = FailureMode.demo()
+        fm.indicators["slow_degrading"].set_condition(10)
+        fm.indicators["fast_degrading"].set_condition(10)
+        fm.set_states(dict(initiation=True, detection=True))
+
+        # Act
+        fm.sim_timeline(200)
+
+        # Assert task is triggered and reset occurs
+        self.assertEqual(fm.timeline["on_condition_replacement"][0], 0, "no triggered")
+        for state, value in (
+            fm.tasks["on_condition_replacement"].impacts["state"].items()
+        ):
+            self.assertEqual(fm.timeline[state][1], value, "impact not completed")
+
+    def test_sim_timeline_on_failure_replacement(self):
+        # Arrange
+        fm = FailureMode(
+            untreated=fixtures.distribution_data["slow_aging"],
+            conditions={
+                "slow_degrading": fixtures.condition_data["slow_degrading"],
+                "fast_degrading": fixtures.condition_data["fast_degrading"],
+            },
+            tasks={"insepction": fixtures.replacement_data["on_failure"]},
+        )
+        fm.set_states({"initiation": True})
+        fm.indicators["slow_degrading"].set_condition(10)
+        fm.indicators["fast_degrading"].set_condition(10)
+
+        # Act
+        fm.sim_timeline(200)
+
+        # Assert task is triggered and reset occurs
+        self.assertEqual(
+            fm.timeline["on_condition_failure"][0], -1, "should not be failed yet"
+        )
+
+        for state, value in (
+            fm.tasks["on_condition_replacement"].impacts["state"].items()
+        ):
+            self.assertEqual(fm.timeline[state][1], value, "impact not completed")
+
+    def test_sim_timeline_remain_failed(self):
+        NotImplemented
 
     # ************ Test sim_timeline ***********************
 
@@ -214,54 +232,24 @@ class TestFailureMode(unittest.TestCase):
         # Check tasks match
         # TODO rewrite time function in tasks first
 
-    def test_sim_timeline_on_condition_task_triggered(self):
-        # Arrange
-        fm = FailureMode(
-            untreated=fixtures.distribution_data["slow_aging"],
-            conditions={
-                "slow_degrading": fixtures.condition_data["slow_degrading"],
-                "fast_degrading": fixtures.condition_data["fast_degrading"],
-            },
-            tasks={"insepction": fixtures.replacement_data["on_condition"]},
-        )
-        fm.set_states({"initiation": True})
-        fm.indicators["slow_degrading"].set_condition(10)
-        fm.indicators["fast_degrading"].set_condition(10)
-
-        # Act
-        fm.sim_timeline(200)
-
-        # Assert
-        fm
-
-        # self.assertEqual()
-
-    # ************ Test load ***********************
-
-    def test_load(self):
-        fm = FailureMode.load()
-        self.assertIsNotNone(fm)
-
-    def test_load_no_data_no_config(self):
-        with patch("pof.failure_mode.cf", self.blank_config):
-            with self.assertRaises(
-                ValueError,
-                msg="Error expected with no input",
-            ):
-                FailureMode.load()
-
-    def test_load_data_demo_data(self):
-        try:
-            fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
-            self.assertIsNotNone(fm)
-        except ValueError:
-            self.fail("ValueError returned")
-        except:
-            self.fail("Unknown error")
-
-    def test_set_demo_some_data(self):
+    def test_demo(self):
         fm = FailureMode.demo()
         self.assertIsNotNone(fm)
+
+    # ------------ Test mc_timeline ------------------
+
+    def test_mc_timeline(self):
+
+        # Arrange
+        fm = FailureMode.demo()
+
+        # Act
+        fm.mc_timeline(t_end=20, n_iterations=10)
+
+    def test_mc_timeline_risk_is_accurate(self):
+        fm = FailureMode.demo()
+
+        fm.mc_timeline(200)
 
     # ************ Test get_dash_ids *****************
 
