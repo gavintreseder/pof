@@ -7,12 +7,20 @@ from unittest.mock import Mock, MagicMock, patch
 
 import numpy as np
 
+from config import config
 import fixtures
 import testconfig
 from test_load import TestPofBase
 from pof.failure_mode import FailureMode
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
+
+
+def se_remain_failed(val):
+    if val == "remain_failed":
+        return True
+    else:
+        return False
 
 
 class TestFailureMode(TestPofBase, unittest.TestCase):
@@ -143,7 +151,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         ):
             self.assertEqual(fm.timeline[state][1], value, "impact not completed")
 
-    def test_sim_timeline_on_failure_replacement(self):
+    def test_sim_timeline_task_on_failure_replacement(self):
         # Arrange
         fm = FailureMode(
             untreated=fixtures.distribution_data["slow_aging"],
@@ -162,16 +170,47 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         # Assert task is triggered and reset occurs
         self.assertEqual(
-            fm.timeline["on_condition_failure"][0], -1, "should not be failed yet"
+            fm.timeline["on_failure_replacement"][0],
+            -1,
+            "task should not trigger at the t=0",
+        )
+        self.assertEqual(
+            fm.timeline["on_failure_replacement"][1], 0, "task should trigger at t=1"
         )
 
-        for state, value in (
-            fm.tasks["on_condition_replacement"].impacts["state"].items()
-        ):
-            self.assertEqual(fm.timeline[state][1], value, "impact not completed")
+        for state, value in fm.tasks["on_failure_replacement"].impacts["state"].items():
+            self.assertEqual(fm.timeline[state][2], value, "impact not completed")
 
     def test_sim_timeline_remain_failed(self):
-        NotImplemented
+        """
+        Check a timeline is impacted by the 'remain
+        """
+
+        params = ()
+
+        # Arrange so replacement should occur immediately
+        fm = FailureMode.demo()
+        fm.indicators["slow_degrading"].set_condition(10)
+        fm.indicators["fast_degrading"].set_condition(10)
+        fm.set_states(dict(initiation=True, detection=True))
+
+        # Act
+        with patch.dict(config, {"FailureMode": {"remain_failed": True}}):
+            fm.sim_timeline(200)
+
+            # Assert
+            self.assertEqual(len(fm.timeline["time"]), 1)
+            self.assertEqual(
+                fm.timeline["on_condition_replacement"][0],
+                0,
+                "task should trigger at t=1",
+            )
+            for task_name in fm.tasks:
+                self.assertEqual(
+                    any(fm.timeline[task_name][1:] + 1),
+                    False,
+                    "task should not be triggered again",
+                )
 
     # ************ Test sim_timeline ***********************
 
