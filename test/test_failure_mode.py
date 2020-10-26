@@ -159,7 +159,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
                 "slow_degrading": fixtures.condition_data["slow_degrading"],
                 "fast_degrading": fixtures.condition_data["fast_degrading"],
             },
-            tasks={"insepction": fixtures.replacement_data["on_failure"]},
+            tasks={"replacement": fixtures.replacement_data["on_failure"]},
         )
         fm.set_states({"initiation": True})
         fm.indicators["slow_degrading"].set_condition(10)
