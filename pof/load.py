@@ -87,7 +87,7 @@ class Load:
 
         return instance
 
-    def _set_container_attr(self, attr, d_type, value):
+    def set_obj(self, attr, d_type, value):
         """
 
         value = {'tasks':{'inspection':{'t_interval':10}}}

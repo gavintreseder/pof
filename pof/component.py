@@ -110,14 +110,14 @@ class Component(Load):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
-        self._set_container_attr("indicator", Indicator, indicator_input)
+        self.set_obj("indicator", Indicator, indicator_input)
 
     def set_failure_mode(self, fm_input):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
 
-        self._set_container_attr("fm", FailureMode, fm_input)
+        self.set_obj("fm", FailureMode, fm_input)
 
     def link_indicators(self):
 

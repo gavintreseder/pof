@@ -18,6 +18,67 @@ cf = config["Distribution"]
 
 # TODO Extend so that it works for all the common distributions
 
+class Manager(object):
+
+    """
+
+    #TODO Maybe move the set and update methods on the manager objects?
+
+    """
+    def set_obj(self, attr, d_type, value):
+        """
+
+        value = {'tasks':{'inspection':{'t_interval':10}}}
+        """
+
+        try:
+            if value is None:
+                setattr(self, attr, dict())
+
+            # Add the value to the dictionary if it is an object of that type
+            elif isinstance(value, d_type):
+                getattr(self, attr)[value.name] = value
+
+            # Check if the input is an iterable
+            elif isinstance(value, Iterable):
+
+                # Create an object from the dict
+                if all([hasattr(d_type, attr) for attr in value]):
+                    new_object = d_type.from_dict(value)
+                    getattr(self, attr)[new_object.name] = new_object
+
+                # Create an object from the dict of dict/objects
+                else:
+                    for key, val in value.items():
+
+                        if isinstance(val, d_type):
+                            getattr(self, attr)[val.name] = val
+
+                        else:
+                            new_object = d_type.from_dict(val)
+                            getattr(self, attr)[new_object.name] = new_object
+
+            else:
+                raise ValueError
+
+class DistributionManager(dict):
+    def __setitem__(self, item, value):
+
+        #untreated = self.get("untreated", None)
+        untreated_hash = hash(self.get("untreated", None))
+
+        # value = set_obj
+        # item = value.name
+
+        super(DistributionManager, self).__setitem__(item, value)
+
+        if untreated_hash != hash(self.get("untreated", None)):
+            init = Distribution.from_pf_interval(
+                self.dists["untreated"], self.pf_interval
+            )
+            self.__setattr__('init', init)
+            
+
 
 @dataclass()
 class DistributionData(Load):

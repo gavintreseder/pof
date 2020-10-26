@@ -300,6 +300,20 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     # ************ Test update methods *****************
 
+    def test_update_on_property_method(self):
+
+        # Arrange
+        fm1 = FailureMode.demo()
+        fm2 = FailureMode.demo()
+        test_data = {"untreated": {"alpha": 20, "beta": 10, "gamma": 5}}
+
+        # Act
+        fm1.untreated = test_data['untreated']
+        fm2.update(test_data)
+
+        # Assert
+        self.assertEquals(fm1, fm2)
+
     def test_update(self):
         # TODO This will be causing errors because new values are being created
         test_data_1 = fixtures.failure_mode_data["early_life"]

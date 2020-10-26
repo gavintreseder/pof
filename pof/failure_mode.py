@@ -212,14 +212,17 @@ class FailureMode(Load):
 
     @property
     def untreated(self):
-        return self.dists["untreated"]
+        return self.dists.get("untreated", None)
 
     @untreated.setter
     def untreated(self, dist):
         if dist is not None:
-            dist["name"] = "untreated"
-            dists = dict(untreated=dist)
-            self.set_dists(dists)
+            if isinstance(dist, Distribution):
+                dist.name = "untreated"
+            else:
+                dist["name"] = "untreated"
+            self.set_dists({'untreated':dist}) 
+            #TODO make this work for dist rather than dists
 
     # ************** Set Functions *****************
 
@@ -229,7 +232,7 @@ class FailureMode(Load):
 
     def set_indicators(self, var=None):
 
-        self._set_container_attr("indicators", Indicator, var)
+        self.set_obj("indicators", Indicator, var)
 
     def set_conditions(self, var=None):
         """
@@ -262,7 +265,7 @@ class FailureMode(Load):
 
         untreated = copy.copy(getattr(self, "dists", None).get("untreated", None))
 
-        self._set_container_attr("dists", Distribution, dists)
+        self.set_obj("dists", Distribution, dists)
 
         # Check if 'untreated' was updated and if so, call init dist
         if untreated != self.dists.get("untreated", None):
@@ -310,7 +313,7 @@ class FailureMode(Load):
         """
         Takes a dictionary of tasks and sets the failure mode tasks
         """
-        self._set_container_attr("tasks", Task, tasks)
+        self.set_obj("tasks", Task, tasks)
 
     def link_indicator(self, indicator):
         """
@@ -921,36 +924,36 @@ class FailureMode(Load):
 
         plt.show()
 
-    def update_from_dict(self, dict_data):
+    # def update_from_dict(self, dict_data):
 
-        for key, value in dict_data.items():
+    #     for key, value in dict_data.items():
 
-            if key in [
-                "name",
-                "active",
-                "pf_curve",
-                "pf_interval",
-                "pf_std",
-            ]:
-                setattr(self, key, value)
+    #         if key in [
+    #             "name",
+    #             "active",
+    #             "pf_curve",
+    #             "pf_interval",
+    #             "pf_std",
+    #         ]:
+    #             setattr(self, key, value)
 
-            elif key in ["untreated", "dists"]:
-                self.set_dists(dict_data[key])
+    #         elif key in ["untreated", "dists"]:
+    #             self.set_dists(dict_data[key])
 
-            elif key == "conditions":
-                self.set_conditions(dict_data[key])
+    #         elif key == "conditions":
+    #             self.set_conditions(dict_data[key])
 
-            elif key == "consequence":
-                self.set_consequence(dict_data[key])
+    #         elif key == "consequence":
+    #             self.set_consequence(dict_data[key])
 
-            elif key == "states":
-                self.set_states(dict_data[key])
+    #         elif key == "states":
+    #             self.set_states(dict_data[key])
 
-            elif key == "tasks":
-                self.set_tasks(dict_data[key])
+    #         elif key == "tasks":
+    #             self.set_tasks(dict_data[key])
 
-            else:
-                print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+    #         else:
+    #             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
     def get_value(self, key):
         """
