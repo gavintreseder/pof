@@ -16,6 +16,11 @@ import scipy.stats as ss
 import plotly.express as px
 import plotly.graph_objects as go
 
+if __package__ is None or __package__ == "":
+    import sys
+    import os
+
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.helper import str_to_dict
 from config import config
@@ -144,77 +149,22 @@ class Load:
                     )
                 )
 
-    def _set_container_attr_legacy(self, attr, d_type, value):
-
-        # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
-        if getattr(self, attr, None) is None:
-            setattr(self, attr, dict())
-
-        try:
-            if value is None:
-                setattr(self, attr, dict())
-
-            # Add the value to the dictionary if it is an object of that type
-            elif isinstance(value, d_type):
-                getattr(self, attr)[value.name] = value
-
-            # Check if the input is an iterable
-            elif isinstance(value, Iterable):
-
-                # TODO fix this
-                # If this doesn't exist yet create it
-                if "name" in value:
-                    getattr(self, attr)[value["name"]] = d_type.load(value)
-
-                # Iterate through and create objects using this method
-                else:
-
-                    for key, val in value.items():
-                        if key in getattr(self, attr) and not isinstance(val, d_type):
-                            getattr(self, attr)[key].update_from_dict(val)
-                            # if "name" in val:
-                            #     getattr(self, attr)[val["name"]] = d_type.load(val)
-                            # else:
-                            #     getattr(self, attr)[key].update_from_dict(val)
-                        else:
-                            self._set_container_attr(attr, d_type, val)
-
-            else:
-                raise ValueError
-
-        except:
-            if value is None and cf.get("on_error_use_default") is True:
-                logging.info(
-                    "%s (%s) - %s cannot be set from %s - Default Use",
-                    self.__class__.__name__,
-                    self.name,
-                    attr,
-                    value,
-                )
-            else:
-                raise ValueError(
-                    "%s (%s) - %s cannot be set from %s"
-                    % (
-                        self.__class__.__name__,
-                        self.name,
-                        attr,
-                        value,
-                    )
-                )
-
     def update(self, id_object, value=None):
-        """"""
-        if isinstance(id_object, str):
-            self.update_from_str(id_object, value, sep="-")
+        """ An update method with some error handling"""
+        try:
+            if isinstance(id_object, str):
+                self.update_from_str(id_object, value, sep="-")
 
-        elif isinstance(id_object, dict):
-            self.update_from_dict(id_object)
+            elif isinstance(id_object, dict):
+                self.update_from_dict(id_object)
 
-        else:
-            print(
-                'ERROR: Cannot update "%s" from string or dict'
-                % (self.__class__.__name__)
-            )
+            else:
+                logging.warning(
+                    'ERROR: Cannot update "%s" from string or dict',
+                    self.__class__.__name__,
+                )
+        except KeyError as error:
+            logging.warning(error)
 
     def update_from_str(self, id_str, value, sep="-"):
         """
@@ -226,11 +176,55 @@ class Load:
 
         self.update_from_dict(dict_data)
 
-    def update_from_dict(self, *args, **kwargs):
+    # def update_from_dict(self, *args, **kwargs):
+    #     """
+    #     Update_from_dict is overloaded in each of the child classes
+    #     """
+    #     raise NotImplementedError()
+
+    def update_from_dict(self, data):
+        """Updates an attribute on a pof object using a
+
+        load = Load()
+        load.update({'name':'updated_name'})
+        load.name
         """
-        Update_from_dict is overloaded in each of the child classes
-        """
-        raise NotImplementedError()
+        # Loop through all the varaibles to update
+        for attr, detail in data.items():
+
+            # Check it is an attribute
+            if hasattr(self, attr):
+                var_to_update = getattr(self, attr)
+
+                # Check if the value is a dictionary
+                if isinstance(var_to_update, dict):
+
+                    for key, val in detail.items():
+
+                        var_to_update = getattr(self, attr).get(key, None)
+
+                        # Check if it is a pof object with an update method
+                        if isinstance(var_to_update, Load):
+                            var_to_update.update_from_dict(val)
+
+                        elif var_to_update is not None:
+                            getattr(self, attr)[key] = val
+
+                        else:
+                            raise KeyError(
+                                "%s - %s - %s - %s - does not have the value - %s"
+                                % (self.__class__.__name__, self.name, attr, key, val),
+                            )
+                elif isinstance(var_to_update, Load):
+                    var_to_update.update_from_dict(detail)
+                else:
+                    setattr(self, attr, detail)
+
+            else:
+                raise KeyError(
+                    "%s - %s - does not have the attribute - %s"
+                    % (self.__class__.__name__, self.name, attr),
+                )
 
     def sensitivity(
         self,
@@ -413,3 +407,8 @@ class Load:
 
     def mc_timeline(self, *args, **kwargs):
         raise NotImplementedError()
+
+
+if __name__ == "__main__":
+    load = Load()
+    print("Load - Ok")

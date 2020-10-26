@@ -19,9 +19,6 @@
         # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
 
 
-    # Stretch
-        # Raise exception v print error for catching mistakes
-
     
 
 # 08 Sep - Gav
@@ -48,6 +45,7 @@
             # Consequence Model
             # Load data from csv file
             # Cox model
+
 
     # Critical
         # inspection interval onto interface w button

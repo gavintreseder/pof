@@ -58,7 +58,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         ):
             comp = Component()
 
-    ## *************** Test set_demo ***********************
+    ## *************** Test demo ***********************
 
     def test_demo(self):
         comp = Component.demo()
@@ -142,9 +142,18 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self.assertEqual(next_task, expected)
         self.assertEqual(t_next, 5)
 
-    def test_next_tasks_many_fm_many_task(self):
+    def test_next_tasks_many_fm_many_tasks(self):
+        # TODO new method
+        # Three different task intervals for each of the failure_modes
+        param_next_task = [(5, 5, 5), (5, 5, 5), (10, 5, 5), (10, 10, 5)]
 
+        for e_l, s_a, f_a, rand in param_next_task:
+            NotImplemented
+
+    def test_next_tasks_many_fm_many_task(self):
+        """ Mock next tasks """
         times = dict(
+            early_life=[5, 5, 5, 5],
             slow_aging=[5, 5, 5],
             fast_aging=[10, 5, 5],
             random=[10, 10, 5],
@@ -153,6 +162,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         for i in range(3):
             t_now = None
             test_next_task = dict(
+                early_life=(times["early_life"][i], ["inspection"]),
                 slow_aging=(times["slow_aging"][i], ["inspection"]),
                 fast_aging=(times["fast_aging"][i], ["inspection", "cm"]),
                 random=(times["random"][i], ["inspection"]),

@@ -456,7 +456,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         fm = FailureMode.demo()
 
-        fm._timeline["failure"] = np.full(False, 200)
+        fm._timeline["failure"] = np.full(0, 200)
 
         er = fm._expected_risk()
 
