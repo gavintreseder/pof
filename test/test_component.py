@@ -99,15 +99,20 @@ class TestComponent(TestPofBase, unittest.TestCase):
                     self.assertEqual([], task.t_completion)
 
     def test_complete_tasks_two_fm_two_task(self):
+
+        # Arrange
         fm_next_tasks = dict(
-            slow_aging=["inspection", "cm"],
-            fast_aging=["inspection", "cm"],
+            slow_aging=["inspection", "on_condition_replacement"],
+            fast_aging=["inspection", "on_condition_replacement"],
         )
         t_now = 5
         comp = Component.demo()
+
+        # Act
         comp.init_timeline(200)
         comp.complete_tasks(t_now, fm_next_tasks)
 
+        # Assert
         for fm_name, fm in comp.fm.items():
             for task_name, task in fm.tasks.items():
 

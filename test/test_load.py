@@ -146,15 +146,17 @@ class TestLoad(unittest.TestCase):
 
     def test_set_container_attr_from_dict(self):
 
+        # Arrange
         load = Load()
-        load.obj = None
-
+        load.dict_obj = None
         test_data = dict(name="test")
         expected = Load(name="test")
 
-        load._set_container_attr("obj", Load, test_data)
+        # Act
+        load._set_container_attr("dict_obj", Load, test_data)
 
-        self.assertEqual(load.obj[expected.name], expected)
+        # Assert
+        self.assertEqual(load.dict_obj[expected.name], expected)
 
     def test_set_container_attr_from_dict_of_dicts(self):
 
@@ -168,13 +170,17 @@ class TestLoad(unittest.TestCase):
 
     def test_set_container_attr_from_dict_of_objects(self):
 
+        # Arrange
         load = Load()
-        test_data = dict(pof_object=Load(name="test"))
+        load.dict_obj = None
+        test_data = {"test_key": Load(name="test")}
         expected = Load(name="test")
 
-        load._set_container_attr("obj", Load, test_data)
+        # Act
+        load._set_container_attr("dict_obj", Load, test_data)
 
-        self.assertEqual(load.obj[expected.name], expected)
+        # Assert
+        self.assertEqual(load.dict_obj[expected.name], expected)
 
     def test_set_container_attr_from_object(self):
 

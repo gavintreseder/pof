@@ -88,6 +88,10 @@ class Load:
         return instance
 
     def _set_container_attr(self, attr, d_type, value):
+        """
+
+        value = {'tasks':{'inspection':{'t_interval':10}}}
+        """
 
         # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
         if getattr(self, attr, None) is None:
@@ -104,50 +108,36 @@ class Load:
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
 
-                try:
+                # Create an object from the dict
+                if all([hasattr(d_type, attr) for attr in value]):
+                    new_object = d_type.from_dict(value)
+                    getattr(self, attr)[new_object.name] = new_object
+
+                # Create an object from the dict of dict/objects
+                else:
                     for key, val in value.items():
 
-                        # dict of objects
                         if isinstance(val, d_type):
                             getattr(self, attr)[val.name] = val
-
-                        # dict to update
-                        elif key in getattr(self, attr) and isinstance(
-                            getattr(self, attr)[key], d_type
-                        ):
-                            getattr(self, attr)[key].update_from_dict(val)
 
                         else:
                             new_object = d_type.from_dict(val)
                             getattr(self, attr)[new_object.name] = new_object
 
-                except (TypeError, ValueError):
-                    # Try and load it with the full value instead
-                    new_object = d_type.load(value)
-                    getattr(self, attr)[new_object.name] = new_object
-
             else:
                 raise ValueError
 
-        except:
+        except ValueError:  # TODO maybe cahnge this back?
+            msg = "%s (%s) - %s cannot be set from %s" % (
+                self.__class__.__name__,
+                self.name,
+                attr,
+                value,
+            )
             if value is None and cf.get("on_error_use_default") is True:
-                logging.info(
-                    "%s (%s) - %s cannot be set from %s - Default Use",
-                    self.__class__.__name__,
-                    self.name,
-                    attr,
-                    value,
-                )
+                logging.info(msg + "- Default used")
             else:
-                raise ValueError(
-                    "%s (%s) - %s cannot be set from %s"
-                    % (
-                        self.__class__.__name__,
-                        self.name,
-                        attr,
-                        value,
-                    )
-                )
+                raise ValueError(msg)
 
     def update(self, id_object, value=None):
         """ An update method with some error handling"""
