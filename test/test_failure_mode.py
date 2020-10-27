@@ -2,6 +2,7 @@
 #TODO add docstring
 """
 
+import copy
 import unittest
 from unittest.mock import Mock, MagicMock, patch
 
@@ -212,6 +213,8 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
                     "task should not be triggered again",
                 )
 
+        x = 1
+
     # ************ Test sim_timeline ***********************
 
     def test_sim_timeline_condition_step(self):  # TODO full coverage
@@ -305,10 +308,12 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # Arrange
         fm1 = FailureMode.demo()
         fm2 = FailureMode.demo()
-        test_data = {"untreated": {"alpha": 20, "beta": 10, "gamma": 5}}
+        test_data = {
+            "untreated": {"name": "untreated", "alpha": 20, "beta": 10, "gamma": 5}
+        }
 
         # Act
-        fm1.untreated = test_data['untreated']
+        fm1.untreated = test_data["untreated"]
         fm2.update(test_data)
 
         # Assert
@@ -475,6 +480,74 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         er = fm._expected_risk()
 
         np.testing.assert_array_equal(er["time"], [])
+
+    # ------------ Integration Tests ---------------
+
+    def test_init_dist_is_updated_on_creation(self):
+
+        # Arrange / Act
+        fm = FailureMode.from_dict(
+            {"pf_interval": 10, "untreated": {"alpha": 100, "beta": 10, "gamma": 10}}
+        )
+
+        # Assert
+        self.assertNotEqual(fm.untreated, fm.dists["init"])
+
+    def test_init_dist_is_updated_with_untreated(self):
+
+        # Arrange
+        fm = FailureMode.from_dict(
+            {"pf_interval": 10, "untreated": {"alpha": 100, "beta": 10, "gamma": 10}}
+        )
+        untreated = copy.copy(fm.dists.get("untreated", None))
+        init = copy.copy(fm.dists.get("init", None))
+
+        # Act
+        fm.untreated = {"alpha": 50, "beta": 10, "gamma": 5}
+
+        # Assert
+        self.assertNotEqual(fm.dists["untreated"], untreated)
+        self.assertNotEqual(fm.dists["init"], init)
+
+    def test_init_dist_is_updated_with_pf_interval(self):
+
+        # Arrange
+        fm = FailureMode.from_dict(
+            {"pf_interval": 10, "untreated": {"alpha": 100, "beta": 10, "gamma": 10}}
+        )
+        untreated = copy.copy(fm.dists.get("untreated", None))
+        init = copy.copy(fm.dists.get("init", None))
+
+        # Act
+        fm.pf_interval = 5
+
+        # Assert
+        self.assertEqual(fm.dists["untreated"], untreated)
+        self.assertNotEqual(fm.dists["init"], init)
+
+    def test_init_dist_is_updated_with_update(self):
+        """ Check that init dist updates when the update method is called on any of its inputs"""
+        param_update = [
+            {"pf_interval": 5},
+            {"untreated": {"alpha": 80}},
+        ]
+
+        for update in param_update:
+
+            # Arrange
+            fm = FailureMode.from_dict(
+                {
+                    "pf_interval": 10,
+                    "untreated": {"alpha": 100, "beta": 10, "gamma": 10},
+                }
+            )
+            init = copy.copy(fm.dists.get("init", None))
+
+            # Act
+            fm.update(update)
+
+            # Assert
+            self.assertNotEqual(fm.dists["init"], init)
 
 
 if __name__ == "__main__":

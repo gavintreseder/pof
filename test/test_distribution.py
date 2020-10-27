@@ -3,20 +3,37 @@ import unittest
 import scipy.stats as ss
 
 import testconfig
-from pof.distribution import Distribution
+from test_load import TestPofBase
+from pof.distribution import Distribution, DistributionManager
 
 
-class TestDistribution(unittest.TestCase):
+# class TestDistributionManager(unittest.TestCase):
+#     def test_set(self):
+
+#         dist = Distribution.demo()
+#         dists = DistributionManager()
+
+#         dists["untreated"] = dist
+
+#     def test_update(self):
+#         NotImplemented
+
+
+class TestDistribution(TestPofBase, unittest.TestCase):
     def setUp(self):
+        super().setUp()
+
+        # TestPofBase
+        self._class = Distribution
+        self._data_valid = {"name": "test"}
+        self._data_invalid_types = [{"alpha": "string"}]
+        self._data_invalid_values = []
+
         self.alpha = 50
         self.beta = 1.5
         self.gamma = 10
 
         self.dist = Distribution(alpha=50, beta=1.5, gamma=10)
-
-    def test_instantiate(self):
-        dist = Distribution()
-        self.assertIsNotNone(dist)
 
     def test_csf_length(self):
 

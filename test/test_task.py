@@ -30,7 +30,6 @@ class TestTaskCommon(TestPofBase):
         # TestPofBase
         self._class = self._class
         self._data_valid = self._data_valid
-        self._data_invalid_types = ["string", True]
         self._data_invalid_types = [dict(invalid_input="invalid_input")]
         self._data_invalid_values = []
 

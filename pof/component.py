@@ -23,8 +23,6 @@ if __package__ is None or __package__ == "":
 
 from config import config
 from pof.failure_mode import FailureMode
-from pof.condition import Condition
-from pof.distribution import Distribution
 from pof.helper import fill_blanks, id_update
 from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
 from pof.load import Load

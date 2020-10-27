@@ -1,5 +1,6 @@
-from dataclasses import dataclass, field
+import copy
 
+from dataclasses import dataclass, field
 import numpy as np
 import scipy.stats as ss
 
@@ -18,81 +19,71 @@ cf = config["Distribution"]
 
 # TODO Extend so that it works for all the common distributions
 
-class Manager(object):
+# class Manager(object):
 
-    """
+#     """
 
-    #TODO Maybe move the set and update methods on the manager objects?
+#     #TODO Maybe move the set and update methods on the manager objects?
 
-    """
-    def set_obj(self, attr, d_type, value):
-        """
+#     """
+#     def set_obj(self, attr, d_type, value):
+#         """
 
-        value = {'tasks':{'inspection':{'t_interval':10}}}
-        """
+#         value = {'tasks':{'inspection':{'t_interval':10}}}
+#         """
 
-        try:
-            if value is None:
-                setattr(self, attr, dict())
+#         try:
+#             if value is None:
+#                 setattr(self, attr, dict())
 
-            # Add the value to the dictionary if it is an object of that type
-            elif isinstance(value, d_type):
-                getattr(self, attr)[value.name] = value
+#             # Add the value to the dictionary if it is an object of that type
+#             elif isinstance(value, d_type):
+#                 getattr(self, attr)[value.name] = value
 
-            # Check if the input is an iterable
-            elif isinstance(value, Iterable):
+#             # Check if the input is an iterable
+#             elif isinstance(value, Iterable):
 
-                # Create an object from the dict
-                if all([hasattr(d_type, attr) for attr in value]):
-                    new_object = d_type.from_dict(value)
-                    getattr(self, attr)[new_object.name] = new_object
+#                 # Create an object from the dict
+#                 if all([hasattr(d_type, attr) for attr in value]):
+#                     new_object = d_type.from_dict(value)
+#                     getattr(self, attr)[new_object.name] = new_object
 
-                # Create an object from the dict of dict/objects
-                else:
-                    for key, val in value.items():
+#                 # Create an object from the dict of dict/objects
+#                 else:
+#                     for key, val in value.items():
 
-                        if isinstance(val, d_type):
-                            getattr(self, attr)[val.name] = val
+#                         if isinstance(val, d_type):
+#                             getattr(self, attr)[val.name] = val
 
-                        else:
-                            new_object = d_type.from_dict(val)
-                            getattr(self, attr)[new_object.name] = new_object
+#                         else:
+#                             new_object = d_type.from_dict(val)
+#                             getattr(self, attr)[new_object.name] = new_object
 
-            else:
-                raise ValueError
+#             else:
+#                 raise ValueError
+
 
 class DistributionManager(dict):
-    def __setitem__(self, item, value):
 
-        #untreated = self.get("untreated", None)
-        untreated_hash = hash(self.get("untreated", None))
+    pf_interval = 0
+
+    def __setitem__(self, item, value):
 
         # value = set_obj
         # item = value.name
-
+        untreated = copy.copy(self.get("untreated", None))
         super(DistributionManager, self).__setitem__(item, value)
 
-        if untreated_hash != hash(self.get("untreated", None)):
+        if untreated != self.get("untreated", None):
             init = Distribution.from_pf_interval(
-                self.dists["untreated"], self.pf_interval
+                self.get("untreated"), self.pf_interval
             )
-            self.__setattr__('init', init)
-            
+            init.name = "init"
+            self["init"] = init
 
 
 @dataclass()
-class DistributionData(Load):
-    """
-    A class that contains the data for the Distribution object.
-    """
-
-    alpha: int = field(default_factory=lambda: cf.getint("alpha"))
-    beta: int = field(default_factory=lambda: cf.getint("beta"))
-    gamma: int = field(default_factory=lambda: cf.getint("gamma"))
-    name: str = field(default_factory=lambda: cf.get("name"))
-
-
-class Distribution(DistributionData):
+class Distribution(Load):
 
     """
     Usage:
@@ -107,6 +98,11 @@ class Distribution(DistributionData):
         Distribution(name=...)
 
     """
+
+    name: str = field(default_factory=lambda: cf.get("name"))
+    alpha: int = field(default_factory=lambda: cf.getint("alpha"))
+    beta: int = field(default_factory=lambda: cf.getint("beta"))
+    gamma: int = field(default_factory=lambda: cf.getint("gamma"))
 
     def params(self):
         params = dict(
@@ -160,10 +156,10 @@ class Distribution(DistributionData):
         prefix = prefix + self.name + sep
         return [prefix + param for param in ["alpha", "beta", "gamma"]]
 
-    def load_demo(self, scenario=None):
+    @classmethod
+    def demo(self, scenario=None):
 
         if scenario is None:
-
             data = dict(
                 name="slow_aging",
                 alpha=100,
@@ -171,7 +167,7 @@ class Distribution(DistributionData):
                 gamma=10,
             )
 
-        self.load(data)
+        return self.from_dict(data)
 
     def csf(self, t_start, t_end):
         t_interval = np.arange(t_start, t_end + 1, 1)
@@ -217,14 +213,14 @@ class Distribution(DistributionData):
 
         return P
 
-    def update_from_dict(self, dict_data):
+    # def update_from_dict(self, dict_data):
 
-        for key, value in dict_data.items():
+    #     for key, value in dict_data.items():
 
-            if key in self.__dict__:
-                self.__dict__[key] = value
-            else:
-                print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+    #         if key in self.__dict__:
+    #             self.__dict__[key] = value
+    #         else:
+    #             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
     def get_value(self, key):
         """

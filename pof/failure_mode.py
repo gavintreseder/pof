@@ -30,7 +30,7 @@ if __package__ is None or __package__ == "":
 
 from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
-from pof.distribution import Distribution
+from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
 from pof.task import (
     Task,
@@ -137,6 +137,14 @@ class FailureMode(Load):
         tasks: Dict = None,
     ):
 
+        self.dists = dict()
+        self.indicators = dict()
+        self.conditions = dict()
+        self.consequences = dict()
+        self.tasks = dict()
+        self.init_states = dict()
+        self.states = dict()
+
         # TODO finish all the @setters to check for valid input and handle defaults
         self.name = name
         self.active = active
@@ -145,20 +153,12 @@ class FailureMode(Load):
         self.pf_std = pf_std
         self.conditions_to_update = set()  # not used yet
 
-        self.dists = dict()
         self.untreated = untreated
-        self.indicators = dict()
         self.set_indicators(indicators)
-        self.conditions = dict()
         self.set_conditions(conditions)
-        self.consequences = dict()
         self.set_consequence(consequence)
-        self.tasks = dict()
         self.set_tasks(tasks)
-
-        self.init_states = dict()
         self.set_init_states(states)
-        self.states = dict()
         self.set_states(states)
 
         self.timeline = dict()
@@ -202,6 +202,8 @@ class FailureMode(Load):
         try:
             if value >= 0:
                 self._pf_interval = value
+                if "untreated" in self.dists:
+                    self._set_init()
             else:
                 raise ValueError(
                     "%s (%s) - pf_interval must be greater than 0"
@@ -221,8 +223,14 @@ class FailureMode(Load):
                 dist.name = "untreated"
             else:
                 dist["name"] = "untreated"
-            self.set_dists({'untreated':dist}) 
-            #TODO make this work for dist rather than dists
+
+            self.set_dists({"untreated": dist})
+            self._set_init()
+
+    def _set_init(self):
+        init = Distribution.from_pf_interval(self.dists["untreated"], self.pf_interval)
+        init.name = "init"
+        self.set_dists({"init": init})
 
     # ************** Set Functions *****************
 
@@ -262,16 +270,7 @@ class FailureMode(Load):
             self.set_indicators(indicator)
 
     def set_dists(self, dists):
-
-        untreated = copy.copy(getattr(self, "dists", None).get("untreated", None))
-
         self.set_obj("dists", Distribution, dists)
-
-        # Check if 'untreated' was updated and if so, call init dist
-        if untreated != self.dists.get("untreated", None):
-            self.dists["init"] = Distribution.from_pf_interval(
-                self.dists["untreated"], self.pf_interval
-            )
 
     def set_init_states(self, states):
         # TODO Update this method at the same time as set state
@@ -923,6 +922,16 @@ class FailureMode(Load):
             ax_task.legend()
 
         plt.show()
+
+    def update_from_dict(self, data):
+        """Simple fix"""
+
+        untreated = copy.copy(self.dists.get("untreated", None))
+
+        super().update_from_dict(data)
+
+        if untreated != self.untreated:
+            self._set_init()
 
     # def update_from_dict(self, dict_data):
 

@@ -54,7 +54,8 @@ class Load:
             # probhitted = ["-"] #TODO expand list
             # if any(x in a_string for x in matches):
             self._name = value
-
+        elif value is None:
+            self._name = None
         else:
             raise TypeError("name must be a string")
 
@@ -186,8 +187,12 @@ class Load:
             if hasattr(self, attr):
                 var_to_update = getattr(self, attr)
 
-                # Check if the value is a dictionary
-                if isinstance(var_to_update, dict):
+                # Check if the object has a load method
+                if isinstance(var_to_update, Load):
+                    var_to_update.update_from_dict(detail)
+
+                # Check if it is a dictionary
+                elif isinstance(var_to_update, dict):
 
                     for key, val in detail.items():
 
@@ -205,8 +210,6 @@ class Load:
                                 "%s - %s - %s - %s - does not have the value - %s"
                                 % (self.__class__.__name__, self.name, attr, key, val),
                             )
-                elif isinstance(var_to_update, Load):
-                    var_to_update.update_from_dict(detail)
                 else:
                     setattr(self, attr, detail)
 
