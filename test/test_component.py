@@ -254,6 +254,17 @@ class TestComponent(TestPofBase, unittest.TestCase):
     def test_replace(self):
         NotImplemented
 
+    def test_delete(self):
+
+        from pof.loader.fleet_data import FleetData
+        from pof.loader.poles_fleet_data_loader import PolesFleetDataLoader
+
+        pfd = PolesFleetDataLoader()
+
+        g = pfd.get_fleet_data()
+
+        a = pfd
+
 
 if __name__ == "__main__":
     unittest.main()
