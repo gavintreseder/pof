@@ -435,6 +435,11 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
                         % (self.__class__.__name__, self.name, key)
                     )
 
+    @classmethod
+    def demo(cls):
+        # TODO make this a scheduled replacement task
+        return cls.from_dict(demo.inspection_data["degrading"])
+
 
 class ConditionTask(Task):
     """
@@ -506,24 +511,9 @@ class ConditionTask(Task):
 
         return tl_ct
 
-    def update_from_dict(self, keys):
-
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if hasattr(self, key):
-                    setattr(self, key, value)
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
-
     @classmethod
     def demo(cls):
-        cls.from_dict(demo.inspection_data["degrading"])
+        return cls.from_dict(demo.replacement_data["on_condition"])
 
 
 class Inspection(ScheduledTask):
@@ -570,7 +560,7 @@ class Inspection(ScheduledTask):
 
     @classmethod
     def demo(cls):
-        cls.from_dict(demo.inspection_data["degrading"])
+        return cls.from_dict(demo.inspection_data["degrading"])
 
 
 class ImmediateMaintenance(ConditionTask):
