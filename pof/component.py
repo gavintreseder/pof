@@ -36,7 +36,7 @@ from dataclasses import dataclass
 
 DEFAULT_ITERATIONS = 100
 
-cf = config["Component"]
+cf = config.get("Component")
 
 
 @dataclass
@@ -204,7 +204,7 @@ class Component(Load):
 
             if bool(system_impact):
 
-                if config.getboolean("Component", "allow_system_impact"):
+                if cf.get("allow_system_impact"):
                     self.renew(t_renew=t_next + 1)
 
                     logging.debug(
@@ -518,7 +518,6 @@ class Component(Load):
 
 if __name__ == "__main__":
     component = Component()
-    component
     print("Component - Ok")
 
     """import doctest

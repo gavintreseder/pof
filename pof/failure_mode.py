@@ -5,7 +5,6 @@ Author: Gavin Treseder
 
 # ************ Packages ********************
 
-import configparser
 import copy
 from dataclasses import dataclass, field
 from typing import Dict, Optional
@@ -294,7 +293,7 @@ class FailureMode(Load):
 
         # Set a default value if none has been provided
         if self.states is None:
-            if cf.USE_DEFAULT:
+            if cf.get("use_default", config.get("Load").get("use_default")):
                 self.states = {state: False for state in self.REQUIRED_STATES}
             else:
                 raise ValueError("Failure Mode - %s - No states provided" % (self.name))
@@ -584,7 +583,7 @@ class FailureMode(Load):
         """
         Update timeline
         """
-        if config.getboolean("FailureMode", "remain_failed"):
+        if cf.get("remain_failed"):
             self.fail(t_renew)
         else:
             self.replace(t_renew)
