@@ -100,9 +100,9 @@ class Distribution(Load):
     """
 
     name: str = field(default_factory=lambda: cf.get("name"))
-    alpha: int = field(default_factory=lambda: cf.getint("alpha"))
-    beta: int = field(default_factory=lambda: cf.getint("beta"))
-    gamma: int = field(default_factory=lambda: cf.getint("gamma"))
+    alpha: int = field(default_factory=lambda: cf.get("alpha"))
+    beta: int = field(default_factory=lambda: cf.get("beta"))
+    gamma: int = field(default_factory=lambda: cf.get("gamma"))
 
     def params(self):
         params = dict(

@@ -71,8 +71,6 @@ class Task(Load):
         triggers=None,
         impacts=None,
         activity=NotImplemented,
-        *args,
-        **kwargs
     ):
 
         # Task information
@@ -106,13 +104,13 @@ class Task(Load):
         self.cost_completion = []
         self._timeline = NotImplemented
 
-        logging.debug(
-            "%s - %s - Unused variables - %s - %s",
-            self.__class__.__name__,
-            self.name,
-            args,
-            kwargs,
-        )
+        # logging.debug(
+        #     "%s - %s - Unused variables - %s - %s",
+        #     self.__class__.__name__,
+        #     self.name,
+        #     args,
+        #     kwargs,
+        # )
 
     # ************ Load Methods **********************
 
@@ -146,6 +144,10 @@ class Task(Load):
             raise TypeError("Dictionary expected")
 
         return task
+
+    @classmethod
+    def demo(cls):
+        raise NotImplementedError
 
     # ************ Set Methods **********************
 
@@ -363,9 +365,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    def __init__(
-        self, t_interval=None, t_delay=0, name="scheduled_task", *args, **kwargs
-    ):
+    def __init__(self, t_interval=0, t_delay=0, name="scheduled_task", *args, **kwargs):
         # TODO fix up defaults
         super().__init__(name=name, *args, **kwargs)
 
@@ -405,7 +405,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         if self.active:
             schedule = np.tile(
                 np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
-                math.ceil((t_end - self.t_delay) / self.t_interval),
+                math.ceil(max((t_end - self.t_delay), 0) / self.t_interval),
             )
 
             if self.t_delay > 0:
@@ -521,6 +521,10 @@ class ConditionTask(Task):
                         % (self.__class__.__name__, self.name, key)
                     )
 
+    @classmethod
+    def demo(cls):
+        cls.from_dict(demo.inspection_data["degrading"])
+
 
 class Inspection(ScheduledTask):
     def __init__(self, t_interval=100, t_delay=0, name="inspection", *args, **kwargs):
@@ -552,15 +556,21 @@ class Inspection(ScheduledTask):
                 if det == True:
                     for trigger, threshold in self.triggers["condition"].items():
                         if trigger in timeline:  # TODO get more efficient check
-                            if trigger["lower"] != "min":
-                                det = (det) & (timeline[trigger][t_now] >= threshold["lower"])
-            
-                            if trigger["upper"] != "max":
-                                det = det | (timeline[trigger][t_now] <= threshold["upper"])
+                            if threshold["lower"] != "min":
+                                det = (det) & (
+                                    timeline[trigger][t_now] >= threshold["lower"]
+                                )
 
-                            )
+                            if threshold["upper"] != "max":
+                                det = det | (
+                                    timeline[trigger][t_now] <= threshold["upper"]
+                                )
 
         return det
+
+    @classmethod
+    def demo(cls):
+        cls.from_dict(demo.inspection_data["degrading"])
 
 
 class ImmediateMaintenance(ConditionTask):

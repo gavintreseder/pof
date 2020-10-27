@@ -42,8 +42,6 @@ class TestPofBase(object):
         # Config for checking default behaviour
         self.blank_config = Mock()
         self.blank_config.get.return_value = None
-        self.blank_config.getboolean.return_value = None
-        self.blank_config.getint.return_value = None
 
         # Class data
         self._class = Mock(return_value=None)
@@ -74,16 +72,7 @@ class TestPofBase(object):
         instance = self._class.from_dict(self._data_valid)
         self.assertIsNotNone(instance)
 
-    def test_from_dict_with_invalid_data_config_default(self):
-
-        # TODO Mock cf.get_boolean('on_error_default')
-        # Arrange
-        class_config = self._class.__module__ + ".cf"
-
-        with patch(class_config, Mock()):
-            self.from_dict_invalid_data()
-
-    def test_from_dict_with_invalid_data_config_none(self):
+    def test_from_dict_with_invalid_data(self):
 
         # Arrange
         class_config = self._class.__module__ + ".cf"
@@ -93,19 +82,54 @@ class TestPofBase(object):
             with patch(load_config, self.blank_config):
 
                 # Act / Assert
-                self.from_dict_invalid_data()
+                for invalid_type in self._data_invalid_types:
+                    with self.assertRaises(TypeError):
+                        self._class.from_dict(invalid_type)
 
-    def from_dict_invalid_data(self):
-        """Check invalid data"""
-        for invalid_type in self._data_invalid_types:
-            with self.assertRaises(TypeError):
-                self._class.from_dict(invalid_type)
-
-        for invalid_value in self._data_invalid_values:
-            with self.assertRaises(ValueError):
-                self._class.from_dict(invalid_value)
+                for invalid_value in self._data_invalid_values:
+                    with self.assertRaises(ValueError):
+                        self._class.from_dict(invalid_value)
 
     # ************ Test load ***********************
+
+    def test_load_with_empty(self):
+        instance = self._class.load()
+        self.assertIsNotNone(instance)
+
+    def test_load_valid_dict(self):
+        # Arrange
+        instance_from_dict = self._class.from_dict(self._data_valid)
+
+        # Act
+        instance = self._class.load(self._data_valid)
+
+        # Assert
+        self.assertEqual(instance, instance_from_dict)
+
+    def test_load_with_invalid_data_config_on_error_use_default(self):
+
+        # Arrange
+        # class_config = self._class.__module__ + ".cf"
+        class_config = "pof.load.cf"
+
+        with patch.dict(class_config, {"on_error_use_default": True}):
+            invalid_data = self._data_invalid_types + self._data_invalid_values
+            for data in invalid_data:
+
+                # Act
+                obj = self._class.load(data)
+
+                # Assert
+                self.assertIsNotNone(obj)
+
+    def test_demo(self):
+
+        # Arrange / Act / Assert
+        self.assertIsNotNone(self._class.demo())
+
+    # def test_load_error(self):
+
+    #     with patch.dict(class_config, {"on_error_use_default": True}):
 
     # def test_load(self):
     #     fm = FailureMode.load()

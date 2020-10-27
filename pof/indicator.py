@@ -316,7 +316,6 @@ class Indicator(Load):
             plt.plot(timeline)
             # plt.plot(self.t_condition, self.current(), "rd")
 
-
     """def expected_condition(self, conf=0.5):
         ec = self.get_timeline()
         return self._expected_condition(ec, conf)"""
@@ -705,7 +704,6 @@ class ConditionIndicator(Indicator):
 
             self._reset_accumulated(accumulated, permanent=permanent)
 
-
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
@@ -795,7 +793,6 @@ class PoleSafetyFactor(Indicator):
             sf[np.isnan(sf)] = 0
 
         return sf
-
 
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
