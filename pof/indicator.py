@@ -316,17 +316,6 @@ class Indicator(Load):
             plt.plot(timeline)
             # plt.plot(self.t_condition, self.current(), "rd")
 
-    def update_from_dict(self, dict_data):
-
-        for key, value in dict_data.items():
-
-            if key in self.__dict__:
-                self.__dict__[key] = value
-            else:
-                raise KeyError(
-                    'ERROR: Cannot update "%s" from dict with key %s'
-                    % (self.__class__.__name__, key)
-                )
 
     """def expected_condition(self, conf=0.5):
         ec = self.get_timeline()
@@ -716,22 +705,6 @@ class ConditionIndicator(Indicator):
 
             self._reset_accumulated(accumulated, permanent=permanent)
 
-    def update_from_dict(self, keys):
-        """
-        Takes a dict of key values and updates an attribute in indicator
-        """
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if key in self.__dict__:
-                    self.__dict__[key] = value
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
 
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
@@ -823,20 +796,6 @@ class PoleSafetyFactor(Indicator):
 
         return sf
 
-    def update_from_dict(self, keys):
-
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if key in self.__dict__:
-                    self.__dict__[key] = value
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
 
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
