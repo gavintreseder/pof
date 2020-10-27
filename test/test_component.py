@@ -35,6 +35,8 @@ class TestComponent(TestPofBase, unittest.TestCase):
         # TestPofBase Setup
         self._class = Component
         self._data_valid = dict(name="TestComponent")
+        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_invalid_values = []
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
@@ -42,21 +44,6 @@ class TestComponent(TestPofBase, unittest.TestCase):
     def test_class_instantiate(self):
         comp = Component()
         self.assertIsNotNone(comp)
-
-    @patch("cf.USE_DEFAULT", True)
-    def test_class_instantiate_no_input_use_default_true(self):
-        """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
-        comp = Component()
-        self.assertIsNotNone(comp)
-
-    @patch("cf.USE_DEFAULT", False)
-    def test_class_instantiate_no_input_use_default_false(self):
-        """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
-        with self.assertRaises(
-            Exception,
-            msg="Indicator should not be able to link if there isn't an indicator by that name",
-        ):
-            comp = Component()
 
     ## *************** Test demo ***********************
 
@@ -126,6 +113,11 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
     # *************** Test next_tasks ***********************
 
+    def test_next_tasks(self):
+
+        # TODO
+        NotImplemented
+
     def test_next_tasks_one_fm_one_task(self):
 
         t_now = None
@@ -147,7 +139,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self.assertEqual(next_task, expected)
         self.assertEqual(t_next, 5)
 
-    def test_next_tasks_many_fm_many_tasks(self):
+    def test_next_tasks_many_fm_many_tasks_new_method(self):
         # TODO new method
         # Three different task intervals for each of the failure_modes
         param_next_task = [(5, 5, 5), (5, 5, 5), (10, 5, 5), (10, 10, 5)]

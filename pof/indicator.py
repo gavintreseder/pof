@@ -24,7 +24,7 @@ if __package__ is None or __package__ == "":
 from pof.load import Load
 from pof.helper import str_to_dict
 from config import config
-import pof.demo import demo
+import pof.demo as demo
 
 cf = config["Indicator"]
 
@@ -711,7 +711,8 @@ class ConditionIndicator(Indicator):
 
     @classmethod
     def demo(cls):
-        return cls.from_dict(demo.condition_data['slow_degrading'])
+        return cls.from_dict(demo.condition_data["slow_degrading"])
+
 
 # TODO overload get method so the None key isnt' needed for _timeline
 

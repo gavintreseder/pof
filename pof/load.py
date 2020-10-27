@@ -219,6 +219,15 @@ class Load:
                     % (self.__class__.__name__, self.name, attr),
                 )
 
+    def validate_inputs(self, *args, **kwargs)
+        # logging.debug(
+        #     "%s - %s - Unused variables - %s - %s",
+        #     self.__class__.__name__,
+        #     self.name,
+        #     args,
+        #     kwargs,
+        # )
+
     def sensitivity(
         self,
         var_name,
@@ -264,7 +273,8 @@ class Load:
 
         d_all = {}
 
-        for index, row in df.iterrows():
+        for index, row in:
+             df.iterrows():
 
             [lower, upper] = ss.norm.interval(
                 alpha=conf, loc=row["mean"], scale=row["sd"]

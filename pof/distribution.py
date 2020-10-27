@@ -157,7 +157,7 @@ class Distribution(Load):
         return [prefix + param for param in ["alpha", "beta", "gamma"]]
 
     @classmethod
-    def demo(self, scenario=None):
+    def demo(cls, scenario=None):
 
         if scenario is None:
             data = dict(
@@ -167,7 +167,7 @@ class Distribution(Load):
                 gamma=10,
             )
 
-        return self.from_dict(data)
+        return cls.from_dict(data)
 
     def csf(self, t_start, t_end):
         t_interval = np.arange(t_start, t_end + 1, 1)

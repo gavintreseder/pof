@@ -2,13 +2,27 @@ import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 from pof import Component
-from pof.interface.layouts import make_component_layout
+from pof.interface.layouts import make_component_layout, make_failure_mode_layout
 
 
 class TestLayout(unittest.TestCase):
     def test_make_component_layout(self):
+        # Arrange
         comp = Component.demo()
-        mcl = make_component_layout(comp)
+
+        # Act
+        layout = make_component_layout(comp)
+
+        # Assert
+
+    def test_make_failure_mode_layout(self):
+        # Arrange
+        fm = FailureMode.demo()
+
+        # Assert
+        layout = make_failure_mode_layout(fm)
+
+        # Act
 
 
 """for ms in ms_fig_update:

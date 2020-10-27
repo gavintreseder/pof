@@ -9,6 +9,7 @@ use_default = false
 
 [Component]
 allow_system_impact = false
+remain_failed = false
 
 
 [FailureMode]

@@ -200,16 +200,14 @@ class Component(Load):
         for fm_name, task_names in fm_tasks.items():
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
-            if bool(system_impact):
-
-                if cf.get("allow_system_impact"):
+            if bool(system_impact) and cf.get("allow_system_impact"):
+                logging.debug(
+                    "Component %s reset by FailureMode %s", self.name, fm_name
+                )
+                if cf.get("remain_failed"):
                     self.renew(t_renew=t_next + 1)
-
-                    logging.debug(
-                        "Component %s reset by FailureMode %s", self.name, fm_name
-                    )
-
-                # TODO does this need another option here
+                else:
+                    self.fail(t_fail=t_next+1)
 
                 break
 
@@ -224,9 +222,9 @@ class Component(Load):
 
         # Reset the failuremodes
         for fm in self.fm.values():
-            fm.renew(t_renew)
+            fm.fail(t_fail)
 
-        self._replacement.append(t_renew)
+        self._replacement.append(t_fail)
 
     def renew(self, t_renew):
         """

@@ -55,6 +55,7 @@ class Task(Load):
 
     CONDITION_IMPACT_AXIS = ["condition", "time"]
     CONDITION_IMPACT_METHODS = ["reduction_factor", "tbc"]
+    SYSTEM_IMPACT = ["fm", "component", "asset"]
 
     def __init__(
         self,
@@ -71,6 +72,8 @@ class Task(Load):
         triggers=None,
         impacts=None,
         activity=NotImplemented,
+        *args,
+        **kwargs
     ):
 
         # Task information
@@ -104,13 +107,13 @@ class Task(Load):
         self.cost_completion = []
         self._timeline = NotImplemented
 
-        # logging.debug(
-        #     "%s - %s - Unused variables - %s - %s",
-        #     self.__class__.__name__,
-        #     self.name,
-        #     args,
-        #     kwargs,
-        # )
+        logging.debug(
+            "%s - %s - Unused variables - %s - %s",
+            self.__class__.__name__,
+            self.name,
+            args,
+            kwargs,
+        )
 
     # ************ Load Methods **********************
 
@@ -147,7 +150,7 @@ class Task(Load):
 
     @classmethod
     def demo(cls):
-        raise NotImplementedError
+        return cls()
 
     # ************ Set Methods **********************
 

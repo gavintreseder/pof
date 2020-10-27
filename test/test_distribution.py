@@ -26,7 +26,7 @@ class TestDistribution(TestPofBase, unittest.TestCase):
         # TestPofBase
         self._class = Distribution
         self._data_valid = {"name": "test"}
-        self._data_invalid_types = [{"alpha": "string"}]
+        self._data_invalid_types = []  # TODO[{"alpha": "string"}]
         self._data_invalid_values = []
 
         self.alpha = 50

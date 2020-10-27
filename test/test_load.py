@@ -153,6 +153,24 @@ class TestPofBase(object):
     #         self.fail("Unknown error")
 
 
+# TODO add back in tests for
+
+# @patch("cf.USE_DEFAULT", True)
+# def test_class_instantiate_no_input_use_default_true(self):
+#     """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
+#     comp = Component()
+#     self.assertIsNotNone(comp)
+
+# @patch("cf.USE_DEFAULT", False)
+# def test_class_instantiate_no_input_use_default_false(self):
+#     """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
+#     with self.assertRaises(
+#         Exception,
+#         msg="Indicator should not be able to link if there isn't an indicator by that name",
+#     ):
+#         comp = Component()
+
+
 class TestLoad(unittest.TestCase):
     def setUp(self):
 
