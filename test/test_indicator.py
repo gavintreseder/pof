@@ -734,7 +734,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         c = ConditionIndicator.from_dict(test_data)
         update = {"alpha": 10, "beta": 5}
 
-        self.assertRaises(KeyError, c.update, update)
+        self.assertRaises(KeyError, c.update_from_dict, update)
 
     def test_agg_timelines_no_cause(self):
         """

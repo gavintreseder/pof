@@ -71,6 +71,8 @@ class Task(Load):
         triggers=None,
         impacts=None,
         activity=NotImplemented,
+        *args,
+        **kwargs
     ):
 
         # Task information
@@ -103,6 +105,14 @@ class Task(Load):
         self.t_completion = []
         self.cost_completion = []
         self._timeline = NotImplemented
+
+        logging.debug(
+            "%s - %s - Unused variables - %s - %s",
+            self.__class__.__name__,
+            self.name,
+            args,
+            kwargs,
+        )
 
     # ************ Load Methods **********************
 
@@ -361,7 +371,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         self.trigger = "time"
         self.t_delay = t_delay
-        self._t_interval = t_interval
+        self.t_interval = t_interval
 
     @property
     def t_interval(self):
@@ -371,6 +381,18 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     def t_interval(self, value):
 
         self._t_interval = int(value)
+
+        if math.ceil(value) != value:
+            logging.warning("t_interval must be an integer - %s", value)
+
+    @property
+    def t_delay(self):
+        return self._t_delay
+
+    @t_delay.setter
+    def t_delay(self, value):
+
+        self._t_delay = int(value)
 
         if math.ceil(value) != value:
             logging.warning("t_interval must be an integer - %s", value)
@@ -530,9 +552,12 @@ class Inspection(ScheduledTask):
                 if det == True:
                     for trigger, threshold in self.triggers["condition"].items():
                         if trigger in timeline:  # TODO get more efficient check
-                            det = det | (
-                                (timeline[trigger][t_now] >= threshold["lower"])
-                                & (timeline[trigger][t_now] <= threshold["upper"])
+                            if trigger["lower"] != "min":
+                                det = (det) & (timeline[trigger][t_now] >= threshold["lower"])
+            
+                            if trigger["upper"] != "max":
+                                det = det | (timeline[trigger][t_now] <= threshold["upper"])
+
                             )
 
         return det

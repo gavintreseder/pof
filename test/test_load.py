@@ -244,6 +244,31 @@ class TestLoad(unittest.TestCase):
 
     # -------------------- Test update -----------------------------
 
+    def test_update_errors_caught_and_logged(self):
+        """ check that an attriubte that doens't exist returns a Key Error"""
+        # Arrange
+        load = Load(name="before_update")
+        load.data = "before_update"
+        load.obj = Load(name="before_update")
+        load.dict_data = {"test_key": "before_update"}
+        load.dict_obj = {"test_key": Load(name="before_update")}
+
+        param_tests = [
+            ({"invalid_attribute": "after_update"}),
+            ({"obj": {"invalid_attribute": "after_update"}},),
+            ({"dict_data": {"invalid_key": "after_update"}}),
+            ({"dict_obj": {"invalid_key": {"name": "after_update"}}},),
+        ]
+
+        for test_data in param_tests:
+            # Act / Assert
+            # with self.assertRaises(error):
+
+            # TODO add context manager to check logger
+            load.update(test_data)
+
+    # -------------------- Test update_from_str -----------------------------
+
     def test_update_with_string(self):
         # TODO
         NotImplemented
