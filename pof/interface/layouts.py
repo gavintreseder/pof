@@ -74,9 +74,9 @@ def validate_layout(pof_obj, layout):
 
     if missing_objects:
         logging.info("Missing objects from layout - %s", missing_objects)
-        return True
-    else:
         return False
+    else:
+        return True
 
 
 # ******************* Component ******************
@@ -552,7 +552,7 @@ def make_system_impact_layout(impact, prefix="", sep="-"):
                 options=[
                     {"label": system, "value": system} for system in Task.SYSTEM_IMPACT
                 ],
-                value=impact["system"],
+                value=impact,
             ),
         ],
         className="mr-3",

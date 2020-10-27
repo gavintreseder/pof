@@ -299,12 +299,16 @@ class AssetModelLoader:
             except:
                 state = df_task["impact_model"]["state"].dropna().to_dict()
 
+            #TODO revist how system impact is set
+            system = [df_task["impact_model"]["system"]['level'].iloc[0]]
+
             impact_data = dict(
                 state=state,
                 condition=df_task["impact_model"]["condition"]
                 .dropna()
                 .set_index("name")
                 .to_dict("index"),
+                system=system,
             )
 
             # Tasks specific information

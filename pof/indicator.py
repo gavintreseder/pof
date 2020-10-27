@@ -127,7 +127,7 @@ class Indicator(Load):
         logging.debug("Non overloaded function called")
         NotImplemented
 
-    def reset(self):
+    def reset(self, name=NotImplemented):
 
         self._profile = dict()
         self._timeline = dict()
