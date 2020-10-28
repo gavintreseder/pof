@@ -1,13 +1,15 @@
 """
     Filename: indicator.py
     Description: Contains the code for implementing a load class
-    Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
+    Authors: Gavin Treseder
+        gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
 
 # from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
+import inspect
 
 from dataclass_property import dataclass, field_property
 import numpy as np
@@ -43,6 +45,9 @@ class Load:
 
     name: str = field_property(default="Load")
 
+    def __post_init__(self, *args, **kwargs):
+        self._handle_invalid_data(args, kwargs)
+
     @name.getter
     def name(self) -> str:
         return self._name
@@ -59,22 +64,57 @@ class Load:
         else:
             raise TypeError("name must be a string")
 
+    def _handle_invalid_data(self, args, kwargs):
+        """
+        Log invalid input or raise an error
+        """
+        if bool(args or kwargs):
+            msg = "%s - %s - Unused variables - %s - %s" % (
+                self.__class__.__name__,
+                self.name,
+                args,
+                kwargs,
+            )
+
+            if cf.get("handle_invalid_data", False):
+                logging.warning(msg)
+            else:
+                raise TypeError(msg)
+
     @classmethod
     def load(cls, details=None):
         """
         Loads the data with extra error checking and default logic
         """
         try:
-            instance = cls.from_dict(details)
+            if details is None:
+                instance = cls.from_dict(details)
+            else:
+                if cf.get("handle_invalid_data", False):
+                    stripped_details = {
+                        k: v
+                        for k, v in details.items()
+                        if k in inspect.signature(cls).parameters
+                    }
+                    instance = cls.from_dict(stripped_details)
+                else:
+                    instance = cls.from_dict(details)
+
         except (ValueError, TypeError) as error:
             logging.warning(error)
             logging.warning("Error loading %s data from dictionary", cls.__name__)
-            if cf.get("on_error_use_default"):
+            if cf.get("on_error_use_default", False):
                 logging.info("Defaults used")
                 instance = cls()
             else:
                 raise error
         return instance
+
+    def _validate_signature(obj):
+        """
+        Recursively get the signature variables"""
+
+        return signature
 
     @classmethod
     def from_dict(cls, details=None):

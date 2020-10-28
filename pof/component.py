@@ -204,40 +204,28 @@ class Component(Load):
                 logging.debug(
                     "Component %s reset by FailureMode %s", self.name, fm_name
                 )
-                if cf.get("remain_failed"):
-                    self.renew(t_renew=t_next + 1)
-                else:
-                    self.fail(t_fail=t_next+1)
+                self.renew(t_renew=t_next + 1)
 
                 break
 
-    # Replace, renew, fail
-
-    def fail(self, t_fail):
-        """ Reset indicators """
-
-        # Reset the indicators
-        for ind in self.indicator.values():
-            ind.reset_to_perfect()
-
-        # Reset the failuremodes
-        for fm in self.fm.values():
-            fm.fail(t_fail)
-
-        self._replacement.append(t_fail)
-
     def renew(self, t_renew):
         """
-        Reset indicators and update failure mode timelines after a component is reset
+        Renew the component because a task has triggered an as-new change or failure
         """
 
         # Reset the indicators
         for ind in self.indicator.values():
             ind.reset_to_perfect()
 
-        # Reset the failuremodes
-        for fm in self.fm.values():
-            fm.renew(t_renew)
+        # Fail
+        if cf.get("remain_failed"):
+            for fm in self.fm.values():
+                fm.fail(t_renew)
+
+        # Replace
+        else:
+            for fm in self.fm.values():
+                fm.renew(t_renew)
 
         self._replacement.append(t_renew)
 

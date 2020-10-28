@@ -55,7 +55,7 @@ class Task(Load):
 
     CONDITION_IMPACT_AXIS = ["condition", "time"]
     CONDITION_IMPACT_METHODS = ["reduction_factor", "tbc"]
-    SYSTEM_IMPACT = ["fm", "component", "asset"]
+    SYSTEM_IMPACT = [None, "fm", "component", "asset"]
 
     def __init__(
         self,
@@ -71,13 +71,15 @@ class Task(Load):
         p_effective=1,
         triggers=None,
         impacts=None,
-        activity=NotImplemented,
+        activity="task",
         *args,
         **kwargs
     ):
 
+        # Load error handling
+        super().__init__(name=name, *args, **kwargs)
+
         # Task information
-        self.name = name
         self.task_type = task_type
         self.trigger = trigger
         self.active = active
@@ -106,14 +108,6 @@ class Task(Load):
         self.t_completion = []
         self.cost_completion = []
         self._timeline = NotImplemented
-
-        logging.debug(
-            "%s - %s - Unused variables - %s - %s",
-            self.__class__.__name__,
-            self.name,
-            args,
-            kwargs,
-        )
 
     # ************ Load Methods **********************
 

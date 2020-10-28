@@ -5,6 +5,7 @@ replace_sep_with = "."
 
 [Load]
 on_error_use_default = true
+handle_invalid_data = true
 use_default = false
 
 [Component]

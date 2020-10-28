@@ -257,13 +257,14 @@ class FailureMode(Load):
                     self.set_indicators(indicator)
         else:
             # Create a simple indicator
+            # Removing this temporarilty #TODO
             indicator = ConditionIndicator(
                 name=self.name,
                 pf_curve="step",
                 pf_interval=0,
                 pf_std=0,
                 perfect=False,
-                failed=True,
+                failed=False,
             )
             self.conditions = {self.name: {}}
             self.set_indicators(indicator)
@@ -849,7 +850,7 @@ class FailureMode(Load):
 
         # Reset indicators
         for ind in self.indicators.values():
-            ind.reset_for_next_sim(name=self.name)
+            ind.reset_for_next_sim()  # TODO will this reset for all, or just for None
 
     def reset(self):
 
@@ -859,7 +860,7 @@ class FailureMode(Load):
 
         # Reset conditions
         for indicator in self.indicators.values():
-            indicator.reset(name=self.name)
+            indicator.reset()  # TODO will this reset for all, or just for None
 
         # Reset timelines
         self.timeline = dict()

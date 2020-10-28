@@ -88,7 +88,7 @@ def make_layout(pof_obj, prefix="", sep="-"):
     elif isinstance(pof_obj, FailureMode):
         layout = make_failure_mode_layout
 
-    validate_layout(pof_object, layout)
+    validate_layout(pof_obj, layout)
 
     return layout
 

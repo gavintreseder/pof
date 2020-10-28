@@ -19,16 +19,17 @@
         # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
 
 
-    
+Completed
+    # Review task update method
+    # Split set/update methods
 
 # 08 Sep - Gav
 
     # Trigger active doesn't do anything
     # All task triggers acting as AND rather than or _> requires change for on_condition_replacement
 
+    # Init dist not working
 
-    # Review task update method
-    # Split set/update methods
     # Write get_dist methods that get the distributions for methods rather than the expected
 
     # Options

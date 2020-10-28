@@ -34,6 +34,8 @@ class TestPofBase(object):
 
     """
 
+    tc = unittest.TestCase()
+
     def setUp(self):
         """
         Set up the test so errors are returned if test data is not overloaded
@@ -55,40 +57,47 @@ class TestPofBase(object):
     # ---------------- Class Instantiate ------------------------
 
     def test_class_instantiate_with_no_data(self):
+        """ Check class instantiate works with all no data"""
         instance = self._class()
-        self.assertIsNotNone(instance)
+        self.tc.assertIsNotNone(instance)
 
     def test_class_instantiate_with_valid_data(self):
+        """ Check class instantiate works with valid data"""
+
+        # Act
         instance = self._class(**self._data_valid)
-        self.assertIsNotNone(instance)
+
+        # Assert
+        self.tc.assertIsNotNone(instance)
+
+    def test_class_instantiate_with_invalid_data(self):
+        """ Check the class creation fails with invalid data"""
+
+        for invalid_data in self._data_invalid_types:
+            with self.tc.assertRaises(TypeError):
+                self._class(**invalid_data)
 
     # ---------------- Test from_dict ----------------
 
     def test_from_dict_no_data(self):
-        with self.assertRaises(TypeError):
+        with self.tc.assertRaises(TypeError):
             self._class.from_dict()
 
     def test_from_dict_with_valid_data(self):
         instance = self._class.from_dict(self._data_valid)
-        self.assertIsNotNone(instance)
+        self.tc.assertIsNotNone(instance)
 
     def test_from_dict_with_invalid_data(self):
+        """ Check invalid data is handled correctly"""
 
-        # Arrange
-        class_config = self._class.__module__ + ".cf"
-        load_config = "pof.load.cf"  # TODO make this work for any namespace
+        # Act / Assert
+        for invalid_type in self._data_invalid_types:
+            with self.tc.assertRaises(TypeError):
+                self._class.from_dict(invalid_type)
 
-        with patch(class_config, self.blank_config):
-            with patch(load_config, self.blank_config):
-
-                # Act / Assert
-                for invalid_type in self._data_invalid_types:
-                    with self.assertRaises(TypeError):
-                        self._class.from_dict(invalid_type)
-
-                for invalid_value in self._data_invalid_values:
-                    with self.assertRaises(ValueError):
-                        self._class.from_dict(invalid_value)
+        for invalid_value in self._data_invalid_values:
+            with self.tc.assertRaises(ValueError):
+                self._class.from_dict(invalid_value)
 
     # ************ Test load ***********************
 
@@ -121,6 +130,14 @@ class TestPofBase(object):
 
                 # Assert
                 self.assertIsNotNone(obj)
+
+
+        # Tests for handle_errors
+        # # Arrange
+        # param_cf = [(False, TypeError, ValueError), (True, None, None)]
+
+        # for h_i_d, type_error, value_error in param_cf:
+        #     with patch.dict("pof.load.cf", {"handle_invalid_data": h_i_d}):
 
     def test_demo(self):
 
