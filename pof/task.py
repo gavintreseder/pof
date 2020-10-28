@@ -303,17 +303,7 @@ class Task(Load):
 
         for key, value in dict_data.items():
 
-            if key in [
-                "activity",
-                "name",
-                "task_type",
-                "active",
-                "p_effective",
-                "cost",
-            ]:
-                setattr(self, key, value)
-
-            elif key in ["trigger", "impact"]:
+            if key in ["trigger", "impact"]:
 
                 for key_1, value in dict_data[key].items():
 
@@ -325,11 +315,11 @@ class Task(Load):
                     elif key_1 == "state":
                         for key_2, value in dict_data[key][key_1].items():
                             self.__dict__[key + "s"][key_1][key_2] = value
+
+                    elif key_1 == "system":
+                        self.__dict__[key][key_1] = value
             else:
-                raise KeyError(
-                    'ERROR: Cannot update "%s" from dict with key %s'
-                    % (self.__class__.__name__, key)
-                )
+                super().update_from_dict({key:value})
 
     def get_dash_ids(self, prefix="", sep="-"):
 
