@@ -5,7 +5,6 @@ Author: Gavin Treseder
 
 # ************ Packages ********************
 
-import configparser
 import copy
 from dataclasses import dataclass, field
 from typing import Dict, Optional
@@ -30,13 +29,12 @@ if __package__ is None or __package__ == "":
 
 from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
-from pof.distribution import Distribution
+from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
 from pof.task import (
     Task,
     Inspection,
     ConditionTask,
-    ImmediateMaintenance,
 )
 import pof.demo as demo
 from pof.load import Load
@@ -137,6 +135,14 @@ class FailureMode(Load):
         tasks: Dict = None,
     ):
 
+        self.dists = dict()
+        self.indicators = dict()
+        self.conditions = dict()
+        self.consequences = dict()
+        self.tasks = dict()
+        self.init_states = dict()
+        self.states = dict()
+
         # TODO finish all the @setters to check for valid input and handle defaults
         self.name = name
         self.active = active
@@ -145,20 +151,12 @@ class FailureMode(Load):
         self.pf_std = pf_std
         self.conditions_to_update = set()  # not used yet
 
-        self.dists = dict()
         self.untreated = untreated
-        self.indicators = dict()
         self.set_indicators(indicators)
-        self.conditions = dict()
         self.set_conditions(conditions)
-        self.consequences = dict()
         self.set_consequence(consequence)
-        self.tasks = dict()
         self.set_tasks(tasks)
-
-        self.init_states = dict()
         self.set_init_states(states)
-        self.states = dict()
         self.set_states(states)
 
         self.timeline = dict()
@@ -202,6 +200,8 @@ class FailureMode(Load):
         try:
             if value >= 0:
                 self._pf_interval = value
+                if "untreated" in self.dists:
+                    self._set_init()
             else:
                 raise ValueError(
                     "%s (%s) - pf_interval must be greater than 0"
@@ -212,14 +212,23 @@ class FailureMode(Load):
 
     @property
     def untreated(self):
-        return self.dists["untreated"]
+        return self.dists.get("untreated", None)
 
     @untreated.setter
     def untreated(self, dist):
         if dist is not None:
-            dist["name"] = "untreated"
-            dists = dict(untreated=dist)
-            self.set_dists(dists)
+            if isinstance(dist, Distribution):
+                dist.name = "untreated"
+            else:
+                dist["name"] = "untreated"
+
+            self.set_dists({"untreated": dist})
+            self._set_init()
+
+    def _set_init(self):
+        init = Distribution.from_pf_interval(self.dists["untreated"], self.pf_interval)
+        init.name = "init"
+        self.set_dists({"init": init})
 
     # ************** Set Functions *****************
 
@@ -229,7 +238,7 @@ class FailureMode(Load):
 
     def set_indicators(self, var=None):
 
-        self._set_container_attr("indicators", Indicator, var)
+        self.set_obj("indicators", Indicator, var)
 
     def set_conditions(self, var=None):
         """
@@ -247,28 +256,20 @@ class FailureMode(Load):
                     self.set_indicators(indicator)
         else:
             # Create a simple indicator
+            # Removing this temporarilty #TODO
             indicator = ConditionIndicator(
                 name=self.name,
                 pf_curve="step",
                 pf_interval=0,
                 pf_std=0,
                 perfect=False,
-                failed=True,
+                failed=False,
             )
             self.conditions = {self.name: {}}
             self.set_indicators(indicator)
 
     def set_dists(self, dists):
-
-        untreated = copy.copy(getattr(self, "dists", None).get("untreated", None))
-
-        self._set_container_attr("dists", Distribution, dists)
-
-        # Check if 'untreated' was updated and if so, call init dist
-        if untreated != self.dists.get("untreated", None):
-            self.dists["init"] = Distribution.from_pf_interval(
-                self.dists["untreated"], self.pf_interval
-            )
+        self.set_obj("dists", Distribution, dists)
 
     def set_init_states(self, states):
         # TODO Update this method at the same time as set state
@@ -292,7 +293,7 @@ class FailureMode(Load):
 
         # Set a default value if none has been provided
         if self.states is None:
-            if cf.USE_DEFAULT:
+            if cf.get("use_default", config.get("Load").get("use_default")):
                 self.states = {state: False for state in self.REQUIRED_STATES}
             else:
                 raise ValueError("Failure Mode - %s - No states provided" % (self.name))
@@ -310,7 +311,7 @@ class FailureMode(Load):
         """
         Takes a dictionary of tasks and sets the failure mode tasks
         """
-        self._set_container_attr("tasks", Task, tasks)
+        self.set_obj("tasks", Task, tasks)
 
     def link_indicator(self, indicator):
         """
@@ -582,7 +583,7 @@ class FailureMode(Load):
         """
         Update timeline
         """
-        if config.getboolean("FailureMode", "remain_failed"):
+        if cf.get("remain_failed"):
             self.fail(t_renew)
         else:
             self.replace(t_renew)
@@ -848,7 +849,7 @@ class FailureMode(Load):
 
         # Reset indicators
         for ind in self.indicators.values():
-            ind.reset_for_next_sim(name=self.name)
+            ind.reset_for_next_sim()  # TODO will this reset for all, or just for None
 
     def reset(self):
 
@@ -858,7 +859,7 @@ class FailureMode(Load):
 
         # Reset conditions
         for indicator in self.indicators.values():
-            indicator.reset(name=self.name)
+            indicator.reset()  # TODO will this reset for all, or just for None
 
         # Reset timelines
         self.timeline = dict()
@@ -921,36 +922,46 @@ class FailureMode(Load):
 
         plt.show()
 
-    def update_from_dict(self, dict_data):
+    def update_from_dict(self, data):
+        """Simple fix"""
 
-        for key, value in dict_data.items():
+        untreated = copy.copy(self.dists.get("untreated", None))
 
-            if key in [
-                "name",
-                "active",
-                "pf_curve",
-                "pf_interval",
-                "pf_std",
-            ]:
-                setattr(self, key, value)
+        super().update_from_dict(data)
 
-            elif key in ["untreated", "dists"]:
-                self.set_dists(dict_data[key])
+        if untreated != self.untreated:
+            self._set_init()
 
-            elif key == "conditions":
-                self.set_conditions(dict_data[key])
+    # def update_from_dict(self, dict_data):
 
-            elif key == "consequence":
-                self.set_consequence(dict_data[key])
+    #     for key, value in dict_data.items():
 
-            elif key == "states":
-                self.set_states(dict_data[key])
+    #         if key in [
+    #             "name",
+    #             "active",
+    #             "pf_curve",
+    #             "pf_interval",
+    #             "pf_std",
+    #         ]:
+    #             setattr(self, key, value)
 
-            elif key == "tasks":
-                self.set_tasks(dict_data[key])
+    #         elif key in ["untreated", "dists"]:
+    #             self.set_dists(dict_data[key])
 
-            else:
-                print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
+    #         elif key == "conditions":
+    #             self.set_conditions(dict_data[key])
+
+    #         elif key == "consequence":
+    #             self.set_consequence(dict_data[key])
+
+    #         elif key == "states":
+    #             self.set_states(dict_data[key])
+
+    #         elif key == "tasks":
+    #             self.set_tasks(dict_data[key])
+
+    #         else:
+    #             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
     def get_value(self, key):
         """

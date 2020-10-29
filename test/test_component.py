@@ -35,6 +35,8 @@ class TestComponent(TestPofBase, unittest.TestCase):
         # TestPofBase Setup
         self._class = Component
         self._data_valid = dict(name="TestComponent")
+        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_invalid_values = []
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
@@ -43,22 +45,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         comp = Component()
         self.assertIsNotNone(comp)
 
-    @patch("cf.USE_DEFAULT", True)
-    def test_class_instantiate_no_input_use_default_true(self):
-        """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
-        comp = Component()
-        self.assertIsNotNone(comp)
-
-    @patch("cf.USE_DEFAULT", False)
-    def test_class_instantiate_no_input_use_default_false(self):
-        """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
-        with self.assertRaises(
-            Exception,
-            msg="Indicator should not be able to link if there isn't an indicator by that name",
-        ):
-            comp = Component()
-
-    ## *************** Test set_demo ***********************
+    ## *************** Test demo ***********************
 
     def test_demo(self):
         comp = Component.demo()
@@ -99,15 +86,20 @@ class TestComponent(TestPofBase, unittest.TestCase):
                     self.assertEqual([], task.t_completion)
 
     def test_complete_tasks_two_fm_two_task(self):
+
+        # Arrange
         fm_next_tasks = dict(
-            slow_aging=["inspection", "cm"],
-            fast_aging=["inspection", "cm"],
+            slow_aging=["inspection", "on_condition_replacement"],
+            fast_aging=["inspection", "on_condition_replacement"],
         )
         t_now = 5
         comp = Component.demo()
+
+        # Act
         comp.init_timeline(200)
         comp.complete_tasks(t_now, fm_next_tasks)
 
+        # Assert
         for fm_name, fm in comp.fm.items():
             for task_name, task in fm.tasks.items():
 
@@ -120,6 +112,11 @@ class TestComponent(TestPofBase, unittest.TestCase):
                     self.assertEqual([], task.t_completion)
 
     # *************** Test next_tasks ***********************
+
+    def test_next_tasks(self):
+
+        # TODO
+        NotImplemented
 
     def test_next_tasks_one_fm_one_task(self):
 
@@ -142,9 +139,18 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self.assertEqual(next_task, expected)
         self.assertEqual(t_next, 5)
 
-    def test_next_tasks_many_fm_many_task(self):
+    def test_next_tasks_many_fm_many_tasks_new_method(self):
+        # TODO new method
+        # Three different task intervals for each of the failure_modes
+        param_next_task = [(5, 5, 5), (5, 5, 5), (10, 5, 5), (10, 10, 5)]
 
+        for e_l, s_a, f_a, rand in param_next_task:
+            NotImplemented
+
+    def test_next_tasks_many_fm_many_task(self):
+        """ Mock next tasks """
         times = dict(
+            early_life=[5, 5, 5, 5],
             slow_aging=[5, 5, 5],
             fast_aging=[10, 5, 5],
             random=[10, 10, 5],
@@ -153,6 +159,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         for i in range(3):
             t_now = None
             test_next_task = dict(
+                early_life=(times["early_life"][i], ["inspection"]),
                 slow_aging=(times["slow_aging"][i], ["inspection"]),
                 fast_aging=(times["fast_aging"][i], ["inspection", "cm"]),
                 random=(times["random"][i], ["inspection"]),

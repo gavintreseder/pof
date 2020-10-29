@@ -14,6 +14,9 @@ import testconfig
 from pof.load import Load
 
 
+# TODO think how to move update tests onto main file
+
+
 class TestPofBase(object):
     """
     An abstract test class that contains a collection of tests to test a from_dict method for a pof object
@@ -22,14 +25,13 @@ class TestPofBase(object):
         self._class
                         Used for calling class methods
 
-        self._class_name
-                        Used for patching config
-
         self._data_valid
         self._data_invalid_values
         self._data_invalid_types
 
     """
+
+    tc = unittest.TestCase()
 
     def setUp(self):
         """
@@ -39,8 +41,6 @@ class TestPofBase(object):
         # Config for checking default behaviour
         self.blank_config = Mock()
         self.blank_config.get.return_value = None
-        self.blank_config.getboolean.return_value = None
-        self.blank_config.getint.return_value = None
 
         # Class data
         self._class = Mock(return_value=None)
@@ -54,55 +54,95 @@ class TestPofBase(object):
     # ---------------- Class Instantiate ------------------------
 
     def test_class_instantiate_with_no_data(self):
+        """ Check class instantiate works with all no data"""
         instance = self._class()
-        self.assertIsNotNone(instance)
+        self.tc.assertIsNotNone(instance)
 
     def test_class_instantiate_with_valid_data(self):
-        instance = self._class(**self._data_valid)
-        self.assertIsNotNone(instance)
+        """ Check class instantiate works with valid data"""
 
-    # ---------------- Load from_dict ----------------
+        # Act
+        instance = self._class(**self._data_valid)
+
+        # Assert
+        self.tc.assertIsNotNone(instance)
+
+    def test_class_instantiate_with_invalid_data(self):
+        """ Check the class creation fails with invalid data"""
+
+        for invalid_data in self._data_invalid_types:
+            with self.tc.assertRaises(TypeError):
+                self._class(**invalid_data)
+
+    # ---------------- Test from_dict ----------------
 
     def test_from_dict_no_data(self):
-        with self.assertRaises(TypeError):
+        with self.tc.assertRaises(TypeError):
             self._class.from_dict()
 
     def test_from_dict_with_valid_data(self):
         instance = self._class.from_dict(self._data_valid)
-        self.assertIsNotNone(instance)
+        self.tc.assertIsNotNone(instance)
 
-    def test_from_dict_with_invalid_data_config_default(self):
+    def test_from_dict_with_invalid_data(self):
+        """ Check invalid data is handled correctly"""
 
-        # TODO Mock cf.get_boolean('on_error_default')
-        # Arrange
-        class_config = self._class.__module__ + ".cf"
-
-        with patch(class_config, Mock()):
-            self.from_dict_invalid_data()
-
-    def test_from_dict_with_invalid_data_config_none(self):
-
-        # Arrange
-        class_config = self._class.__module__ + ".cf"
-        load_config = "pof.load.cf"  # TODO make this work for any namespace
-
-        with patch(class_config, self.blank_config):
-            with patch(load_config, self.blank_config):
-
-                # Act / Assert
-                self.from_dict_invalid_data()
-
-    def from_dict_invalid_data(self):
-        """Check invalid data"""
+        # Act / Assert
         for invalid_type in self._data_invalid_types:
-            with self.assertRaises(TypeError):
+            with self.tc.assertRaises(TypeError):
                 self._class.from_dict(invalid_type)
 
         for invalid_value in self._data_invalid_values:
-            with self.assertRaises(ValueError):
+            with self.tc.assertRaises(ValueError):
                 self._class.from_dict(invalid_value)
 
     # ************ Test load ***********************
+
+    def test_load_with_empty(self):
+        instance = self._class.load()
+        self.tc.assertIsNotNone(instance)
+
+    def test_load_valid_dict(self):
+        # Arrange
+        instance_from_dict = self._class.from_dict(self._data_valid)
+
+        # Act
+        instance = self._class.load(self._data_valid)
+
+        # Assert
+        self.tc.assertEqual(instance, instance_from_dict)
+
+    def test_load_with_invalid_data_config_on_error_use_default(self):
+
+        # Arrange
+        # class_config = self._class.__module__ + ".cf"
+        class_config = "pof.load.cf"
+
+        with patch.dict(class_config, {"on_error_use_default": True}):
+            invalid_data = self._data_invalid_types + self._data_invalid_values
+            for data in invalid_data:
+
+                # Act
+                obj = self._class.load(data)
+
+                # Assert
+                self.tc.assertIsNotNone(obj)
+
+        # Tests for handle_errors
+        # # Arrange
+        # param_cf = [(False, TypeError, ValueError), (True, None, None)]
+
+        # for h_i_d, type_error, value_error in param_cf:
+        #     with patch.dict("pof.load.cf", {"handle_invalid_data": h_i_d}):
+
+    def test_demo(self):
+
+        # Arrange / Act / Assert
+        self.tc.assertIsNotNone(self._class.demo())
+
+    # def test_load_error(self):
+
+    #     with patch.dict(class_config, {"on_error_use_default": True}):
 
     # def test_load(self):
     #     fm = FailureMode.load()
@@ -126,6 +166,24 @@ class TestPofBase(object):
     #         self.fail("Unknown error")
 
 
+# TODO add back in tests for
+
+# @patch("cf.USE_DEFAULT", True)
+# def test_class_instantiate_no_input_use_default_true(self):
+#     """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
+#     comp = Component()
+#     self.assertIsNotNone(comp)
+
+# @patch("cf.USE_DEFAULT", False)
+# def test_class_instantiate_no_input_use_default_false(self):
+#     """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
+#     with self.assertRaises(
+#         Exception,
+#         msg="Indicator should not be able to link if there isn't an indicator by that name",
+#     ):
+#         comp = Component()
+
+
 class TestLoad(unittest.TestCase):
     def setUp(self):
 
@@ -134,96 +192,266 @@ class TestLoad(unittest.TestCase):
         self.pof_obj.name = "mock_name"
         self.pof_obj.load.return_value = Mock()
 
+        # Create a load object with every type of data store
+        self.load = Load(name="before_update")
+        self.load.obj = Load(name="before_update")
+        self.load.dict_obj = dict(test_key=Load(name="before_update"))
+
     # ------------ set_containter_attr with empty container -----------
 
-    def test_set_container_attr_from_dict(self):
+    def test_set_obj_from_dict(self):
 
+        # Arrange
         load = Load()
-        load.data = None
-
+        load.dict_obj = None
         test_data = dict(name="test")
         expected = Load(name="test")
 
-        load._set_container_attr("data", Load, test_data)
+        # Act
+        load.set_obj("dict_obj", Load, test_data)
 
-        self.assertEqual(load.data[expected.name], expected)
+        # Assert
+        self.assertEqual(load.dict_obj[expected.name], expected)
 
-    def test_set_container_attr_from_dict_of_dicts(self):
+    def test_set_obj_from_dict_of_dicts(self):
 
         load = Load()
         test_data = dict(pof_object=dict(name="test"))
         expected = Load(name="test")
 
-        load._set_container_attr("data", Load, test_data)
+        load.set_obj("obj", Load, test_data)
 
-        self.assertEqual(load.data[expected.name], expected)
+        self.assertEqual(load.obj[expected.name], expected)
 
-    def test_set_container_attr_from_dict_of_objects(self):
+    def test_set_obj_from_dict_of_objects(self):
 
+        # Arrange
         load = Load()
-        test_data = dict(pof_object=Load(name="test"))
+        load.dict_obj = None
+        test_data = {"test_key": Load(name="test")}
         expected = Load(name="test")
 
-        load._set_container_attr("data", Load, test_data)
+        # Act
+        load.set_obj("dict_obj", Load, test_data)
 
-        self.assertEqual(load.data[expected.name], expected)
+        # Assert
+        self.assertEqual(load.dict_obj[expected.name], expected)
 
-    def test_set_container_attr_from_object(self):
+    def test_set_obj_from_object(self):
 
         load = Load()
         test_data = Load(name="test")
         expected = Load(name="test")
 
-        load._set_container_attr("data", Load, test_data)
+        load.set_obj("obj", Load, test_data)
 
-        self.assertEqual(load.data[expected.name], expected)
+        self.assertEqual(load.obj[expected.name], expected)
 
     # ------------ set_containter_attr with existing data -----------
 
-    def test_set_container_attr_existing_data_from_dict(self):
+    def test_set_obj_existing_data_from_dict(self):
 
         load = Load()
-        load.data = dict(test=Load(name="this_should_change"))
+        load.obj = dict(test=Load(name="this_should_change"))
         test_data = dict(name="test")
         expected = Load(name="test")
 
-        load._set_container_attr("data", Load, test_data)
+        load.set_obj("obj", Load, test_data)
 
-        self.assertEqual(load.data[expected.name], expected)
+        self.assertEqual(load.obj[expected.name], expected)
 
-    def test_set_container_attr_existing_data_from_dict_of_dicts(self):
+    def test_set_obj_existing_data_from_dict_of_dicts(self):
 
         load = Load()
-        load.data = dict(test=Load(name="this_should_change"))
+        load.obj = dict(test=Load(name="this_should_change"))
         test_data = dict(pof_object=Load(name="test"))
         expected = Load(name="test")
 
-        load._set_container_attr("data", Load, test_data)
+        load.set_obj("obj", Load, test_data)
 
-        self.assertEqual(load.data[expected.name], expected)
+        self.assertEqual(load.obj[expected.name], expected)
 
-    def test_set_container_attr_existing_data_from_dict_of_objects(self):
+    def test_set_obj_existing_data_from_dict_of_objects(self):
 
         load = Load()
-        load.data = dict(test=Load(name="this_should_change"))
+        load.obj = dict(test=Load(name="this_should_change"))
         test_data = dict(pof_object=Load(name="test"))
         expected = Load(name="after_update")
         key_before_update = "test"
 
-        load._set_container_attr("data", Load, test_data)
+        load.set_obj("obj", Load, test_data)
         test_data["pof_object"].name = "after_update"
 
-        self.assertEqual(load.data[key_before_update], expected)
+        self.assertEqual(load.obj[key_before_update], expected)
 
-    def test_set_container_attr_existing_data_from_object(self):
+    def test_set_obj_existing_data_from_object(self):
 
         load = Load()
-        load.data = dict(test=Load(name="this_should_change"))
+        load.obj = dict(test=Load(name="this_should_change"))
         test_data = Load(name="test")
         expected = Load(name="after_update")
         key_before_update = "test"
 
-        load._set_container_attr("data", Load, test_data)
+        load.set_obj("obj", Load, test_data)
         test_data.name = "after_update"
 
-        self.assertEqual(load.data[key_before_update], expected)
+        self.assertEqual(load.obj[key_before_update], expected)
+
+    # -------------------- Test update -----------------------------
+
+    def test_update_errors_caught_and_logged(self):
+        """ check that an attriubte that doens't exist returns a Key Error"""
+        # Arrange
+        load = Load(name="before_update")
+        load.data = "before_update"
+        load.obj = Load(name="before_update")
+        load.dict_data = {"test_key": "before_update"}
+        load.dict_obj = {"test_key": Load(name="before_update")}
+
+        param_tests = [
+            ({"invalid_attribute": "after_update"}),
+            ({"obj": {"invalid_attribute": "after_update"}},),
+            ({"dict_data": {"invalid_key": "after_update"}}),
+            ({"dict_obj": {"invalid_key": {"name": "after_update"}}},),
+        ]
+
+        for test_data in param_tests:
+            # Act
+            load.update(test_data)
+
+            # Assert
+            # TODO add context manager to check logger
+
+    # -------------------- Test update_from_str -----------------------------
+
+    def test_update_from_str(self):
+        """ Check a string is converted to a dict for subsequent updates"""
+        # Arrange
+        load = Load(name="test_load")
+        load.data = "before_update"
+
+        id_str = "Load-test_load-data"
+        value = "after_update"
+        sep = "-"
+
+        # Act
+        load.update_from_str(id_str=id_str, value=value, sep=sep)
+
+        # Assert
+        self.assertEqual(load.data, "after_update")
+
+        NotImplemented
+
+    # -------------------- Test update_from_dict --------------------
+
+    def test_update_from_dict_to_update_data(self):
+        """ Check an attribute can be updated"""
+        # Arrange
+        load = Load(name="no_update")
+        load.obj = Load(name="no_update")
+        load.dict_obj = {"test_key": Load(name="no_update")}
+        test_data = {"name": "after_update"}
+
+        # Act
+        load.update_from_dict(test_data)
+
+        # Assert
+        self.assertEqual(load.name, "after_update")
+
+    def test_update_from_dict_to_update_object(self):
+        """ Check an attribute that is another pof object can be updated"""
+        # Arrange
+        load = Load(name="no_update")
+        load.obj = Load(name="no_update")
+        test_data = {"obj": {"name": "after_update"}}
+
+        # Act
+        load.update_from_dict(test_data)
+
+        # Assert
+        self.assertEqual(load.obj.name, "after_update")
+
+    def test_update_from_dict_to_update_dict_of_data(self):
+        """ Check a dictionary of data can be updated"""
+
+        # Arrange
+        load = Load(name="no_update")
+        load.dict_data = {"test_key": "no_update"}
+        test_data = {"dict_data": {"test_key": "after_update"}}
+
+        # Act
+        load.update_from_dict(test_data)
+
+        # Assert
+        self.assertEqual(load.dict_data["test_key"], "after_update")
+
+    def test_update_from_dict_to_update_dict_of_objects(self):
+        """ Check a dictionary of pof objects can be updated"""
+
+        # Arrange
+        load = Load(name="no_update")
+        load.dict_obj = {"test_key": Load(name="no_update")}
+        test_data = {"dict_obj": {"test_key": {"name": "after_update"}}}
+
+        # Act
+        load.update_from_dict(test_data)
+
+        # Assert
+        self.assertEqual(load.dict_obj["test_key"].name, "after_update")
+
+    def test_update_from_dict_with_multiple_values_at_once(self):
+        """ Check multiple attributes that exist can be updated at once"""
+
+        # Arrange
+        load = Load(name="before_update")
+        load.obj = Load(name="before_update")
+        load.dict_data = {"test_key": "before_update"}
+        load.dict_obj = {"test_key": Load(name="before_update")}
+        test_data = dict(
+            name="after_update",
+            obj={"name": "after_update"},
+            dict_data={"test_key": "after_update"},
+            dict_obj={"test_key": {"name": "after_update"}},
+        )
+
+        # Act
+        load.update_from_dict(test_data)
+
+        # Assert
+        self.assertEqual(load.name, "after_update")
+        self.assertEqual(load.obj.name, "after_update")
+        self.assertEqual(load.dict_data["test_key"], "after_update")
+        self.assertEqual(load.dict_obj["test_key"].name, "after_update")
+
+    def test_update_from_dict_with_errors_expected(self):
+        """ check that an attriubte that doens't exist returns a Key Error"""
+        # Arrange
+        load = Load(name="before_update")
+        load.data = "before_update"
+        load.obj = Load(name="before_update")
+        load.dict_data = {"test_key": "before_update"}
+        load.dict_obj = {"test_key": Load(name="before_update")}
+
+        param_tests = [
+            (
+                KeyError,
+                {"invalid_attribute": "after_update"},
+            ),
+            (
+                KeyError,
+                {"obj": {"invalid_attribute": "after_update"}},
+            ),
+            (
+                KeyError,
+                {"dict_data": {"invalid_key": "after_update"}},
+            ),
+            (
+                KeyError,
+                {"dict_obj": {"invalid_key": {"name": "after_update"}}},
+            ),
+        ]
+
+        for error, test_data in param_tests:
+            # Act / Assert
+            with self.assertRaises(error):
+                load.update_from_dict(test_data)

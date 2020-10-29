@@ -2,25 +2,18 @@
 #TODO add docstring
 """
 
+import copy
 import unittest
 from unittest.mock import Mock, MagicMock, patch
 
 import numpy as np
 
-from config import config
 import fixtures
 import testconfig
 from test_load import TestPofBase
 from pof.failure_mode import FailureMode
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
-
-
-def se_remain_failed(val):
-    if val == "remain_failed":
-        return True
-    else:
-        return False
 
 
 class TestFailureMode(TestPofBase, unittest.TestCase):
@@ -159,7 +152,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
                 "slow_degrading": fixtures.condition_data["slow_degrading"],
                 "fast_degrading": fixtures.condition_data["fast_degrading"],
             },
-            tasks={"insepction": fixtures.replacement_data["on_failure"]},
+            tasks={"replacement": fixtures.replacement_data["on_failure"]},
         )
         fm.set_states({"initiation": True})
         fm.indicators["slow_degrading"].set_condition(10)
@@ -181,12 +174,10 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         for state, value in fm.tasks["on_failure_replacement"].impacts["state"].items():
             self.assertEqual(fm.timeline[state][2], value, "impact not completed")
 
-    def test_sim_timeline_remain_failed(self):
+    def test_sim_timeline_remain_failed_true(self):
         """
         Check a timeline is impacted by the 'remain
         """
-
-        params = ()
 
         # Arrange so replacement should occur immediately
         fm = FailureMode.demo()
@@ -195,8 +186,8 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         fm.set_states(dict(initiation=True, detection=True))
 
         # Act
-        with patch.dict(config, {"FailureMode": {"remain_failed": True}}):
-            fm.sim_timeline(200)
+        with patch.dict("pof.failure_mode.cf", {"remain_failed": True}):
+            fm.sim_timeline(2000)
 
             # Assert
             self.assertEqual(len(fm.timeline["time"]), 1)
@@ -211,6 +202,40 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
                     False,
                     "task should not be triggered again",
                 )
+
+    def test_sim_timeline_remain_failed_false(self):
+        """
+        Check a timeline is impacted by the 'remain
+        """
+
+        params = [(True, 1, 0, False), (False, 2001, 0, True)]
+
+        for remain_failed, time_sim, time_failed, more_tasks in params:
+
+            # Arrange so replacement should occur immediately
+            fm = FailureMode.demo()
+            fm.indicators["slow_degrading"].set_condition(10)
+            fm.indicators["fast_degrading"].set_condition(10)
+            fm.set_states(dict(initiation=True, detection=True))
+            fm.dists["init"].sample = Mock(return_value=0)
+
+            # Act
+            with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):
+                fm.sim_timeline(2000)
+
+                # Assert
+                self.assertEqual(len(fm.timeline["time"]), time_sim)
+                self.assertEqual(
+                    fm.timeline["on_condition_replacement"][0],
+                    time_failed,
+                    "task should trigger at t=1",
+                )
+                for task_name in fm.tasks:
+                    self.assertEqual(
+                        any(fm.timeline[task_name][1:] + 1),
+                        more_tasks,
+                        "task should not be triggered again",
+                    )
 
     # ************ Test sim_timeline ***********************
 
@@ -299,6 +324,22 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         dash_ids = fm.get_dash_ids()
 
     # ************ Test update methods *****************
+
+    def test_update_on_property_method(self):
+
+        # Arrange
+        fm1 = FailureMode.demo()
+        fm2 = FailureMode.demo()
+        test_data = {
+            "untreated": {"name": "untreated", "alpha": 20, "beta": 10, "gamma": 5}
+        }
+
+        # Act
+        fm1.untreated = test_data["untreated"]
+        fm2.update(test_data)
+
+        # Assert
+        self.assertEquals(fm1, fm2)
 
     def test_update(self):
         # TODO This will be causing errors because new values are being created
@@ -456,11 +497,79 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         fm = FailureMode.demo()
 
-        fm._timeline["failure"] = np.full(False, 200)
+        fm._timeline["failure"] = np.full(0, 200)
 
         er = fm._expected_risk()
 
         np.testing.assert_array_equal(er["time"], [])
+
+    # ------------ Integration Tests ---------------
+
+    def test_init_dist_is_updated_on_creation(self):
+
+        # Arrange / Act
+        fm = FailureMode.from_dict(
+            {"pf_interval": 10, "untreated": {"alpha": 100, "beta": 10, "gamma": 10}}
+        )
+
+        # Assert
+        self.assertNotEqual(fm.untreated, fm.dists["init"])
+
+    def test_init_dist_is_updated_with_untreated(self):
+
+        # Arrange
+        fm = FailureMode.from_dict(
+            {"pf_interval": 10, "untreated": {"alpha": 100, "beta": 10, "gamma": 10}}
+        )
+        untreated = copy.copy(fm.dists.get("untreated", None))
+        init = copy.copy(fm.dists.get("init", None))
+
+        # Act
+        fm.untreated = {"alpha": 50, "beta": 10, "gamma": 5}
+
+        # Assert
+        self.assertNotEqual(fm.dists["untreated"], untreated)
+        self.assertNotEqual(fm.dists["init"], init)
+
+    def test_init_dist_is_updated_with_pf_interval(self):
+
+        # Arrange
+        fm = FailureMode.from_dict(
+            {"pf_interval": 10, "untreated": {"alpha": 100, "beta": 10, "gamma": 10}}
+        )
+        untreated = copy.copy(fm.dists.get("untreated", None))
+        init = copy.copy(fm.dists.get("init", None))
+
+        # Act
+        fm.pf_interval = 5
+
+        # Assert
+        self.assertEqual(fm.dists["untreated"], untreated)
+        self.assertNotEqual(fm.dists["init"], init)
+
+    def test_init_dist_is_updated_with_update(self):
+        """ Check that init dist updates when the update method is called on any of its inputs"""
+        param_update = [
+            {"pf_interval": 5},
+            {"untreated": {"alpha": 80}},
+        ]
+
+        for update in param_update:
+
+            # Arrange
+            fm = FailureMode.from_dict(
+                {
+                    "pf_interval": 10,
+                    "untreated": {"alpha": 100, "beta": 10, "gamma": 10},
+                }
+            )
+            init = copy.copy(fm.dists.get("init", None))
+
+            # Act
+            fm.update(update)
+
+            # Assert
+            self.assertNotEqual(fm.dists["init"], init)
 
 
 if __name__ == "__main__":

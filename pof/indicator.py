@@ -24,6 +24,7 @@ if __package__ is None or __package__ == "":
 from pof.load import Load
 from pof.helper import str_to_dict
 from config import config
+import pof.demo as demo
 
 cf = config["Indicator"]
 
@@ -126,7 +127,7 @@ class Indicator(Load):
         logging.debug("Non overloaded function called")
         NotImplemented
 
-    def reset(self):
+    def reset(self, name=NotImplemented):
 
         self._profile = dict()
         self._timeline = dict()
@@ -149,7 +150,7 @@ class Indicator(Load):
         # TODO add robust testing around pf_interval non negative numbers etc
         if pf_interval is None:
             if self.pf_interval is None:
-                if cf.getboolean("use_default"):
+                if cf.get("use_default"):
                     logging.warning(
                         "%s - %s - pf_interval set to DEFAULT %s",
                         self.__class__.__name__,
@@ -171,7 +172,7 @@ class Indicator(Load):
 
         if perfect is None:
             if self.perfect is None:
-                if cf.getboolean("use_default"):
+                if cf.get("use_default"):
                     self.perfect = cf["PERFECT"]
                 else:
                     raise ValueError(
@@ -183,7 +184,7 @@ class Indicator(Load):
 
         if failed is None:
             if self.failed is None:
-                if cf.getboolean("use_default"):
+                if cf.get("use_default"):
                     self.failed = cf["FAILED"]
                 else:
                     raise ValueError(
@@ -315,18 +316,6 @@ class Indicator(Load):
         for cause, timeline in _timeline.items():
             plt.plot(timeline)
             # plt.plot(self.t_condition, self.current(), "rd")
-
-    def update_from_dict(self, dict_data):
-
-        for key, value in dict_data.items():
-
-            if key in self.__dict__:
-                self.__dict__[key] = value
-            else:
-                raise KeyError(
-                    'ERROR: Cannot update "%s" from dict with key %s'
-                    % (self.__class__.__name__, key)
-                )
 
     """def expected_condition(self, conf=0.5):
         ec = self.get_timeline()
@@ -716,26 +705,13 @@ class ConditionIndicator(Indicator):
 
             self._reset_accumulated(accumulated, permanent=permanent)
 
-    def update_from_dict(self, keys):
-        """
-        Takes a dict of key values and updates an attribute in indicator
-        """
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if key in self.__dict__:
-                    self.__dict__[key] = value
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
-
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
+
+    @classmethod
+    def demo(cls):
+        return cls.from_dict(demo.condition_data["slow_degrading"])
 
 
 # TODO overload get method so the None key isnt' needed for _timeline
@@ -822,21 +798,6 @@ class PoleSafetyFactor(Indicator):
             sf[np.isnan(sf)] = 0
 
         return sf
-
-    def update_from_dict(self, keys):
-
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if key in self.__dict__:
-                    self.__dict__[key] = value
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
 
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()

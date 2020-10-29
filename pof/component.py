@@ -23,14 +23,10 @@ if __package__ is None or __package__ == "":
 
 from config import config
 from pof.failure_mode import FailureMode
-from pof.condition import Condition
-from pof.distribution import Distribution
 from pof.helper import fill_blanks, id_update
 from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
 from pof.load import Load
 import pof.demo as demo
-
-from dataclasses import dataclass
 
 
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -38,7 +34,7 @@ from dataclasses import dataclass
 
 DEFAULT_ITERATIONS = 100
 
-cf = config["Component"]
+cf = config.get("Component")
 
 
 @dataclass
@@ -110,14 +106,14 @@ class Component(Load):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
-        self._set_container_attr("indicator", Indicator, indicator_input)
+        self.set_obj("indicator", Indicator, indicator_input)
 
     def set_failure_mode(self, fm_input):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
 
-        self._set_container_attr("fm", FailureMode, fm_input)
+        self.set_obj("fm", FailureMode, fm_input)
 
     def link_indicators(self):
 
@@ -204,46 +200,32 @@ class Component(Load):
         for fm_name, task_names in fm_tasks.items():
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
-            if bool(system_impact):
-
-                if config.getboolean("Component", "allow_system_impact"):
-                    self.renew(t_renew=t_next + 1)
-
-                    logging.debug(
-                        "Component %s reset by FailureMode %s", self.name, fm_name
-                    )
-
-                # TODO does this need another option here
+            if bool(system_impact) and cf.get("allow_system_impact"):
+                logging.debug(
+                    "Component %s reset by FailureMode %s", self.name, fm_name
+                )
+                self.renew(t_renew=t_next + 1)
 
                 break
 
-    # Replace, renew, fail
-
-    def fail(self, t_fail):
-        """ Reset indicators """
-
-        # Reset the indicators
-        for ind in self.indicator.values():
-            ind.reset_to_perfect()
-
-        # Reset the failuremodes
-        for fm in self.fm.values():
-            fm.renew(t_renew)
-
-        self._replacement.append(t_renew)
-
     def renew(self, t_renew):
         """
-        Reset indicators and update failure mode timelines after a component is reset
+        Renew the component because a task has triggered an as-new change or failure
         """
 
         # Reset the indicators
         for ind in self.indicator.values():
             ind.reset_to_perfect()
 
-        # Reset the failuremodes
-        for fm in self.fm.values():
-            fm.renew(t_renew)
+        # Fail
+        if cf.get("remain_failed"):
+            for fm in self.fm.values():
+                fm.fail(t_renew)
+
+        # Replace
+        else:
+            for fm in self.fm.values():
+                fm.renew(t_renew)
 
         self._replacement.append(t_renew)
 
@@ -520,7 +502,6 @@ class Component(Load):
 
 if __name__ == "__main__":
     component = Component()
-    component
     print("Component - Ok")
 
     """import doctest

@@ -1,0 +1,43 @@
+[DEFAULT]
+illyes_var = 10
+sep = "-"
+replace_sep_with = "."
+
+[Load]
+on_error_use_default = true
+handle_invalid_data = true
+use_default = false
+
+[Component]
+allow_system_impact = false
+remain_failed = false
+
+
+[FailureMode]
+remain_failed = false
+
+name = "fm"
+active = true
+pf_curve = "step"
+pf_interval = 0
+pf_std = 0
+
+
+[Indicator]
+PERFECT = 100
+FAILED = 0
+
+[Task]
+
+
+[Distribution]
+name = "dist"
+alpha = 50
+beta = 1
+gamma = 10
+
+[AssetModelLoader]
+
+[FleetDataLoader]
+
+[PoleFleetDataLoader]

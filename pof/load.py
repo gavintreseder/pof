@@ -1,14 +1,17 @@
 """
     Filename: indicator.py
     Description: Contains the code for implementing a load class
-    Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
+    Authors: Gavin Treseder
+        gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
 
 # from dataclasses import dataclass
 from collections.abc import Iterable
 import logging
+import inspect
 
+from dataclasses import fields
 from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
@@ -16,6 +19,11 @@ import scipy.stats as ss
 import plotly.express as px
 import plotly.graph_objects as go
 
+if __package__ is None or __package__ == "":
+    import sys
+    import os
+
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.helper import str_to_dict
 from config import config
@@ -27,7 +35,17 @@ cf = config["Load"]
 The load module is used to overload other pof classes so that they can use a common load methods
 """
 
-# TODO add more robust error checking for types other than value error
+
+def get_signature(obj):
+    """ Get the constructor signature"""
+    signatures = inspect.signature(obj).parameters
+
+    if bool(obj.__bases__):
+        for parent in obj.__bases__:
+            parent_signature = get_signature(parent)
+            signatures = {**signatures, **parent_signature}
+
+    return signatures
 
 
 @dataclass
@@ -49,7 +67,8 @@ class Load:
             # probhitted = ["-"] #TODO expand list
             # if any(x in a_string for x in matches):
             self._name = value
-
+        elif value is None:
+            self._name = None
         else:
             raise TypeError("name must be a string")
 
@@ -59,11 +78,22 @@ class Load:
         Loads the data with extra error checking and default logic
         """
         try:
-            instance = cls.from_dict(details)
+            if details is None:
+                instance = cls.from_dict(details)
+            else:
+                if cf.get("handle_invalid_data", False):
+                    constructor = get_signature(cls)
+                    stripped_details = {
+                        k: v for k, v in details.items() if k in list(constructor)
+                    }
+                    instance = cls.from_dict(stripped_details)
+                else:
+                    instance = cls.from_dict(details)
+
         except (ValueError, TypeError) as error:
             logging.warning(error)
             logging.warning("Error loading %s data from dictionary", cls.__name__)
-            if cf.get("on_error_use_default"):
+            if cf.get("on_error_use_default", False):
                 logging.info("Defaults used")
                 instance = cls()
             else:
@@ -82,7 +112,11 @@ class Load:
 
         return instance
 
-    def _set_container_attr(self, attr, d_type, value):
+    def set_obj(self, attr, d_type, value):
+        """
+
+        value = {'tasks':{'inspection':{'t_interval':10}}}
+        """
 
         # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
         if getattr(self, attr, None) is None:
@@ -99,138 +133,129 @@ class Load:
             # Check if the input is an iterable
             elif isinstance(value, Iterable):
 
-                try:
+                # Create an object from the dict
+                if all([hasattr(d_type, attr) for attr in value]):
+                    new_object = d_type.from_dict(value)
+                    getattr(self, attr)[new_object.name] = new_object
+
+                # Create an object from the dict of dict/objects
+                else:
                     for key, val in value.items():
 
-                        # dict of objects
                         if isinstance(val, d_type):
                             getattr(self, attr)[val.name] = val
-
-                        # dict to update
-                        elif key in getattr(self, attr) and isinstance(
-                            getattr(self, attr)[key], d_type
-                        ):
-                            getattr(self, attr)[key].update_from_dict(val)
 
                         else:
                             new_object = d_type.from_dict(val)
                             getattr(self, attr)[new_object.name] = new_object
 
-                except (TypeError, ValueError):
-                    # Try and load it with the full value instead
-                    new_object = d_type.load(value)
-                    getattr(self, attr)[new_object.name] = new_object
-
             else:
                 raise ValueError
 
-        except:
+        except ValueError:  # TODO maybe cahnge this back?
+            msg = "%s (%s) - %s cannot be set from %s" % (
+                self.__class__.__name__,
+                self.name,
+                attr,
+                value,
+            )
             if value is None and cf.get("on_error_use_default") is True:
-                logging.info(
-                    "%s (%s) - %s cannot be set from %s - Default Use",
-                    self.__class__.__name__,
-                    self.name,
-                    attr,
-                    value,
-                )
+                logging.info(msg + "- Default used")
             else:
-                raise ValueError(
-                    "%s (%s) - %s cannot be set from %s"
-                    % (
-                        self.__class__.__name__,
-                        self.name,
-                        attr,
-                        value,
-                    )
-                )
-
-    def _set_container_attr_legacy(self, attr, d_type, value):
-
-        # Create an empty dictionary if it doesn't exist #Dodgy fix because @property error
-        if getattr(self, attr, None) is None:
-            setattr(self, attr, dict())
-
-        try:
-            if value is None:
-                setattr(self, attr, dict())
-
-            # Add the value to the dictionary if it is an object of that type
-            elif isinstance(value, d_type):
-                getattr(self, attr)[value.name] = value
-
-            # Check if the input is an iterable
-            elif isinstance(value, Iterable):
-
-                # TODO fix this
-                # If this doesn't exist yet create it
-                if "name" in value:
-                    getattr(self, attr)[value["name"]] = d_type.load(value)
-
-                # Iterate through and create objects using this method
-                else:
-
-                    for key, val in value.items():
-                        if key in getattr(self, attr) and not isinstance(val, d_type):
-                            getattr(self, attr)[key].update_from_dict(val)
-                            # if "name" in val:
-                            #     getattr(self, attr)[val["name"]] = d_type.load(val)
-                            # else:
-                            #     getattr(self, attr)[key].update_from_dict(val)
-                        else:
-                            self._set_container_attr(attr, d_type, val)
-
-            else:
-                raise ValueError
-
-        except:
-            if value is None and cf.get("on_error_use_default") is True:
-                logging.info(
-                    "%s (%s) - %s cannot be set from %s - Default Use",
-                    self.__class__.__name__,
-                    self.name,
-                    attr,
-                    value,
-                )
-            else:
-                raise ValueError(
-                    "%s (%s) - %s cannot be set from %s"
-                    % (
-                        self.__class__.__name__,
-                        self.name,
-                        attr,
-                        value,
-                    )
-                )
+                raise ValueError(msg)
 
     def update(self, id_object, value=None):
-        """"""
-        if isinstance(id_object, str):
-            self.update_from_str(id_object, value, sep="-")
+        """ An update method with some error handling"""
+        try:
+            if isinstance(id_object, str):
+                self.update_from_str(id_object, value, sep="-")
 
-        elif isinstance(id_object, dict):
-            self.update_from_dict(id_object)
+            elif isinstance(id_object, dict):
+                self.update_from_dict(id_object)
 
-        else:
-            print(
-                'ERROR: Cannot update "%s" from string or dict'
-                % (self.__class__.__name__)
-            )
+            else:
+                logging.warning(
+                    'ERROR: Cannot update "%s" from string or dict',
+                    self.__class__.__name__,
+                )
+        except KeyError as error:
+            logging.warning(error)
 
     def update_from_str(self, id_str, value, sep="-"):
         """
         updates a single parameter using a string format
         """
-        id_str = id_str.split(self.name + sep, 1)[1]
+        try:
+            id_str = id_str.split(self.name + sep, 1)[1]
+        except:
+            id_str = id_str
 
         dict_data = str_to_dict(id_str, value, sep)
 
         self.update_from_dict(dict_data)
 
-    def update_from_dict(self, *args, **kwargs):
+    # def update_from_dict(self, *args, **kwargs):
+    #     """
+    #     Update_from_dict is overloaded in each of the child classes
+    #     """
+    #     raise NotImplementedError()
+
+    def update_from_dict(self, data):
+        """Updates an attribute on a pof object using a
+
+        load = Load()
+        load.update({'name':'updated_name'})
+        load.name
         """
-        Update_from_dict is overloaded in each of the child classes
-        """
-        raise NotImplementedError()
+        # Loop through all the varaibles to update
+        for attr, detail in data.items():
+
+            # Check it is an attribute
+            if hasattr(self, attr):
+                var_to_update = getattr(self, attr)
+
+                # Check if the object has a load method
+                if isinstance(var_to_update, Load):
+                    var_to_update.update_from_dict(detail)
+
+                # Check if it is a dictionary
+                elif isinstance(var_to_update, dict):
+
+                    for key, val in detail.items():
+
+                        var_to_update = getattr(self, attr).get(key, None)
+
+                        # Check if it is a pof object with an update method
+                        if isinstance(var_to_update, Load):
+                            var_to_update.update_from_dict(val)
+
+                        elif var_to_update is not None:
+                            getattr(self, attr)[key] = val
+
+                        else:
+                            raise KeyError(
+                                "%s - %s - %s - %s - does not have the value - %s"
+                                % (self.__class__.__name__, self.name, attr, key, val),
+                            )
+                else:
+                    setattr(self, attr, detail)
+
+            else:
+                raise KeyError(
+                    "%s - %s - does not have the attribute - %s"
+                    % (self.__class__.__name__, self.name, attr),
+                )
+
+    def validate_inputs(self, *args, **kwargs):
+        # logging.debug(
+        #     "%s - %s - Unused variables - %s - %s",
+        #     self.__class__.__name__,
+        #     self.name,
+        #     args,
+        #     kwargs,
+        # )
+        # TODO make it validate the inputs against that class
+        return NotImplementedError
 
     def sensitivity(
         self,
@@ -413,3 +438,8 @@ class Load:
 
     def mc_timeline(self, *args, **kwargs):
         raise NotImplementedError()
+
+
+if __name__ == "__main__":
+    load = Load()
+    print("Load - Ok")

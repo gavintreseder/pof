@@ -524,12 +524,12 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
     # **************** Test the _set_accumulated  ***********************
 
     def test__set_accumulated(self):
-        param_list = [(100, 0), (0, 100)]
+        param_perfect_failed = [(100, 0), (0, 100)]
         param_initial = [0, 25, 50, 75, 100]
         param_accumulated = [0, 25, 50, 75, 100]
         param_name = [None, "cause_1"]
 
-        for perfect, failed in param_list:
+        for perfect, failed in param_perfect_failed:
             for initial in param_initial:
                 for accumulated in param_accumulated:
                     for name in param_name:
@@ -734,7 +734,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         c = ConditionIndicator.from_dict(test_data)
         update = {"alpha": 10, "beta": 5}
 
-        self.assertRaises(KeyError, c.update, update)
+        self.assertRaises(KeyError, c.update_from_dict, update)
 
     def test_agg_timelines_no_cause(self):
         """

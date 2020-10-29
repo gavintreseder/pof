@@ -1,8 +1,11 @@
+import logging
+
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 from pof.interface.config import Config as cf
+from pof import Component, FailureMode, Task
 
 IS_OPEN = cf.is_open
 SCALING = cf.scaling
@@ -69,13 +72,25 @@ def validate_layout(pof_obj, layout):
 
     missing_objects = [obj for obj in layout_objects if obj not in layout]
 
-    if len(missing_objects) == 0:
-        return True
+    if missing_objects:
+        logging.info("Missing objects from layout - %s", missing_objects)
+        return False
     else:
-        return missing_objects
+        return True
 
 
 # ******************* Component ******************
+
+
+def make_layout(pof_obj, prefix="", sep="-"):
+    if isinstance(pof_obj, Component):
+        layout = make_component_layout(pof_obj, prefix, sep)
+    elif isinstance(pof_obj, FailureMode):
+        layout = make_failure_mode_layout
+
+    validate_layout(pof_obj, layout)
+
+    return layout
 
 
 def make_component_layout(component, prefix="", sep="-"):
@@ -446,6 +461,7 @@ def make_task_impact_layout(impacts, prefix="", sep="-"):
     prefix = prefix + "impact" + sep
     state_layout = make_state_impact_layout(impacts["state"], prefix=prefix)
     condition_layout = make_condition_impact_layout(impacts["condition"], prefix=prefix)
+    system_impact_layout = make_system_impact_layout(impacts["system"], prefix=prefix)
 
     layout = dbc.Card(
         [
@@ -454,6 +470,7 @@ def make_task_impact_layout(impacts, prefix="", sep="-"):
                 [
                     state_layout,
                     condition_layout,
+                    system_impact_layout,
                 ],
             ),
         ],
@@ -521,6 +538,25 @@ def make_condition_impact_layout(impacts, prefix="", sep="-"):
         forms = forms + [condition_form]
 
     layout = dbc.Form(forms)
+
+    return layout
+
+
+def make_system_impact_layout(impact, prefix="", sep="-"):
+
+    layout = dbc.FormGroup(
+        [
+            dbc.Label("System", className="mr-2"),
+            dbc.Select(
+                id=prefix + "system",
+                options=[
+                    {"label": system, "value": system} for system in Task.SYSTEM_IMPACT
+                ],
+                value=impact,
+            ),
+        ],
+        className="mr-3",
+    )
 
     return layout
 

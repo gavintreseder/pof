@@ -28,9 +28,9 @@ class TestTaskCommon(TestPofBase):
         super().setUp()
 
         # TestPofBase
-        self._class = self._class
-        self._data_valid = self._data_valid
-        self._data_invalid_types = ["string", True]
+        # Overide in all children classes
+        # self._class
+        # self._valid
         self._data_invalid_types = [dict(invalid_input="invalid_input")]
         self._data_invalid_values = []
 
@@ -40,17 +40,8 @@ class TestTask(TestTaskCommon, unittest.TestCase):
         super().setUp()
 
         self._class = Task
-        self._data_valid = dict(name="TaskTest", activity="Task")
-
-    # **************** test_load ***********************
-
-    def test_load_empty(self):
-        task = Task.load()
-        self.assertIsNotNone(task)
-
-    def test_load_valid_dict(self):
-        task = Task.load(fixtures.inspection_data["instant"])
-        self.assertIsNotNone(task)
+        self._data_valid = dict(name="TaskTest", task_type="Task")
+        self._data_complete = copy.copy(fixtures.inspection_data["instant"])
 
     # **************** test_update ***********************
 
@@ -93,7 +84,7 @@ class TestScheduledTask(TestTaskCommon, unittest.TestCase):
         super().setUp()
 
         self._class = ScheduledTask
-        self._data_valid = dict(name="ScheduledTaskTest", activity="ScheduledTask")
+        self._data_valid = dict(name="ScheduledTaskTest", task_type="ScheduledTask")
 
     def test_sim_timeline(self):
         """Check the a scheduled task returns the correct time"""
@@ -143,17 +134,9 @@ class TestConditionTask(TestTaskCommon, unittest.TestCase):
 
         # TestTaskCommon Setup
         self._class = ConditionTask
-        self._data_valid = dict(name="TestInspection", activity="ConditionTask")
+        self._data_valid = dict(name="TestInspection", task_type="ConditionTask")
 
     # **************** test_load ***********************
-
-    def test_load_empty(self):
-        task = ConditionTask.load()
-        self.assertIsNotNone(task)
-
-    def test_load_valid_dict(self):
-        task = ConditionTask.load(fixtures.replacement_data["on_condition"])
-        self.assertIsNotNone(task)
 
     def test_update(self):
 
@@ -191,13 +174,7 @@ class TestInspection(TestTaskCommon, unittest.TestCase):
 
         # TestTaskCommon Setup
         self._class = Inspection
-        self._data_valid = dict(name="TestInspection", activity="Inspection")
-
-    # **************** test_load ***********************
-
-    def test_load_valid_dict(self):
-        task = Inspection.load(fixtures.inspection_data["instant"])
-        self.assertIsNotNone(task)
+        self._data_valid = dict(name="TestInspection", task_type="Inspection")
 
     # **************** test_update ***********************
 
