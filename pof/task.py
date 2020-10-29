@@ -60,7 +60,7 @@ class Task(Load):
     def __init__(
         self,
         name="task",
-        task_type="Only used for the from_dict factory method",
+        task_type="Factory method only,
         trigger="unknown",
         active=True,
         cost=0,
