@@ -7,9 +7,10 @@ Author: Gavin Treseder
 
 import copy
 from dataclasses import dataclass, field
+import logging
 from typing import Dict, Optional
 from random import random, seed
-import logging
+
 
 import numpy as np
 import pandas as pd
@@ -27,6 +28,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from config import config
 from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
 from pof.distribution import Distribution, DistributionManager
@@ -38,13 +40,10 @@ from pof.task import (
 )
 import pof.demo as demo
 from pof.load import Load
-from config import config
 
-# TODO
-"""
-    - Use condition pf to change indicator
-    - task indicator
-"""
+
+# TODO Use condition pf to change indicator
+# #TODO task indicator
 
 # TODO Change this to update timeline based on states that have changed
 # TODO make it work with non zero start times
@@ -405,7 +404,7 @@ class FailureMode(Load):
 
                 t_now = t_now + 1
 
-                if "fm" in system_impact:
+                if "component" in system_impact:
                     self.renew(t_now)
 
         return self.timeline
