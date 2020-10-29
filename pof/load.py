@@ -11,6 +11,7 @@ from collections.abc import Iterable
 import logging
 import inspect
 
+from dataclasses import fields
 from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
@@ -34,7 +35,17 @@ cf = config["Load"]
 The load module is used to overload other pof classes so that they can use a common load methods
 """
 
-# TODO add more robust error checking for types other than value error
+
+def get_signature(obj):
+    """ Get the constructor signature"""
+    signatures = inspect.signature(obj).parameters
+
+    if bool(obj.__bases__):
+        for parent in obj.__bases__:
+            parent_signature = get_signature(parent)
+            signatures = {**signatures, **parent_signature}
+
+    return signatures
 
 
 @dataclass
@@ -44,9 +55,6 @@ class Load:
     """
 
     name: str = field_property(default="Load")
-
-    def __post_init__(self, *args, **kwargs):
-        self._handle_invalid_data(args, kwargs)
 
     @name.getter
     def name(self) -> str:
@@ -64,23 +72,6 @@ class Load:
         else:
             raise TypeError("name must be a string")
 
-    def _handle_invalid_data(self, args, kwargs):
-        """
-        Log invalid input or raise an error
-        """
-        if bool(args or kwargs):
-            msg = "%s - %s - Unused variables - %s - %s" % (
-                self.__class__.__name__,
-                self.name,
-                args,
-                kwargs,
-            )
-
-            if cf.get("handle_invalid_data", False):
-                logging.warning(msg)
-            else:
-                raise TypeError(msg)
-
     @classmethod
     def load(cls, details=None):
         """
@@ -91,10 +82,9 @@ class Load:
                 instance = cls.from_dict(details)
             else:
                 if cf.get("handle_invalid_data", False):
+                    constructor = get_signature(cls)
                     stripped_details = {
-                        k: v
-                        for k, v in details.items()
-                        if k in inspect.signature(cls).parameters
+                        k: v for k, v in details.items() if k in list(constructor)
                     }
                     instance = cls.from_dict(stripped_details)
                 else:
@@ -109,12 +99,6 @@ class Load:
             else:
                 raise error
         return instance
-
-    def _validate_signature(obj):
-        """
-        Recursively get the signature variables"""
-
-        return signature
 
     @classmethod
     def from_dict(cls, details=None):

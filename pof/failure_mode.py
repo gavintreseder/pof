@@ -35,7 +35,6 @@ from pof.task import (
     Task,
     Inspection,
     ConditionTask,
-    ImmediateMaintenance,
 )
 import pof.demo as demo
 from pof.load import Load

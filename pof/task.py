@@ -60,7 +60,7 @@ class Task(Load):
     def __init__(
         self,
         name="task",
-        task_type="Task",
+        task_type="Only used for the from_dict factory method",
         trigger="unknown",
         active=True,
         cost=0,
@@ -71,7 +71,6 @@ class Task(Load):
         p_effective=1,
         triggers=None,
         impacts=None,
-        activity="task",
         *args,
         **kwargs
     ):
@@ -94,6 +93,7 @@ class Task(Load):
         self.labour = NotImplemented  # labour TODO
         self.spares = NotImplemented  # spares TODO
         self.equipment = NotImplemented  # equipment TODO
+        self.consequence = dict()
         self.set_consequence(consequence)
 
         # Triggers
@@ -118,21 +118,21 @@ class Task(Load):
         """
         if isinstance(details, dict):
 
-            activity = details.get("activity", None)
+            task_type = details.get("task_type", None)
 
-            if activity == "Task":
+            if task_type == "Task":
                 task = Task(**details)
 
-            elif activity == "ConditionTask":
+            elif task_type == "ConditionTask":
                 task = ConditionTask(**details)
 
-            elif activity == "ScheduledTask":
+            elif task_type == "ScheduledTask":
                 task = ScheduledTask(**details)
 
-            elif activity == "Inspection":
+            elif task_type == "Inspection":
                 task = Inspection(**details)
 
-            elif activity is None:
+            elif task_type is None:
                 task = Task(**details)
 
             else:
@@ -148,7 +148,7 @@ class Task(Load):
 
     # ************ Set Methods **********************
 
-    def set_consequence(self, consequence=dict()):
+    def set_consequence(self, consequence=None):
         """
         Takes a Consequence object or consequence dict to set a consequence
         """
@@ -303,23 +303,25 @@ class Task(Load):
 
         for key, value in dict_data.items():
 
+            # Catch some special examples for tasks
             if key in ["trigger", "impact"]:
 
-                for key_1, value in dict_data[key].items():
+                for key_1, val_1 in dict_data[key].items():
 
                     if key_1 == "condition":
-                        for key_2, value in dict_data[key][key_1].items():
-                            for key_3, value in dict_data[key][key_1][key_2].items():
-                                self.__dict__[key + "s"][key_1][key_2][key_3] = value
+                        for key_2, val_2 in dict_data[key][key_1].items():
+                            for key_3, val_3 in dict_data[key][key_1][key_2].items():
+                                self.__dict__[key + "s"][key_1][key_2][key_3] = val_3
 
                     elif key_1 == "state":
-                        for key_2, value in dict_data[key][key_1].items():
-                            self.__dict__[key + "s"][key_1][key_2] = value
+                        for key_2, val_2 in dict_data[key][key_1].items():
+                            self.__dict__[key + "s"][key_1][key_2] = val_2
 
                     elif key_1 == "system":
-                        self.__dict__[key][key_1] = value
+                        self.__dict__[key][key_1] = val_1
             else:
-                super().update_from_dict({key:value})
+                # Use the default method
+                super().update_from_dict({key: value})
 
     def get_dash_ids(self, prefix="", sep="-"):
 
@@ -433,15 +435,12 @@ class ConditionTask(Task):
     Parent class for creating condition tasks
     """
 
-    def __init__(
-        self, name="condition_task", task_type="ConditionTask", *args, **kwargs
-    ):
+    def __init__(self, name="condition_task", *args, **kwargs):
         super().__init__(name=name, *args, **kwargs)
 
         self.trigger = "condition"
-        self.task_type = task_type
 
-        self.task_type = "immediate"
+        self.task_completion = "immediate"
 
     def sim_timeline(
         self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
@@ -482,7 +481,7 @@ class ConditionTask(Task):
 
             tl_ct = tl_ct.astype(int)
 
-            if self.task_type == "next_maintenance":
+            if self.task_completion == "next_maintenance":
                 # Change to days until format #Adjust
                 t_lower = np.argmax(tl_ct == 1)
                 t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
@@ -490,7 +489,7 @@ class ConditionTask(Task):
                 tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
                 tl_ct[tl_ct == False] = -1
 
-            elif self.task_type == "immediate":
+            elif self.task_completion == "immediate":
                 tl_ct = tl_ct - 1
 
         else:
@@ -507,10 +506,9 @@ class Inspection(ScheduledTask):
     def __init__(self, t_interval=100, t_delay=0, name="inspection", *args, **kwargs):
         # TODO fix up the defaults
 
-        super().__init__(t_interval=t_interval, t_delay=t_delay, *args, **kwargs)
-
-        self.name = name
-        self.task_type = "Inspection"
+        super().__init__(
+            t_interval=t_interval, t_delay=t_delay, name=name, *args, **kwargs
+        )
 
     # TODO replace is_effective with trigger check
     def is_effective(self, t_now, timeline=None):
@@ -548,49 +546,6 @@ class Inspection(ScheduledTask):
     @classmethod
     def demo(cls):
         return cls.from_dict(demo.inspection_data["degrading"])
-
-
-class ImmediateMaintenance(ConditionTask):
-    def __init__(self, task_type="immediate_maintenance", name="immediate_maintenance"):
-        super().__init__(self)
-
-        self.name = name
-        self.task_type = task_type
-
-    def set_default(self):
-
-        self.triggers = dict(
-            condition=dict(),
-            state=dict(
-                failure=True,
-            ),
-        )
-
-        self.impacts = dict(
-            condition=dict(
-                wall_thickness=dict(
-                    target=1,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-                external_diameter=dict(
-                    target=1,
-                    method="reduction_factor",
-                    axis="condition",
-                ),
-            ),
-            state=dict(
-                initiation=False,
-                detection=False,
-                failure=False,
-            ),
-        )
-
-        self.component_reset = True
-
-        self.cost = 5000
-
-        return self
 
 
 # TODO

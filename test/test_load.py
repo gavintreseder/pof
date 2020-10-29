@@ -103,7 +103,7 @@ class TestPofBase(object):
 
     def test_load_with_empty(self):
         instance = self._class.load()
-        self.assertIsNotNone(instance)
+        self.tc.assertIsNotNone(instance)
 
     def test_load_valid_dict(self):
         # Arrange
@@ -113,7 +113,7 @@ class TestPofBase(object):
         instance = self._class.load(self._data_valid)
 
         # Assert
-        self.assertEqual(instance, instance_from_dict)
+        self.tc.assertEqual(instance, instance_from_dict)
 
     def test_load_with_invalid_data_config_on_error_use_default(self):
 
@@ -129,8 +129,7 @@ class TestPofBase(object):
                 obj = self._class.load(data)
 
                 # Assert
-                self.assertIsNotNone(obj)
-
+                self.tc.assertIsNotNone(obj)
 
         # Tests for handle_errors
         # # Arrange
@@ -142,7 +141,7 @@ class TestPofBase(object):
     def test_demo(self):
 
         # Arrange / Act / Assert
-        self.assertIsNotNone(self._class.demo())
+        self.tc.assertIsNotNone(self._class.demo())
 
     # def test_load_error(self):
 
@@ -431,7 +430,10 @@ class TestLoad(unittest.TestCase):
                 KeyError,
                 {"obj": {"invalid_attribute": "after_update"}},
             ),
-            (KeyError, {"dict_data": {"invalid_key": "after_update"}}),
+            (
+                KeyError,
+                {"dict_data": {"invalid_key": "after_update"}},
+            ),
             (
                 KeyError,
                 {"dict_obj": {"invalid_key": {"name": "after_update"}}},

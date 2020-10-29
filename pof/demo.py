@@ -116,7 +116,7 @@ condition_data = dict(
 # *********************** task data **********************************
 inspection_data = dict(
     instant=dict(
-        activity='Inspection',
+        task_type='Inspection',
         name='inspection',
         p_effective=0.9,
         cost=50,
@@ -141,7 +141,7 @@ inspection_data = dict(
         ),
     ),
     degrading=dict(
-        activity='Inspection',
+        task_type='Inspection',
         name='inspection',
         p_effective=0.9,
         cost=55,
@@ -173,7 +173,7 @@ inspection_data = dict(
 
 repair_data = dict(
     on_condition=dict(
-        activity='ConditionTask',
+        task_type='ConditionTask',
         name='on_condition_repair',
         p_effective=0.7,
         cost=100,
@@ -206,7 +206,7 @@ repair_data = dict(
 
 replacement_data =dict(
     instant = dict(
-        activity='ConditionTask',
+        task_type='ConditionTask',
         name='on_condition_replacement',
         p_effective=1,
         cost=5000,
@@ -231,7 +231,7 @@ replacement_data =dict(
         ),
     ),
     on_condition = dict(
-        activity='ConditionTask',
+        task_type='ConditionTask',
         name='on_condition_replacement',
         p_effective=1,
         cost=5000,
@@ -257,7 +257,7 @@ replacement_data =dict(
         ),
     ),
     on_failure = dict(
-        activity='ConditionTask',
+        task_type='ConditionTask',
         name='on_failure_replacement',
         p_effective=1,
         cost=10000,
