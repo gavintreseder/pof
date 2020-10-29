@@ -67,11 +67,11 @@ class PolesFleetDataLoader(FleetDataLoader):
             "TransformerOnPole",
             "PremiseCount",
             "Travel Time to Pole (hrs)",
-            "Total Consequence $",
         ]
 
         self.df_csq = self.from_file(self.csq_path, csq_columns)
         self.df_csq = self.df_csq.rename(columns={"ASSET_ID": "Asset ID"})
+        self.df_csq["Asset ID"] = self.df_csq["Asset ID"].astype(str)
 
         # self.df_csq = self.replace_substring(self.df_csq)
         self.df_csq = self.replace_columns(self.df_csq)
@@ -117,7 +117,10 @@ class PolesFleetDataLoader(FleetDataLoader):
     def load_condition_data(self):
         intervention_columns = ["Asset ID", "Pseudo Asset ID"]
 
-        df_condition = self.from_file(self.condition_path)
+        df_condition = self.from_file(
+            self.condition_path,
+            dtype={"After Value": "object", "Before Value": "object"},
+        )
         df_condition["Date Changed"] = dd.to_datetime(
             df_condition["Date Changed"], format="%Y-%m-%d %H:%M:%S"
         ).dt.normalize()
@@ -143,20 +146,12 @@ class PolesFleetDataLoader(FleetDataLoader):
         df_condition = df_condition.merge(df_intervention, on="Asset ID")
 
         # compare dates if replacement date < condition date the use Pseudo Asset ID
-        # df_condition["Asset ID"] = da.where(
-        #     df_condition["Replace Date"] > df_condition["Date Changed"],
-        #     df_condition["Asset ID"],
-        #     df_condition["Pseudo Asset ID"],
-        # )
-
-        df_condition["bool"] = (
-            df_condition["Replace Date"] > df_condition["Date Changed"]
+        df_condition["Asset ID"] = da.where(
+            df_condition["Replace Date"].to_dask_array()
+            > df_condition["Date Changed"].to_dask_array(),
+            df_condition["Asset ID"].to_dask_array(),
+            df_condition["Pseudo Asset ID"].to_dask_array(),
         )
-        idx_false = df_condition[df_condition["bool"] == False].index
-        df_condition.loc[idx_false]["Asset ID"] = df_condition.loc[idx_false][
-            "Pseudo Asset ID"
-        ]
-        df_condition.drop(columns="bool")
 
         df_condition = df_condition[cond_columns]
 
