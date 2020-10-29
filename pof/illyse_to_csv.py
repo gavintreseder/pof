@@ -1,3 +1,6 @@
+from pympler import classtracker
+
+
 if __package__ is None or __package__ == "":
     import sys
     import os
@@ -7,12 +10,13 @@ if __package__ is None or __package__ == "":
 from pof.loader.fleet_data import FleetData
 from pof.loader.poles_fleet_data_loader import PolesFleetDataLoader
 
-print("starting")
+# imports data
 pfd = PolesFleetDataLoader()
-print("between")
-fd = pfd.get_fleet_data()
-print("okay")
 
+# creates fleet data object from data
+fd = pfd.get_fleet_data()
+
+# attributes to keep in summary
 attributes = {
     "pole_material": [],
     "pole_strength": [],
@@ -22,13 +26,23 @@ attributes = {
     "DPWT_perfect_condition": [],
     "total_csq": [],
 }
-
+# attributes to remove from summary
 remove = None
-summary = fd.get_population_summary(by=attributes, remove=remove, n_bins=10)
-print("omg it worked")
-x = summary.compute()
-print("omg it really worked")
 
+tr = classtracker.ClassTracker()  # pympler
+tr.track_object(fd)  # pympler
+
+# population summary (dask object)
+summary = fd.get_population_summary(by=attributes, remove=remove, n_bins=10)
+
+tr.create_snapshot()  # pympler
+tr.stats.print_summary()  # pympler
+
+# population summary (pandas object)
+# x = summary.compute()
+
+
+############################################
 
 # add progress bar
 # tqdm - simple but may not work with dask
