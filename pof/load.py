@@ -185,7 +185,10 @@ class Load:
         """
         updates a single parameter using a string format
         """
-        id_str = id_str.split(self.name + sep, 1)[1]
+        try:
+            id_str = id_str.split(self.name + sep, 1)[1]
+        except:
+            id_str = id_str
 
         dict_data = str_to_dict(id_str, value, sep)
 

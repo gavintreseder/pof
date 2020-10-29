@@ -25,9 +25,6 @@ class TestPofBase(object):
         self._class
                         Used for calling class methods
 
-        self._class_name
-                        Used for patching config
-
         self._data_valid
         self._data_invalid_values
         self._data_invalid_types
@@ -319,16 +316,30 @@ class TestLoad(unittest.TestCase):
         ]
 
         for test_data in param_tests:
-            # Act / Assert
-            # with self.assertRaises(error):
-
-            # TODO add context manager to check logger
+            # Act
             load.update(test_data)
+
+            # Assert
+            # TODO add context manager to check logger
 
     # -------------------- Test update_from_str -----------------------------
 
-    def test_update_with_string(self):
-        # TODO
+    def test_update_from_str(self):
+        """ Check a string is converted to a dict for subsequent updates"""
+        # Arrange
+        load = Load(name="test_load")
+        load.data = "before_update"
+
+        id_str = "Load-test_load-data"
+        value = "after_update"
+        sep = "-"
+
+        # Act
+        load.update_from_str(id_str=id_str, value=value, sep=sep)
+
+        # Assert
+        self.assertEqual(load.data, "after_update")
+
         NotImplemented
 
     # -------------------- Test update_from_dict --------------------
