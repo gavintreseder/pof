@@ -13,7 +13,7 @@ from pof.loader.poles_fleet_data_loader import PolesFleetDataLoader
 # imports data
 pfd = PolesFleetDataLoader()
 
-# creates fleet data object from data
+# creates fleet data object from datapip
 fd = pfd.get_fleet_data()
 
 # attributes to keep in summary
@@ -29,14 +29,14 @@ attributes = {
 # attributes to remove from summary
 remove = None
 
-tr = classtracker.ClassTracker()  # pympler
-tr.track_object(fd)  # pympler
+# tr = classtracker.ClassTracker()  # pympler
+# tr.track_object(fd)  # pympler
 
 # population summary (dask object)
 summary = fd.get_population_summary(by=attributes, remove=remove, n_bins=10)
 
-tr.create_snapshot()  # pympler
-tr.stats.print_summary()  # pympler
+# tr.create_snapshot()  # pympler
+# tr.stats.print_summary()  # pympler
 
 # population summary (pandas object)
 # x = summary.compute()

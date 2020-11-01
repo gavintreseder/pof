@@ -61,6 +61,7 @@ class PolesFleetDataLoader(FleetDataLoader):
         """
         Legacy not needed
         """
+        print("loading consequence model")
         csq_columns = [
             "ASSET_ID",
             "BushfirePriority",
@@ -73,10 +74,13 @@ class PolesFleetDataLoader(FleetDataLoader):
         self.df_csq = self.df_csq.rename(columns={"ASSET_ID": "Asset ID"})
         self.df_csq["Asset ID"] = self.df_csq["Asset ID"].astype(str)
 
-        # self.df_csq = self.replace_substring(self.df_csq)
+        self.df_csq = self.replace_substring(self.df_csq)
         self.df_csq = self.replace_columns(self.df_csq)
+        self.df_csq = self.df_csq.repartition(npartitions=1).reset_index(drop=True)
+        print("consequence model loaded")
 
     def load_asset_info(self):
+        print("loading asset information")
         csq_columns = [
             "ASSET_ID",
             "C_Safety_Dollars",
@@ -111,10 +115,15 @@ class PolesFleetDataLoader(FleetDataLoader):
 
         self.df_asset_info = self.df_asset_info.merge(intervention, on="Asset ID")
 
-        # self.df_asset_info = self.replace_substring(self.df_asset_info)
+        self.df_asset_info = self.replace_substring(self.df_asset_info)
         self.df_asset_info = self.replace_columns(self.df_asset_info)
+        self.df_asset_info = self.df_asset_info.repartition(npartitions=1).reset_index(
+            drop=True
+        )
+        print("asset information loaded")
 
     def load_condition_data(self):
+        "loading condition data"
         intervention_columns = ["Asset ID", "Pseudo Asset ID"]
 
         df_condition = self.from_file(
@@ -155,10 +164,12 @@ class PolesFleetDataLoader(FleetDataLoader):
 
         df_condition = df_condition[cond_columns]
 
-        # df_condition = self.replace_substring(df_condition)
+        df_condition = self.replace_substring(df_condition)
         df_condition = self.replace_columns(df_condition)
+        df_condition = df_condition.repartition(npartitions=1).reset_index(drop=True)
 
         self.condition_data = df_condition
+        print("condition data loaded")
 
     def replace_substring(
         self, df, replace=prohibbited_characters, replace_with=replacement_character
@@ -168,8 +179,19 @@ class PolesFleetDataLoader(FleetDataLoader):
             df_replaced = df.applymap(
                 lambda s: s.replace(r, replace_with[0]) if isinstance(s, str) else s
             )
+        df_replaced = df.applymap(
+            lambda s: s.replace(" ", "") if isinstance(s, str) else s
+        )
+        # df_replaced = df.where(~isinstance(df, str), df.replace(r, replace_with[0]))
 
         return df_replaced
+
+    def cleanse_numerical(self, df, columns, replace_with=np.nan):
+
+        for c in columns:
+            df[c] = df[c].where(df[c].str.isnumeric(), replace_with).astype("float")
+
+        return df
 
     def replace_columns(self, df):
 
@@ -201,6 +223,7 @@ class PolesFleetDataLoader(FleetDataLoader):
         """
         Creates a FleetData object
         """
+        print("fleet data object created")
         return FleetData(
             asset_info=self.df_asset_info,
             condition=self.condition_data,

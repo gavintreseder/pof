@@ -28,3 +28,6 @@ celery = "*"
 
 [requires]
 python_version = "*"
+
+[pipenv]
+allow_prereleases = true

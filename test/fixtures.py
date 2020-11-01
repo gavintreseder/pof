@@ -6,7 +6,7 @@ from distribution import Demo as demo
 demo.slow_aging
 demo.distribution.slow_aging
 """
-
+import testconfig
 import pof.demo as demo
 
 # fmt: off

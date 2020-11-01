@@ -7,10 +7,11 @@ import math
 import logging
 import dask.array as da
 import dask.dataframe as dd
-import dask.distributed
-from distributed import Client
 
-client = Client(processes=False)
+# import dask.distributed
+# from distributed import Client
+
+# client = Client(processes=False)
 
 
 class FleetData:
@@ -75,6 +76,7 @@ class FleetData:
             asset_condition_match,
             asset_csq_match,
         )
+        print("data validated")
 
     # ************** Preparation Functions *****************
     def _calculate_age(self):
@@ -88,6 +90,7 @@ class FleetData:
             - x.year
             - ((today.month, today.day) < (x.month, x.day))
         )
+        print("age calculated")
 
     def _field_types(self, threshold=5):
         """
@@ -129,6 +132,7 @@ class FleetData:
                 types[col] = "numerical"
 
         self.field_types = types
+        print("field types obtained")
 
     # ************** Summary Functions *****************
     def _summarise_condition(self):
@@ -136,10 +140,19 @@ class FleetData:
         Summarises the condition data into format describing perfect_condition condition, current_condition condition,
         and whether an asset has experienced condition loss.
         """
+        print("summarising condition")
 
         condition_summary = self.condition[["asset_id", "condition_name"]]
 
         self.condition["condition_after"] = self.condition["condition_after"].fillna(0)
+        self.condition["condition_after"] = (
+            self.condition["condition_after"]
+            .where(self.condition["condition_after"].str.isnumeric(), 0)
+            .astype("int")
+        )
+        # self.condition_summary = condition_summary.repartition(
+        #     npartitions=1
+        # ).reset_index(drop=True)
 
         # perfect_condition = (
         #     self.condition.iloc[
@@ -157,7 +170,6 @@ class FleetData:
             .reset_index()
             .rename(columns={"condition_after": "perfect_condition"})
         )
-
         condition_summary = condition_summary.merge(
             perfect_condition, on=["asset_id", "condition_name"]
         )
@@ -194,7 +206,8 @@ class FleetData:
 
         condition_summary = condition_summary.drop_duplicates().reset_index(drop=True)
 
-        condition_name_list = client.persist(self.condition["condition_name"].unique())
+        condition_name_list = self.condition["condition_name"].unique().compute()
+        # condition_name_list = client.persist(self.condition["condition_name"].unique())
 
         condition_summary_2 = condition_summary[["asset_id", "condition_name"]].rename(
             columns={
@@ -229,6 +242,7 @@ class FleetData:
 
         condition_summary_2 = condition_summary_2.drop(columns={"dummy"})
         self.condition_summary = condition_summary_2
+        print("condition summarised")
 
     def _summarise_csq(self):
         """
@@ -241,25 +255,26 @@ class FleetData:
         """
         Returns a summary of asset data defined by user.
         """
-
+        print("starting population summary")
         # filter categorical
+        print("filtering data")
         asset_info_filtered = self._filter_asset_info(by, remove)
         condition_filtered = self._filter_condition(by)
         # TODO: Add csq_filtered
-
+        print("merging filtered data")
         # merge asset, condition, csq
         df_summary = asset_info_filtered.merge(condition_filtered, on="asset_id")
         # TODO: df_summary = df_summary.merge(self.csq_filtered, on="asset_id")
-
+        print("binning numerical data")
         # bin numerical
-        # df_summary = self._get_bins(df_summary, by, n_bins)
-
+        df_summary = self._get_bins(df_summary, by, n_bins)
+        print("computing summary")
         # compute dataframe
-        df_summary = client.persist(df_summary)
+        # df_summary = client.persist(df_summary)
 
         # filter numerical
         groupby_filter = list(by.keys())
-
+        print("count summary")
         # group and count by filter
         df_sum = (
             df_summary.groupby(groupby_filter, dropna=False)["asset_id"]
@@ -267,10 +282,11 @@ class FleetData:
             .reset_index()
             .rename(columns={"asset_id": "count"})
         )
-
+        df_sum = df_sum.compute()
         # drop zero counts
         df_summary = df_sum[df_sum["count"] > 0].reset_index(drop=True)
 
+        print("summary complete")
         return df_summary
 
     def get_population_summary_legacy(self, by, remove, n_bins=10):
@@ -439,17 +455,19 @@ class FleetData:
         for att, trait in by.items():
             if att in self.field_types:
                 if self.field_types[att] == "numerical":
-                    bins = da.unique(
-                        da.round(
-                            da.linspace(
-                                da.floor(df[att].min() - 0.01),
-                                da.ceil(df[att].max() + 0.01),
+                    print(att)
+                    bins = np.unique(
+                        np.round(
+                            np.linspace(
+                                np.floor(df[att].min()) - 0.01,
+                                np.ceil(df[att].max()) + 0.01,
                                 n_bins,
                             )
                         )
-                    ).compute()
+                    )
                     labels = bins[1:]
                     df[att] = df[att].map_partitions(pd.cut, bins, labels=labels)
+                    df[att] = df[att].astype(float)
 
         return df
 

@@ -12,6 +12,7 @@ import logging
 import inspect
 
 from dataclasses import fields
+
 from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
@@ -55,6 +56,8 @@ class Load:
     """
 
     name: str = field_property(default="Load")
+    # def __init__(self, name):
+    #     self._name = name
 
     @name.getter
     def name(self) -> str:
