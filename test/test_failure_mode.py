@@ -174,38 +174,9 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         for state, value in fm.tasks["on_failure_replacement"].impacts["state"].items():
             self.assertEqual(fm.timeline[state][2], value, "impact not completed")
 
-    def test_sim_timeline_remain_failed_true(self):
+    def test_sim_timeline_remain_failed(self):
         """
-        Check a timeline is impacted by the 'remain
-        """
-
-        # Arrange so replacement should occur immediately
-        fm = FailureMode.demo()
-        fm.indicators["slow_degrading"].set_condition(10)
-        fm.indicators["fast_degrading"].set_condition(10)
-        fm.set_states(dict(initiation=True, detection=True))
-
-        # Act
-        with patch.dict("pof.failure_mode.cf", {"remain_failed": True}):
-            fm.sim_timeline(2000)
-
-            # Assert
-            self.assertEqual(len(fm.timeline["time"]), 1)
-            self.assertEqual(
-                fm.timeline["on_condition_replacement"][0],
-                0,
-                "task should trigger at t=1",
-            )
-            for task_name in fm.tasks:
-                self.assertEqual(
-                    any(fm.timeline[task_name][1:] + 1),
-                    False,
-                    "task should not be triggered again",
-                )
-
-    def test_sim_timeline_remain_failed_false(self):
-        """
-        Check a timeline is impacted by the 'remain
+        Check a timeline is impacted by the 'remain_failed' flag
         """
 
         params = [(True, 1, 0, False), (False, 2001, 0, True)]
@@ -228,7 +199,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
                 self.assertEqual(
                     fm.timeline["on_condition_replacement"][0],
                     time_failed,
-                    "task should trigger at t=1",
+                    f"task should trigger at t=1",
                 )
                 for task_name in fm.tasks:
                     self.assertEqual(
@@ -436,7 +407,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         test_data = Task.from_dict(fixtures.inspection_data["instant"])
 
-        fm._set_container_attr("tasks", Task, test_data)
+        fm.set_obj("tasks", Task, test_data)
 
         self.assertIsInstance(fm.tasks["inspection"], Task)
         self.assertEqual(
@@ -450,7 +421,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         test_data = dict(inspection=Task.from_dict(fixtures.inspection_data["instant"]))
 
-        fm._set_container_attr("tasks", Task, test_data)
+        fm.set_obj("tasks", Task, test_data)
 
         self.assertIsInstance(fm.tasks["inspection"], Task)
         self.assertEqual(
@@ -464,7 +435,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         test_data = dict(inspection=fixtures.inspection_data["instant"])
 
-        fm._set_container_attr("tasks", Task, test_data)
+        fm.set_obj("tasks", Task, test_data)
 
         self.assertIsInstance(fm.tasks["inspection"], Task)
         self.assertEqual(
@@ -476,9 +447,9 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         fm = FailureMode.from_dict(fixtures.failure_mode_data["random"])
 
-        test_data = dict(fixtures.inspection_data["instant"])
+        test_data = dict(inspection=fixtures.inspection_data["instant"])
 
-        fm._set_container_attr("tasks", Task, test_data)
+        fm.set_obj("tasks", Task, test_data)
 
         self.assertIsInstance(fm.tasks["inspection"], Task)
         self.assertEqual(
@@ -487,11 +458,6 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         )
 
     # ------------------ Test Expected Risk ------------------------
-
-    def test_mc_timeline_risk_is_accurate(self):
-        fm = FailureMode.demo()
-
-        fm.mc_timeline(200)
 
     def test_expected_risk(self):
 

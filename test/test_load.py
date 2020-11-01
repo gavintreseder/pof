@@ -340,8 +340,6 @@ class TestLoad(unittest.TestCase):
         # Assert
         self.assertEqual(load.data, "after_update")
 
-        NotImplemented
-
     # -------------------- Test update_from_dict --------------------
 
     def test_update_from_dict_to_update_data(self):
@@ -455,3 +453,7 @@ class TestLoad(unittest.TestCase):
             # Act / Assert
             with self.assertRaises(error):
                 load.update_from_dict(test_data)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,8 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from pof import Component
-from pof.interface.layouts import make_component_layout, make_failure_mode_layout
+from pof import Component, FailureMode
+from pof.interface.layouts import (
+    make_component_layout,
+    make_failure_mode_layout,
+    validate_layout,
+)
 
 
 class TestLayout(unittest.TestCase):
@@ -12,17 +16,21 @@ class TestLayout(unittest.TestCase):
 
         # Act
         layout = make_component_layout(comp)
+        valid = validate_layout(comp, layout)
 
         # Assert
+        self.assertTrue(valid)
 
     def test_make_failure_mode_layout(self):
         # Arrange
         fm = FailureMode.demo()
 
-        # Assert
-        layout = make_failure_mode_layout(fm)
-
         # Act
+        layout = make_failure_mode_layout(fm)
+        valid = validate_layout(fm, layout)
+
+        # Assert
+        self.assertTrue(valid)
 
 
 """for ms in ms_fig_update:
