@@ -1,4 +1,5 @@
 from pympler import classtracker
+from dask.diagnostics import ProgressBar
 
 
 if __package__ is None or __package__ == "":
@@ -29,17 +30,19 @@ attributes = {
 # attributes to remove from summary
 remove = None
 
-tr = classtracker.ClassTracker()  # pympler
-tr.track_object(fd)  # pympler
+# tr = classtracker.ClassTracker()  # pympler
+# tr.track_object(fd)  # pympler
 
 # population summary (dask object)
-summary = fd.get_population_summary(by=attributes, remove=remove, n_bins=10)
+with ProgressBar():
+    summary = fd.get_population_summary(by=attributes, remove=remove, n_bins=10)
 
-tr.create_snapshot()  # pympler
-tr.stats.print_summary()  # pympler
+# tr.create_snapshot()  # pympler
+# tr.stats.print_summary()  # pympler
 
 # population summary (pandas object)
-# x = summary.compute()
+with ProgressBar():
+    x = summary.compute()
 
 
 ############################################

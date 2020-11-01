@@ -112,6 +112,29 @@ class Task(Load):
     # ************ Load Methods **********************
 
     @classmethod
+    def _factory(cls, task_type=None):
+
+        if task_type == "Task":
+            task_class = Task
+
+        elif task_type == "ConditionTask":
+            task_class = ConditionTask
+
+        elif task_type == "ScheduledTask":
+            task_class = ScheduledTask
+
+        elif task_type == "Inspection":
+            task_class = Inspection
+
+        elif task_type is None:
+            task_class = Task
+
+        else:
+            raise ValueError("Invalid Task Type")
+
+        return task_class
+
+    @classmethod
     def from_dict(cls, details=None):
         """
         Factory method for loading a Task
@@ -119,28 +142,18 @@ class Task(Load):
         if isinstance(details, dict):
 
             task_type = details.get("task_type", None)
+            task_class = cls._factory(task_type)
+            task = task_class(**details)
 
-            if task_type == "Task":
-                task = Task(**details)
-
-            elif task_type == "ConditionTask":
-                task = ConditionTask(**details)
-
-            elif task_type == "ScheduledTask":
-                task = ScheduledTask(**details)
-
-            elif task_type == "Inspection":
-                task = Inspection(**details)
-
-            elif task_type is None:
-                task = Task(**details)
-
-            else:
-                raise ValueError("Invalid Task Type")
         else:
             raise TypeError("Dictionary expected")
 
         return task
+
+    @classmethod
+    def _signature(cls, obj, sig_input=None):
+        task_type = sig_input.get("task_type", None)
+        return super()._signature(task_type)
 
     @classmethod
     def demo(cls):

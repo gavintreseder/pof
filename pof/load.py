@@ -82,7 +82,7 @@ class Load:
                 instance = cls.from_dict(details)
             else:
                 if cf.get("handle_invalid_data", False):
-                    constructor = get_signature(cls)
+                    constructor = cls._signature(details)
                     stripped_details = {
                         k: v for k, v in details.items() if k in list(constructor)
                     }
@@ -99,6 +99,13 @@ class Load:
             else:
                 raise error
         return instance
+
+    @classmethod
+    def _signature(cls, sig_input=None):
+        """
+        Returns the signature for the class. sig_input can be used when the function is overriden in child classes""
+        """
+        return get_signature(obj)
 
     @classmethod
     def from_dict(cls, details=None):

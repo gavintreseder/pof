@@ -31,6 +31,8 @@ dist_update_test_2 = dict(
     )
 )
 
+# *********************** distribution data **********************************
+
 distribution_data = demo.distribution_data
 
 # *********************** condition data **********************************
@@ -48,7 +50,7 @@ replacement_data = demo.replacement_data
 
 state_data = demo.state_data
 
-# *********************** failure mode data ********************************** 
+# *********************** failure mode data **********************************
 
 failure_mode_data = demo.failure_mode_data
 
