@@ -37,7 +37,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         # TestLoadFromdict
         self._data_valid = dict(name="TestConditionIndicator", pf_curve="step")
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
-        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_invalid_types = [{"invalid_type": "invalid_type", "indicator_type":"ConditionIndicator"}]
 
         cond_data = demo.condition_data["instant"]
         self.cond = ConditionIndicator.load(cond_data)

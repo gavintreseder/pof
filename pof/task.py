@@ -151,12 +151,6 @@ class Task(Load):
         return task
 
     @classmethod
-    def _signature(cls, sig_input=None):
-        task_type = sig_input.get("task_type", None)
-        task_class = cls._factory(task_type)
-        return get_signature(task_class)
-
-    @classmethod
     def demo(cls):
         return cls()
 

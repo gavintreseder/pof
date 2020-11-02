@@ -11,7 +11,8 @@ from collections.abc import Iterable
 import logging
 import inspect
 
-from dataclass_property import dataclass, field_property
+#from dataclass_property import dataclass, field_property
+from dataclassy import dataclass
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -47,7 +48,7 @@ def get_signature(obj):
     return signatures
 
 
-#@dataclass
+@dataclass(kwargs=True)
 class Load:
     """
     A class with methods for loading data that
@@ -55,13 +56,18 @@ class Load:
 
     #name: str = field_property(default="Load")
 
-    def __init__(self, name="Load", *args, **kwargs):
-        self.name = name
-        
-        if args or kwargs:
-            if cf.get
 
-    @name.getter
+    def __init__(self, *args, name="Load", **kwargs):
+        self._name = name
+
+        if args or kwargs:
+            msg = f"Invalid Data {args} - {kwargs}"
+            if cf.get("handle_invalid_data", False):
+                logging.warning(msg)
+            else:
+                raise TypeError(msg)
+
+    @property
     def name(self) -> str:
         return self._name
 
@@ -83,17 +89,7 @@ class Load:
         Loads the data with extra error checking and default logic
         """
         try:
-            if details is None:
-                instance = cls.from_dict(details)
-            else:
-                if cf.get("handle_invalid_data", False):
-                    constructor = cls._signature(details)
-                    stripped_details = {
-                        k: v for k, v in details.items() if k in list(constructor)
-                    }
-                    instance = cls.from_dict(stripped_details)
-                else:
-                    instance = cls.from_dict(details)
+            instance = cls.from_dict(details)
 
         except (ValueError, TypeError) as error:
             logging.warning(error)
@@ -104,14 +100,6 @@ class Load:
             else:
                 raise error
         return instance
-
-    @classmethod
-    def _signature(cls, sig_input=NotImplemented):
-        """
-        Returns the signature for the class. sig_input can be used when the function is overriden in child classes""
-        """
-
-        return get_signature(cls)
 
     @classmethod
     def from_dict(cls, details=None):

@@ -84,26 +84,35 @@ class Indicator(Load):
         self.reset()
 
     @classmethod
+    def _factory(cls, pf_curve=None, indicator_type=None):
+
+        if pf_curve in ["linear", "step"] or indicator_type == "ConditionIndicator":
+
+            ind_class = ConditionIndicator
+
+        elif (
+            pf_curve in ["ssf_calc", "dsf_calc"] or indicator_type == "PoleSafetyFactor"
+        ):
+
+            ind_class = PoleSafetyFactor
+
+        elif pf_curve is None:
+            ind_class = Indicator
+
+        else:
+            raise ValueError("Invalid Indicator Type")
+
+        return ind_class
+
+    @classmethod
     def from_dict(cls, details=None):
         """
         Overloaded factory for creating indicators
         """
         if isinstance(details, dict):
             pf_curve = details.get("pf_curve", None)
-
-            if pf_curve in ["linear", "step"]:
-
-                ind = ConditionIndicator(**details)
-
-            elif pf_curve in ["ssf_calc", "dsf_calc"]:
-
-                ind = PoleSafetyFactor(**details)
-
-            elif pf_curve is None:
-                ind = Indicator(**details)
-
-            else:
-                raise ValueError("Invalid Indicator Type")
+            ind_class = cls._factory(pf_curve)
+            ind = ind_class(**details)
 
         else:
             raise TypeError("Dictionary expected")
