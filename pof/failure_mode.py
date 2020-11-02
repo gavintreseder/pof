@@ -132,7 +132,10 @@ class FailureMode(Load):
         conditions: Dict = None,
         states: Dict = None,
         tasks: Dict = None,
+        **kwargs
     ):
+
+        super().__init__(**kwargs)
 
         self.dists = dict()
         self.indicators = dict()
