@@ -49,6 +49,19 @@ def get_signature(obj):
 
 
 @dataclass(kwargs=True)
+class _Load:
+    name: str = "Load"
+
+    def __init__(self, *args, **kwargs):
+        if args or kwargs:
+            msg = f"Invalid Data {args} - {kwargs}"
+            if cf.get("handle_invalid_data", False):
+                logging.warning(msg)
+            else:
+                raise TypeError(msg)
+
+
+@dataclass(kwargs=True)
 class Load:
     """
     A class with methods for loading data that
@@ -65,18 +78,18 @@ class Load:
                 raise TypeError(msg)
 
     @property
-    def _name(self) -> str:
-        return self.__name
+    def _prop_name(self) -> str:
+        return self._name
 
-    @_name.setter
-    def _name(self, value: str):
+    @_prop_name.setter
+    def _prop_name(self, value: str):
 
         if isinstance(value, str):
             # probhitted = ["-"] #TODO expand list
             # if any(x in a_string for x in matches):
-            self.__name = value
+            self._name = value
         elif value is None:
-            self.__name = None
+            self._name = None
         else:
             raise ValueError("name must be a string")
 
@@ -442,7 +455,7 @@ class Load:
         raise NotImplementedError()
 
 
-Load.name = Load._name
+Load.name = Load._prop_name
 
 if __name__ == "__main__":
     load = Load()
