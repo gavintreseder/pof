@@ -918,7 +918,12 @@ class FailureMode(Load):
 
         untreated = copy.copy(self.dists.get("untreated", None))
 
-        super().update_from_dict(data)
+        condition_data = data.pop("conditions", None)
+        if bool(condition_data):
+            self.conditions.update(condition_data)
+
+        if bool(data):
+            super().update_from_dict(data)
 
         if untreated != self.untreated:
             self._set_init()

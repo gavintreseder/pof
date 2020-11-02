@@ -293,29 +293,29 @@ class Task(Load):
 
     # ********************* interface methods ******************
 
-    def update_from_dict(self, dict_data):
+    # def update_from_dict(self, dict_data):
 
-        for key, value in dict_data.items():
+    #     for key, value in dict_data.items():
 
-            # Catch some special examples for tasks
-            if key in ["trigger", "impact"]:
+    #         # Catch some special examples for tasks
+    #         if key in ["trigger", "impact"]:
 
-                for key_1, val_1 in dict_data[key].items():
+    #             for key_1, val_1 in dict_data[key].items():
 
-                    if key_1 == "condition":
-                        for key_2, val_2 in dict_data[key][key_1].items():
-                            for key_3, val_3 in dict_data[key][key_1][key_2].items():
-                                self.__dict__[key + "s"][key_1][key_2][key_3] = val_3
+    #                 if key_1 == "condition":
+    #                     for key_2, val_2 in dict_data[key][key_1].items():
+    #                         for key_3, val_3 in dict_data[key][key_1][key_2].items():
+    #                             self.__dict__[key + "s"][key_1][key_2][key_3] = val_3
 
-                    elif key_1 == "state":
-                        for key_2, val_2 in dict_data[key][key_1].items():
-                            self.__dict__[key + "s"][key_1][key_2] = val_2
+    #                 elif key_1 == "state":
+    #                     for key_2, val_2 in dict_data[key][key_1].items():
+    #                         self.__dict__[key + "s"][key_1][key_2] = val_2
 
-                    elif key_1 == "system":
-                        self.__dict__[key][key_1] = val_1
-            else:
-                # Use the default method
-                super().update_from_dict({key: value})
+    #                 elif key_1 == "system":
+    #                     self.__dict__[key][key_1] = val_1
+    #         else:
+    #             # Use the default method
+    #             super().update_from_dict({key: value})
 
     def get_dash_ids(self, prefix="", sep="-"):
 
@@ -351,7 +351,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     def __init__(
         self,
         name: str = "scheduled_task",
-        t_interval: int = 0,
+        t_interval: int = 1,
         t_delay: int = 0,
         *args,
         **kwargs,
@@ -369,10 +369,13 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     @t_interval.setter
     def t_interval(self, value):
 
-        self._t_interval = int(value)
+        if int(value) <= 0:
+            raise ValueError("t_interval must be a positive time - %s", value)
+        else:
+            self._t_interval = int(value)
 
-        if math.ceil(value) != value:
-            logging.warning("t_interval must be an integer - %s", value)
+            if math.ceil(value) != value:
+                logging.warning("t_interval must be an integer - %s", value)
 
     @property
     def t_delay(self):
@@ -408,21 +411,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             schedule = np.full(t_end - t_start + 1, -1)
 
         return schedule
-
-    def update_from_dict(self, keys):
-
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if hasattr(self, key):
-                    setattr(self, key, value)
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
 
     @classmethod
     def demo(cls):

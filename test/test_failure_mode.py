@@ -17,6 +17,13 @@ from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
 
 
+def side_effect_trigger_task(**kwargs):
+    t_start = kwargs.get("t_start")
+    t_end = kwargs.get("t_end")
+
+    return np.full(t_end - t_start + 1, 0)
+
+
 class TestFailureMode(TestPofBase, unittest.TestCase):
     def setUp(self):
 
@@ -26,9 +33,10 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         self._class = FailureMode
 
         # TestFromDict
-        self._data_valid = dict(name="TestFailureMode")
+        self._data_valid = [{"name": "TestFailureMode"}]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_complete = [fixtures.complete['component_0'], fixtures.'complete_1']
 
     # ************ Test init_timeline ***********************
 
@@ -150,6 +158,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         """
 
         params = [(True, 1, 0, False), (False, 2001, 0, True)]
+        t_end = 2000
 
         for remain_failed, time_sim, time_failed, more_tasks in params:
 
@@ -158,7 +167,11 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             fm.indicators["slow_degrading"].set_condition(10)
             fm.indicators["fast_degrading"].set_condition(10)
             fm.set_states(dict(initiation=True, detection=True))
+
+            # Trigger tasks
             fm.dists["init"].sample = Mock(return_value=0)
+            for task in fm.tasks.values():
+                task.sim_timeline = Mock(side_effect=side_effect_trigger_task)
 
             # Act
             with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):

@@ -10,6 +10,7 @@ from collections.abc import Iterable
 import logging
 import inspect
 from typing import Optional
+from flatten_dict import flatten, unflatten
 
 # from dataclassy import dataclass
 from dataclass_property import dataclass, field_property
@@ -173,11 +174,11 @@ class Load:
 
             else:
                 logging.warning(
-                    'ERROR: Cannot update "%s" from string or dict',
+                    'ERROR: Can only update "%s" from string or dict',
                     self.__class__.__name__,
                 )
-        except KeyError as error:
-            logging.warning(error)
+        except (KeyError, AttributeError, ValueError) as error:
+            logging.warning("Update Failed. {error}")
 
     def update_from_str(self, id_str, value, sep="-"):
         """
@@ -186,7 +187,7 @@ class Load:
         try:
             id_str = id_str.split(self.name + sep, 1)[1]
         except:
-            id_str = id_str
+            pass
 
         dict_data = str_to_dict(id_str, value, sep)
 
@@ -210,14 +211,14 @@ class Load:
 
             # Check it is an attribute
             if hasattr(self, attr):
-                var_to_update = getattr(self, attr)
+                attr_to_update = getattr(self, attr)
 
                 # Check if the object has a load method
-                if isinstance(var_to_update, Load):
-                    var_to_update.update_from_dict(detail)
+                if isinstance(attr_to_update, Load):
+                    attr_to_update.update_from_dict(detail)
 
                 # Check if it is a dictionary
-                elif isinstance(var_to_update, dict):
+                elif isinstance(attr_to_update, dict):
 
                     for key, val in detail.items():
 
@@ -230,16 +231,29 @@ class Load:
                         elif var_to_update is not None:
                             getattr(self, attr)[key] = val
 
+                        # Check if it is dictionaries
+                        elif isinstance(val, dict):
+                            flat_detail = flatten(detail)
+                            flat_attr = flatten(attr_to_update)
+
+                            missing = set(flat_detail).difference(set(flat_attr))
+                            if not missing:
+                                flat_attr.update(flat_detail)
+                                attr_to_update = unflatten(flat_attr)
+                            else:
+                                raise KeyError(
+                                    f"{self.__class__.__name__} - {self.name} - {attr} does not have {missing}"
+                                )
+
                         else:
-                            raise KeyError(
-                                "%s - %s - %s - %s - does not have the value - %s"
-                                % (self.__class__.__name__, self.name, attr, key, val),
+                            raise ValueError(
+                                f"{self.__class__.__name__} - {self.name} - {attr} cannot be updated with the value {key} {val}"
                             )
                 else:
                     setattr(self, attr, detail)
 
             else:
-                raise KeyError(
+                raise AttributeError(
                     "%s - %s - does not have the attribute - %s"
                     % (self.__class__.__name__, self.name, attr),
                 )

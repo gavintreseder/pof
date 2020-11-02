@@ -18,7 +18,6 @@ if __package__ is None or __package__ == "":
     import os
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 from pof.load import Load
 from pof.helper import str_to_dict
 from config import config

@@ -6,6 +6,7 @@
         Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
 """
 
+import logging
 import unittest
 from unittest.mock import Mock, patch
 
@@ -47,6 +48,7 @@ class TestPofBase(object):
         self._data_valid = [Mock(return_value=None)]
         self._data_invalid_values = [{"name": "name"}]
         self._data_invalid_types = [{"name": "name"}]
+        self._data_complete = [Mock(return_value=None)]
 
     # ---------------- Class Instantiate ------------------------
 
@@ -200,6 +202,47 @@ class TestPofBase(object):
         self.tc.assertTrue(not (inst_1 is inst_2))
         self.tc.assertTrue(not (inst_2 is inst_3))
 
+    # *************** Test Update *************
+
+    def test_update(self):
+
+        # Arrange
+        data = self._data_complete[0]
+        instance_0 = self._class.from_dict(data)
+        instance_1 = self._class.from_dict(self._data_complete[1])
+
+        for var, val in data.items():
+            d = {}
+            d[var] = val
+
+            # Act
+            instance_1.update(d)
+
+        # Assert
+        self.tc_assertEqual(instance_0, instance_1)
+
+    def test_update_errors_raised(self):
+
+        # Arrange
+        instance_0 = self._class.demo()
+        instance_1 = self._class.demo()
+
+        invalid_data = self._data_invalid_types + self._data_invalid_values
+
+        for data in invalid_data:
+            for var, val in data.items():
+                d = {}
+                d[var] = val
+
+                with self.tc.assertLogs(level="DEBUG") as log:
+                    # Act
+                    instance_1.update(d)
+
+                    # Assert
+                    self.tc.assertTrue("Update Failed" in log.output[-1])
+
+        #
+
 
 class TestLoad(TestPofBase, unittest.TestCase):
     def setUp(self):
@@ -209,6 +252,7 @@ class TestLoad(TestPofBase, unittest.TestCase):
         self._data_valid = [{"name": "name"}]
         self._data_invalid_values = [{"name": 1234}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_complete = [{"name": "name"}]
 
         # Mock the pof object
         self.pof_obj = Mock()
@@ -321,6 +365,23 @@ class TestLoad(TestPofBase, unittest.TestCase):
         self.assertEqual(load.obj[key_before_update], expected)
 
     # -------------------- Test update -----------------------------
+
+    def test_update(self):
+
+        # Arrange
+        data = self._data_complete[0]
+        instance_1 = self._class()
+        instance_2 = self._class.from_dict(data)
+
+        for var, val in data.items():
+            d = {}
+            d[var] = val
+
+            # Act
+            instance_1.update(d)
+
+        # Assert
+        self.assertEqual(instance_1, instance_2)
 
     def test_update_errors_caught_and_logged(self):
         """ check that an attriubte that doens't exist returns a Key Error"""
