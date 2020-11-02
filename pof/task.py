@@ -342,24 +342,17 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    name='scheduled_task'
-    t_interval=0
-    t_delay=0
-
-    def __init__(self, t_interval=0, t_delay=0, name="scheduled_task", *args, **kwargs):
-        # TODO fix up defaults
-        super().__init__(name=name, *args, **kwargs)
-
-        self.trigger = "time"
-        self.t_delay = t_delay
-        self.t_interval = t_interval
+    name: str = "scheduled_task"
+    trigger: str = "time"
+    t_interval: int = 0
+    t_delay: int = 0
 
     @property
-    def t_interval(self):
+    def _prop_t_interval(self):
         return self._t_interval
 
-    @t_interval.setter
-    def t_interval(self, value):
+    @_prop_t_interval.setter
+    def _prop_t_interval(self, value):
 
         self._t_interval = int(value)
 
@@ -367,11 +360,11 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             logging.warning("t_interval must be an integer - %s", value)
 
     @property
-    def t_delay(self):
+    def _prop_t_delay(self):
         return self._t_delay
 
-    @t_delay.setter
-    def t_delay(self, value):
+    @_prop_t_delay.setter
+    def _prop_t_delay(self, value):
 
         self._t_delay = int(value)
 
@@ -422,17 +415,21 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         return cls.from_dict(demo.inspection_data["degrading"])
 
 
+ScheduledTask.t_interval = ScheduledTask._prop_t_interval
+ScheduledTask.t_delay = ScheduledTask._prop_t_delay
+
+
 class ConditionTask(Task):
     """
     Parent class for creating condition tasks
     """
 
-    def __init__(self, name="condition_task", *args, **kwargs):
-        super().__init__(name=name, *args, **kwargs)
+    name: str = "condition_task"
+    trigger: str = "condition"
+    task_completion: str = "immediate"
 
-        self.trigger = "condition"
-
-        self.task_completion = "immediate"
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def sim_timeline(
         self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
@@ -495,12 +492,9 @@ class ConditionTask(Task):
 
 
 class Inspection(ScheduledTask):
-    def __init__(self, t_interval=100, t_delay=0, name="inspection", *args, **kwargs):
-        # TODO fix up the defaults
 
-        super().__init__(
-            t_interval=t_interval, t_delay=t_delay, name=name, *args, **kwargs
-        )
+    name: str = "inspection"
+    t_interval: int = 100
 
     # TODO replace is_effective with trigger check
     def is_effective(self, t_now, timeline=None):
@@ -540,7 +534,6 @@ class Inspection(ScheduledTask):
         return cls.from_dict(demo.inspection_data["degrading"])
 
 
-# TODO
 """
     inspection -> detect failure initiation
     repair -> remove failure initiation (Failure Modes that only reset)
@@ -651,7 +644,7 @@ Task
 
 
 if __name__ == "__main__":
-    tsk = Task()
+    task = Task()
     print("Task - Ok")
 
 
@@ -683,7 +676,6 @@ if __name__ == "__main__":
 #     self.trigger = trigger
 #     self.active = active
 
-#     # TODO how the package is grouped together
 #     self._package = NotImplemented
 #     self._impacts_parent = NotImplemented
 #     self._impacts_children = False
