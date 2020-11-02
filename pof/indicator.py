@@ -395,9 +395,7 @@ class ConditionIndicator(Indicator):
 
         # Current accumulation
         self._accumulated = dict()
-        self._set_accumulated(
-            accumulated=abs(self.perfect - self.initial), name="initial"
-        )
+        self._set_accumulated(accumulated=abs(self.perfect - self.initial))
 
     # ********************** Timeline methods ******************************
 
@@ -685,7 +683,6 @@ class ConditionIndicator(Indicator):
     def reset_for_next_sim(self, name=None):
         self._reset_accumulated(
             accumulated=abs(self.perfect - self.initial),
-            name="initial",
             permanent=False,
         )
         self._timeline = dict()

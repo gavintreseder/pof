@@ -56,7 +56,9 @@ class Load:
                 raise TypeError(msg)
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        if type(other) is type(self):
+            return self.__dict__ == other.__dict__
+        return False
 
     @property
     def name(self) -> str:
@@ -106,7 +108,7 @@ class Load:
 
     @classmethod
     def demo(cls):
-        return NotImplementedError
+        return cls("Not Implemented")
 
     def set_obj(self, attr, d_type, value):
         """

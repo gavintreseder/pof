@@ -13,6 +13,7 @@ import fixtures
 import testconfig
 from pof.load import Load
 
+
 class TestPofBase(object):
     """
     An abstract test class that contains a collection of tests to test a from_dict method for a pof object
@@ -181,6 +182,23 @@ class TestPofBase(object):
 
         # Arrange / Act / Assert
         self.tc.assertIsNotNone(self._class.demo())
+
+    # ************ Test __ methods __
+
+    def test_equivalence(self):
+
+        # Arrange / Act
+        inst_1 = self._class.demo()
+        inst_2 = self._class.demo()
+        inst_3 = self._class(name="a different name")
+
+        # Assert
+        self.tc.assertTrue(inst_1 == inst_2)
+        self.tc.assertTrue(inst_2 == inst_1)
+        self.tc.assertTrue(inst_1 != inst_3)
+        self.tc.assertTrue(inst_3 != inst_1)
+        self.tc.assertTrue(not (inst_1 is inst_2))
+        self.tc.assertTrue(not (inst_2 is inst_3))
 
 
 class TestLoad(TestPofBase, unittest.TestCase):
