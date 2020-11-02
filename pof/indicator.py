@@ -4,14 +4,10 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import field
-from typing import Dict
 import collections
 import copy
 import logging
 
-from dataclassy import dataclass
-from dataclass_property import field_property
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -54,26 +50,37 @@ class Indicator(Load):
 
     """
 
+    # Class Variables
     PF_CURVES = ["linear", "step"]
 
-    name: str = "indicator"
-    pf_curve: str = "step"
-    pf_interval: int = 0  # TODO change pf_interval to None?
-    pf_std: int = 0
-    perfect: bool = False
-    failed: bool = True
-    decreasing: bool = field(init=False)
+    def __init__(
+        self,
+        name: str = "indicator",
+        pf_curve: str = "step",
+        pf_interval: int = 0,
+        pf_std: int = 0,
+        perfect: bool = False,
+        failed: bool = True,
+        threshold_detection: int = None,
+        threshold_failure: int = None,
+        initial: int = None,
+        *args,
+        **kwargs
+    ):
 
-    threshold_detection: int = None
-    threshold_failure: int = None
+        super().__init__(name=name, *args, **kwargs)
 
-    initial: int = None
+        self.pf_curve = pf_curve
+        self.pf_interval = pf_interval
+        self.pf_std = pf_std
 
-    _profile: Dict = field(init=False, repr=False)
-    _timeline: Dict = field(init=False, repr=False)
-    _timelines: Dict = field(init=False, repr=False)
+        self.perfect = perfect
+        self.failed = failed
+        self.decreasing = None
 
-    def __post_init__(self):
+        self.threshold_detection = threshold_detection
+        self.threshold_failure = threshold_failure
+        self.initial = initial
 
         self.set_limits(perfect=self.perfect, failed=self.failed)
         self.set_threshold(
@@ -82,22 +89,28 @@ class Indicator(Load):
         self.set_initial(initial=self.initial)
         self.set_pf_curve(pf_curve=self.pf_curve)
         self.set_pf_interval(pf_interval=self.pf_interval)
+
+        self._profile: dict()
+        self._timeline: dict()
+        self._timelines: dict()
         self.reset()
 
     @classmethod
     def _factory(cls, pf_curve=None, indicator_type=None):
 
-        if pf_curve in ["linear", "step"] or indicator_type == "ConditionIndicator":
-
+        if indicator_type == "ConditionIndicator":
             ind_class = ConditionIndicator
 
-        elif (
-            pf_curve in ["ssf_calc", "dsf_calc"] or indicator_type == "PoleSafetyFactor"
-        ):
-
+        elif indicator_type == "PoleSafetyFactor":
             ind_class = PoleSafetyFactor
 
-        elif pf_curve is None:
+        elif pf_curve in ["linear", "step"]:
+            ind_class = ConditionIndicator
+
+        elif pf_curve in ["ssf_calc", "dsf_calc"]:
+            ind_class = PoleSafetyFactor
+
+        elif pf_curve is None and indicator_type is None:
             ind_class = Indicator
 
         else:
@@ -370,16 +383,13 @@ class Indicator(Load):
         self._timelines[idx] = copy.deepcopy(self._timeline)
 
 
-@dataclass
 class ConditionIndicator(Indicator):
 
     # Class Variables
     PF_CURVES = ["linear", "step"]
 
-    name: str = "ConditionIndicator"
-
-    def __post_init__(self):
-        super().__post_init__()
+    def __init__(self, name: str = "ConditionIndicator", **kwargs):
+        super().__init__(name=name, **kwargs)
 
         self.pf_curve_params = NotImplemented  # TODO for complex condition types
 
@@ -727,15 +737,15 @@ class ConditionIndicator(Indicator):
 # TODO overload get method so the None key isnt' needed for _timeline
 
 
-@dataclass
 class PoleSafetyFactor(Indicator):
 
     # Class Variables
     PF_CURVES = ["ssf_calc", "dsf_calc"]
 
-    failed: int = 1
-    decreasing: int = True
-    component = None
+    def __init__(
+        self, failed: int = 1, decreasing: bool = True, component=None, *args, **kwargs
+    ):
+        super().__init__(self, *args, **kwargs)
 
     def set_t_condition(self, *args, **kwargs):
         """No actions required"""

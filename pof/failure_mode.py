@@ -163,17 +163,6 @@ class FailureMode(Load):
         self._sim_counter = 0
 
     @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        if isinstance(name, str):
-            self._name = name
-        else:
-            raise TypeError("Name must be of type str %s" % (name))
-
-    @property
     def pf_curve(self):
         return self._pf_curve
 
