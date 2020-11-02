@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as ss
 
-from test_pofbase import TestPofBase
+from test_load import TestPofBase
 import fixtures
 import testconfig
 from pof.component import Component
@@ -34,7 +34,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
         # TestPofBase Setup
         self._class = Component
-        self._data_valid = dict(name="TestComponent")
+        self._data_valid = [dict(name="TestComponent")]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
         self._data_invalid_values = []
 

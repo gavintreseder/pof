@@ -14,7 +14,7 @@ import numpy as np
 
 import fixtures
 import testconfig
-from test_pofbase import TestPofBase
+from test_load import TestPofBase
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 
 
@@ -40,7 +40,7 @@ class TestTask(TestTaskCommon, unittest.TestCase):
         super().setUp()
 
         self._class = Task
-        self._data_valid = dict(name="TaskTest", task_type="Task")
+        self._data_valid = [dict(name="TaskTest", task_type="Task")]
         self._data_invalid_types = [dict(invalid_input="invalid_input", task_type="Task")]
         self._data_complete = copy.copy(fixtures.inspection_data["instant"])
 

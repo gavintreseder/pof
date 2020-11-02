@@ -5,14 +5,14 @@
         gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-
-# from dataclasses import dataclass
+from dataclasses import field
 from collections.abc import Iterable
 import logging
 import inspect
+from typing import Optional
 
-#from dataclass_property import dataclass, field_property
 from dataclassy import dataclass
+from dataclass_property import field_property
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -54,12 +54,9 @@ class Load:
     A class with methods for loading data that
     """
 
-    #name: str = field_property(default="Load")
+    name: str = "Load"
 
-
-    def __init__(self, *args, name="Load", **kwargs):
-        self._name = name
-
+    def __init__(self, *args, **kwargs):
         if args or kwargs:
             msg = f"Invalid Data {args} - {kwargs}"
             if cf.get("handle_invalid_data", False):
@@ -68,20 +65,20 @@ class Load:
                 raise TypeError(msg)
 
     @property
-    def name(self) -> str:
-        return self._name
+    def _name(self) -> str:
+        return self.__name
 
-    @name.setter
-    def name(self, value: str):
+    @_name.setter
+    def _name(self, value: str):
 
         if isinstance(value, str):
             # probhitted = ["-"] #TODO expand list
             # if any(x in a_string for x in matches):
-            self._name = value
+            self.__name = value
         elif value is None:
-            self._name = None
+            self.__name = None
         else:
-            raise TypeError("name must be a string")
+            raise ValueError("name must be a string")
 
     @classmethod
     def load(cls, details=None):
@@ -112,6 +109,10 @@ class Load:
             raise TypeError("Dictionary expected")
 
         return instance
+
+    @classmethod
+    def demo(cls):
+        return NotImplementedError
 
     def set_obj(self, attr, d_type, value):
         """
@@ -440,6 +441,8 @@ class Load:
     def mc_timeline(self, *args, **kwargs):
         raise NotImplementedError()
 
+
+Load.name = Load._name
 
 if __name__ == "__main__":
     load = Load()

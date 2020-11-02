@@ -4,12 +4,14 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Dict
 import collections
 import copy
 import logging
 
+from dataclassy import dataclass
+from dataclass_property import field_property
 import numpy as np
 import pandas as pd
 import scipy.stats as ss

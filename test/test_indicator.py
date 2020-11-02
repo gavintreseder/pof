@@ -7,7 +7,7 @@ import numpy as np
 
 import fixtures
 import testconfig
-from test_pofbase import TestPofBase
+from test_load import TestPofBase
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
 
@@ -35,9 +35,11 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         self._class = ConditionIndicator
 
         # TestLoadFromdict
-        self._data_valid = dict(name="TestConditionIndicator", pf_curve="step")
+        self._data_valid = [dict(name="TestConditionIndicator", pf_curve="step")]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
-        self._data_invalid_types = [{"invalid_type": "invalid_type", "indicator_type":"ConditionIndicator"}]
+        self._data_invalid_types = [
+            {"invalid_type": "invalid_type", "indicator_type": "ConditionIndicator"}
+        ]
 
         cond_data = demo.condition_data["instant"]
         self.cond = ConditionIndicator.load(cond_data)

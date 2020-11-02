@@ -3,7 +3,7 @@ import unittest
 import scipy.stats as ss
 
 import testconfig
-from test_pofbase import TestPofBase
+from test_load import TestPofBase
 from pof.distribution import Distribution, DistributionManager
 
 
@@ -25,7 +25,7 @@ class TestDistribution(TestPofBase, unittest.TestCase):
 
         # TestPofBase
         self._class = Distribution
-        self._data_valid = {"name": "test"}
+        self._data_valid = [{"name": "test"}]
         self._data_invalid_types = []  # TODO[{"alpha": "string"}]
         self._data_invalid_values = []
 
