@@ -142,7 +142,7 @@ class TestConditionTask(TestTaskCommon, unittest.TestCase):
         self._class = ConditionTask
         self._data_valid = [dict(name="TestInspection", task_type="ConditionTask")]
         self._data_invalid_types = [
-            {"invalid_input":"invalid_input", "task_type":"ConditionTask"})
+            {"invalid_input": "invalid_input", "task_type": "ConditionTask"}
         ]
 
     # **************** test_load ***********************

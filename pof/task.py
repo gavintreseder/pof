@@ -25,7 +25,7 @@ from pof.consequence import Consequence
 from pof.distribution import Distribution
 import pof.demo as demo
 from config import config as cf
-from pof.load import Load, get_signature
+from pof.load import Load
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -34,60 +34,66 @@ from pof.load import Load, get_signature
 
 seed(1)
 
+# from dataclasses import dataclass
 
-@dataclass(kwargs=True)
+
 class Task(Load):
-    """
-    Parameters:
-                trigger
-                    time, condition, state, task group?
-
-                activty?
-                    insp, repair, replace
-
-    Things a task can do:
-        - insp
-            - detect symptom
-            - measure condition
-        - repair
-            - stop initiation
-            - improve condition
-        - replace
-            - reset everything
-
-    """
+    """"""
 
     # Class Variables
     CONDITION_IMPACT_AXIS = ["condition", "time"]
     CONDITION_IMPACT_METHODS = ["reduction_factor", "tbc"]
     SYSTEM_IMPACT = [None, "fm", "component", "asset"]
 
-    # Instance variables
-    name: str = "task"
-    task_type: str = "factory method only"
-    trigger: str = "unknown"
-    active: bool = True
-    cost: int = 0
+    def __init__(
+        self,
+        name="task",
+        task_type="Factory method only",
+        trigger="unknown",
+        active=True,
+        cost=0,
+        labour=None,
+        spares=None,
+        equipment=None,
+        consequence=None,
+        p_effective=1,
+        triggers=None,
+        impacts=None,
+        *args,
+        **kwargs,
+    ):
 
-    _labour = NotImplemented
-    _spares = NotImplemented
-    consequence = None
-    _equipment = NotImplemented
+        super().__init__(name=name, *args, **kwargs)
 
-    p_effective: float = 1
-    triggers: Dict = {}
-    impacts: Dict = {}
+        # Task information
+        self.task_type = task_type
+        self.trigger = trigger
+        self.active = active
 
-    t_completion: List = []
-    cost_completion: List = []
-    _timeline = NotImplemented
+        self._package = NotImplemented
+        self._impacts_parent = NotImplemented
+        self._impacts_children = False
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # Consumed per use
+        self.cost = cost
+        self.labour = NotImplemented  # labour TODO
+        self.spares = NotImplemented  # spares TODO
+        self.equipment = NotImplemented  # equipment TODO
+        self.consequence = dict()
+        self.set_consequence(consequence)
 
-        self.set_consequence(self.consequence)
-        self.set_triggers(self.triggers)
-        self.set_impacts(self.impacts)
+        # Triggers
+        self.p_effective = p_effective
+        self.set_triggers(triggers)
+        self.set_impacts(impacts)
+
+        # Time to execute
+        self.state = NotImplemented
+
+        # Log it's use
+        self.t_completion = []
+        self.cost_completion = []
+        self._timeline = NotImplemented
 
     # ************ Load Methods **********************
 
@@ -342,17 +348,26 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    name: str = "scheduled_task"
-    trigger: str = "time"
-    t_interval: int = 0
-    t_delay: int = 0
+    def __init__(
+        self,
+        name: str = "scheduled_task",
+        t_interval: int = 0,
+        t_delay: int = 0,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(name=name, *args, **kwargs)
+
+        self.trigger = "time"
+        self.t_interval = t_interval
+        self.t_delay = t_delay
 
     @property
-    def _prop_t_interval(self):
+    def t_interval(self):
         return self._t_interval
 
-    @_prop_t_interval.setter
-    def _prop_t_interval(self, value):
+    @t_interval.setter
+    def t_interval(self, value):
 
         self._t_interval = int(value)
 
@@ -360,11 +375,11 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             logging.warning("t_interval must be an integer - %s", value)
 
     @property
-    def _prop_t_delay(self):
+    def t_delay(self):
         return self._t_delay
 
-    @_prop_t_delay.setter
-    def _prop_t_delay(self, value):
+    @t_delay.setter
+    def t_delay(self, value):
 
         self._t_delay = int(value)
 
@@ -415,21 +430,22 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         return cls.from_dict(demo.inspection_data["degrading"])
 
 
-ScheduledTask.t_interval = ScheduledTask._prop_t_interval
-ScheduledTask.t_delay = ScheduledTask._prop_t_delay
-
-
 class ConditionTask(Task):
     """
     Parent class for creating condition tasks
     """
 
-    name: str = "condition_task"
-    trigger: str = "condition"
-    task_completion: str = "immediate"
+    def __init__(
+        self,
+        name: str = "condition_task",
+        task_completion: str = "immediate",
+        *args,
+        **kwargs,
+    ):
+        super().__init__(name=name, *args, **kwargs)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self.trigger = "condition"
+        self.task_completion = task_completion
 
     def sim_timeline(
         self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
@@ -492,9 +508,15 @@ class ConditionTask(Task):
 
 
 class Inspection(ScheduledTask):
-
-    name: str = "inspection"
-    t_interval: int = 100
+    def __init__(
+        self,
+        name: str = "inspection",
+        t_interval: int = 100,
+        t_delay: int = 0,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(name=name, *args, **kwargs)
 
     # TODO replace is_effective with trigger check
     def is_effective(self, t_now, timeline=None):
@@ -644,59 +666,32 @@ Task
 
 
 if __name__ == "__main__":
-    task = Task()
+    tsk = Task()
     print("Task - Ok")
 
+    # # Instance variables
+    # name: str = "task"
+    # task_type: str = "factory method only"
+    # trigger: str = "unknown"
+    # active: bool = True
+    # cost: int = 0
 
-#     # Log it's use
-#     self.t_completion = []
-#     self.cost_completion = []
-#     self._timeline = NotImplemented
+    # _labour = NotImplemented
+    # _spares = NotImplemented
+    # consequence = None
+    # _equipment = NotImplemented
 
-# def __init__(
-#     self,
-#     name="task",
-#     task_type="Factory method only",
-#     trigger="unknown",
-#     active=True,
-#     cost=0,
-#     labour=None,
-#     spares=None,
-#     equipment=None,
-#     consequence=None,
-#     p_effective=1,
-#     triggers=None,
-#     impacts=None,
-#     *args,
-#     **kwargs
-# ):
+    # p_effective: float = 1
+    # triggers: Dict = {}
+    # impacts: Dict = {}
 
-#     # Task information
-#     self.task_type = task_type
-#     self.trigger = trigger
-#     self.active = active
+    # t_completion: List = []
+    # cost_completion: List = []
+    # _timeline = NotImplemented
 
-#     self._package = NotImplemented
-#     self._impacts_parent = NotImplemented
-#     self._impacts_children = False
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
 
-#     # Consumed per use
-#     self.cost = cost
-#     self.labour = NotImplemented  # labour TODO
-#     self.spares = NotImplemented  # spares TODO
-#     self.equipment = NotImplemented  # equipment TODO
-#     self.consequence = dict()
-#     self.set_consequence(consequence)
-
-#     # Triggers
-#     self.p_effective = p_effective
-#     self.set_triggers(triggers)
-#     self.set_impacts(impacts)
-
-#     # Time to execute
-#     self.state = NotImplemented
-
-#     # Log it's use
-#     self.t_completion = []
-#     self.cost_completion = []
-#     self._timeline = NotImplemented
+    #     self.set_consequence(self.consequence)
+    #     self.set_triggers(self.triggers)
+    #     self.set_impacts(self.impacts)

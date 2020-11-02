@@ -5,14 +5,14 @@
         gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import field
+from dataclasses import dataclass, field
 from collections.abc import Iterable
 import logging
 import inspect
 from typing import Optional
 
-from dataclassy import dataclass
-from dataclass_property import field_property
+# from dataclassy import dataclass
+from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -36,40 +36,18 @@ The load module is used to overload other pof classes so that they can use a com
 """
 
 
-def get_signature(obj):
-    """ Get the constructor signature"""
-    signatures = inspect.signature(obj).parameters
-
-    if bool(obj.__bases__):
-        for parent in obj.__bases__:
-            parent_signature = get_signature(parent)
-            signatures = {**signatures, **parent_signature}
-
-    return signatures
-
-
-@dataclass(kwargs=True)
-class _Load:
-    name: str = "Load"
-
-    def __init__(self, *args, **kwargs):
-        if args or kwargs:
-            msg = f"Invalid Data {args} - {kwargs}"
-            if cf.get("handle_invalid_data", False):
-                logging.warning(msg)
-            else:
-                raise TypeError(msg)
-
-
-@dataclass(kwargs=True)
+# @dataclass
 class Load:
     """
     A class with methods for loading data that
     """
 
-    name: str = "Load"
+    # name: str = field_property("load")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name="load", *args, **kwargs):
+
+        self.name = name
+
         if args or kwargs:
             msg = f"Invalid Data {args} - {kwargs}"
             if cf.get("handle_invalid_data", False):
@@ -77,12 +55,15 @@ class Load:
             else:
                 raise TypeError(msg)
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     @property
-    def _prop_name(self) -> str:
+    def name(self) -> str:
         return self._name
 
-    @_prop_name.setter
-    def _prop_name(self, value: str):
+    @name.setter
+    def name(self, value: str):
 
         if isinstance(value, str):
             # probhitted = ["-"] #TODO expand list
@@ -454,8 +435,6 @@ class Load:
     def mc_timeline(self, *args, **kwargs):
         raise NotImplementedError()
 
-
-Load.name = Load._prop_name
 
 if __name__ == "__main__":
     load = Load()

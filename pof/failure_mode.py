@@ -53,7 +53,6 @@ cf = config["FailureMode"]
 seed(1)
 
 
-@dataclass
 class FailureModeData(Load):
     """
     A class that contains the data for the FailureMode object.
@@ -116,6 +115,7 @@ class FailureMode(Load):
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
 
+    # Class Variables
     PF_CURVES = ["linear", "step"]
     REQUIRED_STATES = ["initiation", "detection", "failure"]
 

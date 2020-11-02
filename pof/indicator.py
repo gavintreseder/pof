@@ -38,7 +38,6 @@ cf = config["Indicator"]
 # TODO move threshold down into condition indciator so indicator is purely bool
 
 
-@dataclass
 class Indicator(Load):
 
     """
