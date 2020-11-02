@@ -11,7 +11,7 @@ import numpy as np
 
 import fixtures
 import testconfig
-from test_load import TestPofBase
+from test_pofbase import TestPofBase
 from pof.failure_mode import FailureMode
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo

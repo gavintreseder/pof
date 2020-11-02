@@ -7,7 +7,7 @@ import numpy as np
 
 import fixtures
 import testconfig
-from test_load import TestPofBase
+from test_pofbase import TestPofBase
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
 

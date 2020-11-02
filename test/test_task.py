@@ -14,7 +14,7 @@ import numpy as np
 
 import fixtures
 import testconfig
-from test_load import TestPofBase
+from test_pofbase import TestPofBase
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 
 
@@ -31,7 +31,7 @@ class TestTaskCommon(TestPofBase):
         # Overide in all children classes
         # self._class
         # self._valid
-        self._data_invalid_types = [dict(invalid_input="invalid_input")]
+        # self._invalid_types
         self._data_invalid_values = []
 
 
@@ -41,6 +41,7 @@ class TestTask(TestTaskCommon, unittest.TestCase):
 
         self._class = Task
         self._data_valid = dict(name="TaskTest", task_type="Task")
+        self._data_invalid_types = [dict(invalid_input="invalid_input", task_type="Task")]
         self._data_complete = copy.copy(fixtures.inspection_data["instant"])
 
     # **************** test_update ***********************
@@ -85,6 +86,7 @@ class TestScheduledTask(TestTaskCommon, unittest.TestCase):
 
         self._class = ScheduledTask
         self._data_valid = dict(name="ScheduledTaskTest", task_type="ScheduledTask")
+        self._data_invalid_types = [dict(invalid_input="invalid_input", task_type="ScheduledTask")]
 
     def test_sim_timeline(self):
         """Check the a scheduled task returns the correct time"""
@@ -135,6 +137,7 @@ class TestConditionTask(TestTaskCommon, unittest.TestCase):
         # TestTaskCommon Setup
         self._class = ConditionTask
         self._data_valid = dict(name="TestInspection", task_type="ConditionTask")
+        self._data_invalid_types = [dict(invalid_input="invalid_input", task_type="ConditionTask")]
 
     # **************** test_load ***********************
 
@@ -175,6 +178,7 @@ class TestInspection(TestTaskCommon, unittest.TestCase):
         # TestTaskCommon Setup
         self._class = Inspection
         self._data_valid = dict(name="TestInspection", task_type="Inspection")
+        self._data_invalid_types = [dict(invalid_input="invalid_input", task_type="Inspection")]
 
     # **************** test_update ***********************
 

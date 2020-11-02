@@ -22,7 +22,7 @@ from pof.consequence import Consequence
 from pof.distribution import Distribution
 import pof.demo as demo
 from config import config as cf
-from pof.load import Load
+from pof.load import Load, get_signature
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -151,9 +151,10 @@ class Task(Load):
         return task
 
     @classmethod
-    def _signature(cls, obj, sig_input=None):
+    def _signature(cls, sig_input=None):
         task_type = sig_input.get("task_type", None)
-        return super()._signature(task_type)
+        task_class = cls._factory(task_type)
+        return get_signature(task_class)
 
     @classmethod
     def demo(cls):

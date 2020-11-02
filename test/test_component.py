@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as ss
 
-from test_load import TestPofBase
+from test_pofbase import TestPofBase
 import fixtures
 import testconfig
 from pof.component import Component

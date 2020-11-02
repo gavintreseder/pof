@@ -11,7 +11,6 @@ from collections.abc import Iterable
 import logging
 import inspect
 
-from dataclasses import fields
 from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
@@ -48,13 +47,19 @@ def get_signature(obj):
     return signatures
 
 
-@dataclass
+#@dataclass
 class Load:
     """
     A class with methods for loading data that
     """
 
-    name: str = field_property(default="Load")
+    #name: str = field_property(default="Load")
+
+    def __init__(self, name="Load", *args, **kwargs):
+        self.name = name
+        
+        if args or kwargs:
+            if cf.get
 
     @name.getter
     def name(self) -> str:
@@ -101,11 +106,12 @@ class Load:
         return instance
 
     @classmethod
-    def _signature(cls, sig_input=None):
+    def _signature(cls, sig_input=NotImplemented):
         """
         Returns the signature for the class. sig_input can be used when the function is overriden in child classes""
         """
-        return get_signature(obj)
+
+        return get_signature(cls)
 
     @classmethod
     def from_dict(cls, details=None):

@@ -3,7 +3,7 @@ import unittest
 import scipy.stats as ss
 
 import testconfig
-from test_load import TestPofBase
+from test_pofbase import TestPofBase
 from pof.distribution import Distribution, DistributionManager
 
 
