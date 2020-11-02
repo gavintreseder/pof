@@ -9,6 +9,9 @@ import math
 import numpy as np
 from random import random, seed
 import logging
+from typing import Dict, List
+
+from dataclassy import dataclass
 
 if __package__ is None or __package__ == "":
     import sys
@@ -32,6 +35,7 @@ from pof.load import Load, get_signature
 seed(1)
 
 
+@dataclass(kwargs=True)
 class Task(Load):
     """
     Parameters:
@@ -53,61 +57,37 @@ class Task(Load):
 
     """
 
+    # Class Variables
     CONDITION_IMPACT_AXIS = ["condition", "time"]
     CONDITION_IMPACT_METHODS = ["reduction_factor", "tbc"]
     SYSTEM_IMPACT = [None, "fm", "component", "asset"]
 
-    def __init__(
-        self,
-        name="task",
-        task_type="Factory method only",
-        trigger="unknown",
-        active=True,
-        cost=0,
-        labour=None,
-        spares=None,
-        equipment=None,
-        consequence=None,
-        p_effective=1,
-        triggers=None,
-        impacts=None,
-        *args,
-        **kwargs
-    ):
+    # Instance variables
+    name: str = "task"
+    task_type: str = "factory method only"
+    trigger: str = "unknown"
+    active: bool = True
+    cost: int = 0
 
-        # Load error handling
-        super().__init__(name=name, *args, **kwargs)
+    _labour = NotImplemented
+    _spares = NotImplemented
+    consequence = None
+    _equipment = NotImplemented
 
-        # Task information
-        self.task_type = task_type
-        self.trigger = trigger
-        self.active = active
+    p_effective: float = 1
+    triggers: Dict = {}
+    impacts: Dict = {}
 
-        # TODO how the package is grouped together
-        self._package = NotImplemented
-        self._impacts_parent = NotImplemented
-        self._impacts_children = False
+    t_completion: List = []
+    cost_completion: List = []
+    _timeline = NotImplemented
 
-        # Consumed per use
-        self.cost = cost
-        self.labour = NotImplemented  # labour TODO
-        self.spares = NotImplemented  # spares TODO
-        self.equipment = NotImplemented  # equipment TODO
-        self.consequence = dict()
-        self.set_consequence(consequence)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        # Triggers
-        self.p_effective = p_effective
-        self.set_triggers(triggers)
-        self.set_impacts(impacts)
-
-        # Time to execute
-        self.state = NotImplemented
-
-        # Log it's use
-        self.t_completion = []
-        self.cost_completion = []
-        self._timeline = NotImplemented
+        self.set_consequence(self.consequence)
+        self.set_triggers(self.triggers)
+        self.set_impacts(self.impacts)
 
     # ************ Load Methods **********************
 
@@ -361,6 +341,10 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     """
     Parent class for creating scheduled tasks
     """
+
+    name='scheduled_task'
+    t_interval=0
+    t_delay=0
 
     def __init__(self, t_interval=0, t_delay=0, name="scheduled_task", *args, **kwargs):
         # TODO fix up defaults
@@ -669,3 +653,58 @@ Task
 if __name__ == "__main__":
     tsk = Task()
     print("Task - Ok")
+
+
+#     # Log it's use
+#     self.t_completion = []
+#     self.cost_completion = []
+#     self._timeline = NotImplemented
+
+# def __init__(
+#     self,
+#     name="task",
+#     task_type="Factory method only",
+#     trigger="unknown",
+#     active=True,
+#     cost=0,
+#     labour=None,
+#     spares=None,
+#     equipment=None,
+#     consequence=None,
+#     p_effective=1,
+#     triggers=None,
+#     impacts=None,
+#     *args,
+#     **kwargs
+# ):
+
+#     # Task information
+#     self.task_type = task_type
+#     self.trigger = trigger
+#     self.active = active
+
+#     # TODO how the package is grouped together
+#     self._package = NotImplemented
+#     self._impacts_parent = NotImplemented
+#     self._impacts_children = False
+
+#     # Consumed per use
+#     self.cost = cost
+#     self.labour = NotImplemented  # labour TODO
+#     self.spares = NotImplemented  # spares TODO
+#     self.equipment = NotImplemented  # equipment TODO
+#     self.consequence = dict()
+#     self.set_consequence(consequence)
+
+#     # Triggers
+#     self.p_effective = p_effective
+#     self.set_triggers(triggers)
+#     self.set_impacts(impacts)
+
+#     # Time to execute
+#     self.state = NotImplemented
+
+#     # Log it's use
+#     self.t_completion = []
+#     self.cost_completion = []
+#     self._timeline = NotImplemented
