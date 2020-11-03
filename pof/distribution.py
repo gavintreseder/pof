@@ -63,7 +63,58 @@ cf = config["Distribution"]
 #                 raise ValueError
 
 
-class DistributionManager(dict):
+from collections.abc import MutableMapping
+
+
+class PofContainer(MutableMapping):
+    """A dictionary that changes the key if the name of the pof object it is storing changes"""
+
+    def __init__(self, *args, **kwargs):
+        self.store = dict()
+        self.update(dict(*args, **kwargs))  # use the free update to set keys
+
+    def __getitem__(self, key):
+        return self.store[key]
+
+    def __setitem__(self, key, value):
+        self.store[key] = value
+
+    def __delitem__(self, key):
+        del self.store[key]
+
+    def __iter__(self):
+        return iter(self.store)
+
+    def __len__(self):
+        return len(self.store)
+
+    def update_from_dict(self, data):
+
+        for key, val in data.items():
+
+            # Update with the
+            self.store[key].update_from_dict(val)
+
+            # Check if the name has been updated
+            if key != self.store[key].name:
+
+                logging.debug(f"Updating key to match name change")
+                new_key = self.store[key].name
+
+                # Change the key if it is already in the dict
+                if new_key in self.store:
+                    new_key = str(new_key).join(".1")
+                    self.store[key].name = new_key
+                    logging.debug(
+                        f"Key {key} is already in use. Name and key changed to {new_key}"
+                    )
+
+                # Update the key
+                self.store[new_key] = self.store[key]
+                del self.store[key]
+
+
+class DistributionContainer(PofContainer):
 
     pf_interval = 0
 

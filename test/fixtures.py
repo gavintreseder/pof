@@ -5,6 +5,10 @@ from distribution import Demo as demo
 
 demo.slow_aging
 demo.distribution.slow_aging
+
+
+Notes:
+Use dict() to wrap data when reusing it so that data is copied. This prevents errors where raw data sets are modified
 """
 
 import testconfig
@@ -203,13 +207,15 @@ state_data = dict(demo.state_data)
 
 failure_mode_data = dict(demo.failure_mode_data)
 
+#TODO this hsould work with unique condtion names, but currenlty has an issue
+
 complete['failure_mode_0']=dict(
     name='fm_0',
     pf_curve = 'linear',
     pf_interval=0,
     untreated=dict(complete['distribution_0']),
-    conditions=dict(complete['condition_indicator_0']),
-    tasks=dict(complete['inspection_0']),
+    conditions={'condition_indicator':dict(complete['condition_indicator_0'])},
+    tasks={'task':dict(complete['inspection_0'])},
 )
 
 complete['failure_mode_1']=dict(
@@ -217,8 +223,8 @@ complete['failure_mode_1']=dict(
     pf_curve = 'step',
     pf_interval=1,
     untreated=dict(complete['distribution_1']),
-    conditions=dict(complete['condition_indicator_1']),
-    tasks=dict(complete['inspection_1']),
+    conditions={'condition_indicator':dict(complete['condition_indicator_1'])},
+    tasks={'task':dict(complete['inspection_1'])},
 )
 
 # *********************** component data **********************************

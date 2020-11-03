@@ -37,6 +37,31 @@ The load module is used to overload other pof classes so that they can use a com
 """
 
 
+def get_signature(obj):
+    """ Get the constructor signature"""
+    signatures = inspect.signature(obj).parameters
+
+    if bool(obj.__bases__):
+        for parent in obj.__bases__:
+            parent_signature = get_signature(parent)
+            signatures = {**signatures, **parent_signature}
+
+    return signatures
+
+
+def valid_signature(obj, inputs):
+    """ Returns whether an object can be created with the inputs provided based on the signature"""
+
+    factory = getattr(obj, "factory", None)
+    if callable(factory):
+        obj = obj.factory(**inputs)
+
+    signature = get_signature(obj)
+    valid = [attr in signature for attr in inputs]
+
+    return all(valid)
+
+
 # @dataclass
 class Load:
     """
@@ -133,7 +158,8 @@ class Load:
             elif isinstance(value, Iterable):
 
                 # Create an object from the dict
-                if all([hasattr(d_type, attr) for attr in value]):
+                # TODO replace with get_signature
+                if valid_signature(obj=d_type, inputs=value):
                     new_object = d_type.from_dict(value)
                     getattr(self, attr)[new_object.name] = new_object
 

@@ -92,7 +92,7 @@ class Indicator(Load):
         self.reset()
 
     @classmethod
-    def _factory(cls, pf_curve=None, indicator_type=None):
+    def factory(cls, pf_curve=None, indicator_type=None, **kwargs):
 
         if indicator_type == "ConditionIndicator":
             ind_class = ConditionIndicator
@@ -122,7 +122,7 @@ class Indicator(Load):
         if isinstance(details, dict):
             pf_curve = details.get("pf_curve", None)
             ind_type = details.get("indicator_type", None)
-            ind_class = cls._factory(pf_curve=pf_curve, indicator_type=ind_type)
+            ind_class = cls.factory(pf_curve=pf_curve, indicator_type=ind_type)
             ind = ind_class(**details)
 
         else:

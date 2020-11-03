@@ -98,7 +98,7 @@ class Task(Load):
     # ************ Load Methods **********************
 
     @classmethod
-    def _factory(cls, task_type=None):
+    def factory(cls, task_type=None, **kwargs):
 
         if task_type == "Task":
             task_class = Task
@@ -128,7 +128,7 @@ class Task(Load):
         if isinstance(details, dict):
 
             task_type = details.get("task_type", None)
-            task_class = cls._factory(task_type)
+            task_class = cls.factory(task_type)
             task = task_class(**details)
 
         else:

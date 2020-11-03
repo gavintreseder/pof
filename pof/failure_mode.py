@@ -237,11 +237,15 @@ class FailureMode(Load):
         # TODO Make this work for different pf_intervals for different conditions
 
         if bool(var):
-            self.conditions = var
+            if "name" in var:
+                self.conditions = {var["name"]: var}
+            else:
+                self.conditions = var
             # Create an indicator for any conditions not in the indicator list
-            for cond_name in var:
+
+            for cond_name, condition in self.conditions.items():
                 if cond_name not in self.indicators:
-                    indicator = ConditionIndicator.load(var[cond_name])
+                    indicator = ConditionIndicator.load(condition)
                     self.set_indicators(indicator)
         else:
             # Create a simple indicator
@@ -252,7 +256,7 @@ class FailureMode(Load):
                 pf_interval=0,
                 pf_std=0,
                 perfect=False,
-                failed=False,
+                failed=True,
             )
             self.conditions = {self.name: {}}
             self.set_indicators(indicator)
