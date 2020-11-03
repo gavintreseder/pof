@@ -85,9 +85,6 @@ class Indicator(Load):
         self.set_threshold(
             detection=self.threshold_detection, failure=self.threshold_failure
         )
-        self.set_initial(initial=self.initial)
-        self.set_pf_curve(pf_curve=self.pf_curve)
-        self.set_pf_interval(pf_interval=self.pf_interval)
 
         self._profile: dict()
         self._timeline: dict()
@@ -161,17 +158,27 @@ class Indicator(Load):
     def reset_to_perfect(self):
         None
 
-    def set_pf_curve(self, pf_curve):
+    @property
+    def pf_curve(self):
+        return self._pf_curve
+
+    @pf_curve.setter
+    def pf_curve(self, pf_curve=None):
         if pf_curve in self.PF_CURVES:
-            self.pf_curve = pf_curve
+            self._pf_curve = pf_curve
         else:
             raise ValueError("pf_curve must be from: %s" % (self.PF_CURVES))
 
+    @property
+    def pf_interval(self):
+        return self._pf_interval
+
+    @pf_interval.setter
     def set_pf_interval(self, pf_interval=None):
 
         # TODO add robust testing around pf_interval non negative numbers etc
         if pf_interval is None:
-            if self.pf_interval is None:
+            if self._pf_interval is None:
                 if cf.get("use_default"):
                     logging.warning(
                         "%s - %s - pf_interval set to DEFAULT %s",
@@ -187,7 +194,7 @@ class Indicator(Load):
                             % (self.__class__.__name__, self.name)
                         )
         else:
-            self.pf_interval = pf_interval
+            self._pf_interval = pf_interval
 
     def set_limits(self, perfect=None, failed=None):
         # TODO Add test make sure these tests work for bool and int
@@ -224,14 +231,19 @@ class Indicator(Load):
 
         self.upper = abs(self.perfect - self.failed)
 
-    def set_initial(self, initial=None):
+    @property
+    def initial(self):
+        return self._initial
+
+    @initial.setter
+    def initial(self, initial=None):
         """ Set the intial """
         # TODO add checks to make sure it is a valid value
 
         if initial is None:
-            self.initial = self.perfect
+            self._initial = self.perfect
         else:
-            self.initial = initial
+            self._initial = initial
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
@@ -394,7 +406,7 @@ class ConditionIndicator(Indicator):
 
         # Current accumulation
         self._accumulated = dict()
-        self._set_accumulated(accumulated=abs(self.perfect - self.initial))
+        self._set_accumulated(accumulated=abs(self.perfect - self._initial))
 
     # ********************** Timeline methods ******************************
 
@@ -496,7 +508,7 @@ class ConditionIndicator(Indicator):
         # Get the time to be investitaged
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
-        if self.pf_curve == "linear":
+        if self._pf_curve == "linear":
             # Prevent zero division error
             if pf_interval <= 0:
                 m = 0
@@ -505,13 +517,13 @@ class ConditionIndicator(Indicator):
             b = perfect
             y = m * x + b
 
-        elif self.pf_curve == "step":
+        elif self._pf_curve == "step":
             if pf_interval == 0:
                 y = np.full(1, self.failed)
             else:
                 y = np.full(pf_interval, self.perfect)
 
-        elif self.pf_curve == "exponential" or self.pf_curve == "exp":
+        elif self._pf_curve == "exponential" or self._pf_curve == "exp":
             NotImplemented
 
         self._profile[pf_interval] = y
@@ -682,7 +694,7 @@ class ConditionIndicator(Indicator):
 
     def reset_for_next_sim(self, name=None):
         self._reset_accumulated(
-            accumulated=abs(self.perfect - self.initial),
+            accumulated=abs(self.perfect - self._initial),
             permanent=False,
         )
         self._timeline = dict()

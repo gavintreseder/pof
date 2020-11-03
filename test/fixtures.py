@@ -10,6 +10,7 @@ demo.distribution.slow_aging
 import testconfig
 import pof.demo as demo
 
+
 # fmt: off
 complete = {}
 # *********************** distribution data **********************************
@@ -55,6 +56,11 @@ complete['condition_indicator_1'] = dict(
     pf_interval=10,
     pf_std=1
 )
+
+# *********************** trigger_data *******************************
+
+
+
 # *********************** task data **********************************
 inspection_data = dict(demo.inspection_data)
 
@@ -62,13 +68,13 @@ repair_data = dict(demo.repair_data)
 
 replacement_data = dict(demo.replacement_data)
 
-complete['inspection_0'] = dict(
-    task_type='Inspection',
-    name='inspection_0',
+# --------------- Task --------------------
+
+complete['task_0'] = dict(
+    task_type='Task',
+    name='task_0',
     p_effective=0,
     cost=0,
-    t_interval=1,
-    t_delay=0,
 
     triggers=dict(
         condition=dict(
@@ -100,13 +106,11 @@ complete['inspection_0'] = dict(
     ),
 )
 
-complete['inspection_1'] = dict(
-    task_type='Inspection',
-    name='inspection_1',
+complete['task_1'] = dict(
+    task_type='Task',
+    name='task_1',
     p_effective=1,
     cost=1,
-    t_interval=10,
-    t_delay=1,
 
     triggers=dict(
         condition=dict(
@@ -138,6 +142,55 @@ complete['inspection_1'] = dict(
         system = 'component',
     ),
 )
+
+# -------------- Scheduled Task ------------
+
+complete['scheduled_task_0'] = dict(complete['task_0'])
+complete['scheduled_task_0'].update(dict(
+    task_type='ScheduledTask',
+    name='scheduled_task_0',
+    t_interval=1,
+    t_delay=0,
+))
+
+
+complete['scheduled_task_1'] = dict(complete['task_1'])
+complete['scheduled_task_1'].update(dict(
+    task_type='ScheduledTask',
+    name='scheduled_task_1',
+    t_interval=10,
+    t_delay=1,
+))
+
+# -------------- Condition Task ------------
+
+complete['condition_task_0'] = dict(complete['task_0'])
+complete['condition_task_0'].update(dict(
+    task_type='ConditionTask',
+    name='condition_task_0',
+    task_completion = 'immediate',
+))
+
+complete['condition_task_1'] = dict(complete['task_1'])
+complete['condition_task_1'].update(dict(
+    task_type='ConditionTask',
+    name='condition_task_1',
+    task_completion = 'immediate',
+))
+
+# ------------- Inspection -----------------
+
+complete['inspection_0'] = dict(complete['scheduled_task_0'])
+complete['inspection_0'].update(dict(
+    task_type='Inspection',
+    name='inspection_0',
+))
+
+complete['inspection_1'] = dict(complete['scheduled_task_1'])
+complete['inspection_1'].update(dict(
+    task_type='Inspection',
+    name='inspection_1',
+))
 
 
 # *********************** state data **********************************
@@ -183,5 +236,4 @@ complete['component_1'] = dict(
 )
 
 if __name__ == "__main__":
-
     print("Fixtures - Ok")
