@@ -504,7 +504,9 @@ class Inspection(ScheduledTask):
         *args,
         **kwargs,
     ):
-        super().__init__(name=name, *args, **kwargs)
+        super().__init__(
+            name=name, t_interval=t_interval, t_delay=t_delay, *args, **kwargs
+        )
 
     # TODO replace is_effective with trigger check
     def is_effective(self, t_now, timeline=None):

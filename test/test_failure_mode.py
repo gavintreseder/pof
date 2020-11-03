@@ -254,8 +254,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # TODO rewrite time function in tasks first
 
     def test_demo(self):
-        fm = FailureMode.demo()
-        self.assertIsNotNone(fm)
+        super().test_demo()
 
     # ------------ Test mc_timeline ------------------
 

@@ -1048,7 +1048,6 @@ class FailureMode(Load):
     def get_objects(self, prefix="", sep="-"):
 
         # Failure mode object
-        prefix = prefix
         objects = [prefix + self.name]
 
         # Tasks objects

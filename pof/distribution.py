@@ -1,5 +1,6 @@
 import copy
 from dataclasses import dataclass, field
+import logging
 
 import numpy as np
 import scipy.stats as ss
@@ -12,7 +13,6 @@ if __package__ is None or __package__ == "":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.load import Load
-from pof.helper import id_update, str_to_dict
 from config import config
 
 cf = config["Distribution"]
@@ -114,7 +114,7 @@ class PofContainer(MutableMapping):
                 del self.store[key]
 
 
-class DistributionContainer(PofContainer):
+class DistributionManager(PofContainer):
 
     pf_interval = 0
 
