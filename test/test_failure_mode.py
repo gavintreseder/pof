@@ -36,7 +36,10 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         self._data_valid = [{"name": "TestFailureMode"}]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
-        self._data_complete = [fixtures.complete['component_0'], fixtures.'complete_1']
+        self._data_complete = [
+            fixtures.complete["failure_mode_0"],
+            fixtures.complete["failure_mode_1"],
+        ]
 
     # ************ Test init_timeline ***********************
 

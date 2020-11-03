@@ -45,7 +45,10 @@ complete['condition_indicator_0'] = dict(
     failed=1,
     pf_curve='linear',
     pf_interval=1,
-    pf_std=0
+    pf_std=0,
+    initial=0,
+    threshold_failure=0,
+    threshold_detection=0,
 )
 
 complete['condition_indicator_1'] = dict(
@@ -54,7 +57,10 @@ complete['condition_indicator_1'] = dict(
     failed=0,
     pf_curve='step',
     pf_interval=10,
-    pf_std=1
+    pf_std=1,
+    initial=1,
+    threshold_failure=1,
+    threshold_detection=1,
 )
 
 # *********************** trigger_data *******************************

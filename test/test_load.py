@@ -218,8 +218,13 @@ class TestPofBase(object):
             # Act
             instance_1.update(d)
 
+        msg = []
+        for k, v in instance_0.__dict__.items():
+            if instance_1.__dict__[k] != v:
+                msg.append((k, v))
+
         # Assert
-        self.tc.assertEqual(instance_0, instance_1)
+        self.tc.assertEqual(instance_0, instance_1, msg=msg)
 
     def test_update_errors_raised(self):
 

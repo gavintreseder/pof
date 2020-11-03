@@ -40,7 +40,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         self._data_invalid_types = [
             {"invalid_type": "invalid_type", "indicator_type": "ConditionIndicator"}
         ]
-        self._complete_data = [
+        self._data_complete = [
             fixtures.complete["condition_indicator_0"],
             fixtures.complete["condition_indicator_1"],
         ]
@@ -513,7 +513,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
                     ind = ConditionIndicator(
                         perfect=perfect, failed=failed, pf_curve=pf_curve
                     )
-                    ind.set_initial(initial)
+                    ind.initial = initial
                     expected = abs(perfect - initial)
 
                     # Act
