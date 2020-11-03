@@ -130,6 +130,20 @@ class TestPofBase(object):
                 with self.tc.assertRaises(ValueError):
                     self._class.from_dict(invalid_value)
 
+    def test_from_dict_with_complete_data(self):
+        # Arrange
+        class_config = "pof.load.cf"
+
+        with patch.dict(class_config, {"handle_invalid_data": False}):
+            with patch.dict(class_config, {"on_error_use_default": False}):
+                for data in self._data_complete:
+                    # Act
+                    instance = self._class.from_dict(data)
+
+                    # Assert
+                    self.tc.assertIsNotNone(instance)
+                    self.tc.assertTrue(isinstance(instance, self._class))
+
     # ************ Test load ***********************
 
     def test_load_with_empty(self):

@@ -2,6 +2,7 @@ import unittest
 
 import scipy.stats as ss
 
+import fixtures
 import testconfig
 from test_load import TestPofBase
 from pof.distribution import Distribution, DistributionManager
@@ -28,6 +29,10 @@ class TestDistribution(TestPofBase, unittest.TestCase):
         self._data_valid = [{"name": "test"}]
         self._data_invalid_types = []  # TODO[{"alpha": "string"}]
         self._data_invalid_values = []
+        self._data_complete = [
+            fixtures.complete["distribution_0"],
+            fixtures.complete["distribution_1"],
+        ]
 
         self.alpha = 50
         self.beta = 1.5
@@ -85,25 +90,6 @@ class TestDistribution(TestPofBase, unittest.TestCase):
 
         # Check the boundary cases
 
-        # ************ Test update methods *****************
-
-    # def test_update(self):
-
-    #     expected_list = [True, False, 10, "abc"]
-
-    #     dist = Distribution(alpha=50, beta=1.5, gamma=10)
-    #     dash_ids = dist.get_dash_ids()
-
-    #     for dash_id in dash_ids:
-
-    #         for expected in expected_list:
-
-    #             dist.update(dash_id, expected)
-
-    #             val = utils.get_dash_id_value(dist, dash_id)
-
-    #             self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
-
     def test_get_value(self):
 
         d = Distribution(alpha=10, beta=3, gamma=1)
@@ -121,18 +107,6 @@ class TestDistribution(TestPofBase, unittest.TestCase):
         # use get value to get the value
 
         NotImplemented
-
-    def test_update(self):
-
-        test_data_1 = {"alpha": 5, "beta": 3, "gamma": 1}
-        test_data_2 = {"alpha": 10, "beta": 5, "gamma": 1}
-
-        d1 = Distribution.from_dict(test_data_1)
-        d2 = Distribution.from_dict(test_data_2)
-
-        d1.update({"alpha": 10, "beta": 5})
-
-        self.assertEqual(d1, d2)
 
 
 if __name__ == "__main__":

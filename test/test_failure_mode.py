@@ -298,23 +298,6 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # Assert
         self.assertEquals(fm1, fm2)
 
-    def test_update(self):
-        # TODO This will be causing errors because new values are being created
-        test_data_1 = fixtures.failure_mode_data["early_life"]
-        test_data_2 = fixtures.failure_mode_data["slow_aging"]
-
-        fm1 = FailureMode.from_dict(test_data_1)
-        fm2 = FailureMode.from_dict(test_data_2)
-
-        # update var by var
-        for var, val in test_data_2.items():
-            d = {}
-            d[var] = val
-
-            fm1.update(d)
-
-        self.assertEqual(fm1, fm2)
-
     # ************ Test link indicators ***************
 
     # TODO change to use set methods

@@ -17,22 +17,18 @@ complete = {}
 
 distribution_data = dict(demo.distribution_data)
 
-complete['distribution_0'] = dict(
-    dist = dict(
-        name='dist_0',
-        alpha = 0,
-        beta = 0,
-        gamma = 0
-    )
+complete['distribution_0'] =  dict(
+    name='dist_0',
+    alpha = 0,
+    beta = 0,
+    gamma = 0
 )
 
 complete['distribution_1'] = dict(
-    dist = dict(
-        name='dist_1',
-        alpha = 1,
-        beta = 1,
-        gamma = 1
-    )
+    name='dist_1',
+    alpha = 1,
+    beta = 1,
+    gamma = 1
 )
 
 # *********************** indicator data **********************************
