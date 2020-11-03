@@ -715,29 +715,6 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
     def test_accumulate_time(self):
         self.assertEqual(False, False)
 
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
-        test_data_1["name"] = "FD"
-        test_data_1["pf_std"] = 0.25
-        test_data_2 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
-
-        c1 = ConditionIndicator.from_dict(test_data_1)
-        c2 = ConditionIndicator.from_dict(test_data_2)
-
-        c1.update({"name": "fast_degrading", "pf_std": 0.5})
-
-        self.assertEqual(c1, c2)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.condition_data["fast_degrading"])
-
-        c = ConditionIndicator.from_dict(test_data)
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, c.update_from_dict, update)
-
     def test_agg_timelines_no_cause(self):
         """
         Check that the timelines aggregate correctly and do not exceed the limits

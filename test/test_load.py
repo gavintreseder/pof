@@ -219,7 +219,7 @@ class TestPofBase(object):
             instance_1.update(d)
 
         # Assert
-        self.tc_assertEqual(instance_0, instance_1)
+        self.tc.assertEqual(instance_0, instance_1)
 
     def test_update_errors_raised(self):
 
@@ -230,18 +230,12 @@ class TestPofBase(object):
         invalid_data = self._data_invalid_types + self._data_invalid_values
 
         for data in invalid_data:
-            for var, val in data.items():
-                d = {}
-                d[var] = val
+            with self.tc.assertLogs(level="DEBUG") as log:
+                # Act
+                instance_1.update(data)
 
-                with self.tc.assertLogs(level="DEBUG") as log:
-                    # Act
-                    instance_1.update(d)
-
-                    # Assert
-                    self.tc.assertTrue("Update Failed" in log.output[-1])
-
-        #
+                # Assert
+                self.tc.assertTrue("Update Failed" in log.output[-1])
 
 
 class TestLoad(TestPofBase, unittest.TestCase):

@@ -601,7 +601,9 @@ class ConditionIndicator(Indicator):
         return self._timelines
 
     def get_accumulated(self, name=None):  # TODO make this work for arrays of names
-
+        """
+        Returns the accumulated degradation
+        """
         if name is None:
             # Get all the total acumulated condition
             accumulated = sum(self._accumulated.values())
@@ -655,7 +657,7 @@ class ConditionIndicator(Indicator):
         # TODO is this needed - self.get_accumulated(name=name)
 
         # max accumulation - current - initial
-        self._accumulated[name] = min(
+        self._accumulated[name] = self.get_accumulated(name=name) + min(
             accumulated,
             abs(self.perfect - self.failed) - current,
         )
