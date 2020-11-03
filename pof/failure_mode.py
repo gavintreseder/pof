@@ -145,8 +145,6 @@ class FailureMode(Load):
         self.init_states = dict()
         self.states = dict()
 
-        # TODO finish all the @setters to check for valid input and handle defaults
-        self.name = name
         self.active = active
         self.pf_curve = pf_curve
         self.pf_interval = pf_interval
