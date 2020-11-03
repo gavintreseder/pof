@@ -246,7 +246,7 @@ class Load:
                                 )
 
                         else:
-                            raise ValueError(
+                            raise KeyError(
                                 f"{self.__class__.__name__} - {self.name} - {attr} cannot be updated with the value {key} {val}"
                             )
                 else:

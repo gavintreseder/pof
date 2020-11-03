@@ -510,11 +510,11 @@ class TestLoad(TestPofBase, unittest.TestCase):
 
         param_tests = [
             (
-                KeyError,
+                AttributeError,
                 {"invalid_attribute": "after_update"},
             ),
             (
-                KeyError,
+                AttributeError,
                 {"obj": {"invalid_attribute": "after_update"}},
             ),
             (

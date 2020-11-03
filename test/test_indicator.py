@@ -34,11 +34,15 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         # TestInstantiate
         self._class = ConditionIndicator
 
-        # TestLoadFromdict
+        # TestPofBase
         self._data_valid = [dict(name="TestConditionIndicator", pf_curve="step")]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
         self._data_invalid_types = [
             {"invalid_type": "invalid_type", "indicator_type": "ConditionIndicator"}
+        ]
+        self._complete_data = [
+            fixtures.complete["condition_indicator_0"],
+            fixtures.complete["condition_indicator_1"],
         ]
 
         cond_data = demo.condition_data["instant"]

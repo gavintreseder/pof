@@ -38,8 +38,8 @@ complete['distribution_1'] = dict(
 
 condition_data = dict(demo.condition_data)
 
-complete['indicator_0'] = dict(
-    name='indicator_0',
+complete['condition_indicator_0'] = dict(
+    name='condition_indicator_0',
     perfect=0,
     failed=1,
     pf_curve='linear',
@@ -47,8 +47,8 @@ complete['indicator_0'] = dict(
     pf_std=0
 )
 
-complete['indicator_1'] = dict(
-    name='indicator_1',
+complete['condition_indicator_1'] = dict(
+    name='condition_indicator_1',
     perfect=1,
     failed=0,
     pf_curve='step',
@@ -153,7 +153,7 @@ complete['failure_mode_0']=dict(
     pf_curve = 'linear',
     pf_interval=0,
     untreated=dict(complete['distribution_0']),
-    conditions=dict(complete['indicator_0']),
+    conditions=dict(complete['condition_indicator_0']),
     tasks=dict(complete['inspection_0']),
 )
 
@@ -162,7 +162,7 @@ complete['failure_mode_1']=dict(
     pf_curve = 'step',
     pf_interval=1,
     untreated=dict(complete['distribution_1']),
-    conditions=dict(complete['indicator_1']),
+    conditions=dict(complete['condition_indicator_1']),
     tasks=dict(complete['inspection_1']),
 )
 
@@ -173,13 +173,13 @@ component_data = dict(demo.component_data)
 complete['component_0'] = dict(
     name='component_0',
     fm=dict(complete['failure_mode_0']),
-    indicator=dict(complete['indicator_0']),
+    indicator=dict(complete['condition_indicator_0']),
 )
 
 complete['component_1'] = dict(
     name='component_1',
     fm=dict(complete['failure_mode_1']),
-    indicator=dict(complete['indicator_1'])
+    indicator=dict(complete['condition_indicator_1'])
 )
 
 if __name__ == "__main__":

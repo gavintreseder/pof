@@ -654,7 +654,6 @@ class ConditionIndicator(Indicator):
         """
         # check accumulated will not exceed the maximum allowable condition
         current = self.get_accumulated()
-        # TODO is this needed - self.get_accumulated(name=name)
 
         # max accumulation - current - initial
         self._accumulated[name] = self.get_accumulated(name=name) + min(
