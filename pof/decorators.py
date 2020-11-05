@@ -7,6 +7,8 @@ import logging
 import inspect
 
 
+
+
 def check_arg_type(func):
     """
     Checks the args match the input type annotations
@@ -70,6 +72,52 @@ def coerce_arg_type(func):
 
     return wrapper
 
+#TODO Illyse
+
+#tips
+
+# Step 1 - trial it in a notebook
+
+def func(value):
+    
+    #do somethign wtih value
+
+    return value
+
+def check_is_negative(func):
+
+    def wrapper(*args, **kwargs):
+
+        # check *args and **wargs are right
+
+        result = func(*args, **kwargs)
+
+        # Chck the result is right
+
+    return wrapper
+
+#inspect.signature
+# inspect.getfullargspec
+
+def wrapper(self, value):
+    if value < 0:
+        raise ValueError
+    return func(self, value)
+
+
+@check_arg_positive('value') #params
+def pf_interval(self, value)
+def pf_interval(self, pf_interval)
+
+
+def pf_interval(value)
+def pf_interval(self, value)
+defpf_interval(self, other_dist, value=-10)
+
+pf_interval() # Uses the default
+pf_interval(-10, -10) # args
+pf_interval(value=-10) # kwarg
+
 
 def check_arg_positive(*params):
     """
@@ -94,16 +142,23 @@ def check_arg_positive(*params):
     ValueError: -8 is not positive
     """
 
-    # TODO rewrite the wrapper so that it wokrs for classes and methods
-
     def inner(func):
         @wraps(func)
-        def wrapper(*args):
+        def wrapper(*args, **kwargs):
             for param in params:
+
+                
+
+                # Check kwargs - Is the param in the kwarg
+                # Check args - is the param in the arg
+                # Check default - is the param a default value
                 param_idx = inspect.getfullargspec(func)[0].index(param)
 
-                if args[param_idx] < 0:
-                    raise ValueError(f"{args[param_idx]} is not positive")
+                value = args[param_idx]
+
+                # Raise an error if it is negative
+                if value < 0:
+                    raise ValueError(f"{value} is not positive")
 
             func(*args)
 
@@ -112,12 +167,13 @@ def check_arg_positive(*params):
     return inner
 
 
+
+
+
+
 # Options
-
 # Raise Errors
-
 # Log Errors and no change
-
 # Log error and use default
 
 
@@ -139,8 +195,9 @@ def validate_pf_curve(func):
     """ Validates a pf_curve"""
 
     @wraps(func)
-    def wrapper(self, value):
 
+    def wrapper(self, value):
+        return func(*args, **kwagrs)
         if value in self.PF_CURVES:
             return value
         else:
@@ -181,6 +238,10 @@ def exception_handler(*exceptions):
             try:
                 func(*args, **kwargs)
             except (exceptions) as error:
+                # if we_want_to_raisee_erors:
+                #     raise error:
+                # else:
+                #     logging.warning(error)
                 logging.warning(error)
 
         return wrapper
@@ -188,37 +249,16 @@ def exception_handler(*exceptions):
     return handle_exceptions
 
 
-def accepts(*types):
-    """
-    Checks data types
-
-    Usage:
-
-    @accepts(int, (int,float))
-    def func(arg1, arg2):
-        return arg1 * arg2
-
-    func(3, 2) # -> 6
-    func('3', 2)
-
-    """
-
-    def check_accepts(func):
-        assert len(types) == func.__code__.co_argcount
-
-        def new_func(*args, **kwds):
-            for (a, t) in zip(args, types):
-                assert isinstance(a, t), f"arg {args} does not match {t}" % (a, t)
-            return func(*args, **kwds)
-
-        new_func.__name__ = func.__name__
-        return new_func
-
-    return check_accepts
-
-
 if __name__ == "__main__":
     import doctest
+
+    @check_arg_positive("value")
+    def func(other=-2, value=20):
+        return value
+
+    # value passed
+    func(value=-15)
+    func()
 
     doctest.testmod(optionflags=doctest.ELLIPSIS)  # extraglobs={"dist": Distribution()}
     print("Validators - Ok")
