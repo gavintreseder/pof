@@ -1,27 +1,18 @@
+import logging
 import os
-import datetime
 
-import pandas as pd
+from tkinter.filedialog import askdirectory
 import numpy as np
 import dask.array as da
 import dask.dataframe as dd
-import tkinter as tk
-from tkinter.filedialog import askopenfilename
-from tkinter.filedialog import askdirectory
-
-if __package__ is None or __package__ == "":
-    import sys
-    import os
-
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from pof.loader.fleet_data_loader import FleetDataLoader
 from pof.loader.fleet_data import FleetData
 
+if __package__ is None or __package__ == "":
+    import sys
 
-# Constant
-prohibbited_characters = [".", ";", "-"]
-replacement_character = ["_"]
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 class PolesFleetDataLoader(FleetDataLoader):
@@ -29,182 +20,281 @@ class PolesFleetDataLoader(FleetDataLoader):
     Anything extra that awe
     """
 
-    def __init__(self, df_csq=None, df_asset_info=None, condition_data=None):
+    pandas_or_dask = "pandas"
+
+    file_path = "C:\\Users\\ischram\\OneDrive - KPMG\\Desktop\\Data\\csv"
+
+    nrows = None
+
+    prohibbited_characters = [".", ";", "-"]
+    replacement_character = ["_"]
+
+    specific_columns_rename = dict(
+        detail_code="condition_name",
+        date_changed="date",
+        before_value="condition_before",
+        after_value="condition_after",
+        total_consequence_="total_consequence",
+        date_installed="installation_date",
+    )
+
+    csq_columns = dict(
+        asset_info=[
+            "asset_id",
+            "c_safety_dollars",
+            "c_network_dollars",
+            "c_bushfire_dollars",
+            "c_environment_dollars",
+            "c_financial_dollars",
+            "total_consequence",
+        ],
+        csq=[
+            "asset_id",
+            "bushfirepriority",
+            "transformeronpole",
+            "premisecount",
+            "travel_time_to_pole_(hrs)",
+            "travel_distance_to_pole_(km)",
+        ],
+    )
+
+    intervention_columns = ["asset_id", "pseudo_asset_id"]
+
+    numerical_columns = dict(
+        asset_info=[
+            "latitude",
+            "longitude",
+            "premise_count",
+            "pole_length",
+            "pole_strength",
+        ],
+        csq=[
+            "premisecount",
+            "travel_time_to_pole_(hrs)",
+            "travel_distance_to_pole_(km)",
+        ],
+        condition=[
+            "condition_before",
+            "condition_after",
+        ],
+    )
+
+    dtype = dict(
+        asset_info={"Pole Length": "object"},
+        condition={"After Value": "object", "Before Value": "object"},
+        csq={"Radial": "object", "Radial(Y/N)": "object"},
+    )
+
+    def __init__(
+        self,
+        df_csq=None,
+        df_asset_info=None,
+        condition_data=None,
+    ):
         self.df_csq = df_csq
         self.df_asset_info = df_asset_info
         self.condition_data = condition_data
-        # TODO: make sure all cls variable initialised
-        self.asset_path = None
 
-        self.load_asset_()
+        self.asset_path = None
+        self.condition_path = None
+        self.csq_path = None
+        self.intervention_path = None
+
+        self.load()
 
     def get_path(self):
-        try:
-            file_path
-        except:
-            file_path = askdirectory(initialdir=os.getcwd())
-
-        self.asset_path = file_path + "\\ACS - Poles - Asset Details.csv"
-        self.condition_path = file_path + "\\ACS - Poles - Condition History.csv"
-        self.csq_path = file_path + "\\ACS - Poles - Consequence Model Output.csv"
-        self.intervention_path = file_path + "\\ACS - Poles - Intervention History.csv"
-
-    def load_asset_(self, path=None):
-        if path is None:
-            self.get_path()
-
-        self.load_csq_model()
-        self.load_asset_info()
-        self.load_condition_data()
-
-    def load_csq_model(self):
         """
-        Legacy not needed
+        Requests user to input file path if not specified
         """
-        csq_columns = [
-            "ASSET_ID",
-            "BushfirePriority",
-            "TransformerOnPole",
-            "PremiseCount",
-            "Travel Time to Pole (hrs)",
-        ]
 
-        self.df_csq = self.from_file(self.csq_path, csq_columns)
-        self.df_csq = self.df_csq.rename(columns={"ASSET_ID": "Asset ID"})
-        self.df_csq["Asset ID"] = self.df_csq["Asset ID"].astype(str)
+        logging.debug("Retrieving file path")
 
-        # self.df_csq = self.replace_substring(self.df_csq)
-        self.df_csq = self.replace_columns(self.df_csq)
-
-    def load_asset_info(self):
-        csq_columns = [
-            "ASSET_ID",
-            "C_Safety_Dollars",
-            "C_Network_Dollars",
-            "C_Bushfire_Dollars",
-            "C_Environment_Dollars",
-            "C_Financial_Dollars",
-            "Total Consequence $",
-        ]
-        dtype = {"Pole Length": "object"}
-
-        self.df_asset_info = self.from_file(self.asset_path, dtype=dtype)
-        self.df_asset_info["Date Installed"] = dd.to_datetime(
-            self.df_asset_info["Date Installed"], format="%Y%m%d", errors="coerce"
+        file_path = (
+            askdirectory(initialdir=os.getcwd())
+            if self.file_path is None
+            else self.file_path
         )
 
-        intervention_columns = ["Asset ID", "Pseudo Asset ID"]
+        self.asset_path = file_path + "\\" + "ACS - Poles - Asset Details.csv"
+        self.condition_path = file_path + "\\" + "ACS - Poles - Condition History.csv"
+        self.csq_path = file_path + "\\" + "ACS - Poles - Consequence Model Output.csv"
+        self.intervention_path = (
+            file_path + "\\" + "ACS - Poles - Intervention History.csv"
+        )
 
-        csq = self.from_file(self.csq_path, csq_columns)
-        csq = csq.rename(columns={"ASSET_ID": "Asset ID"})
+        logging.debug("File path retrieved")
 
-        csq["Asset ID"] = csq["Asset ID"].astype(str)
-        self.df_asset_info["Asset ID"] = self.df_asset_info["Asset ID"].astype(str)
+    def load(self):
+        """
+        Loads poles data
+        """
 
-        self.df_asset_info = self.df_asset_info.merge(csq, on="Asset ID")
+        df_dict = self.read_data()
 
-        intervention = self.from_file(
-            self.intervention_path, intervention_columns
-        ).drop_duplicates()
+        self.merge_data(
+            df_csq=df_dict["csq"],
+            df_asset_info=df_dict["asset_info"],
+            df_condition=df_dict["condition"],
+            df_intervention=df_dict["intervention"],
+        )
 
-        intervention["Asset ID"] = intervention["Asset ID"].astype(str)
+        if self.pandas_or_dask == "pandas":
+            self.to_pandas()
 
-        self.df_asset_info = self.df_asset_info.merge(intervention, on="Asset ID")
+        logging.debug("Load complete")
 
-        # self.df_asset_info = self.replace_substring(self.df_asset_info)
-        self.df_asset_info = self.replace_columns(self.df_asset_info)
+    def to_pandas(self):
 
-    def load_condition_data(self):
-        intervention_columns = ["Asset ID", "Pseudo Asset ID"]
+        logging.debug("Converting dask dataframes to pandas")
+
+        self.df_csq = self.df_csq.compute()
+        self.df_asset_info = self.df_asset_info.compute()
+        self.condition_data = self.condition_data.compute()
+
+    def read_data(self):
+
+        self.get_path()
+
+        df_csq = self.from_file(
+            path=self.csq_path, dtype=self.dtype["csq"], nrows=self.nrows
+        )
+        df_csq = self.cleanse_data(
+            df=df_csq,
+            replace=self.prohibbited_characters,
+            replace_with=self.replacement_character,
+            numerical_columns=self.numerical_columns["csq"],
+            columns_rename=self.specific_columns_rename,
+        )
+
+        df_asset_info = self.from_file(
+            path=self.asset_path, dtype=self.dtype["asset_info"], nrows=self.nrows
+        )
+        df_asset_info = self.cleanse_data(
+            df=df_asset_info,
+            replace=self.prohibbited_characters,
+            replace_with=self.replacement_character,
+            numerical_columns=self.numerical_columns["asset_info"],
+            columns_rename=self.specific_columns_rename,
+        )
 
         df_condition = self.from_file(
-            self.condition_path,
-            dtype={"After Value": "object", "Before Value": "object"},
+            path=self.condition_path, dtype=self.dtype["condition"], nrows=self.nrows
         )
-        df_condition["Date Changed"] = dd.to_datetime(
-            df_condition["Date Changed"], format="%Y-%m-%d %H:%M:%S"
-        ).dt.normalize()
+        df_condition = self.cleanse_data(
+            df=df_condition,
+            replace=self.prohibbited_characters,
+            replace_with=self.replacement_character,
+            numerical_columns=self.numerical_columns["condition"],
+            columns_rename=self.specific_columns_rename,
+        )
 
-        # used to drop additional columns later
+        df_intervention = self.from_file(path=self.intervention_path, nrows=self.nrows)
+        df_intervention = self.cleanse_data(
+            df=df_intervention,
+            replace=self.prohibbited_characters,
+            replace_with=self.replacement_character,
+            numerical_columns=None,
+            columns_rename=self.specific_columns_rename,
+        )
+
+        df_dict = dict(
+            csq=df_csq,
+            asset_info=df_asset_info,
+            condition=df_condition,
+            intervention=df_intervention,
+        )
+
+        return df_dict
+
+    def merge_data(self, df_csq, df_asset_info, df_condition, df_intervention):
+
+        logging.debug("got into merge_data")
+
+        self.load_csq_model(df_csq=df_csq)
+        self.load_asset_info(
+            df_csq=df_csq, df_asset_info=df_asset_info, df_intervention=df_intervention
+        )
+        self.load_condition_data(
+            df_condition=df_condition, df_intervention=df_intervention
+        )
+
+    def load_csq_model(self, df_csq):
+        """
+        Legacy not needed. Loads poles consequence model data
+        """
+
+        logging.debug("Loading consequence model")
+
+        self.df_csq = df_csq[self.csq_columns["csq"]]
+
+        logging.debug("Consequence model loaded")
+
+    def load_asset_info(self, df_csq, df_asset_info, df_intervention):
+        """
+        Loads poles asset information
+        """
+
+        logging.debug("Loading asset information")
+
+        df_intervention = df_intervention[self.intervention_columns].drop_duplicates()
+
+        df_csq = df_csq[self.csq_columns["asset_info"]].drop_duplicates()
+
+        df_asset_info = df_asset_info.merge(
+            df_csq, how="left", on="asset_id"
+        ).reset_index(drop=True)
+
+        df_asset_info = df_asset_info.merge(
+            df_intervention, how="left", on="asset_id"
+        ).reset_index(drop=True)
+
+        self.df_asset_info = df_asset_info
+
+        logging.debug("Asset information loaded")
+
+    def load_condition_data(self, df_condition, df_intervention):
+        """
+        Loads poles condition data
+        """
+
+        logging.debug("Loading condition data")
+
         cond_columns = df_condition.columns
 
-        df_intervention = self.from_file(
-            self.intervention_path, intervention_columns
-        ).drop_duplicates()
+        df_intervention = df_intervention[self.intervention_columns].drop_duplicates()
 
-        # create column of replacement dates
-        df_intervention["Replace Date"] = df_intervention["Pseudo Asset ID"].map(
+        df_intervention["replace_date"] = df_intervention["pseudo_asset_id"].map(
             lambda x: x.split("-", 1)[1] if len(x.split("-", 1)) == 2 else np.nan
         )
-        df_intervention["Replace Date"] = dd.to_datetime(
-            df_intervention["Replace Date"], format="%Y-%m-%d"
+        df_intervention["replace_date"] = dd.to_datetime(
+            df_intervention["replace_date"], format="%Y-%m-%d"
+        ).dt.date
+
+        df_condition = df_condition.merge(
+            df_intervention, how="left", on="asset_id"
+        ).reset_index(drop=True)
+
+        df_condition["pseudo_asset_id"] = df_condition["pseudo_asset_id"].where(
+            df_condition["replace_date"] > df_condition["date"],
+            df_condition["asset_id"],
         )
 
-        df_intervention["Asset ID"] = df_intervention["Asset ID"].astype(str)
-        df_condition["Asset ID"] = df_condition["Asset ID"].astype(str)
+        self.condition_data = df_condition[cond_columns]
 
-        df_condition = df_condition.merge(df_intervention, on="Asset ID")
-
-        # compare dates if replacement date < condition date the use Pseudo Asset ID
-        df_condition["Asset ID"] = da.where(
-            df_condition["Replace Date"].to_dask_array()
-            > df_condition["Date Changed"].to_dask_array(),
-            df_condition["Asset ID"].to_dask_array(),
-            df_condition["Pseudo Asset ID"].to_dask_array(),
-        )
-
-        df_condition = df_condition[cond_columns]
-
-        # df_condition = self.replace_substring(df_condition)
-        df_condition = self.replace_columns(df_condition)
-
-        self.condition_data = df_condition
-
-    def replace_substring(
-        self, df, replace=prohibbited_characters, replace_with=replacement_character
-    ):
-
-        for r in replace:
-            df_replaced = df.applymap(
-                lambda s: s.replace(r, replace_with[0]) if isinstance(s, str) else s
-            )
-
-        return df_replaced
-
-    def replace_columns(self, df):
-
-        specific_columns_rename = dict(
-            detail_code="condition_name",
-            date_changed="date",
-            before_value="condition_before",
-            after_value="condition_after",
-            total_consequence_="total_csq",
-            date_installed="installation_date",
-        )
-
-        replaced = []
-        for col in list(df.columns):
-            new_col = col.lower()
-            new_col = new_col.replace(" ", "_")
-            new_col = new_col.replace("$", "")
-            replaced.append(new_col)
-            for name, rename in specific_columns_rename.items():
-                if new_col == name:
-                    new_col = rename
-                    replaced[-1] = new_col
-
-        df.columns = replaced
-
-        return df
+        logging.debug("Condition data loaded")
 
     def get_fleet_data(self):
         """
         Creates a FleetData object
         """
+
+        logging.debug("Creating FleetData object")
+
         return FleetData(
             asset_info=self.df_asset_info,
             condition=self.condition_data,
             csq_info=self.df_csq,
+            pandas_or_dask=self.pandas_or_dask,
         )
 
 
