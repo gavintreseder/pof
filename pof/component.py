@@ -28,7 +28,6 @@ from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
 from pof.load import Load
 import pof.demo as demo
 
-
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # TODO create get, set, del and add methods
 
@@ -37,7 +36,6 @@ DEFAULT_ITERATIONS = 100
 cf = config.get("Component")
 
 
-@dataclass
 class Component(Load):
     """
     Parameters:
@@ -58,7 +56,7 @@ class Component(Load):
 
     indicator: Dict = None
     fm: Dict = None
-
+    
     def __post_init__(self):
 
         self.set_indicator(self.indicator)

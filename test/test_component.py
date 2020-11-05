@@ -2,22 +2,16 @@
     Filename: test_component.py
     Description: Contains the code for testing the Component class
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
- 
 """
 
 import unittest
 from unittest.mock import Mock, patch
-
-import numpy as np
-import pandas as pd
-import scipy.stats as ss
 
 from test_load import TestPofBase
 import fixtures
 import testconfig
 from pof.component import Component
 from config import config
-import pof.demo as demo
 
 from pof.interface.figures import update_condition_fig
 
@@ -37,7 +31,10 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self._data_valid = [dict(name="TestComponent")]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
         self._data_invalid_values = []
-        self._data_complete = [fixtures.complete['component_0'], fixtures.complete['component_0']]
+        self._data_complete = [
+            fixtures.complete["component_0"],
+            fixtures.complete["component_0"],
+        ]
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
