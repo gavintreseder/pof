@@ -6,14 +6,13 @@
         Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
 """
 
-import copy
 import unittest
 from unittest.mock import Mock
 
 import numpy as np
 
 import fixtures
-import testconfig
+import testconfig  # pylint: disable=unused-import
 from test_load import TestPofBase
 from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 

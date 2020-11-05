@@ -6,12 +6,11 @@
         Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
 """
 
-import logging
 import unittest
 from unittest.mock import Mock, patch
 
 import fixtures
-import testconfig
+import testconfig  # pylint: disable=unused-import
 from pof.load import Load
 
 
@@ -243,15 +242,14 @@ class TestPofBase(object):
     def test_update_errors_raised(self):
 
         # Arrange
-        instance_0 = self._class.demo()
-        instance_1 = self._class.demo()
+        instance = self._class.demo()
 
         invalid_data = self._data_invalid_types + self._data_invalid_values
 
         for data in invalid_data:
             with self.tc.assertLogs(level="DEBUG") as log:
                 # Act
-                instance_1.update(data)
+                instance.update(data)
 
                 # Assert
                 self.tc.assertTrue("Update Failed" in log.output[-1])
@@ -413,11 +411,13 @@ class TestLoad(TestPofBase, unittest.TestCase):
         ]
 
         for test_data in param_tests:
-            # Act
-            load.update(test_data)
+            with self.tc.assertLogs(level="DEBUG") as log:
+                # Act
+                load.update(test_data)
 
-            # Assert
-            # TODO add context manager to check logger
+                # Assert
+                # TODO check errorhas been looged
+                # self.tc.assertTrue("Update Failed" in log.output[-1])
 
     # -------------------- Test update_from_str -----------------------------
 

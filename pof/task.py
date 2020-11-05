@@ -121,15 +121,15 @@ class Task(Load):
         return task_class
 
     @classmethod
-    def from_dict(cls, details=None):
+    def from_dict(cls, data=None):
         """
         Factory method for loading a Task
         """
-        if isinstance(details, dict):
+        if isinstance(data, dict):
 
-            task_type = details.get("task_type", None)
+            task_type = data.get("task_type", None)
             task_class = cls.factory(task_type)
-            task = task_class(**details)
+            task = task_class(**data)
 
         else:
             raise TypeError("Dictionary expected")

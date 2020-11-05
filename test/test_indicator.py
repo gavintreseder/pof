@@ -6,7 +6,7 @@ from random import randint
 import numpy as np
 
 import fixtures
-import testconfig
+import testconfig  # pylint: disable=unused-import
 from test_load import TestPofBase
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
