@@ -1,5 +1,6 @@
 """
-#TODO add docstring
+Tests for the FailureMode class
+Author: Gavin Treseder
 """
 
 import copy
@@ -16,6 +17,13 @@ from pof.task import Task, ScheduledTask, ConditionTask, Inspection
 import pof.demo as demo
 
 
+def side_effect_trigger_task(**kwargs):
+    t_start = kwargs.get("t_start")
+    t_end = kwargs.get("t_end")
+
+    return np.full(t_end - t_start + 1, 0)
+
+
 class TestFailureMode(TestPofBase, unittest.TestCase):
     def setUp(self):
 
@@ -25,90 +33,63 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         self._class = FailureMode
 
         # TestFromDict
-        self._data_valid = dict(name="TestFailureMode")
+        self._data_valid = [{"name": "TestFailureMode"}]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_complete = [
+            fixtures.complete["failure_mode_0"],
+            fixtures.complete["failure_mode_1"],
+        ]
 
     # ************ Test init_timeline ***********************
 
-    def test_init_timeline_condition_step(self):
+    def test_init_timeline(self):
         # TODO full coverage
-        t_start = 0
-        t_end = 200
-        fm = FailureMode.load(demo.failure_mode_data["random"])
 
-        fm.init_timeline(t_start=0, t_end=200)
+        params = [
+            ("step", demo.failure_mode_data["random"]),
+            ("linear", demo.failure_mode_data["slow_aging"]),
+        ]
 
-        # Check times match
-        self.assertEqual(
-            fm.timeline["time"][0], t_start, "First time does not equal t_start"
-        )
-        self.assertEqual(
-            fm.timeline["time"][-1], t_end, "Last time in timeline does not equal t_end"
-        )
+        for pf_curve, test_data in params:
+            # Arrange
+            t_start = 0
+            t_end = 200
+            fm = FailureMode.load(demo.failure_mode_data["random"])
 
-        # Check states match
-        self.assertEqual(
-            fm.timeline["initiation"][0],
-            fm.is_initiated(),
-            "First initiation in timeline does not equal current initiation",
-        )
-        self.assertEqual(
-            fm.timeline["detection"][0],
-            fm.is_detected(),
-            "First detection in timeline does not equal current detection",
-        )
-        self.assertEqual(
-            fm.timeline["failure"][0],
-            fm.is_failed(),
-            "First Failure in timeline does not equal current failure",
-        )
+            # Act
+            fm.init_timeline(t_start=0, t_end=200)
 
-        # Check conditions match
-        # TODO move conditions to indicators first
+            # Check times match
+            self.assertEqual(fm.timeline["time"][0], t_start, "t=0 != t_start")
+            self.assertEqual(
+                fm.timeline["time"][-1],
+                t_end,
+                "Last time in timeline does not equal t_end",
+            )
 
-        # Check tasks match
-        # TODO rewrite time function in tasks first
+            # Check states match
+            self.assertEqual(
+                fm.timeline["initiation"][0],
+                fm.is_initiated(),
+                "First initiation in timeline does not equal current initiation",
+            )
+            self.assertEqual(
+                fm.timeline["detection"][0],
+                fm.is_detected(),
+                "First detection in timeline does not equal current detection",
+            )
+            self.assertEqual(
+                fm.timeline["failure"][0],
+                fm.is_failed(),
+                "First Failure in timeline does not equal current failure",
+            )
 
-    def test_init_timeline_condition_linear(self):  # TODO full coverage
-        t_start = 0
-        t_end = 200
-        fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
+            # Check conditions match
+            # TODO move conditions to indicators first
 
-        fm.init_timeline(t_start=0, t_end=200)
-
-        # Check times match
-        self.assertEqual(
-            fm.timeline["time"][0],
-            t_start,
-            "First time in timeline should equal _start",
-        )
-        self.assertEqual(
-            fm.timeline["time"][-1], t_end, "Last time in timeline should equal t_end"
-        )
-
-        # Check states match
-        self.assertEqual(
-            fm.timeline["initiation"][0],
-            fm.is_initiated(),
-            "First initiation in timeline does not equal current initiation",
-        )
-        self.assertEqual(
-            fm.timeline["detection"][0],
-            fm.is_detected(),
-            "First detection in timeline does not equal current detection",
-        )
-        self.assertEqual(
-            fm.timeline["failure"][0],
-            fm.is_failed(),
-            "First Failure in timeline does not equal current failure",
-        )
-
-        # Check conditions match
-        # TODO move conditions to indicators first copy from previous test
-
-        # Check tasks match
-        # TODO rewrite time function in tasks first copy from previous test
+            # Check tasks match
+            # TODO rewrite time function in tasks first
 
     # ------------ Test update_timeline --------------------
 
@@ -180,6 +161,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         """
 
         params = [(True, 1, 0, False), (False, 2001, 0, True)]
+        t_end = 2000
 
         for remain_failed, time_sim, time_failed, more_tasks in params:
 
@@ -188,7 +170,11 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             fm.indicators["slow_degrading"].set_condition(10)
             fm.indicators["fast_degrading"].set_condition(10)
             fm.set_states(dict(initiation=True, detection=True))
+
+            # Trigger tasks
             fm.dists["init"].sample = Mock(return_value=0)
+            for task in fm.tasks.values():
+                task.sim_timeline = Mock(side_effect=side_effect_trigger_task)
 
             # Act
             with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):
@@ -268,8 +254,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # TODO rewrite time function in tasks first
 
     def test_demo(self):
-        fm = FailureMode.demo()
-        self.assertIsNotNone(fm)
+        super().test_demo()
 
     # ------------ Test mc_timeline ------------------
 
@@ -311,23 +296,6 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         # Assert
         self.assertEquals(fm1, fm2)
-
-    def test_update(self):
-        # TODO This will be causing errors because new values are being created
-        test_data_1 = fixtures.failure_mode_data["early_life"]
-        test_data_2 = fixtures.failure_mode_data["slow_aging"]
-
-        fm1 = FailureMode.from_dict(test_data_1)
-        fm2 = FailureMode.from_dict(test_data_2)
-
-        # update var by var
-        for var, val in test_data_2.items():
-            d = {}
-            d[var] = val
-
-            fm1.update(d)
-
-        self.assertEqual(fm1, fm2)
 
     # ************ Test link indicators ***************
 
@@ -447,7 +415,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
         fm = FailureMode.from_dict(fixtures.failure_mode_data["random"])
 
-        test_data = dict(inspection=fixtures.inspection_data["instant"])
+        test_data = fixtures.inspection_data["instant"]
 
         fm.set_obj("tasks", Task, test_data)
 

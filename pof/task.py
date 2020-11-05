@@ -9,6 +9,9 @@ import math
 import numpy as np
 from random import random, seed
 import logging
+from typing import Dict, List
+
+from dataclassy import dataclass
 
 if __package__ is None or __package__ == "":
     import sys
@@ -31,28 +34,13 @@ from pof.load import Load
 
 seed(1)
 
+# from dataclasses import dataclass
+
 
 class Task(Load):
-    """
-    Parameters:
-                trigger
-                    time, condition, state, task group?
+    """"""
 
-                activty?
-                    insp, repair, replace
-
-    Things a task can do:
-        - insp
-            - detect symptom
-            - measure condition
-        - repair
-            - stop initiation
-            - improve condition
-        - replace
-            - reset everything
-
-    """
-
+    # Class Variables
     CONDITION_IMPACT_AXIS = ["condition", "time"]
     CONDITION_IMPACT_METHODS = ["reduction_factor", "tbc"]
     SYSTEM_IMPACT = [None, "fm", "component", "asset"]
@@ -72,10 +60,9 @@ class Task(Load):
         triggers=None,
         impacts=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
 
-        # Load error handling
         super().__init__(name=name, *args, **kwargs)
 
         # Task information
@@ -83,7 +70,6 @@ class Task(Load):
         self.trigger = trigger
         self.active = active
 
-        # TODO how the package is grouped together
         self._package = NotImplemented
         self._impacts_parent = NotImplemented
         self._impacts_children = False
@@ -112,6 +98,29 @@ class Task(Load):
     # ************ Load Methods **********************
 
     @classmethod
+    def factory(cls, task_type=None, **kwargs):
+
+        if task_type == "Task":
+            task_class = Task
+
+        elif task_type == "ConditionTask":
+            task_class = ConditionTask
+
+        elif task_type == "ScheduledTask":
+            task_class = ScheduledTask
+
+        elif task_type == "Inspection":
+            task_class = Inspection
+
+        elif task_type is None:
+            task_class = Task
+
+        else:
+            raise ValueError("Invalid Task Type")
+
+        return task_class
+
+    @classmethod
     def from_dict(cls, details=None):
         """
         Factory method for loading a Task
@@ -119,24 +128,9 @@ class Task(Load):
         if isinstance(details, dict):
 
             task_type = details.get("task_type", None)
+            task_class = cls.factory(task_type)
+            task = task_class(**details)
 
-            if task_type == "Task":
-                task = Task(**details)
-
-            elif task_type == "ConditionTask":
-                task = ConditionTask(**details)
-
-            elif task_type == "ScheduledTask":
-                task = ScheduledTask(**details)
-
-            elif task_type == "Inspection":
-                task = Inspection(**details)
-
-            elif task_type is None:
-                task = Task(**details)
-
-            else:
-                raise ValueError("Invalid Task Type")
         else:
             raise TypeError("Dictionary expected")
 
@@ -299,29 +293,29 @@ class Task(Load):
 
     # ********************* interface methods ******************
 
-    def update_from_dict(self, dict_data):
+    # def update_from_dict(self, dict_data):
 
-        for key, value in dict_data.items():
+    #     for key, value in dict_data.items():
 
-            # Catch some special examples for tasks
-            if key in ["trigger", "impact"]:
+    #         # Catch some special examples for tasks
+    #         if key in ["trigger", "impact"]:
 
-                for key_1, val_1 in dict_data[key].items():
+    #             for key_1, val_1 in dict_data[key].items():
 
-                    if key_1 == "condition":
-                        for key_2, val_2 in dict_data[key][key_1].items():
-                            for key_3, val_3 in dict_data[key][key_1][key_2].items():
-                                self.__dict__[key + "s"][key_1][key_2][key_3] = val_3
+    #                 if key_1 == "condition":
+    #                     for key_2, val_2 in dict_data[key][key_1].items():
+    #                         for key_3, val_3 in dict_data[key][key_1][key_2].items():
+    #                             self.__dict__[key + "s"][key_1][key_2][key_3] = val_3
 
-                    elif key_1 == "state":
-                        for key_2, val_2 in dict_data[key][key_1].items():
-                            self.__dict__[key + "s"][key_1][key_2] = val_2
+    #                 elif key_1 == "state":
+    #                     for key_2, val_2 in dict_data[key][key_1].items():
+    #                         self.__dict__[key + "s"][key_1][key_2] = val_2
 
-                    elif key_1 == "system":
-                        self.__dict__[key][key_1] = val_1
-            else:
-                # Use the default method
-                super().update_from_dict({key: value})
+    #                 elif key_1 == "system":
+    #                     self.__dict__[key][key_1] = val_1
+    #         else:
+    #             # Use the default method
+    #             super().update_from_dict({key: value})
 
     def get_dash_ids(self, prefix="", sep="-"):
 
@@ -354,13 +348,19 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    def __init__(self, t_interval=0, t_delay=0, name="scheduled_task", *args, **kwargs):
-        # TODO fix up defaults
+    def __init__(
+        self,
+        name: str = "scheduled_task",
+        t_interval: int = 1,
+        t_delay: int = 0,
+        *args,
+        **kwargs,
+    ):
         super().__init__(name=name, *args, **kwargs)
 
         self.trigger = "time"
-        self.t_delay = t_delay
         self.t_interval = t_interval
+        self.t_delay = t_delay
 
     @property
     def t_interval(self):
@@ -369,10 +369,13 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     @t_interval.setter
     def t_interval(self, value):
 
-        self._t_interval = int(value)
+        if int(value) <= 0:
+            raise ValueError("t_interval must be a positive time - %s", value)
+        else:
+            self._t_interval = int(value)
 
-        if math.ceil(value) != value:
-            logging.warning("t_interval must be an integer - %s", value)
+            if math.ceil(value) != value:
+                logging.warning("t_interval must be an integer - %s", value)
 
     @property
     def t_delay(self):
@@ -409,21 +412,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         return schedule
 
-    def update_from_dict(self, keys):
-
-        for key, value in keys.items():
-
-            try:
-                super().update_from_dict({key: value})
-            except KeyError:
-                if hasattr(self, key):
-                    setattr(self, key, value)
-                else:
-                    raise KeyError(
-                        'ERROR: Cannot update "%s" - %s from dict with key %s'
-                        % (self.__class__.__name__, self.name, key)
-                    )
-
     @classmethod
     def demo(cls):
         # TODO make this a scheduled replacement task
@@ -435,12 +423,17 @@ class ConditionTask(Task):
     Parent class for creating condition tasks
     """
 
-    def __init__(self, name="condition_task", *args, **kwargs):
+    def __init__(
+        self,
+        name: str = "condition_task",
+        task_completion: str = "immediate",
+        *args,
+        **kwargs,
+    ):
         super().__init__(name=name, *args, **kwargs)
 
         self.trigger = "condition"
-
-        self.task_completion = "immediate"
+        self.task_completion = task_completion
 
     def sim_timeline(
         self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
@@ -503,11 +496,16 @@ class ConditionTask(Task):
 
 
 class Inspection(ScheduledTask):
-    def __init__(self, t_interval=100, t_delay=0, name="inspection", *args, **kwargs):
-        # TODO fix up the defaults
-
+    def __init__(
+        self,
+        name: str = "inspection",
+        t_interval: int = 100,
+        t_delay: int = 0,
+        *args,
+        **kwargs,
+    ):
         super().__init__(
-            t_interval=t_interval, t_delay=t_delay, name=name, *args, **kwargs
+            name=name, t_interval=t_interval, t_delay=t_delay, *args, **kwargs
         )
 
     # TODO replace is_effective with trigger check
@@ -548,7 +546,6 @@ class Inspection(ScheduledTask):
         return cls.from_dict(demo.inspection_data["degrading"])
 
 
-# TODO
 """
     inspection -> detect failure initiation
     repair -> remove failure initiation (Failure Modes that only reset)
@@ -661,3 +658,30 @@ Task
 if __name__ == "__main__":
     tsk = Task()
     print("Task - Ok")
+
+    # # Instance variables
+    # name: str = "task"
+    # task_type: str = "factory method only"
+    # trigger: str = "unknown"
+    # active: bool = True
+    # cost: int = 0
+
+    # _labour = NotImplemented
+    # _spares = NotImplemented
+    # consequence = None
+    # _equipment = NotImplemented
+
+    # p_effective: float = 1
+    # triggers: Dict = {}
+    # impacts: Dict = {}
+
+    # t_completion: List = []
+    # cost_completion: List = []
+    # _timeline = NotImplemented
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+
+    #     self.set_consequence(self.consequence)
+    #     self.set_triggers(self.triggers)
+    #     self.set_impacts(self.impacts)

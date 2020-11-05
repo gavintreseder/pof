@@ -6,15 +6,13 @@
         Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
 """
 
+import logging
 import unittest
 from unittest.mock import Mock, patch
 
 import fixtures
 import testconfig
 from pof.load import Load
-
-
-# TODO think how to move update tests onto main file
 
 
 class TestPofBase(object):
@@ -43,36 +41,67 @@ class TestPofBase(object):
         self.blank_config.get.return_value = None
 
         # Class data
-        self._class = Mock(return_value=None)
-        self._class.from_dict.return_value = None
+        self._class = Mock(spec=object, return_value=None)
+        self._class.from_dict = Mock(return_value=None)
 
         # Valid and invalid Data that will cause errors if not overloaded
-        self._data_valid = Mock(return_value=None)
+        self._data_valid = [Mock(return_value=None)]
         self._data_invalid_values = [{"name": "name"}]
         self._data_invalid_types = [{"name": "name"}]
+        self._data_complete = [Mock(return_value=None)]
 
     # ---------------- Class Instantiate ------------------------
 
     def test_class_instantiate_with_no_data(self):
         """ Check class instantiate works with all no data"""
-        instance = self._class()
-        self.tc.assertIsNotNone(instance)
+        # Arrange
+        class_config = "pof.load.cf"
+        for param in [True, False, None]:
+            with patch.dict(class_config, {"handle_invalid_data": param}):
+
+                # Act
+                instance = self._class()
+
+                # Assert
+                self.tc.assertIsNotNone(instance)
 
     def test_class_instantiate_with_valid_data(self):
         """ Check class instantiate works with valid data"""
 
-        # Act
-        instance = self._class(**self._data_valid)
+        # Arrange
+        class_config = "pof.load.cf"
+        for param in [True, False, None]:
+            with patch.dict(class_config, {"handle_invalid_data": param}):
 
-        # Assert
-        self.tc.assertIsNotNone(instance)
+                for data in self._data_valid:
+                    # Act
+                    instance = self._class(**data)
+
+                    # Assert
+                    self.tc.assertIsNotNone(instance)
 
     def test_class_instantiate_with_invalid_data(self):
-        """ Check the class creation fails with invalid data"""
 
-        for invalid_data in self._data_invalid_types:
-            with self.tc.assertRaises(TypeError):
-                self._class(**invalid_data)
+        # Arrange
+        class_config = "pof.load.cf"
+        with patch.dict(class_config, {"handle_invalid_data": True}):
+            invalid_data = self._data_invalid_types
+            for data in invalid_data:
+
+                # Act
+                instance = self._class(**data)
+
+                # Assert
+                self.tc.assertIsNotNone(instance)
+                self.tc.assertTrue(isinstance(instance, self._class))
+
+        with patch.dict(class_config, {"handle_invalid_data": False}):
+            invalid_data = self._data_invalid_types
+            for data in invalid_data:
+
+                # Act / Assert
+                with self.tc.assertRaises(TypeError):
+                    instance = self._class(**data)
 
     # ---------------- Test from_dict ----------------
 
@@ -81,111 +110,162 @@ class TestPofBase(object):
             self._class.from_dict()
 
     def test_from_dict_with_valid_data(self):
-        instance = self._class.from_dict(self._data_valid)
-        self.tc.assertIsNotNone(instance)
+        for data in self._data_valid:
+            instance = self._class.from_dict(data)
+            self.tc.assertIsNotNone(instance)
 
     def test_from_dict_with_invalid_data(self):
         """ Check invalid data is handled correctly"""
 
-        # Act / Assert
-        for invalid_type in self._data_invalid_types:
-            with self.tc.assertRaises(TypeError):
-                self._class.from_dict(invalid_type)
+        # Arrange
+        class_config = "pof.load.cf"
+        with patch.dict(class_config, {"handle_invalid_data": False}):
 
-        for invalid_value in self._data_invalid_values:
-            with self.tc.assertRaises(ValueError):
-                self._class.from_dict(invalid_value)
+            # Act / Assert
+            for invalid_type in self._data_invalid_types:
+                with self.tc.assertRaises(TypeError):
+                    self._class.from_dict(invalid_type)
+
+            for invalid_value in self._data_invalid_values:
+                with self.tc.assertRaises(ValueError):
+                    self._class.from_dict(invalid_value)
+
+    def test_from_dict_with_complete_data(self):
+        # Arrange
+        class_config = "pof.load.cf"
+
+        with patch.dict(class_config, {"handle_invalid_data": False}):
+            with patch.dict(class_config, {"on_error_use_default": False}):
+                for data in self._data_complete:
+                    # Act
+                    instance = self._class.from_dict(data)
+
+                    # Assert
+                    self.tc.assertIsNotNone(instance)
+                    self.tc.assertTrue(isinstance(instance, self._class))
 
     # ************ Test load ***********************
 
     def test_load_with_empty(self):
         instance = self._class.load()
         self.tc.assertIsNotNone(instance)
+        self.tc.assertTrue(isinstance(instance, self._class))
 
     def test_load_valid_dict(self):
-        # Arrange
-        instance_from_dict = self._class.from_dict(self._data_valid)
+        for data in self._data_valid:
+            # Arrange
+            instance_from_dict = self._class.from_dict(data)
 
-        # Act
-        instance = self._class.load(self._data_valid)
+            # Act
+            instance = self._class.load(data)
 
-        # Assert
-        self.tc.assertEqual(instance, instance_from_dict)
+            # Assert
+            self.tc.assertTrue(isinstance(instance, self._class))
+            self.tc.assertEqual(instance, instance_from_dict)
 
-    def test_load_with_invalid_data_config_on_error_use_default(self):
+    def test_load_with_invalid_data_errors_managed(self):
 
         # Arrange
         # class_config = self._class.__module__ + ".cf"
         class_config = "pof.load.cf"
 
-        with patch.dict(class_config, {"on_error_use_default": True}):
-            invalid_data = self._data_invalid_types + self._data_invalid_values
-            for data in invalid_data:
+        with patch.dict(class_config, {"handle_invalid_data": False}):
+            with patch.dict(class_config, {"on_error_use_default": False}):
 
-                # Act
-                obj = self._class.load(data)
+                # Act / Assert
+                for data in self._data_invalid_types:
+                    with self.tc.assertRaises(TypeError):
+                        self._class.from_dict(data)
 
-                # Assert
-                self.tc.assertIsNotNone(obj)
+                for data in self._data_invalid_values:
+                    with self.tc.assertRaises(ValueError):
+                        self._class.from_dict(data)
 
-        # Tests for handle_errors
-        # # Arrange
-        # param_cf = [(False, TypeError, ValueError), (True, None, None)]
+            with patch.dict(class_config, {"on_error_use_default": True}):
+                invalid_data = self._data_invalid_types + self._data_invalid_values
+                for data in invalid_data:
 
-        # for h_i_d, type_error, value_error in param_cf:
-        #     with patch.dict("pof.load.cf", {"handle_invalid_data": h_i_d}):
+                    # Act  / Assert
+                    instance = self._class.load(data)
+
+                    # Assert
+                    self.tc.assertIsNotNone(instance)
+                    self.tc.assertTrue(isinstance(instance, self._class))
+
+    # ************ Test load ***********************
 
     def test_demo(self):
 
         # Arrange / Act / Assert
         self.tc.assertIsNotNone(self._class.demo())
 
-    # def test_load_error(self):
+    # ************ Test __ methods __
 
-    #     with patch.dict(class_config, {"on_error_use_default": True}):
+    def test_equivalence(self):
 
-    # def test_load(self):
-    #     fm = FailureMode.load()
-    #     self.assertIsNotNone(fm)
+        # Arrange / Act
+        inst_1 = self._class.demo()
+        inst_2 = self._class.demo()
+        inst_3 = self._class(name="a different name")
 
-    # def test_load_no_data_no_config(self):
-    #     with patch("pof.failure_mode.cf", self.blank_config):
-    #         with self.assertRaises(
-    #             ValueError,
-    #             msg="Error expected with no input",
-    #         ):
-    #             FailureMode.load()
+        # Assert
+        self.tc.assertTrue(inst_1 == inst_2)
+        self.tc.assertTrue(inst_2 == inst_1)
+        self.tc.assertTrue(inst_1 != inst_3)
+        self.tc.assertTrue(inst_3 != inst_1)
+        self.tc.assertTrue(not (inst_1 is inst_2))
+        self.tc.assertTrue(not (inst_2 is inst_3))
 
-    # def test_load_data_demo_data(self):
-    #     try:
-    #         fm = FailureMode.load(demo.failure_mode_data["slow_aging"])
-    #         self.assertIsNotNone(fm)
-    #     except ValueError:
-    #         self.fail("ValueError returned")
-    #     except:
-    #         self.fail("Unknown error")
+    # *************** Test Update *************
+
+    def test_update(self):
+
+        # Arrange
+        data = self._data_complete[0]
+        instance_0 = self._class.from_dict(data)
+        instance_1 = self._class.from_dict(self._data_complete[1])
+
+        for var, val in data.items():
+            d = {}
+            d[var] = val
+
+            # Act
+            instance_1.update(d)
+
+        msg = []
+        for k, v in instance_0.__dict__.items():
+            if instance_1.__dict__[k] != v:
+                msg.append((k, v))
+
+        # Assert
+        self.tc.assertEqual(instance_0, instance_1, msg=msg)
+
+    def test_update_errors_raised(self):
+
+        # Arrange
+        instance_0 = self._class.demo()
+        instance_1 = self._class.demo()
+
+        invalid_data = self._data_invalid_types + self._data_invalid_values
+
+        for data in invalid_data:
+            with self.tc.assertLogs(level="DEBUG") as log:
+                # Act
+                instance_1.update(data)
+
+                # Assert
+                self.tc.assertTrue("Update Failed" in log.output[-1])
 
 
-# TODO add back in tests for
-
-# @patch("cf.USE_DEFAULT", True)
-# def test_class_instantiate_no_input_use_default_true(self):
-#     """ Tests the creation of a class instance with no inputs when the global default flag is set to true"""
-#     comp = Component()
-#     self.assertIsNotNone(comp)
-
-# @patch("cf.USE_DEFAULT", False)
-# def test_class_instantiate_no_input_use_default_false(self):
-#     """ Tests the creation of a class instance with no inputs when the global default flag is set to false"""
-#     with self.assertRaises(
-#         Exception,
-#         msg="Indicator should not be able to link if there isn't an indicator by that name",
-#     ):
-#         comp = Component()
-
-
-class TestLoad(unittest.TestCase):
+class TestLoad(TestPofBase, unittest.TestCase):
     def setUp(self):
+
+        # PofBase
+        self._class = Load
+        self._data_valid = [{"name": "name"}]
+        self._data_invalid_values = [{"name": 1234}]
+        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_complete = [{"name": "name"}]
 
         # Mock the pof object
         self.pof_obj = Mock()
@@ -298,6 +378,23 @@ class TestLoad(unittest.TestCase):
         self.assertEqual(load.obj[key_before_update], expected)
 
     # -------------------- Test update -----------------------------
+
+    def test_update(self):
+
+        # Arrange
+        data = self._data_complete[0]
+        instance_1 = self._class()
+        instance_2 = self._class.from_dict(data)
+
+        for var, val in data.items():
+            d = {}
+            d[var] = val
+
+            # Act
+            instance_1.update(d)
+
+        # Assert
+        self.assertEqual(instance_1, instance_2)
 
     def test_update_errors_caught_and_logged(self):
         """ check that an attriubte that doens't exist returns a Key Error"""
@@ -432,11 +529,11 @@ class TestLoad(unittest.TestCase):
 
         param_tests = [
             (
-                KeyError,
+                AttributeError,
                 {"invalid_attribute": "after_update"},
             ),
             (
-                KeyError,
+                AttributeError,
                 {"obj": {"invalid_attribute": "after_update"}},
             ),
             (

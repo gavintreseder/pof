@@ -31,8 +31,9 @@ class TestTaskCommon(TestPofBase):
         # Overide in all children classes
         # self._class
         # self._valid
-        self._data_invalid_types = [dict(invalid_input="invalid_input")]
+        # self._invalid_types
         self._data_invalid_values = []
+        # self._data_complete
 
 
 class TestTask(TestTaskCommon, unittest.TestCase):
@@ -40,39 +41,14 @@ class TestTask(TestTaskCommon, unittest.TestCase):
         super().setUp()
 
         self._class = Task
-        self._data_valid = dict(name="TaskTest", task_type="Task")
-        self._data_complete = copy.copy(fixtures.inspection_data["instant"])
-
-    # **************** test_update ***********************
-
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.replacement_data["on_condition"])
-        test_data_1["cost"] = 0
-        test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.replacement_data["on_condition"])
-
-        # Test all the options
-        t1 = Task.from_dict(test_data_1)
-        t2 = Task.from_dict(test_data_2)
-
-        t1.update_from_dict(
-            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}}
-        )
-
-        # self.assertEqual(t1.__dict__, t2.__dict__)
-        self.assertEqual(t1.cost, t2.cost)
-        self.assertEqual(t1.triggers, t2.triggers)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.replacement_data["on_condition"])
-
-        t = Task.from_dict(test_data)
-
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, t.update_from_dict, update)
+        self._data_valid = [dict(name="TaskTest", task_type="Task")]
+        self._data_invalid_types = [
+            dict(invalid_input="invalid_input", task_type="Task")
+        ]
+        self._data_complete = [
+            fixtures.complete["task_0"],
+            fixtures.complete["task_1"],
+        ]
 
 
 class TestScheduledTask(TestTaskCommon, unittest.TestCase):
@@ -84,7 +60,14 @@ class TestScheduledTask(TestTaskCommon, unittest.TestCase):
         super().setUp()
 
         self._class = ScheduledTask
-        self._data_valid = dict(name="ScheduledTaskTest", task_type="ScheduledTask")
+        self._data_valid = [{"name": "ScheduledTaskTest", "task_type": "ScheduledTask"}]
+        self._data_invalid_types = [
+            dict(invalid_input="invalid_input", task_type="ScheduledTask")
+        ]
+        self._data_complete = [
+            fixtures.complete["scheduled_task_0"],
+            fixtures.complete["scheduled_task_1"],
+        ]
 
     def test_sim_timeline(self):
         """Check the a scheduled task returns the correct time"""
@@ -134,38 +117,16 @@ class TestConditionTask(TestTaskCommon, unittest.TestCase):
 
         # TestTaskCommon Setup
         self._class = ConditionTask
-        self._data_valid = dict(name="TestInspection", task_type="ConditionTask")
+        self._data_valid = [dict(name="TestInspection", task_type="ConditionTask")]
+        self._data_invalid_types = [
+            {"invalid_input": "invalid_input", "task_type": "ConditionTask"}
+        ]
+        self._data_complete = [
+            fixtures.complete["condition_task_0"],
+            fixtures.complete["condition_task_1"],
+        ]
 
     # **************** test_load ***********************
-
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.replacement_data["on_condition"])
-        test_data_1["cost"] = 0
-        test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.replacement_data["on_condition"])
-
-        # Test all the options
-        t1 = ConditionTask.from_dict(test_data_1)
-        t2 = ConditionTask.from_dict(test_data_2)
-
-        t1.update_from_dict(
-            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}}
-        )
-
-        # self.assertEqual(t1.__dict__, t2.__dict__)
-        self.assertEqual(t1.cost, t2.cost)
-        self.assertEqual(t1.triggers, t2.triggers)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.replacement_data["on_condition"])
-
-        t = ConditionTask.from_dict(test_data)
-
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, t.update_from_dict, update)
 
 
 class TestInspection(TestTaskCommon, unittest.TestCase):
@@ -174,38 +135,16 @@ class TestInspection(TestTaskCommon, unittest.TestCase):
 
         # TestTaskCommon Setup
         self._class = Inspection
-        self._data_valid = dict(name="TestInspection", task_type="Inspection")
+        self._data_valid = [dict(name="TestInspection", task_type="Inspection")]
+        self._data_invalid_types = [
+            dict(invalid_input="invalid_input", task_type="Inspection")
+        ]
+        self._data_complete = [
+            fixtures.complete["inspection_0"],
+            fixtures.complete["inspection_1"],
+        ]
 
     # **************** test_update ***********************
-
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.replacement_data["on_condition"])
-        test_data_1["cost"] = 0
-        test_data_1["triggers"]["condition"]["fast_degrading"]["upper"] = 90
-        test_data_2 = copy.deepcopy(fixtures.replacement_data["on_condition"])
-
-        # Test all the options
-        t1 = ConditionTask.from_dict(test_data_1)
-        t2 = ConditionTask.from_dict(test_data_2)
-
-        t1.update_from_dict(
-            {"cost": 5000, "trigger": {"condition": {"fast_degrading": {"upper": 20}}}}
-        )
-
-        # self.assertEqual(t1.__dict__, t2.__dict__)
-        self.assertEqual(t1.cost, t2.cost)
-        self.assertEqual(t1.triggers, t2.triggers)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.inspection_data["instant"])
-
-        t = Inspection.from_dict(test_data)
-
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, t.update_from_dict, update)
 
 
 if __name__ == "__main__":

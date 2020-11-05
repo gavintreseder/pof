@@ -4,8 +4,6 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import dataclass, field
-from typing import Dict
 import collections
 import copy
 import logging
@@ -20,7 +18,6 @@ if __package__ is None or __package__ == "":
     import os
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 from pof.load import Load
 from pof.helper import str_to_dict
 from config import config
@@ -36,7 +33,6 @@ cf = config["Indicator"]
 # TODO move threshold down into condition indciator so indicator is purely bool
 
 
-@dataclass
 class Indicator(Load):
 
     """
@@ -53,35 +49,70 @@ class Indicator(Load):
 
     """
 
+    # Class Variables
     PF_CURVES = ["linear", "step"]
 
-    name: str = "indicator"
-    pf_curve: str = "step"
-    pf_interval: int = 0  # TODO change pf_interval to None?
-    pf_std: int = 0
-    perfect: bool = False
-    failed: bool = True
-    decreasing: bool = field(init=False)
+    def __init__(
+        self,
+        name: str = "indicator",
+        pf_curve: str = "step",
+        pf_interval: int = 0,
+        pf_std: int = 0,
+        perfect: bool = False,
+        failed: bool = True,
+        threshold_detection: int = None,
+        threshold_failure: int = None,
+        initial: int = None,
+        *args,
+        **kwargs,
+    ):
 
-    threshold_detection: int = None
-    threshold_failure: int = None
+        super().__init__(name=name, *args, **kwargs)
 
-    initial: int = None
+        self.pf_curve = pf_curve
+        self.pf_interval = pf_interval
+        self.pf_std = pf_std
 
-    _profile: Dict = field(init=False, repr=False)
-    _timeline: Dict = field(init=False, repr=False)
-    _timelines: Dict = field(init=False, repr=False)
+        self.perfect = perfect
+        self.failed = failed
+        self.decreasing = None
 
-    def __post_init__(self):
+        self.threshold_detection = threshold_detection
+        self.threshold_failure = threshold_failure
+        self.initial = initial
 
-        self.set_limits(perfect=self.perfect, failed=self.failed)
+        self.set_limits()
         self.set_threshold(
             detection=self.threshold_detection, failure=self.threshold_failure
         )
-        self.set_initial(initial=self.initial)
-        self.set_pf_curve(pf_curve=self.pf_curve)
-        self.set_pf_interval(pf_interval=self.pf_interval)
+
+        self._profile: dict()
+        self._timeline: dict()
+        self._timelines: dict()
         self.reset()
+
+    @classmethod
+    def factory(cls, pf_curve=None, indicator_type=None, **kwargs):
+
+        if indicator_type == "ConditionIndicator":
+            ind_class = ConditionIndicator
+
+        elif indicator_type == "PoleSafetyFactor":
+            ind_class = PoleSafetyFactor
+
+        elif pf_curve in ["linear", "step"]:
+            ind_class = ConditionIndicator
+
+        elif pf_curve in ["ssf_calc", "dsf_calc"]:
+            ind_class = PoleSafetyFactor
+
+        elif pf_curve is None and indicator_type is None:
+            ind_class = Indicator
+
+        else:
+            raise ValueError("Invalid Indicator Type")
+
+        return ind_class
 
     @classmethod
     def from_dict(cls, details=None):
@@ -90,20 +121,9 @@ class Indicator(Load):
         """
         if isinstance(details, dict):
             pf_curve = details.get("pf_curve", None)
-
-            if pf_curve in ["linear", "step"]:
-
-                ind = ConditionIndicator(**details)
-
-            elif pf_curve in ["ssf_calc", "dsf_calc"]:
-
-                ind = PoleSafetyFactor(**details)
-
-            elif pf_curve is None:
-                ind = Indicator(**details)
-
-            else:
-                raise ValueError("Invalid Indicator Type")
+            ind_type = details.get("indicator_type", None)
+            ind_class = cls.factory(pf_curve=pf_curve, indicator_type=ind_type)
+            ind = ind_class(**details)
 
         else:
             raise TypeError("Dictionary expected")
@@ -139,88 +159,92 @@ class Indicator(Load):
     def reset_to_perfect(self):
         None
 
-    def set_pf_curve(self, pf_curve):
+    @property
+    def pf_curve(self):
+        return self._pf_curve
+
+    @pf_curve.setter
+    def pf_curve(self, pf_curve=None):
         if pf_curve in self.PF_CURVES:
-            self.pf_curve = pf_curve
+            self._pf_curve = pf_curve
         else:
             raise ValueError("pf_curve must be from: %s" % (self.PF_CURVES))
 
-    def set_pf_interval(self, pf_interval=None):
+    @property
+    def pf_interval(self):
+        return self._pf_interval
+
+    @pf_interval.setter
+    def pf_interval(self, value):
 
         # TODO add robust testing around pf_interval non negative numbers etc
-        if pf_interval is None:
-            if self.pf_interval is None:
-                if cf.get("use_default"):
-                    logging.warning(
-                        "%s - %s - pf_interval set to DEFAULT %s",
-                        self.__class__.__name__,
-                        self.name,
-                        cf["PF_INTERVAL"],
-                    )
-                    self.pf_interval = cf["PF_INTERVAL"]
-                else:
-                    if False:  # TODO revist whether pf_interval is required
-                        raise ValueError(
-                            "%s - %s - pf_interval required"
-                            % (self.__class__.__name__, self.name)
-                        )
+        if value is None:
+            raise ValueError(
+                f"{self.__class__.__name__} - {self.name} - pf_interval required"
+            )
         else:
-            self.pf_interval = pf_interval
+            self._pf_interval = value
+
+    @property
+    def perfect(self):
+        return self._perfect
+
+    @perfect.setter
+    def perfect(self, value):
+        self._perfect = value
+        self.set_limits()
+
+    @property
+    def failed(self):
+        return self._failed
+
+    @failed.setter
+    def failed(self, value):
+        self._failed = value
+        self.set_limits()
 
     def set_limits(self, perfect=None, failed=None):
         # TODO Add test make sure these tests work for bool and int
 
-        if perfect is None:
-            if self.perfect is None:
-                if cf.get("use_default"):
-                    self.perfect = cf["PERFECT"]
-                else:
-                    raise ValueError(
-                        "%s - %s - perfect value required"
-                        % (self.__class__.__name__, self.name)
-                    )
-        else:
+        if perfect is not None:
             self.perfect = perfect
 
-        if failed is None:
-            if self.failed is None:
-                if cf.get("use_default"):
-                    self.failed = cf["FAILED"]
-                else:
-                    raise ValueError(
-                        "%s - %s - failed value required"
-                        % (self.__class__.__name__, self.name)
-                    )
-        else:
-            self.perfect = perfect
+        if failed is not None:
+            self.failed = failed
 
         # Set perfect
-        if self.perfect > self.failed:
-            self.decreasing = True
-        else:
-            self.decreasing = False
+        if hasattr(self, "_perfect") and hasattr(self, "_failed"):
+            if self._perfect > self._failed:
+                self.decreasing = True
+            else:
+                self.decreasing = False
 
-        self.upper = abs(self.perfect - self.failed)
+            self.upper = abs(self._perfect - self._failed)
 
-    def set_initial(self, initial=None):
+    @property
+    def initial(self):
+        return self._initial
+
+    @initial.setter
+    def initial(self, initial=None):
         """ Set the intial """
         # TODO add checks to make sure it is a valid value
 
         if initial is None:
-            self.initial = self.perfect
+            self._initial = self._perfect
         else:
-            self.initial = initial
+            self._initial = initial
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
             if self.threshold_detection is None:
-                self.threshold_detection = self.perfect
+                self.threshold_detection = self._perfect
             else:
                 self.threshold_detection = detection
 
         if failure is None:
             if self.threshold_failure is None:
-                self.threshold_failure = self.failed
+                self.threshold_failure = self._failed
             else:
                 self.threshold_failure = failure
 
@@ -231,15 +255,15 @@ class Indicator(Load):
     def agg_timeline(self):
 
         if self.decreasing:
-            timeline = self.perfect - (
-                self.perfect - np.array(list(self._timeline.values()))
+            timeline = self._perfect - (
+                self._perfect - np.array(list(self._timeline.values()))
             ).sum(axis=0)
-            timeline[timeline < self.failed] = self.failed
+            timeline[timeline < self._failed] = self._failed
         else:
-            timeline = self.perfect + (
-                np.array(list(self._timeline.values())) - self.perfect
+            timeline = self._perfect + (
+                np.array(list(self._timeline.values())) - self._perfect
             ).sum(axis=0)
-            timeline[timeline > self.failed] = self.failed
+            timeline[timeline > self._failed] = self._failed
         return timeline
 
     def agg_timelines(self):
@@ -249,15 +273,15 @@ class Indicator(Load):
         agg_timeline = []
         for timeline in self._timelines.values():
             if self.decreasing:
-                etl = self.perfect - (
-                    self.perfect - np.array(list(timeline.values()))
+                etl = self._perfect - (
+                    self._perfect - np.array(list(timeline.values()))
                 ).sum(axis=0)
-                etl[etl < self.failed] = self.failed
+                etl[etl < self._failed] = self._failed
             else:
-                etl = self.perfect + (
-                    np.array(list(timeline.values())) - self.perfect
+                etl = self._perfect + (
+                    np.array(list(timeline.values())) - self._perfect
                 ).sum(axis=0)
-                etl[etl > self.failed] = self.failed
+                etl[etl > self._failed] = self._failed
 
             agg_timeline.append(etl)
 
@@ -342,11 +366,11 @@ class Indicator(Load):
         lower[no_variance] = mean[no_variance]
 
         if self.decreasing:
-            upper[upper > self.perfect] = self.perfect
-            lower[lower < self.failed] = self.failed
+            upper[upper > self._perfect] = self._perfect
+            lower[lower < self._failed] = self._failed
         else:
-            upper[upper > self.failed] = self.failed
-            lower[lower < self.perfect] = self.perfect
+            upper[upper > self._failed] = self._failed
+            lower[lower < self._perfect] = self._perfect
 
         expected = dict(
             lower=lower,
@@ -360,24 +384,19 @@ class Indicator(Load):
         self._timelines[idx] = copy.deepcopy(self._timeline)
 
 
-@dataclass
 class ConditionIndicator(Indicator):
 
     # Class Variables
     PF_CURVES = ["linear", "step"]
 
-    name: str = "ConditionIndicator"
-
-    def __post_init__(self):
-        super().__post_init__()
+    def __init__(self, name: str = "ConditionIndicator", **kwargs):
+        super().__init__(name=name, **kwargs)
 
         self.pf_curve_params = NotImplemented  # TODO for complex condition types
 
         # Current accumulation
         self._accumulated = dict()
-        self._set_accumulated(
-            accumulated=abs(self.perfect - self.initial), name="initial"
-        )
+        self._set_accumulated(accumulated=abs(self._perfect - self._initial))
 
     # ********************** Timeline methods ******************************
 
@@ -465,10 +484,10 @@ class ConditionIndicator(Indicator):
 
         # Use the condition parameters if unique parameters aren't provided TODO maybe remove/
         if perfect is None:
-            perfect = self.perfect
+            perfect = self._perfect
 
         if failed is None:
-            failed = self.failed
+            failed = self._failed
 
         if pf_interval is None:
             pf_interval = self.pf_interval
@@ -479,7 +498,7 @@ class ConditionIndicator(Indicator):
         # Get the time to be investitaged
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
-        if self.pf_curve == "linear":
+        if self._pf_curve == "linear":
             # Prevent zero division error
             if pf_interval <= 0:
                 m = 0
@@ -488,13 +507,13 @@ class ConditionIndicator(Indicator):
             b = perfect
             y = m * x + b
 
-        elif self.pf_curve == "step":
+        elif self._pf_curve == "step":
             if pf_interval == 0:
-                y = np.full(1, self.failed)
+                y = np.full(1, self._failed)
             else:
-                y = np.full(pf_interval, self.perfect)
+                y = np.full(pf_interval, self._perfect)
 
-        elif self.pf_curve == "exponential" or self.pf_curve == "exp":
+        elif self._pf_curve == "exponential" or self._pf_curve == "exp":
             NotImplemented
 
         self._profile[pf_interval] = y
@@ -525,7 +544,7 @@ class ConditionIndicator(Indicator):
         accumulated = self.get_accumulated(name=name)
         if accumulated > 0:
             profile = profile - accumulated
-            profile[profile < self.failed] = self.failed
+            profile[profile < self._failed] = self._failed
 
         # Fill the start with the current condtiion
         if t_start < 0:
@@ -534,7 +553,7 @@ class ConditionIndicator(Indicator):
         # Fill the end with the failed condition
         n_after_failure = t_stop - t_start - len(profile) + 1
         if n_after_failure > 0:
-            profile = np.append(profile, np.full(max(0, n_after_failure), self.failed))
+            profile = np.append(profile, np.full(max(0, n_after_failure), self._failed))
 
         return profile
 
@@ -573,9 +592,9 @@ class ConditionIndicator(Indicator):
 
     def get_condition(self):
         if self.decreasing:
-            return self.perfect - self.get_accumulated()
+            return self._perfect - self.get_accumulated()
         else:
-            return self.perfect + self.get_accumulated()
+            return self._perfect + self.get_accumulated()
 
     def get_timeline(self, name=None):
         return self._timeline[name]
@@ -584,7 +603,9 @@ class ConditionIndicator(Indicator):
         return self._timelines
 
     def get_accumulated(self, name=None):  # TODO make this work for arrays of names
-
+        """
+        Returns the accumulated degradation
+        """
         if name is None:
             # Get all the total acumulated condition
             accumulated = sum(self._accumulated.values())
@@ -620,11 +641,11 @@ class ConditionIndicator(Indicator):
 
         if self.decreasing:
             accumulated = min(
-                max(0, self.perfect - condition), self.perfect - self.failed
+                max(0, self._perfect - condition), self._perfect - self._failed
             )
         else:
             accumulated = min(
-                max(0, condition - self.perfect), self.failed - self.perfect
+                max(0, condition - self._perfect), self._failed - self._perfect
             )
 
         self._set_accumulated(accumulated=accumulated, name=name)
@@ -635,12 +656,11 @@ class ConditionIndicator(Indicator):
         """
         # check accumulated will not exceed the maximum allowable condition
         current = self.get_accumulated()
-        # TODO is this needed - self.get_accumulated(name=name)
 
         # max accumulation - current - initial
-        self._accumulated[name] = min(
+        self._accumulated[name] = self.get_accumulated(name=name) + min(
             accumulated,
-            abs(self.perfect - self.failed) - current,
+            abs(self._perfect - self._failed) - current,
         )
 
     def _reset_accumulated(self, accumulated=0, name=None, permanent=False):
@@ -664,8 +684,7 @@ class ConditionIndicator(Indicator):
 
     def reset_for_next_sim(self, name=None):
         self._reset_accumulated(
-            accumulated=abs(self.perfect - self.initial),
-            name="initial",
+            accumulated=abs(self._perfect - self._initial),
             permanent=False,
         )
         self._timeline = dict()
@@ -681,7 +700,7 @@ class ConditionIndicator(Indicator):
         # Error with time reset, different method required.
 
         if method == "reduction_factor":
-            # accumulated = (abs(self.perfect - self.get_accumulated())) * (1 - target)
+            # accumulated = (abs(self._perfect - self.get_accumulated())) * (1 - target)
             accumulated = self.get_accumulated() * (1 - target)
 
         elif method == "reverse":
@@ -699,9 +718,9 @@ class ConditionIndicator(Indicator):
         elif axis == "condition":
 
             """if self.decreasing:
-                accumulated = min(max(self.failed, accumulated), self.perfect)
+                accumulated = min(max(self._failed, accumulated), self._perfect)
             else:
-                accumulated = max(min(self.failed, accumulated), self.perfect)"""
+                accumulated = max(min(self._failed, accumulated), self._perfect)"""
 
             self._reset_accumulated(accumulated, permanent=permanent)
 
@@ -717,15 +736,15 @@ class ConditionIndicator(Indicator):
 # TODO overload get method so the None key isnt' needed for _timeline
 
 
-@dataclass
 class PoleSafetyFactor(Indicator):
 
     # Class Variables
     PF_CURVES = ["ssf_calc", "dsf_calc"]
 
-    failed: int = 1
-    decreasing: int = True
-    component = None
+    def __init__(
+        self, failed: int = 1, decreasing: bool = True, component=None, *args, **kwargs
+    ):
+        super().__init__(self, *args, **kwargs)
 
     def set_t_condition(self, *args, **kwargs):
         """No actions required"""

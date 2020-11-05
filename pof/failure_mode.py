@@ -40,6 +40,7 @@ from pof.task import (
 )
 import pof.demo as demo
 from pof.load import Load
+from pof.decorators import check_arg_positive
 
 
 # TODO Use condition pf to change indicator
@@ -53,7 +54,6 @@ cf = config["FailureMode"]
 seed(1)
 
 
-@dataclass
 class FailureModeData(Load):
     """
     A class that contains the data for the FailureMode object.
@@ -116,6 +116,7 @@ class FailureMode(Load):
     # *************** Property Methods *************
     # #TODO convert any get/set pairs to properties
 
+    # Class Variables
     PF_CURVES = ["linear", "step"]
     REQUIRED_STATES = ["initiation", "detection", "failure"]
 
@@ -132,7 +133,10 @@ class FailureMode(Load):
         conditions: Dict = None,
         states: Dict = None,
         tasks: Dict = None,
+        **kwargs
     ):
+
+        super().__init__(**kwargs)
 
         self.dists = dict()
         self.indicators = dict()
@@ -142,8 +146,6 @@ class FailureMode(Load):
         self.init_states = dict()
         self.states = dict()
 
-        # TODO finish all the @setters to check for valid input and handle defaults
-        self.name = name
         self.active = active
         self.pf_curve = pf_curve
         self.pf_interval = pf_interval
@@ -161,17 +163,6 @@ class FailureMode(Load):
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        if isinstance(name, str):
-            self._name = name
-        else:
-            raise TypeError("Name must be of type str %s" % (name))
 
     @property
     def pf_curve(self):
@@ -194,20 +185,11 @@ class FailureMode(Load):
         return self._pf_interval
 
     @pf_interval.setter
+    @check_arg_positive('value')
     def pf_interval(self, value):
-
-        try:
-            if value >= 0:
-                self._pf_interval = value
-                if "untreated" in self.dists:
-                    self._set_init()
-            else:
-                raise ValueError(
-                    "%s (%s) - pf_interval must be greater than 0"
-                    % (self.__class__.__name__, self.name)
-                )
-        except:
-            raise
+        self._pf_interval = value
+        if "untreated" in self.dists:
+            self._set_init()
 
     @property
     def untreated(self):
@@ -247,11 +229,15 @@ class FailureMode(Load):
         # TODO Make this work for different pf_intervals for different conditions
 
         if bool(var):
-            self.conditions = var
+            if "name" in var:
+                self.conditions = {var["name"]: var}
+            else:
+                self.conditions = var
             # Create an indicator for any conditions not in the indicator list
-            for cond_name in var:
+
+            for cond_name, condition in self.conditions.items():
                 if cond_name not in self.indicators:
-                    indicator = ConditionIndicator.load(var[cond_name])
+                    indicator = ConditionIndicator.load(condition)
                     self.set_indicators(indicator)
         else:
             # Create a simple indicator
@@ -262,7 +248,7 @@ class FailureMode(Load):
                 pf_interval=0,
                 pf_std=0,
                 perfect=False,
-                failed=False,
+                failed=True,
             )
             self.conditions = {self.name: {}}
             self.set_indicators(indicator)
@@ -1054,7 +1040,6 @@ class FailureMode(Load):
     def get_objects(self, prefix="", sep="-"):
 
         # Failure mode object
-        prefix = prefix
         objects = [prefix + self.name]
 
         # Tasks objects

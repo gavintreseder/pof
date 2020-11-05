@@ -34,9 +34,10 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
         # TestPofBase Setup
         self._class = Component
-        self._data_valid = dict(name="TestComponent")
+        self._data_valid = [dict(name="TestComponent")]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
         self._data_invalid_values = []
+        self._data_complete = [fixtures.complete['component_0'], fixtures.complete['component_0']]
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)

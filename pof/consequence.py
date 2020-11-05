@@ -1,27 +1,10 @@
+from pof.load import Load
 
 
-class Consequence:
-    def __init__(self, risk_cost_total = 50000):
+class Consequence(Load):
+    def __init__(self, risk_cost_total=50000):
 
         self.risk_cost_total = risk_cost_total
-
-    @classmethod
-    def from_dict(cls, details=None):
-        try:
-            csq = cls(**details)
-        except:
-            print("Error loading Consequence data from dictionary")
-        return csq
-
-    @classmethod
-    def load(cls, details=None, *args, **kwargs):
-        try:
-            csq = cls.from_dict(details)
-        except:
-            csq = cls()
-            print("Error loading Consequence data")
-
-        return csq
 
     def _load(self, *args, **kwargs):
 

@@ -34,10 +34,16 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         # TestInstantiate
         self._class = ConditionIndicator
 
-        # TestLoadFromdict
-        self._data_valid = dict(name="TestConditionIndicator", pf_curve="step")
+        # TestPofBase
+        self._data_valid = [dict(name="TestConditionIndicator", pf_curve="step")]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
-        self._data_invalid_types = [{"invalid_type": "invalid_type"}]
+        self._data_invalid_types = [
+            {"invalid_type": "invalid_type", "indicator_type": "ConditionIndicator"}
+        ]
+        self._data_complete = [
+            fixtures.complete["condition_indicator_0"],
+            fixtures.complete["condition_indicator_1"],
+        ]
 
         cond_data = demo.condition_data["instant"]
         self.cond = ConditionIndicator.load(cond_data)
@@ -507,7 +513,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
                     ind = ConditionIndicator(
                         perfect=perfect, failed=failed, pf_curve=pf_curve
                     )
-                    ind.set_initial(initial)
+                    ind.initial = initial
                     expected = abs(perfect - initial)
 
                     # Act
@@ -712,29 +718,6 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
 
     def test_accumulate_time(self):
         self.assertEqual(False, False)
-
-    def test_update(self):
-
-        test_data_1 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
-        test_data_1["name"] = "FD"
-        test_data_1["pf_std"] = 0.25
-        test_data_2 = copy.deepcopy(fixtures.condition_data["fast_degrading"])
-
-        c1 = ConditionIndicator.from_dict(test_data_1)
-        c2 = ConditionIndicator.from_dict(test_data_2)
-
-        c1.update({"name": "fast_degrading", "pf_std": 0.5})
-
-        self.assertEqual(c1, c2)
-
-    def test_update_error(self):
-
-        test_data = copy.deepcopy(fixtures.condition_data["fast_degrading"])
-
-        c = ConditionIndicator.from_dict(test_data)
-        update = {"alpha": 10, "beta": 5}
-
-        self.assertRaises(KeyError, c.update_from_dict, update)
 
     def test_agg_timelines_no_cause(self):
         """

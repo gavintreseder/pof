@@ -5,14 +5,14 @@
         gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-
-# from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections.abc import Iterable
 import logging
 import inspect
+from typing import Optional
+from flatten_dict import flatten, unflatten
 
-from dataclasses import fields
-
+# from dataclassy import dataclass
 from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
@@ -49,17 +49,44 @@ def get_signature(obj):
     return signatures
 
 
-@dataclass
+def valid_signature(obj, inputs):
+    """ Returns whether an object can be created with the inputs provided based on the signature"""
+
+    factory = getattr(obj, "factory", None)
+    if callable(factory):
+        obj = obj.factory(**inputs)
+
+    signature = get_signature(obj)
+    valid = [attr in signature for attr in inputs]
+
+    return all(valid)
+
+
+# @dataclass
 class Load:
     """
     A class with methods for loading data that
     """
 
-    name: str = field_property(default="Load")
-    # def __init__(self, name):
-    #     self._name = name
+    # name: str = field_property("load")
 
-    @name.getter
+    def __init__(self, name="load", *args, **kwargs):
+
+        self.name = name
+
+        if args or kwargs:
+            msg = f"Invalid Data {args} - {kwargs}"
+            if cf.get("handle_invalid_data", False):
+                logging.warning(msg)
+            else:
+                raise TypeError(msg)
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__dict__ == other.__dict__
+        return False
+
+    @property
     def name(self) -> str:
         return self._name
 
@@ -73,7 +100,7 @@ class Load:
         elif value is None:
             self._name = None
         else:
-            raise TypeError("name must be a string")
+            raise ValueError("name must be a string")
 
     @classmethod
     def load(cls, details=None):
@@ -81,17 +108,7 @@ class Load:
         Loads the data with extra error checking and default logic
         """
         try:
-            if details is None:
-                instance = cls.from_dict(details)
-            else:
-                if cf.get("handle_invalid_data", False):
-                    constructor = get_signature(cls)
-                    stripped_details = {
-                        k: v for k, v in details.items() if k in list(constructor)
-                    }
-                    instance = cls.from_dict(stripped_details)
-                else:
-                    instance = cls.from_dict(details)
+            instance = cls.from_dict(details)
 
         except (ValueError, TypeError) as error:
             logging.warning(error)
@@ -115,6 +132,10 @@ class Load:
 
         return instance
 
+    @classmethod
+    def demo(cls):
+        return cls("Not Implemented")
+
     def set_obj(self, attr, d_type, value):
         """
 
@@ -137,7 +158,8 @@ class Load:
             elif isinstance(value, Iterable):
 
                 # Create an object from the dict
-                if all([hasattr(d_type, attr) for attr in value]):
+                # TODO replace with get_signature
+                if valid_signature(obj=d_type, inputs=value):
                     new_object = d_type.from_dict(value)
                     getattr(self, attr)[new_object.name] = new_object
 
@@ -178,11 +200,11 @@ class Load:
 
             else:
                 logging.warning(
-                    'ERROR: Cannot update "%s" from string or dict',
+                    'ERROR: Can only update "%s" from string or dict',
                     self.__class__.__name__,
                 )
-        except KeyError as error:
-            logging.warning(error)
+        except (KeyError, AttributeError, ValueError) as error:
+            logging.warning("Update Failed. {error}")
 
     def update_from_str(self, id_str, value, sep="-"):
         """
@@ -191,7 +213,7 @@ class Load:
         try:
             id_str = id_str.split(self.name + sep, 1)[1]
         except:
-            id_str = id_str
+            pass
 
         dict_data = str_to_dict(id_str, value, sep)
 
@@ -215,14 +237,14 @@ class Load:
 
             # Check it is an attribute
             if hasattr(self, attr):
-                var_to_update = getattr(self, attr)
+                attr_to_update = getattr(self, attr)
 
                 # Check if the object has a load method
-                if isinstance(var_to_update, Load):
-                    var_to_update.update_from_dict(detail)
+                if isinstance(attr_to_update, Load):
+                    attr_to_update.update_from_dict(detail)
 
                 # Check if it is a dictionary
-                elif isinstance(var_to_update, dict):
+                elif isinstance(attr_to_update, dict):
 
                     for key, val in detail.items():
 
@@ -235,16 +257,29 @@ class Load:
                         elif var_to_update is not None:
                             getattr(self, attr)[key] = val
 
+                        # Check if it is dictionaries
+                        elif isinstance(val, dict):
+                            flat_detail = flatten(detail)
+                            flat_attr = flatten(attr_to_update)
+
+                            missing = set(flat_detail).difference(set(flat_attr))
+                            if not missing:
+                                flat_attr.update(flat_detail)
+                                attr_to_update = unflatten(flat_attr)
+                            else:
+                                raise KeyError(
+                                    f"{self.__class__.__name__} - {self.name} - {attr} does not have {missing}"
+                                )
+
                         else:
                             raise KeyError(
-                                "%s - %s - %s - %s - does not have the value - %s"
-                                % (self.__class__.__name__, self.name, attr, key, val),
+                                f"{self.__class__.__name__} - {self.name} - {attr} cannot be updated with the value {key} {val}"
                             )
                 else:
                     setattr(self, attr, detail)
 
             else:
-                raise KeyError(
+                raise AttributeError(
                     "%s - %s - does not have the attribute - %s"
                     % (self.__class__.__name__, self.name, attr),
                 )
