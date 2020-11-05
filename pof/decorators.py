@@ -7,8 +7,6 @@ import logging
 import inspect
 
 
-
-
 def check_arg_type(func):
     """
     Checks the args match the input type annotations
@@ -72,52 +70,6 @@ def coerce_arg_type(func):
 
     return wrapper
 
-#TODO Illyse
-
-#tips
-
-# Step 1 - trial it in a notebook
-
-def func(value):
-    
-    #do somethign wtih value
-
-    return value
-
-def check_is_negative(func):
-
-    def wrapper(*args, **kwargs):
-
-        # check *args and **wargs are right
-
-        result = func(*args, **kwargs)
-
-        # Chck the result is right
-
-    return wrapper
-
-#inspect.signature
-# inspect.getfullargspec
-
-def wrapper(self, value):
-    if value < 0:
-        raise ValueError
-    return func(self, value)
-
-
-@check_arg_positive('value') #params
-def pf_interval(self, value)
-def pf_interval(self, pf_interval)
-
-
-def pf_interval(value)
-def pf_interval(self, value)
-defpf_interval(self, other_dist, value=-10)
-
-pf_interval() # Uses the default
-pf_interval(-10, -10) # args
-pf_interval(value=-10) # kwarg
-
 
 def check_arg_positive(*params):
     """
@@ -147,13 +99,12 @@ def check_arg_positive(*params):
         def wrapper(*args, **kwargs):
             for param in params:
 
-                
-
+                # Get the value using one of 3 methods
                 # Check kwargs - Is the param in the kwarg
                 # Check args - is the param in the arg
                 # Check default - is the param a default value
-                param_idx = inspect.getfullargspec(func)[0].index(param)
 
+                param_idx = inspect.getfullargspec(func)[0].index(param)
                 value = args[param_idx]
 
                 # Raise an error if it is negative
@@ -165,10 +116,6 @@ def check_arg_positive(*params):
         return wrapper
 
     return inner
-
-
-
-
 
 
 # Options
@@ -195,7 +142,6 @@ def validate_pf_curve(func):
     """ Validates a pf_curve"""
 
     @wraps(func)
-
     def wrapper(self, value):
         return func(*args, **kwagrs)
         if value in self.PF_CURVES:
@@ -208,7 +154,7 @@ def validate_pf_curve(func):
     return wrapper
 
 
-def deafaults(func):
+def defaults(func):
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
@@ -252,6 +198,9 @@ def exception_handler(*exceptions):
 if __name__ == "__main__":
     import doctest
 
+    doctest.testmod(optionflags=doctest.ELLIPSIS)  # extraglobs={"dist": Distribution()}
+
+    # Some quick testing to delete once it works for all
     @check_arg_positive("value")
     def func(other=-2, value=20):
         return value
@@ -259,6 +208,4 @@ if __name__ == "__main__":
     # value passed
     func(value=-15)
     func()
-
-    doctest.testmod(optionflags=doctest.ELLIPSIS)  # extraglobs={"dist": Distribution()}
     print("Validators - Ok")
