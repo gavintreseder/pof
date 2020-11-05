@@ -1,5 +1,5 @@
 """
-Validators that can be used to decorate pof class methods
+Decoarators that can be used to validate pof class methods
 """
 
 from functools import wraps
@@ -9,34 +9,35 @@ import inspect
 
 def check_arg_type(func):
     """
-    Checks the args match the input
+    Checks the args match the input type annotations
 
     Usage:
     >>> @check_arg_type
-    ... def func(x: int, y: str):
-    ...     return (x, y)
+    ... def func(x: int, y: str, z):
+    ...     return (x, y, z)
 
-    >>> func(10.0, 2)
+    >>> func(3.0, 2, 1)
     Traceback (most recent call last):
         ...
-    TypeError: 10.0 is not of type <class 'int'>
+    TypeError: 3.0 is not of type <class 'int'>
 
-    >>> func(10, 2)
+    >>> func(3, 2, 1)
     Traceback (most recent call last):
         ...
     TypeError: 2 is not of type <class 'str'>
 
-    >>> func(10, '2')
-    (10, '2')
+    >>> func(3, '2', 1)
+    (3, '2', 1)
     """
 
     @wraps(func)
     def wrapper(*args):
         for index, arg in enumerate(inspect.getfullargspec(func)[0]):
-            if not isinstance(args[index], func.__annotations__[arg]):
-                raise TypeError(
-                    f"{args[index]} is not of type {func.__annotations__[arg]}"
-                )
+            if arg in func.__annotations__:
+                if not isinstance(args[index], func.__annotations__[arg]):
+                    raise TypeError(
+                        f"{args[index]} is not of type {func.__annotations__[arg]}"
+                    )
 
         return func(*args)
 
@@ -45,35 +46,70 @@ def check_arg_type(func):
 
 def coerce_arg_type(func):
     """
-    Checks the args match the input
+    Coerces the args to match the type annotations
 
     Usage:
-    >>> @check_arg_type
-    ... def func(x: int, y: str):
-    ...     return (x, y)
+    >>> @coerce_arg_type
+    ... def func(x: int, y: str, z):
+    ...     return (x, y, z)
 
-    >>> func(10.0, 2)
-    Traceback (most recent call last):
-        ...
-    TypeError: 10.0 is not of type <class 'int'>
+    >>> func(3.0, 2, 1)
+    (3, '2', 1)
 
-    >>> func(10, 2)
-    Traceback (most recent call last):
-        ...
-    TypeError: 2 is not of type <class 'str'>
-
-    >>> func(10, '2')
-    (10, '2')
+    >>> func(3, '2', 1)
+    (3, '2', 1)
     """
 
-    def _f(*args):
-        new_args = []
+    @wraps(func)
+    def wrapper(*args):
+        args = list(args)
         for index, arg in enumerate(inspect.getfullargspec(func)[0]):
-            new_args.append(func.__annotations__[arg](args[index]))
-        return func(*new_args)
+            if arg in func.__annotations__:
+                args[index] = func.__annotations__[arg](args[index])
+        return func(*tuple(args))
 
-    _f.__doc__ = func.__doc__
-    return _f
+    return wrapper
+
+
+def check_arg_positive(*params):
+    """
+    Checks the arg value is positive
+
+    Usage:
+    >>> @check_arg_positive('value')
+    ... def func(value=-10, other=-6):
+    ...     return value
+
+    >>> func(10)
+    10
+
+    >>> func()
+    Traceback (most recent call last):
+        ...
+    ValueError: -10 is not positive
+
+    >>> func(-8)
+    Traceback (most recent call last):
+        ...
+    ValueError: -8 is not positive
+    """
+
+    # TODO rewrite the wrapper so that it wokrs for classes and methods
+
+    def inner(func):
+        @wraps(func)
+        def wrapper(*args):
+            for param in params:
+                param_idx = inspect.getfullargspec(func)[0].index(param)
+
+                if args[param_idx] < 0:
+                    raise ValueError(f"{args[param_idx]} is not positive")
+
+            func(*args)
+
+        return wrapper
+
+    return inner
 
 
 # Options
@@ -85,30 +121,16 @@ def coerce_arg_type(func):
 # Log error and use default
 
 
-def check_positive(func):
-    """
-    Checks the arg is positive
-
-    Usage:
-    >>> @check_positive
-    ... def func(value):
-    ...     return value
-
-    >>> func(10)
-    10
-
-    >>> func(-8)
-    Traceback (most recent call last):
-        ...
-    ValueError: -8 is not positive
-    """
+def check_in_list(func, valid_list):
+    """ Validates a pf_curve"""
 
     @wraps(func)
     def wrapper(value, *args, **kwargs):
-        if value >= 0:
+
+        if value in valid_list:
             return value
         else:
-            raise ValueError(f"{value} is not positive")
+            raise ValueError(f"pf_curve must be from {valid_list}")
 
     return wrapper
 

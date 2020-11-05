@@ -40,6 +40,7 @@ from pof.task import (
 )
 import pof.demo as demo
 from pof.load import Load
+from pof.decorators import check_arg_positive
 
 
 # TODO Use condition pf to change indicator
@@ -184,20 +185,11 @@ class FailureMode(Load):
         return self._pf_interval
 
     @pf_interval.setter
+    @check_arg_positive('value')
     def pf_interval(self, value):
-
-        try:
-            if value >= 0:
-                self._pf_interval = value
-                if "untreated" in self.dists:
-                    self._set_init()
-            else:
-                raise ValueError(
-                    "%s (%s) - pf_interval must be greater than 0"
-                    % (self.__class__.__name__, self.name)
-                )
-        except:
-            raise
+        self._pf_interval = value
+        if "untreated" in self.dists:
+            self._set_init()
 
     @property
     def untreated(self):
