@@ -1,51 +1,70 @@
+import logging
+from datetime import date
+
 import pandas as pd
 import scipy.stats as ss
 import numpy as np
-import datetime
-from datetime import date
-import math
-import logging
 import dask.array as da
 import dask.dataframe as dd
 
-# import dask.distributed
-# from distributed import Client
-
-# client = Client(processes=False)
-
 
 class FleetData:
-
     """
     A class that contains all the fleet data in the structured format that we want to use
     """
 
-    # Primary Key -> Asset ID
-    # Asset IDs
-
-    def __init__(self, asset_info=None, condition=None, csq_info=None):
+    def __init__(
+        self, asset_info=None, condition=None, csq_info=None, pandas_or_dask="dask"
+    ):
 
         self.asset_info = asset_info
         self.condition = condition
         self.csq_info = csq_info
 
-        # Humanise Names
+        self.pandas_or_dask = pandas_or_dask
 
-        # Data Validation
-        self._validate_data()
+        if self.pandas_or_dask == "pandas":
+            # Data Validation
+            self._validate_data_pandas()
 
-        # Data Preparation
-        self._calculate_age()
+            # Data Preparation
+            self._calculate_age_pandas()
 
-        self.field_types = None
-        self._field_types()
+            self.field_types = None
+            self._field_types()
 
-        # Data Summaries
-        self.condition_summary = None
-        self._summarise_condition()
+            # Data Summaries
+            self.asset_summary = None
+            self._summarise_asset_pandas()
 
-        self.csq_summary = None
-        self._summarise_csq()
+            self.condition_summary = None
+            self._summarise_condition_pandas()
+
+            self.csq_summary = None
+            self._summarise_csq_pandas()
+
+        else:
+
+            # Data Validation
+            self._validate_data()
+
+            # Data Preparation
+            self._calculate_age()
+
+            self.field_types = None
+            self._field_types()
+
+            # Data Summaries
+            self.asset_summary = None
+            self._summarise_asset()
+
+            self.condition_summary = None
+            self._summarise_condition()
+
+            self.csq_summary = None
+            self._summarise_csq()
+
+        logging.debug("FleetData object created")
 
     # ************** Validation Functions *****************
     def _validate_data(self):
@@ -53,50 +72,104 @@ class FleetData:
         Checks the quality of data and logs a percentage match of asset ids across data sources.
         """
 
-        asset_info_assets = self.asset_info["asset_id"].unique().reset_index()
-        condition_assets = self.condition["asset_id"].unique().reset_index()
-        csq_info_assets = self.csq_info["asset_id"].unique().reset_index()
+        logging.debug("Validating data")
+
+        asset_info_assets = self.asset_info["asset_id"].drop_duplicates().reset_index()
+        condition_assets = self.condition["asset_id"].drop_duplicates().reset_index()
+        csq_info_assets = self.csq_info["asset_id"].drop_duplicates().reset_index()
+
+        match_cond = asset_info_assets.merge(
+            condition_assets, on="asset_id"
+        ).index.size.compute()
+        union_cond = asset_info_assets.merge(
+            condition_assets, how="outer", on="asset_id"
+        ).index.size.compute()
+
+        asset_condition_match = match_cond / union_cond
+
+        match_csq = asset_info_assets.merge(
+            csq_info_assets, on="asset_id"
+        ).index.size.compute()
+        union_csq = asset_info_assets.merge(
+            csq_info_assets, how="outer", on="asset_id"
+        ).index.size.compute()
+
+        asset_csq_match = match_csq / union_csq
+
+        logging.info(
+            f"{asset_condition_match:.2%} asset ids match in asset info and condition. {asset_csq_match:.2%} asset ids match in asset info and consequence."
+        )
+        logging.debug("Data validated")
+
+    def _validate_data_pandas(self):
+        """
+        Checks the quality of data and logs a percentage match of asset ids across data sources.
+        """
+
+        logging.debug("Validating data")
+
+        asset_info_assets = self.asset_info["asset_id"].drop_duplicates().reset_index()
+        condition_assets = self.condition["asset_id"].drop_duplicates().reset_index()
+        csq_info_assets = self.csq_info["asset_id"].drop_duplicates().reset_index()
 
         match_cond = asset_info_assets.merge(condition_assets, on="asset_id").index.size
         union_cond = asset_info_assets.merge(
             condition_assets, how="outer", on="asset_id"
         ).index.size
 
-        asset_condition_match = (match_cond / union_cond) * 100
+        asset_condition_match = match_cond / union_cond
 
         match_csq = asset_info_assets.merge(csq_info_assets, on="asset_id").index.size
         union_csq = asset_info_assets.merge(
             csq_info_assets, how="outer", on="asset_id"
         ).index.size
 
-        asset_csq_match = (match_csq / union_csq) * 100
+        asset_csq_match = match_csq / union_csq
 
         logging.info(
-            "%s percent asset ids match in asset info and condition. %s percent asset ids match in asset info and consequence.",
-            asset_condition_match,
-            asset_csq_match,
+            f"{asset_condition_match:.2%} asset ids match in asset info and condition. {asset_csq_match:.2%} asset ids match in asset info and consequence."
         )
-        print("data validated")
+        logging.debug("Data validated")
 
     # ************** Preparation Functions *****************
     def _calculate_age(self):
         """
         Turns installation date into an age.
         """
+        logging.debug("Converting date to age")
 
         today = date.today()
         self.asset_info["age"] = self.asset_info["installation_date"].apply(
             lambda x: today.year
             - x.year
-            - ((today.month, today.day) < (x.month, x.day))
+            - ((today.month, today.day) < (x.month, x.day)),
+            meta=("installation_date", "datetime64[ns]"),
         )
-        print("age calculated")
+
+        logging.debug("Date converted")
+
+    def _calculate_age_pandas(self):
+        """
+        Turns installation date into an age.
+        """
+        logging.debug("Converting date to age")
+
+        today = date.today()
+
+        self.asset_info["age"] = self.asset_info["installation_date"].apply(
+            lambda x: today.year
+            - x.year
+            - ((today.month, today.day) < (x.month, x.day)),
+        )
+        logging.debug("Date converted")
 
     def _field_types(self, threshold=5):
         """
-        Returns data types for columns in asset info. Threshold is the number of unique int values
-        that toggles between categorical and numerical.
+        Returns data types for columns in asset info, condition data and consequence model.
+        Threshold is the number of unique int values that toggles between categorical and numerical.
         """
+
+        logging.debug("Obtaining field types")
 
         types = self.asset_info.dtypes.to_dict()
         types.update(self.condition.dtypes.to_dict())
@@ -132,38 +205,39 @@ class FleetData:
                 types[col] = "numerical"
 
         self.field_types = types
-        print("field types obtained")
+
+        logging.debug("Field types obtained")
 
     # ************** Summary Functions *****************
+    def _summarise_asset(self):
+        """
+        Summary of asset data.
+        """
+
+        logging.debug("Summarising asset data")
+        self.asset_summary = self.asset_info.compute()
+        logging.debug("Asset data summarised")
+
+    def _summarise_asset_pandas(self):
+        """
+        Summary of asset data.
+        """
+
+        logging.debug("Summarising asset data")
+        self.asset_summary = self.asset_info
+        logging.debug("Asset data summarised")
+
     def _summarise_condition(self):
         """
         Summarises the condition data into format describing perfect_condition condition, current_condition condition,
         and whether an asset has experienced condition loss.
         """
-        print("summarising condition")
+        logging.debug("Summarising condition")
 
         condition_summary = self.condition[["asset_id", "condition_name"]]
 
-        self.condition["condition_after"] = self.condition["condition_after"].fillna(0)
-        self.condition["condition_after"] = (
-            self.condition["condition_after"]
-            .where(self.condition["condition_after"].str.isnumeric(), 0)
-            .astype("int")
-        )
-        # self.condition_summary = condition_summary.repartition(
-        #     npartitions=1
-        # ).reset_index(drop=True)
+        logging.debug("Summarising condition: obtaining perfect condition")
 
-        # perfect_condition = (
-        #     self.condition.iloc[
-        #         self.condition.groupby(["asset_id", "condition_name"])[
-        #             "condition_after"
-        #         ].agg(dd.Series.idxmax)
-        #     ]
-        #     .set_index("asset_id")[["condition_name", "condition_after"]]
-        #     .reset_index()
-        #     .rename(columns={"condition_after": "perfect_condition"})
-        # )
         perfect_condition = (
             self.condition.groupby(["asset_id", "condition_name"])["condition_after"]
             .max()
@@ -174,17 +248,12 @@ class FleetData:
             perfect_condition, on=["asset_id", "condition_name"]
         )
 
-        # current_condition = (
-        #     self.condition.sort_values("date")
-        #     .groupby(["asset_id", "condition_name"])
-        #     .last()["condition_after"]
-        #     .reset_index()
-        #     .rename(columns={"condition_after": "current_condition"})
-        # )
+        logging.debug("Summarising condition: obtaining current condition")
 
         idx_recent_date = (
             self.condition.groupby(["asset_id", "condition_name"])["date"].transform(
-                max
+                max,
+                meta=("date", "datetime64[ns]"),
             )
             == self.condition["date"]
         )
@@ -197,6 +266,8 @@ class FleetData:
             current_condition, on=["asset_id", "condition_name"]
         )
 
+        logging.debug("Summarising condition: calculating condition loss")
+
         condition_summary["condition_loss"] = da.where(
             condition_summary["perfect_condition"].to_dask_array()
             == condition_summary["current_condition"].to_dask_array(),
@@ -204,26 +275,29 @@ class FleetData:
             True,
         )
 
+        logging.debug("Summarising condition: separating data per condition name")
+
         condition_summary = condition_summary.drop_duplicates().reset_index(drop=True)
 
         condition_name_list = self.condition["condition_name"].unique().compute()
-        # condition_name_list = client.persist(self.condition["condition_name"].unique())
 
-        condition_summary_2 = condition_summary[["asset_id", "condition_name"]].rename(
+        self.condition_summary = condition_summary[
+            ["asset_id", "condition_name"]
+        ].rename(
             columns={
                 "condition_name": "dummy",
             }
         )
 
-        condition_summary_2["dummy"] = 0
-        condition_summary_2 = condition_summary_2.drop_duplicates().reset_index(
+        self.condition_summary["dummy"] = 0
+        self.condition_summary = self.condition_summary.drop_duplicates().reset_index(
             drop=True
         )
 
         for condition_name in condition_name_list:
 
-            condition_summary_2 = (
-                condition_summary_2.merge(
+            self.condition_summary = (
+                self.condition_summary.merge(
                     condition_summary[
                         condition_summary["condition_name"] == condition_name
                     ],
@@ -240,107 +314,184 @@ class FleetData:
                 .drop(columns={"condition_name"})
             )
 
-        condition_summary_2 = condition_summary_2.drop(columns={"dummy"})
-        self.condition_summary = condition_summary_2
-        print("condition summarised")
+        self.condition_summary = self.condition_summary.drop(columns={"dummy"})
+
+        self.condition_summary = self.condition_summary.compute()
+
+        logging.debug("Condition summarised")
+
+    def _summarise_condition_pandas(self):
+        """
+        Summarises the condition data into format describing perfect_condition condition, current_condition condition,
+        and whether an asset has experienced condition loss.
+        """
+        logging.debug("Summarising condition")
+
+        condition_summary = self.condition[["asset_id", "condition_name"]]
+
+        logging.debug("Summarising condition: obtaining perfect condition")
+
+        perfect_condition = (
+            self.condition.groupby(["asset_id", "condition_name"])["condition_after"]
+            .max()
+            .reset_index()
+            .rename(columns={"condition_after": "perfect_condition"})
+        )
+        condition_summary = condition_summary.merge(
+            perfect_condition, on=["asset_id", "condition_name"]
+        )
+
+        logging.debug("Summarising condition: obtaining current condition")
+
+        idx_recent_date = (
+            self.condition.groupby(["asset_id", "condition_name"])["date"].transform(
+                max,
+            )
+            == self.condition["date"]
+        )
+
+        current_condition = self.condition[idx_recent_date][
+            ["asset_id", "condition_name", "condition_after"]
+        ].rename(columns={"condition_after": "current_condition"})
+
+        condition_summary = condition_summary.merge(
+            current_condition, on=["asset_id", "condition_name"]
+        )
+
+        logging.debug("Summarising condition: calculating condition loss")
+
+        condition_summary["condition_loss"] = True
+
+        condition_summary["condition_loss"] = condition_summary["condition_loss"].where(
+            condition_summary["perfect_condition"]
+            == condition_summary["current_condition"],
+            False,
+        )
+
+        logging.debug("Summarising condition: separating data per condition name")
+
+        condition_summary = condition_summary.drop_duplicates().reset_index(drop=True)
+
+        condition_name_list = self.condition["condition_name"].unique()
+
+        self.condition_summary = condition_summary[
+            ["asset_id", "condition_name"]
+        ].rename(
+            columns={
+                "condition_name": "dummy",
+            }
+        )
+
+        self.condition_summary["dummy"] = 0
+        self.condition_summary = self.condition_summary.drop_duplicates().reset_index(
+            drop=True
+        )
+
+        for condition_name in condition_name_list:
+
+            self.condition_summary = (
+                self.condition_summary.merge(
+                    condition_summary[
+                        condition_summary["condition_name"] == condition_name
+                    ],
+                    how="outer",
+                    on="asset_id",
+                )
+                .rename(
+                    columns={
+                        "perfect_condition": condition_name + "_perfect_condition",
+                        "current_condition": condition_name + "_current_condition",
+                        "condition_loss": condition_name + "_condition_loss",
+                    }
+                )
+                .drop(columns={"condition_name"})
+            )
+
+        self.condition_summary = self.condition_summary.drop(columns={"dummy"})
+
+        logging.debug("Condition summarised")
 
     def _summarise_csq(self):
         """
         Summary of consequence data. Not currently used.
         """
 
-        self.csq_summary = self.csq_info
+        logging.debug("Summarising consequence model data")
+        self.csq_summary = self.csq_info.compute()
+        logging.debug("Consequence model data summarised")
 
-    def get_population_summary(self, by, remove, n_bins=10):
+    def _summarise_csq_pandas(self):
+        """
+        Summary of consequence data. Not currently used.
+        """
+
+        logging.debug("Summarising consequence model data")
+        self.csq_summary = self.csq_info
+        logging.debug("Consequence model data summarised")
+
+    def get_population_data(self, by, remove, n_bins=10):
         """
         Returns a summary of asset data defined by user.
         """
-        print("starting population summary")
-        # filter categorical
-        print("filtering data")
+
+        logging.debug("Filtering asset data")
         asset_info_filtered = self._filter_asset_info(by, remove)
+
+        logging.debug("Filtering condition data")
         condition_filtered = self._filter_condition(by)
+
+        logging.debug("Filtering consequence data: NOTIMPLEMENTED")
         # TODO: Add csq_filtered
-        print("merging filtered data")
-        # merge asset, condition, csq
+
+        logging.debug("Merging filtered data")
         df_summary = asset_info_filtered.merge(condition_filtered, on="asset_id")
         # TODO: df_summary = df_summary.merge(self.csq_filtered, on="asset_id")
-        print("binning numerical data")
-        # bin numerical
-        df_summary = self._get_bins(df_summary, by, n_bins)
-        print("computing summary")
-        # compute dataframe
-        # df_summary = client.persist(df_summary)
 
-        # filter numerical
+        logging.debug("Obtaining bins for numerical data, n_bins = %s", n_bins)
+        df_summary = self._get_bins(df_summary, by, n_bins)
+
+        attributes_to_keep = list(by.keys())
+        df_summary = df_summary[["asset_id"] + attributes_to_keep]
+
+        logging.debug("Population data complete")
+
+        return df_summary
+
+    def get_population_summary(self, by, remove, n_bins=10):
+        """
+        Returns a population summary of asset data defined by user.
+        """
+
+        df_summary = self.get_population_data(by=by, remove=remove, n_bins=n_bins)
+
+        logging.debug("Summarising population data")
         groupby_filter = list(by.keys())
-        print("count summary")
-        # group and count by filter
         df_sum = (
             df_summary.groupby(groupby_filter, dropna=False)["asset_id"]
             .count()
             .reset_index()
             .rename(columns={"asset_id": "count"})
         )
-        df_sum = df_sum.compute()
-        # drop zero counts
-        df_summary = df_sum[df_sum["count"] > 0].reset_index(drop=True)
 
-        print("summary complete")
-        return df_summary
+        df_sum = df_sum[df_sum["count"] > 0].reset_index(drop=True)
 
-    def get_population_summary_legacy(self, by, remove, n_bins=10):
-        """
-        Returns a summary of asset data defined by user.
-        """
+        logging.debug("Population summary complete")
 
-        # filter categorical
-        idx_a = self._return_index_asset_info(by, remove)
-        print(idx_a)
-        idx_c, code_list = self._return_index_condition(by)
-        print(idx_c)
-
-        condition_summary = self.condition_summary.loc[idx_c].drop_duplicates()
-        # TODO add in condition code filter
-
-        # merge asset, condition, csq
-        df_summary = self.asset_info.loc[idx_a].merge(condition_summary, on="asset_id")
-        # df_summary = df_summary.merge(self.csq_summary, on="asset_id")
-
-        # bin numerical
-        df_summary = self._get_bins(df_summary, by, n_bins)
-
-        # filter numerical
-        groupby_filter = list(by.keys())
-
-        # group and count by filter
-        df_summary = (
-            df_summary.groupby(groupby_filter, dropna=False)["asset_id"]
-            .count()
-            .reset_index()
-            .rename(columns={"asset_id": "count"})
-        )
-
-        # drop zero counts
-        df_summary = df_summary[
-            df_summary["count"] != 0
-        ]  # Delete if you want to keep zero counts
-
-        return df_summary
+        return df_sum
 
     def _filter_asset_info(self, by, remove):
         """
-        Returns index if assets with traits decribed by user filters.
+        Returns asset data of assets with traits decribed by user filters.
         """
         conditions = []
         for att, trait in by.items():
             if att in self.field_types:
                 if trait:
-                    conditions.append((self.asset_info[att].isin(trait)))
+                    conditions.append((self.asset_summary[att].isin(trait)))
 
         if remove:
             for att, trait in remove.items():
-                conditions.append((~self.asset_info[att].isin(trait)))
+                conditions.append((~self.asset_summary[att].isin(trait)))
 
         if conditions:
             cond = conditions[0]
@@ -348,14 +499,16 @@ class FleetData:
             for c in conditions[1:]:
                 cond = cond & c
 
-            asset_info_filtered = self.asset_info[cond]
+            asset_info_filtered = self.asset_summary[cond]
         else:
-            asset_info_filtered = self.asset_info
+            asset_info_filtered = self.asset_summary
 
         return asset_info_filtered
 
     def _filter_condition(self, by):
-
+        """
+        Returns condition data of assets with traits decribed by user filters.
+        """
         conditions = []
         for att, trait in by.items():
             for condition_type in [
@@ -364,7 +517,6 @@ class FleetData:
                 "current_condition",
             ]:
                 if condition_type in att:
-                    code = att.replace("_" + condition_type, "")
                     if condition_type == "condition_loss" and trait:
                         conditions.append((self.condition_summary[att].isin(trait)))
         if conditions:
@@ -379,74 +531,32 @@ class FleetData:
 
         return condition_filtered
 
-    def _return_index_asset_info(self, by, remove):
+    def _filter_consequence_model(self, by, remove):
         """
-        Returns index if assets with traits decribed by user filters.
+        NOTIMPLEMENTED: Returns consequence data of assets with traits decribed by user filters.
         """
 
-        idx = []
+        conditions = []
         for att, trait in by.items():
-
             if att in self.field_types:
-
                 if trait:
-
-                    idx_list = da.where((self.asset_info[att].isin(trait)))
-                    print(idx_list)
-                    if not idx:
-                        idx = set(idx_list[0])
-                    else:
-                        idx = set(idx) & set(idx_list[0])
+                    conditions.append((self.csq_summary[att].isin(trait)))
 
         if remove:
             for att, trait in remove.items():
+                conditions.append((~self.csq_summary[att].isin(trait)))
 
-                idx_list = da.where((~self.asset_info[att].isin(trait).to_dask_array()))
-                if not idx:
-                    idx = set(idx_list[0])
-                else:
-                    idx = set(idx) & set(idx_list[0])
+        if conditions:
+            cond = conditions[0]
 
-        if idx == []:
-            idx = self.asset_info.index
+            for c in conditions[1:]:
+                cond = cond & c
 
-        idx = list(idx)
+            consequence_filtered = self.csq_summary[cond]
+        else:
+            consequence_filtered = self.csq_summary
 
-        return idx
-
-    def _return_index_condition(self, by):
-        # TODO return to get
-
-        idx = []
-        code_list = []
-        for att, trait in by.items():
-            for condition_type in [
-                "condition_loss",
-                "perfect_condition",
-                "current_condition",
-            ]:
-                if condition_type in att:
-                    code = att.replace("_" + condition_type, "")
-                    code_list.append(code)
-                    if condition_type == "condition_loss" and trait:
-                        idx_list = np.where(
-                            (self.condition_summary[code]["condition_loss"] == trait[0])
-                        )[0]
-                        if not idx:
-                            idx = set(idx_list)
-                        else:
-                            idx = set(idx) & set(idx_list)
-        idx = list(idx)
-        code_list = list(set(code_list))
-
-        if code_list == []:
-            code_list = set(self.condition_summary.columns.get_level_values(0))
-            code_list.remove("asset_id")
-            code_list = list(idx)
-        if idx == []:
-            idx = list(self.condition_summary.index)
-
-        return idx, code_list
+        return NotImplemented
 
     def _get_bins(self, df, by, n_bins):
         """
@@ -455,18 +565,18 @@ class FleetData:
         for att, trait in by.items():
             if att in self.field_types:
                 if self.field_types[att] == "numerical":
-                    print(att)
-                    bins = np.unique(
-                        np.round(
-                            np.linspace(
-                                np.floor(df[att].min()) - 0.01,
-                                np.ceil(df[att].max()) + 0.01,
-                                n_bins,
-                            )
+                    logging.debug("Obtaining bins for %s", att)
+                    bins = np.round(
+                        np.linspace(
+                            np.floor(df[att].min()) - 0.01,
+                            np.ceil(df[att].max()) + 0.01,
+                            n_bins,
                         )
                     )
                     labels = bins[1:]
-                    df[att] = df[att].map_partitions(pd.cut, bins, labels=labels)
+                    df[att] = pd.cut(
+                        df[att], bins=bins, labels=labels, duplicates="drop"
+                    )
                     df[att] = df[att].astype(float)
 
         return df
@@ -494,7 +604,7 @@ class FleetData:
             "2010-02-02",
         ]
         code = ["code_1", "code_2"]
-        date = ["2020-10-10", "2020-05-10", "2020-01-10", "2019-10-10"]
+        dates = ["2020-10-10", "2020-05-10", "2020-01-10", "2019-10-10"]
         condition_before = [90, 100, 100]
         condition_after = [50, 90, 100]
 
@@ -527,7 +637,7 @@ class FleetData:
         condition["condition_name"] = (
             code * int(2 * n_assets / len(code)) + code[: 2 * n_assets % len(code)]
         )
-        condition["date"] = np.random.choice(list(date), size=2 * n_assets)
+        condition["date"] = np.random.choice(list(dates), size=2 * n_assets)
         condition["date"] = pd.to_datetime(
             condition["date"], format="%Y-%m-%d", errors="coerce"
         )
