@@ -488,7 +488,7 @@ class ConditionIndicator(Indicator):
         if pf_std is None:
             pf_std = self.pf_std
 
-        # Get the time to be investitaged
+        # Get the time to be investitaged #TODO Does this work GTGTGTGT
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
         if self._pf_curve == "linear":
@@ -502,9 +502,11 @@ class ConditionIndicator(Indicator):
 
         elif self._pf_curve == "step":
             if pf_interval == 0:
-                y = np.full(1, self._failed)
+                y = np.array([self._perfect, self._failed])  # this one is changed
             else:
-                y = np.full(pf_interval, self._perfect)
+                y = np.append(
+                    np.full(pf_interval, self._perfect), (np.array(self._failed))
+                )
 
         elif self._pf_curve == "exponential" or self._pf_curve == "exp":
             raise NotImplementedError

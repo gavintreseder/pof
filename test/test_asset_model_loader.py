@@ -92,6 +92,17 @@ class TestAssetModelLoader(unittest.TestCase):
         # Load asset with initiated failure mode, condition already in window and condition task with 100% effectiveness
         # self.assertEqual()
 
+    def test_load_lightning_problem(self):
+
+        aml = AssetModelLoader()
+        data = aml.load(filename)
+
+        comp = Component.load(data["pole"])
+
+        fm = comp.fm["lightning"]
+
+        fm.sim_timeline(200)
+
 
 if __name__ == "__main__":
     unittest.main()
