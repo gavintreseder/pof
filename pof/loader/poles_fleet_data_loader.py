@@ -266,9 +266,7 @@ class PolesFleetDataLoader(FleetDataLoader):
         df_intervention["replace_date"] = df_intervention["pseudo_asset_id"].map(
             lambda x: x.split("-", 1)[1] if len(x.split("-", 1)) == 2 else np.nan
         )
-        df_intervention["replace_date"] = dd.to_datetime(
-            df_intervention["replace_date"], format="%Y-%m-%d"
-        ).dt.date
+        df_intervention = self.date_formatter(df_intervention)
 
         df_condition = df_condition.merge(
             df_intervention, how="left", on="asset_id"
