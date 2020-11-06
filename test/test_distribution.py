@@ -3,7 +3,7 @@ import unittest
 import scipy.stats as ss
 
 import fixtures
-import testconfig
+import testconfig  # pylint: disable=unused-import
 from test_load import TestPofBase
 from pof.distribution import Distribution, DistributionManager
 

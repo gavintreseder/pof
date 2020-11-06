@@ -2,24 +2,16 @@
     Filename: test_component.py
     Description: Contains the code for testing the Component class
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
- 
 """
 
 import unittest
-from unittest.mock import Mock, patch
-
-import numpy as np
-import pandas as pd
-import scipy.stats as ss
+from unittest.mock import Mock
 
 from test_load import TestPofBase
 import fixtures
-import testconfig
+import testconfig  # pylint: disable=unused-import
 from pof.component import Component
 from config import config
-import pof.demo as demo
-
-from pof.interface.figures import update_condition_fig
 
 cf = config["Component"]
 
@@ -37,7 +29,10 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self._data_valid = [dict(name="TestComponent")]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
         self._data_invalid_values = []
-        self._data_complete = [fixtures.complete['component_0'], fixtures.complete['component_0']]
+        self._data_complete = [
+            fixtures.complete["component_0"],
+            fixtures.complete["component_0"],
+        ]
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
@@ -123,6 +118,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
         t_now = None
         test_next_task = dict(
+            early_life=(20, ["inspection"]),
             slow_aging=(5, ["inspection"]),
             fast_aging=(10, ["inspection", "cm"]),
             random=(15, ["inspection"]),
@@ -197,13 +193,9 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
     # ************ Test expected methods *****************
 
-    def test_expected_condition_no_timeline(self):
-        comp = Component.demo()
-        comp.expected_condition()
-
-        # TODO add some checks
-
     def test_expected_condition_with_timelines(self):
+        # TODO make it work when mc_timeline hs nto been called
+
         comp = Component.demo()
         comp.mc_timeline(10)
         comp.expected_condition()
@@ -216,23 +208,6 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
         comp.update("comp-fm-slow_aging-active", False)
         self.assertEqual(comp.fm["slow_aging"].active, False)
-
-    def test_update_from_str(self):
-
-        expected_list = [True]
-
-        comp = Component.demo()
-        dash_ids = comp.get_dash_ids()
-
-        for dash_id in dash_ids:
-
-            for expected in expected_list:
-
-                comp.update(dash_id, expected)
-
-                val = NotImplemented
-
-                self.assertEqual(val, expected, msg="Error: dash_id %s" % (dash_id))
 
     def test_expected_inspection_interval(self):
 
@@ -251,13 +226,22 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
     def test_reset_for_next_sim(self):
 
+        perfect = 100
+        initial = 80
+        t_end = 10
+        accumulated = abs(perfect - initial)
+
         comp = Component.demo()
-        comp.indicator["slow_degrading"].set_initial(20)
+        comp.indicator["slow_degrading"].initial = initial
 
-        comp.mc_timeline(10)
-        comp.reset()
+        # Act
+        comp.mc_timeline(t_end)
+        comp.reset_for_next_sim()
 
-        self.assertEqual(comp.indicator["slow_degrading"].get_accumulated(), 20)
+        # Assert
+        self.assertEqual(
+            comp.indicator["slow_degrading"].get_accumulated(), accumulated
+        )
 
     def test_replace(self):
         NotImplemented

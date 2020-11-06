@@ -7,13 +7,10 @@
 
 import unittest
 
-import numpy as np
-
-import testconfig
+import testconfig  # pylint: disable=unused-import
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.component import Component
 from pof.failure_mode import FailureMode
-import pof.demo as demo
 
 # TODO move this all to a test file rather than demo
 filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential Energy\Probability of Failure Model\pof\data\inputs\Asset Model - Demo.xlsx"
@@ -24,7 +21,7 @@ filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential En
 
 class TestAssetModelLoader(unittest.TestCase):
     def test_class_imports_correctly(self):
-        self.assertTrue(True)
+        self.assertIsNotNone(AssetModelLoader)
 
     def test_class_instantiate(self):
         aml = AssetModelLoader()

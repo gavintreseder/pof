@@ -136,7 +136,7 @@ class FailureMode(Load):
         **kwargs
     ):
 
-        super().__init__(**kwargs)
+        super().__init__(name=name, **kwargs)
 
         self.dists = dict()
         self.indicators = dict()
@@ -185,7 +185,7 @@ class FailureMode(Load):
         return self._pf_interval
 
     @pf_interval.setter
-    @check_arg_positive('value')
+    @check_arg_positive("value")
     def pf_interval(self, value):
         self._pf_interval = value
         if "untreated" in self.dists:

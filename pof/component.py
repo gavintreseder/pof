@@ -4,15 +4,12 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
-from dataclasses import dataclass, field
 from typing import Dict
 import logging
 
 import numpy as np
 import pandas as pd
-import scipy.stats as ss
 from tqdm import tqdm
-from lifelines import WeibullFitter
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -23,21 +20,16 @@ if __package__ is None or __package__ == "":
 
 from config import config
 from pof.failure_mode import FailureMode
-from pof.helper import fill_blanks, id_update
-from pof.indicator import Indicator, ConditionIndicator, PoleSafetyFactor
+from pof.helper import fill_blanks
+from pof.indicator import Indicator
 from pof.load import Load
 import pof.demo as demo
-
-
-# TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
-# TODO create get, set, del and add methods
 
 DEFAULT_ITERATIONS = 100
 
 cf = config.get("Component")
 
 
-@dataclass
 class Component(Load):
     """
     Parameters:
@@ -50,20 +42,24 @@ class Component(Load):
 
     """
 
-    name: str = "comp"
-    active: bool = True
+    def __init__(
+        self,
+        name: str = "comp",
+        active: bool = True,
+        indicator: Dict = None,
+        fm: Dict = None,
+        *args,
+        **kwargs
+    ):
 
-    _parent_id: str = NotImplemented
-    _children_id: str = NotImplemented
+        super().__init__(name=name, *args, **kwargs)
 
-    indicator: Dict = None
-    fm: Dict = None
+        self.active = active
+        self.indicator = dict()
+        self.fm = dict()
 
-    def __post_init__(self):
-
-        self.set_indicator(self.indicator)
-
-        self.set_failure_mode(self.fm)
+        self.set_indicator(indicator)
+        self.set_failure_mode(fm)
 
         # Link failure mode indicators to the component indicators
         self.link_indicators()
@@ -81,6 +77,7 @@ class Component(Load):
 
         # Simulation traking
         self._sim_counter = 0
+        self._replacement = []
 
     # ****************** Load data ******************
 
@@ -102,7 +99,7 @@ class Component(Load):
             # Set current
             NotImplemented
 
-    def set_indicator(self, indicator_input):  # TODO add testing for None
+    def set_indicator(self, indicator_input):
         """
         Takes a dictionary of Indicator objects or indicator data and sets the component indicators
         """
@@ -442,22 +439,6 @@ class Component(Load):
         self._replacement = []
 
     # ****************** Interface ******************
-
-    def update_from_dict(self, dict_data):
-
-        for key, value in dict_data.items():
-
-            if key in ["name", "active"]:
-                self.__dict__[key] = value
-
-            elif key == "fm":
-                self.set_failure_mode(dict_data[key])
-
-            elif key == "indicator":
-                self.set_indicator(dict_data[key])
-
-            else:
-                logging.warning('Cannot update "%s" from dict', self.__class__.__name__)
 
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""

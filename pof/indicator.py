@@ -176,14 +176,7 @@ class Indicator(Load):
 
     @pf_interval.setter
     def pf_interval(self, value):
-
-        # TODO add robust testing around pf_interval non negative numbers etc
-        if value is None:
-            raise ValueError(
-                f"{self.__class__.__name__} - {self.name} - pf_interval required"
-            )
-        else:
-            self._pf_interval = value
+        self._pf_interval = value
 
     @property
     def perfect(self):
@@ -514,7 +507,7 @@ class ConditionIndicator(Indicator):
                 y = np.full(pf_interval, self._perfect)
 
         elif self._pf_curve == "exponential" or self._pf_curve == "exp":
-            NotImplemented
+            raise NotImplementedError
 
         self._profile[pf_interval] = y
 
@@ -742,9 +735,15 @@ class PoleSafetyFactor(Indicator):
     PF_CURVES = ["ssf_calc", "dsf_calc"]
 
     def __init__(
-        self, failed: int = 1, decreasing: bool = True, component=None, *args, **kwargs
+        self,
+        name="PoleSafetyFactor",
+        perfect: int = 4,
+        failed: int = 1,
+        component=None,
+        *args,
+        **kwargs,
     ):
-        super().__init__(self, *args, **kwargs)
+        super().__init__(name=name, failed=failed, *args, **kwargs)
 
     def set_t_condition(self, *args, **kwargs):
         """No actions required"""

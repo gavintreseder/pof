@@ -5,15 +5,15 @@ Author: Gavin Treseder
 
 import copy
 import unittest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 
 import fixtures
-import testconfig
+import testconfig # pylint: disable=unused-import
 from test_load import TestPofBase
 from pof.failure_mode import FailureMode
-from pof.task import Task, ScheduledTask, ConditionTask, Inspection
+from pof.task import Task
 import pof.demo as demo
 
 

@@ -5,15 +5,11 @@
         gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
-from dataclasses import dataclass, field
 from collections.abc import Iterable
 import logging
 import inspect
-from typing import Optional
 from flatten_dict import flatten, unflatten
 
-# from dataclassy import dataclass
-from dataclass_property import dataclass, field_property
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -158,14 +154,13 @@ class Load:
             elif isinstance(value, Iterable):
 
                 # Create an object from the dict
-                # TODO replace with get_signature
                 if valid_signature(obj=d_type, inputs=value):
                     new_object = d_type.from_dict(value)
                     getattr(self, attr)[new_object.name] = new_object
 
                 # Create an object from the dict of dict/objects
                 else:
-                    for key, val in value.items():
+                    for val in value.values():
 
                         if isinstance(val, d_type):
                             getattr(self, attr)[val.name] = val
@@ -185,7 +180,7 @@ class Load:
                 value,
             )
             if value is None and cf.get("on_error_use_default") is True:
-                logging.info(msg + "- Default used")
+                logging.info(msg.join(" - Default used"))
             else:
                 raise ValueError(msg)
 
@@ -210,10 +205,8 @@ class Load:
         """
         updates a single parameter using a string format
         """
-        try:
+        if self.name + sep in id_str:
             id_str = id_str.split(self.name + sep, 1)[1]
-        except:
-            pass
 
         dict_data = str_to_dict(id_str, value, sep)
 
@@ -474,7 +467,7 @@ class Load:
     def reset(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def mc_timeline(self, *args, **kwargs):
+    def mc_timeline(self, t_start=None, t_end=None, n_iterations=None):
         raise NotImplementedError()
 
 
