@@ -98,20 +98,26 @@ def check_arg_positive(*params):
         @wraps(func)
         def wrapper(*args, **kwargs):
             for param in params:
-
                 # Get the value using one of 3 methods
-                # Check kwargs - Is the param in the kwarg
-                # Check args - is the param in the arg
-                # Check default - is the param a default value
 
-                param_idx = inspect.getfullargspec(func)[0].index(param)
-                value = args[param_idx]
+                if param in inspect.getfullargspec(func)[0]:
+                    # Check kwargs - Is the param in the kwarg
+                    if param in kwargs:
+                        value = kwargs[param]
+                    else:
+                        param_idx = inspect.getfullargspec(func)[0].index(param)
+                        # Check args - is the param in the arg
+                        if param_idx < len(args):
+                            value = args[param_idx]
+                        # Check default - is the param a default value
+                        else:
+                            value = inspect.signature(func).parameters[param].default
 
                 # Raise an error if it is negative
                 if value < 0:
                     raise ValueError(f"{value} is not positive")
 
-            func(*args)
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -200,12 +206,4 @@ if __name__ == "__main__":
 
     doctest.testmod(optionflags=doctest.ELLIPSIS)  # extraglobs={"dist": Distribution()}
 
-    # Some quick testing to delete once it works for all
-    @check_arg_positive("value")
-    def func(other=-2, value=20):
-        return value
-
-    # value passed
-    func(value=-15)
-    func()
     print("Validators - Ok")
