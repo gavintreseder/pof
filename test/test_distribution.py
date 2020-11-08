@@ -28,7 +28,13 @@ class TestDistribution(TestPofBase, unittest.TestCase):
         self._class = Distribution
         self._data_valid = [{"name": "test"}]
         self._data_invalid_types = []  # TODO[{"alpha": "string"}]
-        self._data_invalid_values = []
+        self._data_invalid_values = [{"alpha":-1}]
+
+        # Altartive method
+        self._data_invalid = [
+            (Error, Input)
+            (KeyError, {})
+        ]
         self._data_complete = [
             fixtures.complete["distribution_0"],
             fixtures.complete["distribution_1"],

@@ -133,7 +133,7 @@ class FailureMode(Load):
         conditions: Dict = None,
         states: Dict = None,
         tasks: Dict = None,
-        **kwargs
+        **kwargs,
     ):
 
         super().__init__(name=name, **kwargs)
@@ -249,6 +249,8 @@ class FailureMode(Load):
                 pf_std=0,
                 perfect=False,
                 failed=True,
+                threshold_detection=True,
+                threshold_failure=True,
             )
             self.conditions = {self.name: {}}
             self.set_indicators(indicator)
@@ -401,7 +403,7 @@ class FailureMode(Load):
         system_impacts = []
         if self.active:
             for task_name in task_names:
-                logging.debug("Time %s - Tasks %s", t_now, task_names)
+                logging.debug(f"Time {t_now} - Tasks {task_names}")
 
                 # Complete the tasks
                 states = self.tasks[task_name].sim_completion(
@@ -506,11 +508,7 @@ class FailureMode(Load):
             for cond_name in self._cond_to_update():
                 if "initiation" in updates or cond_name in updates:
                     logging.debug(
-                        "condition %s, start %s, initiate %s, end %s",
-                        cond_name,
-                        t_start,
-                        t_initiate,
-                        t_end,
+                        f"condition {cond_name}, start {t_start}, initiate {t_initiate}, end {t_end}"
                     )
                     # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start])
                     # #TODO this should be set earlier using a a better method
