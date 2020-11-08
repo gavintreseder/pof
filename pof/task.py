@@ -452,7 +452,7 @@ class ConditionTask(Task):
                 try:
                     tl_ct = (tl_ct) & (timeline[state][t_start:t_end] == trigger)
                 except KeyError:
-                    logging.warning("%s not found" % (state))
+                    logging.warning(f"{state} not found")
 
             # Check the condition triggers have been met
             for condition, trigger in self.triggers["condition"].items():

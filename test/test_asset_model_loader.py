@@ -99,7 +99,8 @@ class TestAssetModelLoader(unittest.TestCase):
 
         comp = Component.load(data["pole"])
 
-        fm = comp.fm["lightning"]
+        # TODO lightning add a test to make sure the timeline handles before and after correclty
+        fm = comp.fm["weathering"]
 
         fm.sim_timeline(200)
 

@@ -133,7 +133,7 @@ class FailureMode(Load):
         conditions: Dict = None,
         states: Dict = None,
         tasks: Dict = None,
-        **kwargs
+        **kwargs,
     ):
 
         super().__init__(name=name, **kwargs)
@@ -507,7 +507,9 @@ class FailureMode(Load):
             # Check for condition changes
             for cond_name in self._cond_to_update():
                 if "initiation" in updates or cond_name in updates:
-                    logging.debug(f"condition {cond_name}, start {t_start}, initiate {t_initiate}, end {t_end}")
+                    logging.debug(
+                        f"condition {cond_name}, start {t_start}, initiate {t_initiate}, end {t_end}"
+                    )
                     # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start])
                     # #TODO this should be set earlier using a a better method
                     self.timeline[cond_name][t_start:] = self.indicators[
