@@ -745,7 +745,7 @@ class PoleSafetyFactor(Indicator):
         *args,
         **kwargs,
     ):
-        super().__init__(name=name, failed=failed, *args, **kwargs)
+        super().__init__(name=name, perfect=perfect, failed=failed, *args, **kwargs)
 
     def set_t_condition(self, *args, **kwargs):
         """No actions required"""

@@ -369,7 +369,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     @t_interval.setter
     def t_interval(self, value):
 
-        if int(value) <= 0:
+        if int(value) < 0:
             raise ValueError("t_interval must be a positive time - %s", value)
         else:
             self._t_interval = int(value)
@@ -395,6 +395,12 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         # TODO make it work like arange (start, stop, delay)
 
         if self.active:
+
+            if self._t_delay > 0:
+                t_delay = min(self._t_delay, t_end)
+                np.linspace(t_delay, 0, t_delay + 1)
+
+            # old one
             schedule = np.tile(
                 np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
                 math.ceil(max((t_end - self.t_delay), 0) / self.t_interval),

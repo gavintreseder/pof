@@ -147,10 +147,11 @@ class Component(Load):
 
         # Initialise the failure modes
         self.init_timeline(t_start=t_start, t_end=t_end)
+        self.t_end = t_end
 
         t_now = t_start
 
-        while t_now < t_end:
+        while t_now < self.t_end:
 
             t_next, next_fm_tasks = self.next_tasks(t_now)
 
@@ -199,7 +200,7 @@ class Component(Load):
 
             if bool(system_impact) and cf.get("allow_system_impact"):
                 logging.debug(
-                    "Component %s reset by FailureMode %s", self.name, fm_name
+                    "Component %s reset by FailureMode %s", self._name, fm_name
                 )
                 self.renew(t_renew=t_next + 1)
 
@@ -218,6 +219,7 @@ class Component(Load):
         if cf.get("remain_failed"):
             for fm in self.fm.values():
                 fm.fail(t_renew)
+            self.t_end = t_renew
 
         # Replace
         else:

@@ -465,9 +465,17 @@ class FailureMode(Load):
         self.timeline = timeline
 
     def _cond_to_update(self):
+        # TODO change this function so that it doesn't get calculated all the time, only updated on changes
         cond_to_update = set(self.conditions)
         for task in self.tasks.values():
             cond_to_update = cond_to_update | set(task.get_triggers("condition"))
+
+        # Dodgy fix to make sure safety_factor goes last
+        if "safety_factor" in cond_to_update:
+            cond_to_update = list(cond_to_update)
+            cond_to_update.remove("safety_factor")
+            cond_to_update.append("safety_factor")
+
         return cond_to_update
 
     def update_timeline(self, t_start, t_end=None, updates=dict()):
@@ -523,8 +531,8 @@ class FailureMode(Load):
                     )
 
             # Check for failure changes
-            if any(
-                state in updates for state in ["initiation", "detection", "failure"]
+            if bool(
+                set(updates).intersection(set(["initiation", "detection", "failure"]))
             ):
                 self.timeline["failure"][t_start:] = updates.get("failure", False)
                 for cond_name in self._cond_to_update():
@@ -574,14 +582,17 @@ class FailureMode(Load):
     def fail(self, t_fail):
         """ Cut the timeline short and prevent any more tasks from triggering"""
 
-        # Make timelines shorter
+        for var in self.timeline:
+            self.timeline[var] = self.timeline[var][:t_fail]
+
+        """# Make timelines shorter
         for state in ["time", "initiation", "detection", "failure"]:
             self.timeline[state] = self.timeline[state][:t_fail]
 
         # Cancel future tasks
         for task in self.tasks.values():
             # TODO consider moving timeline to the task and make sure task timeline canges to zero
-            self.timeline[task.name][t_fail:] = -1
+            self.timeline[task.name][t_fail:] = -1"""
 
     def replace(self, t_replace):
         """ Update the asset to a perfect asset """
@@ -825,7 +836,7 @@ class FailureMode(Load):
         for indicator in self.indicators.values():
             indicator.reset()
 
-    def reset_for_next_sim(self):
+    def reset_for_next_sim(self, t_reset=None):
 
         # Reset state
         self.set_states(self.init_states)

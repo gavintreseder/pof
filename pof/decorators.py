@@ -2,7 +2,7 @@
 Decoarators that can be used to validate pof class methods
 """
 
-from functools import wraps
+from makefun import wraps  # Alternatively from functools import wraps
 import logging
 import inspect
 
@@ -122,6 +122,16 @@ def check_arg_positive(*params):
         return wrapper
 
     return inner
+
+
+def check_value_positive(func):
+    def wrapper(self, value):
+
+        # check here
+
+        return func(self, value)
+
+    return wrapper
 
 
 # Options
