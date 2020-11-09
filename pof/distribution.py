@@ -14,6 +14,7 @@ if __package__ is None or __package__ == "":
 
 from pof.load import Load
 from config import config
+from pof.decorators import check_arg_positive, coerce_arg_type
 
 cf = config["Distribution"]
 
@@ -133,7 +134,6 @@ class DistributionManager(PofContainer):
             self["init"] = init
 
 
-@dataclass()
 class Distribution(Load):
 
     """
@@ -154,6 +154,22 @@ class Distribution(Load):
     alpha: int = field(default_factory=lambda: cf.get("alpha"))
     beta: int = field(default_factory=lambda: cf.get("beta"))
     gamma: int = field(default_factory=lambda: cf.get("gamma"))
+
+    def __init__(self, name="dist", alpha=50, beta=1.5, gamma=10):
+        self.name = name
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+
+    @property
+    def alpha(self):
+        return self._alpha
+
+    @alpha.setter
+    @check_arg_positive("value")
+    @coerce_arg_type
+    def alpha(self, value: float):
+        self._alpha = value
 
     def params(self):
         params = dict(

@@ -61,12 +61,12 @@ def coerce_arg_type(func):
     """
 
     @wraps(func)
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         args = list(args)
         for index, arg in enumerate(inspect.getfullargspec(func)[0]):
             if arg in func.__annotations__:
                 args[index] = func.__annotations__[arg](args[index])
-        return func(*tuple(args))
+        return func(*tuple(args), **kwargs)
 
     return wrapper
 
@@ -97,10 +97,12 @@ def check_arg_positive(*params):
     def inner(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            print(f"this is the function name {func.__name__}")
             for param in params:
                 # Get the value using one of 3 methods
 
                 if param in inspect.getfullargspec(func)[0]:
+                    print(f"we got here")
                     # Check kwargs - Is the param in the kwarg
                     if param in kwargs:
                         value = kwargs[param]
@@ -128,6 +130,14 @@ def check_arg_positive(*params):
 # Raise Errors
 # Log Errors and no change
 # Log error and use default
+def check_value_positive(func):
+    def wrapper(self, value):
+
+        # check here
+
+        return func(self, value)
+
+    return wrapper
 
 
 def check_in_list(func, valid_list):
