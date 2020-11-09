@@ -5,7 +5,7 @@
 """
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from test_load import TestPofBase
 import fixtures
@@ -190,6 +190,26 @@ class TestComponent(TestPofBase, unittest.TestCase):
         comp = Component.demo()
 
         comp.mc_timeline(t_end=100)
+
+    def test_mc_timeline_remain_failed(self):
+        """ Check that only one failure mode is triggered when remain failed is true"""
+        # Arrange
+        comp = Component.demo()
+
+        t_end = 2000
+
+        with patch.dict(
+            "pof.component.cf", {"remain_failed": True, "allow_system_impact": True}
+        ):
+
+            # Act
+            comp.mc_timeline(t_end=t_end, n_iterations=10)
+            df = comp.expected_risk_cost_df()
+            risk = df.loc[df["task"] == "risk"]["cost"].sum()
+            max_risk = comp.fm["random"].consequence.risk_cost_total
+
+            # Assert
+            self.assertLess(risk, max_risk)
 
     # ************ Test expected methods *****************
 

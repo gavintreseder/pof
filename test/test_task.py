@@ -72,7 +72,7 @@ class TestScheduledTask(TestTaskCommon, unittest.TestCase):
         """Check the a scheduled task returns the correct time"""
         # Task params
         param_t_delay = [0, 1, 5]
-        param_t_interval = [0, 1, 5]
+        param_t_interval = [1, 3, 5]  # TODO should it work with 0?
 
         # Sim_timeline params
         param_inputs = [(0, 100)]

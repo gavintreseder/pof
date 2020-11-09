@@ -2,7 +2,7 @@
 Decoarators that can be used to validate pof class methods
 """
 
-from functools import wraps
+from makefun import wraps  # Alternatively from functools import wraps
 import logging
 import inspect
 
@@ -126,6 +126,16 @@ def check_arg_positive(*params):
     return inner
 
 
+def check_value_positive(func):
+    def wrapper(self, value):
+
+        # check here
+
+        return func(self, value)
+
+    return wrapper
+
+
 # Options
 # Raise Errors
 # Log Errors and no change
@@ -159,13 +169,14 @@ def validate_pf_curve(func):
 
     @wraps(func)
     def wrapper(self, value):
-        return func(*args, **kwagrs)
         if value in self.PF_CURVES:
             return value
         else:
             raise ValueError(
                 f"{self.__class__.__name__} - {self.name} - pf_curve must be from {self.PF_CURVES}"
             )
+
+        raise NotImplementedError
 
     return wrapper
 
