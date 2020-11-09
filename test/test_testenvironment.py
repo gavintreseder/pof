@@ -10,8 +10,6 @@ class TestTestEnvironment(unittest.TestCase):
 
         self.assertIsNotNone(fixtures)
 
-
-class TestTestConfig(unittest.TestCase):
     def test_import_testconfig(self):
         import testconfig
 

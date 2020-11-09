@@ -202,11 +202,11 @@ class Component(Load):
                 logging.debug(
                     "Component %s reset by FailureMode %s", self._name, fm_name
                 )
-                self.renew(t_renew=t_next + 1)
+                self.renew(t_renew=t_next, fm_name = fm_name)
 
                 break
 
-    def renew(self, t_renew):
+    def renew(self, t_renew, fm_name):
         """
         Renew the component because a task has triggered an as-new change or failure
         """
@@ -218,7 +218,10 @@ class Component(Load):
         # Fail
         if cf.get("remain_failed"):
             for fm in self.fm.values():
-                fm.fail(t_renew)
+                if fm.name == fm_name:
+                    fm.fail(t_renew)
+                else:
+                    fm.fail(t_renew + 1)
             self.t_end = t_renew
 
         # Replace
@@ -304,8 +307,8 @@ class Component(Load):
 
         if t_end == None:
             t_end = t_start
-            for details in erc.values():
-                for task in details.values():
+            for timeline in erc.values():
+                for task in timeline.values():
                     t_end = max(max(task["time"], default=t_start), t_end)
 
         df = pd.DataFrame().from_dict(erc, orient="index")

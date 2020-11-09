@@ -159,13 +159,14 @@ def validate_pf_curve(func):
 
     @wraps(func)
     def wrapper(self, value):
-        return func(*args, **kwagrs)
         if value in self.PF_CURVES:
             return value
         else:
             raise ValueError(
                 f"{self.__class__.__name__} - {self.name} - pf_curve must be from {self.PF_CURVES}"
             )
+
+        raise NotImplementedError
 
     return wrapper
 

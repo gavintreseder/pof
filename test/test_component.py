@@ -195,6 +195,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         """ Check that only one failure mode is triggered when remain failed is true"""
         # Arrange
         comp = Component.demo()
+
         t_end = 2000
 
         with patch.dict(
