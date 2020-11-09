@@ -163,6 +163,8 @@ class FailureMode(Load):
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
+        self._t_failures = []
+        self._risk_failures = []
 
     @property
     def pf_curve(self):
@@ -799,12 +801,14 @@ class FailureMode(Load):
     def _expected_risk(self, scaling=1):
         # TODO expected risk with or without replacement
 
-        t_failures = []
-        for timeline in self._timelines.values():
-            if timeline["failure"].any():
-                t_failures.append(np.argmax(timeline["failure"]))
+        # t_failures = []
+        # for timeline in self._timelines.values():
+        #     if timeline["failure"].any():
+        #         t_failures.append(np.argmax(timeline["failure"]))
 
-        time, cost = np.unique(t_failures, return_counts=True)
+        # time, cost = np.unique(t_failures, return_counts=True)
+
+        time, cost = np.unique(self._t_failures, return_counts=True)
         cost = cost * self.consequence.get_cost() / scaling
 
         return dict(time=time, cost=cost)

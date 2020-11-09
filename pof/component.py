@@ -202,11 +202,11 @@ class Component(Load):
                 logging.debug(
                     "Component %s reset by FailureMode %s", self._name, fm_name
                 )
-                self.renew(t_renew=t_next, fm_name = fm_name)
+                self.renew(t_renew=t_next + 1)
 
                 break
 
-    def renew(self, t_renew, fm_name):
+    def renew(self, t_renew, ):
         """
         Renew the component because a task has triggered an as-new change or failure
         """
@@ -218,10 +218,8 @@ class Component(Load):
         # Fail
         if cf.get("remain_failed"):
             for fm in self.fm.values():
-                if fm.name == fm_name:
-                    fm.fail(t_renew)
-                else:
-                    fm.fail(t_renew + 1)
+                fm.fail(t_renew)
+
             self.t_end = t_renew
 
         # Replace
