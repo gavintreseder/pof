@@ -14,7 +14,7 @@ if __package__ is None or __package__ == "":
 
 from pof.load import Load
 from config import config
-from pof.decorators import check_arg_positive, coerce_arg_type
+from pof.decorators import check_arg_positive, coerce_arg_type, check_arg_type
 
 cf = config["Distribution"]
 
@@ -166,6 +166,7 @@ class Distribution(Load):
         return self._alpha
 
     @alpha.setter
+    @check_arg_type
     @coerce_arg_type
     @check_arg_positive("value")
     def alpha(self, value: float):
