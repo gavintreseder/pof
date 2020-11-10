@@ -272,11 +272,9 @@ class TestComponent(TestPofBase, unittest.TestCase):
         NotImplemented
 
     def test_delete(self):
-        from pof.failure_mode import FailureMode
         from pof.interface.figures import update_cost_fig
 
         comp = Component.demo()
-        fm = FailureMode.demo()
         config["FailureMode"]["remain_failed"] = "False"
         comp.mc_timeline(500)
         update_cost_fig(comp)
