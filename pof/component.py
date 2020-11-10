@@ -49,7 +49,7 @@ class Component(Load):
         indicator: Dict = None,
         fm: Dict = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
 
         super().__init__(name=name, *args, **kwargs)
@@ -76,6 +76,7 @@ class Component(Load):
         # TODO link failure_modes to indicators
 
         # Simulation traking
+        self._in_service = True
         self._sim_counter = 0
         self._replacement = []
 
@@ -147,11 +148,11 @@ class Component(Load):
 
         # Initialise the failure modes
         self.init_timeline(t_start=t_start, t_end=t_end)
-        self.t_end = t_end
 
         t_now = t_start
+        self._in_service = True
 
-        while t_now < self.t_end:
+        while t_now < t_end and self._in_service:
 
             t_next, next_fm_tasks = self.next_tasks(t_now)
 
@@ -199,14 +200,15 @@ class Component(Load):
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
             if bool(system_impact) and cf.get("allow_system_impact"):
-                logging.debug(
-                    "Component %s reset by FailureMode %s", self._name, fm_name
-                )
+                logging.debug(f"Component {self._name} reset by FailureMode {fm_name}")
                 self.renew(t_renew=t_next + 1)
 
                 break
 
-    def renew(self, t_renew, ):
+    def renew(
+        self,
+        t_renew,
+    ):
         """
         Renew the component because a task has triggered an as-new change or failure
         """
@@ -216,11 +218,11 @@ class Component(Load):
             ind.reset_to_perfect()
 
         # Fail
-        if cf.get("remain_failed"):
+        if config.get("FailureMode").get("remain_failed"):
             for fm in self.fm.values():
                 fm.fail(t_renew)
 
-            self.t_end = t_renew
+            self._in_service = False
 
         # Replace
         else:

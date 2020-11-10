@@ -383,19 +383,17 @@ class FailureMode(Load):
         if self.active:
 
             t_now = t_start
+            self.in_service = True
 
-            while t_now < t_end:
+            while t_now < t_end and self.in_service:
 
                 # Check when the next task needs to be executed
                 t_now, task_names = self.next_tasks(timeline, t_now, t_end)
 
                 # Complete those tasks
-                system_impact = self.complete_tasks(t_now, task_names)
+                self.complete_tasks(t_now, task_names)
 
                 t_now = t_now + 1
-
-                if "component" in system_impact:
-                    self.renew(t_now)
 
         return self.timeline
 
@@ -404,6 +402,10 @@ class FailureMode(Load):
 
         system_impacts = []
         if self.active:
+            # Record any risk events
+            if self.timeline["failure"][t_now]:
+                self._t_failures.append(t_now)
+
             for task_name in task_names:
                 logging.debug(f"Time {t_now} - Tasks {task_names}")
 
@@ -415,12 +417,16 @@ class FailureMode(Load):
                     conditions=self.indicators,
                 )
 
-                # Update timeline
-                self.set_states(states)
-                self.update_timeline(t_now + 1, updates=states)
-
                 # Check if a system impact is triggered
-                system_impacts = system_impacts + self.tasks[task_name].system_impact()
+                system_impact = self.tasks[task_name].system_impact()
+
+                if bool(system_impact):
+                    self.renew(t_now + 1)
+                    system_impacts.append(system_impact)
+                else:
+                    # Update timeline
+                    self.set_states(states)
+                    self.update_timeline(t_now + 1, updates=states)
 
         return system_impacts
 
@@ -584,21 +590,14 @@ class FailureMode(Load):
     def fail(self, t_fail):
         """ Cut the timeline short and prevent any more tasks from triggering"""
 
+        self.in_service = False
+
         for var in self.timeline:
             self.timeline[var] = self.timeline[var][:t_fail]
 
-        """# Make timelines shorter
-        for state in ["time", "initiation", "detection", "failure"]:
-            self.timeline[state] = self.timeline[state][:t_fail]
-
-        # Cancel future tasks
-        for task in self.tasks.values():
-            # TODO consider moving timeline to the task and make sure task timeline canges to zero
-            self.timeline[task.name][t_fail:] = -1"""
-
     def replace(self, t_replace):
         """ Update the asset to a perfect asset """
-        state_after_replace = dict(initation=False, detection=False, failure=False)
+        state_after_replace = dict(initiation=False, detection=False, failure=False)
         self.update_timeline(t_start=t_replace, updates=state_after_replace)
 
     def next_tasks(self, timeline=None, t_start=0, t_end=None):
@@ -844,6 +843,7 @@ class FailureMode(Load):
 
         # Reset state
         self.set_states(self.init_states)
+        self.in_service = True
 
         # Reset indicators
         for ind in self.indicators.values():
