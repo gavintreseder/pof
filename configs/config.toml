@@ -10,8 +10,6 @@ use_default = false
 
 [Component]
 allow_system_impact = true
-remain_failed = false
-
 
 [FailureMode]
 remain_failed = false
