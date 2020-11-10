@@ -92,20 +92,21 @@ class TestComponent(TestPofBase, unittest.TestCase):
         comp = Component.demo()
 
         # Act
-        comp.init_timeline(200)
-        comp.complete_tasks(t_now, fm_next_tasks)
+        with patch.dict("pof.cf.component", {"allow_system_impact": False}):
+            comp.init_timeline(200)
+            comp.complete_tasks(t_now, fm_next_tasks)
 
-        # Assert
-        for fm_name, fm in comp.fm.items():
-            for task_name, task in fm.tasks.items():
+            # Assert
+            for fm_name, fm in comp.fm.items():
+                for task_name, task in fm.tasks.items():
 
-                if fm_name in list(fm_next_tasks):
-                    if task_name in fm_next_tasks[fm_name]:
-                        self.assertEqual([t_now], task.t_completion)
+                    if fm_name in list(fm_next_tasks):
+                        if task_name in fm_next_tasks[fm_name]:
+                            self.assertEqual([t_now], task.t_completion)
+                        else:
+                            self.assertEqual([], task.t_completion)
                     else:
                         self.assertEqual([], task.t_completion)
-                else:
-                    self.assertEqual([], task.t_completion)
 
     # *************** Test next_tasks ***********************
 
@@ -209,7 +210,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
             max_risk = comp.fm["random"].consequence.risk_cost_total
 
             # Assert
-            self.assertLess(risk, max_risk)
+            self.assertLessEqual(risk, max_risk)
 
     # ************ Test expected methods *****************
 

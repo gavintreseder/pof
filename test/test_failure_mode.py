@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 
 import fixtures
-import testconfig # pylint: disable=unused-import
+import testconfig  # pylint: disable=unused-import
 from test_load import TestPofBase
 from pof.failure_mode import FailureMode
 from pof.task import Task
