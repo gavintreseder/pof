@@ -865,6 +865,7 @@ class FailureMode(Load):
 
         # Reset counters
         self._sim_counter = 0
+        self._t_failures = []
 
     # ****************** Optimise routines ***********
 
@@ -911,7 +912,7 @@ class FailureMode(Load):
             ax_cond.legend()
 
         for state in self.get_states():
-            ax_state.plot(timeline["time"], timeline[state], label=state)
+            ax_state.step(timeline["time"], timeline[state], label=state)
             ax_state.legend()
 
         for task in self.tasks:

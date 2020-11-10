@@ -92,7 +92,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         comp = Component.demo()
 
         # Act
-        with patch.dict("pof.cf.component", {"allow_system_impact": False}):
+        with patch.dict("pof.component.cf", {"allow_system_impact": False}):
             comp.init_timeline(200)
             comp.complete_tasks(t_now, fm_next_tasks)
 
@@ -200,7 +200,11 @@ class TestComponent(TestPofBase, unittest.TestCase):
         t_end = 2000
 
         with patch.dict(
-            "pof.component.cf", {"remain_failed": True, "allow_system_impact": True}
+            "pof.component.config",
+            {
+                "FailureMode": {"remain_failed": True},
+                "Component": {"allow_system_impact": True},
+            },
         ):
 
             # Act
