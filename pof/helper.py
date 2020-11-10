@@ -24,7 +24,10 @@ def fill_blanks(row, t_start, t_end):
     cost = np.full(n, 0)
 
     if row["time"].size:
-        cost[row["time"]] = row["cost"]
+        row_time = [item for item in row["time"] if item < n]
+        row_cost = row["cost"][: len(row_time)]
+        cost[row_time] = row_cost
+        # cost[row["time"]] = row["cost"] #TODO: Gav if you want to check what I've done for update_cost_fig
 
     row["time"] = time
     row["cost"] = cost
