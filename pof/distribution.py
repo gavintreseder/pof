@@ -166,8 +166,8 @@ class Distribution(Load):
         return self._alpha
 
     @alpha.setter
-    @check_arg_positive("value")
     @coerce_arg_type
+    @check_arg_positive("value")
     def alpha(self, value: float):
         self._alpha = value
 

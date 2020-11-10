@@ -13,18 +13,9 @@ class TestDecorators(unittest.TestCase):
             return (a, b, c)
 
     def test_chain(self):
-        @check_arg_positive("c")
         @coerce_arg_type
-        def func(a, b, c=-3, *args, **kwargs):
-            return (a, b, c)
-
-        func(1, 2, 3)
-
-    def test_check_arg_positive(self):
-        @check_arg_type
-        @check_arg_type
         @check_arg_positive("c")
-        def func(a, b, c: float, *args, **kwargs):
+        def func(a, b, c: int = 3, *args, **kwargs):
             return (a, b, c)
 
         func(1, 2, "3")

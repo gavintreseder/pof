@@ -2,7 +2,8 @@
 Decoarators that can be used to validate pof class methods
 """
 
-from makefun import wraps  # Alternatively from functools import wraps
+from functools import wraps
+import makefun
 import logging
 import inspect
 
@@ -95,14 +96,13 @@ def check_arg_positive(*params):
     """
 
     def inner(func):
-        @wraps(func)
+        @makefun.wraps(func)
         def wrapper(*args, **kwargs):
-            print(f"this is the function name {func.__name__}")
             for param in params:
                 # Get the value using one of 3 methods
 
                 if param in inspect.getfullargspec(func)[0]:
-                    print(f"we got here")
+
                     # Check kwargs - Is the param in the kwarg
                     if param in kwargs:
                         value = kwargs[param]
