@@ -12,7 +12,7 @@ use_default = false
 allow_system_impact = true
 
 [FailureMode]
-remain_failed = false
+remain_failed = true
 
 name = "fm"
 active = true
