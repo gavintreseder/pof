@@ -155,8 +155,8 @@ class Distribution(Load):
     beta: int = field(default_factory=lambda: cf.get("beta"))
     gamma: int = field(default_factory=lambda: cf.get("gamma"))
 
-    def __init__(self, name="dist", alpha=50, beta=1.5, gamma=10):
-        self.name = name
+    def __init__(self, name="dist", alpha=50, beta=1.5, gamma=10, *args, **kwargs):
+        super().__init__(name=name, *args, **kwargs)
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
@@ -166,8 +166,8 @@ class Distribution(Load):
         return self._alpha
 
     @alpha.setter
-    @check_arg_type
     @coerce_arg_type
+    # @check_arg_type
     @check_arg_positive("value")
     def alpha(self, value: float):
         self._alpha = value

@@ -27,19 +27,24 @@ class TestDistribution(TestPofBase, unittest.TestCase):
         # TestPofBase
         self._class = Distribution
         self._data_valid = [{"name": "test"}]
-        self._data_invalid_types = [{"alpha": "50"}]  # TODO[{"alpha": "string"}]
-        self._data_invalid_values = [{"alpha": -1}]
+        self._data_invalid_types = [
+            {"doesnotexist": "doesnotexist"}
+        ]  # TODO[{"alpha": "string"}]
+        self._data_invalid_values = [
+            {"alpha": -1},
+            {"alpha": "this is an invalid type"},
+        ]
 
         self._data_complete = [
             fixtures.complete["distribution_0"],
             fixtures.complete["distribution_1"],
         ]
 
-        self.alpha = 50
+        self.alpha = 50.0
         self.beta = 1.5
         self.gamma = 10
 
-        self.dist = Distribution(alpha=50, beta=1.5, gamma=10)
+        self.dist = Distribution(alpha=50.0, beta=1.5, gamma=10)
 
     def test_csf_length(self):
 
@@ -90,24 +95,6 @@ class TestDistribution(TestPofBase, unittest.TestCase):
         self.assertEqual(p_2[-1], 1 - p_end / p_start)
 
         # Check the boundary cases
-
-    def test_get_value(self):
-
-        d = Distribution(alpha=10, beta=3, gamma=1)
-
-        alpha = d.get_value(key="alpha")
-        self.assertEqual(alpha, 10)
-
-        alpha, beta, gamma = d.get_value(key=["alpha", "beta", "gamma"])
-        self.assertEqual(alpha, 10)
-        self.assertEqual(beta, 3)
-        self.assertEqual(gamma, 1)
-
-        # Create an object with parameters
-
-        # use get value to get the value
-
-        NotImplemented
 
 
 if __name__ == "__main__":
