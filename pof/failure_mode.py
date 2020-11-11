@@ -851,6 +851,10 @@ class FailureMode(Load):
 
     def reset(self):
 
+        # Reset state
+        self.set_states(self.init_states)
+        self.in_service = True
+
         # Reset tasks
         for task in self.tasks.values():
             task.reset()

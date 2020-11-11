@@ -13,7 +13,7 @@ from pof import Component, FailureMode
 
 def update_cost_fig(local):
     try:
-        df = local.expected_risk_cost_df(t_end=200)
+        df = local.expected_risk_cost_df()
         df.columns = df.columns.str.replace("_", " ").str.title()
 
         if isinstance(local, Component):
