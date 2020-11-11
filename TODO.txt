@@ -1,3 +1,12 @@
+# Priority
+
+    # Annualised cost button
+    # Change sensitivity graph to work for any variable and range Input
+        # Task groups
+    # Expected failures
+
+
+
 # 09 Sep -> Illyse Tasks
 
     # Distribution
@@ -24,7 +33,6 @@ Completed
     # Split set/update methods
 
 # 08 Sep - Gav
-
     # Trigger active doesn't do anything
     # All task triggers acting as AND rather than or _> requires change for on_condition_replacement
 

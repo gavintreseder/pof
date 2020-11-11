@@ -79,6 +79,7 @@ class Component(Load):
         self._in_service = True
         self._sim_counter = 0
         self._replacement = []
+        self.stop_simulation = False
 
     # ****************** Load data ******************
 
@@ -137,6 +138,9 @@ class Component(Load):
         self.reset()
 
         for i in tqdm(range(n_iterations)):
+            if self.stop_simulation:
+                break
+
             self.sim_timeline(t_end=t_end, t_start=t_start)
 
             self.save_timeline(i)
@@ -442,6 +446,7 @@ class Component(Load):
         # Reset counters
         self._sim_counter = 0
         self._replacement = []
+        self.stop_simulation = False
 
     # ****************** Interface ******************
 
