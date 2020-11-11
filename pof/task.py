@@ -396,9 +396,9 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         if self.active:
 
-            if self._t_delay > 0:
-                t_delay = min(self._t_delay, t_end)
-                np.linspace(t_delay, 0, t_delay + 1)
+            # if self._t_delay > 0:
+            #     t_delay = min(self._t_delay, t_end)
+            #     np.linspace(t_delay, 0, t_delay + 1)
 
             # old one
             schedule = np.tile(

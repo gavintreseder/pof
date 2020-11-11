@@ -27,7 +27,7 @@ def fill_blanks(row, t_start, t_end):
         row_time = [item for item in row["time"] if item < n]
         row_cost = row["cost"][: len(row_time)]
         cost[row_time] = row_cost
-        # cost[row["time"]] = row["cost"] #TODO: Gav if you want to check what I've done for update_cost_fig
+        # cost[row["time"]] = row["cost"]
 
     row["time"] = time
     row["cost"] = cost
