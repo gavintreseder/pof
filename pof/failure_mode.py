@@ -361,8 +361,11 @@ class FailureMode(Load):
     def get_expected_pof(self):
 
         # TODO add a check if it has been simulated yet self.pof is None, self._timlines = None
-
+        raise NotImplementedError()
         return self.pof
+
+    def get_t_max(self):
+        pass
 
     # ****************** Timeline ******************
 

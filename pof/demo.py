@@ -49,7 +49,7 @@ condition_data = dict(
         perfect=100,
         failed=0,
         pf_curve='linear',
-        pf_interval=10,
+        pf_interval=15,
         pf_std=0.5
     ),
     fast_degrading=dict(
@@ -57,7 +57,7 @@ condition_data = dict(
         perfect=100,
         failed=0,
         pf_curve='linear',
-        pf_interval=10,
+        pf_interval=8,
         pf_std=0.5
     ),
     uncertain_degrading=dict(

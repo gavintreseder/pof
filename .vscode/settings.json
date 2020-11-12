@@ -14,7 +14,7 @@
     "python.linting.enabled": true,
     "python.autoComplete.extraPaths": [],
     "python.pipenvPath": ".venv\\Scripts\\pipenv.exe",
-    "python.dataScience.jupyterServerURI": "local",
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
+    "jupyter.jupyterServerType": "local",
 }

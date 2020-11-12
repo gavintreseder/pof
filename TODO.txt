@@ -6,6 +6,29 @@
     # Expected failures
 
 
+    # Talk to Occa about representing probability of repeatable events
+
+
+# Greg Changes
+    # Time units
+        # Graphs
+        # In PoF objects
+    # Set up one failure mode for hte most complex scenarios
+        # Multiple inspection types (drones, groundline, aerial, protection trip) -> Tell the story around scenario analysis
+        # Multiple condition measures (rot_ground_line, rot_pole_top)
+
+    
+    # Set up demo for the impact of changing the lower/upper intervention limits
+        # Safety Factor -> First pass
+        # Intervention threshold (50mm) -> second pass
+
+    # CAT3/4 - AND State AND Condition
+        # Set minimum limits for MWT from OIM
+    # CAT1/2 - AND State OR Condition
+    # Emergency - Failure
+        Set up one demo for a triggers
+
+
 
 # 09 Sep -> Illyse Tasks
 

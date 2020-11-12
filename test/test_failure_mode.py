@@ -115,6 +115,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         fm.indicators["fast_degrading"].set_condition(10)
         fm.set_states(dict(initiation=True, detection=True))
 
+    
         # Act
         fm.sim_timeline(200)
 
