@@ -33,11 +33,7 @@ from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
 from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
-from pof.task import (
-    Task,
-    Inspection,
-    ConditionTask,
-)
+from pof.task import Task, Inspection, ConditionTask
 import pof.demo as demo
 from pof.load import Load
 from pof.decorators import check_arg_positive
