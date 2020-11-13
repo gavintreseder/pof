@@ -150,10 +150,10 @@ class Distribution(Load):
 
     """
 
-    name: str = field(default_factory=lambda: cf.get("name"))
-    alpha: int = field(default_factory=lambda: cf.get("alpha"))
-    beta: int = field(default_factory=lambda: cf.get("beta"))
-    gamma: int = field(default_factory=lambda: cf.get("gamma"))
+    # name: str = field(default_factory=lambda: cf.get("name"))
+    # alpha: int = field(default_factory=lambda: cf.get("alpha"))
+    # beta: int = field(default_factory=lambda: cf.get("beta"))
+    # gamma: int = field(default_factory=lambda: cf.get("gamma"))
 
     def __init__(self, name="dist", alpha=50, beta=1.5, gamma=10, *args, **kwargs):
         super().__init__(name=name, *args, **kwargs)
@@ -161,16 +161,38 @@ class Distribution(Load):
         self.beta = beta
         self.gamma = gamma
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name={self.name}, alpha={self.alpha}, beta={self.beta}, gamma={self.gamma}"
+
     @property
     def alpha(self):
         return self._alpha
 
     @alpha.setter
     @coerce_arg_type
-    # @check_arg_type
     @check_arg_positive("value")
     def alpha(self, value: float):
         self._alpha = value
+
+    @property
+    def beta(self):
+        return self._beta
+
+    @beta.setter
+    @coerce_arg_type
+    @check_arg_positive("value")
+    def beta(self, value: float):
+        self._beta = value
+
+    @property
+    def gamma(self):
+        return self._gamma
+
+    @gamma.setter
+    @coerce_arg_type
+    @check_arg_positive("value")
+    def gamma(self, value: float):
+        self._gamma = value
 
     def params(self):
         params = dict(
@@ -290,29 +312,7 @@ class Distribution(Load):
     #         else:
     #             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
 
-    def get_value(self, key):
-        """
-        Takes a key as either a list or a variable name and returns the value stored at that location.
-
-        Usage:
-            >>> dist = Distribution(alpha=10, beta = 3, gamma=1)
-            >>> dist.get_value(key="alpha")
-            10
-        """
-        if isinstance(key, str):
-            value = self.__dict__[key]
-
-        elif isinstance(key, list):
-            if len(key) == 1:
-                value = self.__dict__[key[0]]
-            else:
-                value = ()
-                for k in key:
-                    value = value + (self.__dict__[k],)
-        else:
-            print("ERROR")
-
-        return value
+    # def almost_equal(self, other, decimal=1):
 
 
 """class Dataset:

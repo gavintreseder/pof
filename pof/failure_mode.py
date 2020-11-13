@@ -20,6 +20,7 @@ from scipy.linalg import circulant
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from lifelines import WeibullFitter
+from reliability.Fitters import Fit_Weibull_2P, Fit_Weibull_3P
 
 # Change the system path when this is run directly
 if __package__ is None or __package__ == "":
@@ -374,7 +375,7 @@ class FailureMode(Load):
         self.reset()  # TODO ditch this
 
         for i in tqdm(range(n_iterations)):
-            self.sim_timeline(t_end=t_end + i, t_start=t_start)
+            self.sim_timeline(t_end=t_end, t_start=t_start)
             self.increment_counter()
             self.save_timeline(i)
             self.reset_for_next_sim()
@@ -668,29 +669,35 @@ class FailureMode(Load):
         return self.expected
 
     def expected_pof(self):
+        """ Returns a weibull distribution given the first failure observed over a time period"""
         # TODO general into expected event = 'failure', cumulative = True/False method
-        t_failures = []
+        # TODO generalise to work with any event and for cumulative events
+        event = "failure"
+        durations = []
+        event_observed = []
 
-        t_max = self._timelines[0]["time"][-1] + 1
-
-        # Get the time of first failure or age at failure
         for timeline in self._timelines.values():
-            if timeline["failure"].any():
-                t_failures.append(timeline["time"][timeline["failure"]][0])
+            event_observed.append(timeline[event].any())
+            if event_observed[-1]:
+                durations.append(timeline["time"][timeline[event]][0])
             else:
-                t_failures.append(t_max)
+                durations.append(timeline["time"][-1])
+
+        # Adjust durations based on the gamma to speed up the fitting process
+        durations = np.array(durations)
+        event_observed = np.array(event_observed)
+        durations = durations - self.untreated.gamma
 
         # Fit the weibull
         wbf = WeibullFitter()
-
-        event_observed = t_failures != t_max
-
-        wbf.fit(durations=t_failures, event_observed=event_observed)
+        wbf.fit(durations=durations, event_observed=event_observed)
 
         self.pof = Distribution(
             alpha=wbf.lambda_,
             beta=wbf.rho_,
+            gamma=self.untreated.gamma,
         )
+        # self.pof = fit_weibull(durations, event_observed)
 
         return self.pof
 
@@ -722,6 +729,7 @@ class FailureMode(Load):
         wbf.fit(durations=t_failures, event_observed=event_observed)
 
         self.wbf = wbf
+        raise NotImplementedError()
 
     def expected_condition(self):
         """Get the expected condition for a failure mode"""
@@ -1073,6 +1081,41 @@ class FailureMode(Load):
     @classmethod
     def demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
+
+
+def fit_weibull(durations, event_observed):
+    """ Fit a weibull with an available method"""
+
+    durations = np.array(durations)
+    event_observed = np.array(event_observed)
+
+    try:
+
+        failures = durations[event_observed]
+        right_censored = durations[~event_observed]
+
+        wbf = Fit_Weibull_3P(
+            failures=failures,
+            right_censored=right_censored,
+            show_probability_plot=False,
+            print_results=False,
+        )
+
+        pof = Distribution(alpha=wbf.alpha, beta=wbf.beta, gamma=wbf.gamma)
+
+    except:
+        logging.warning(f"Insufficient failure data for 3P weibull. Using Lifelines")
+
+        wbf = WeibullFitter()
+        wbf.fit(durations=durations, event_observed=event_observed)
+
+        pof = Distribution(
+            alpha=wbf.lambda_,
+            beta=wbf.rho_,
+            gamma=0,
+        )
+
+    return pof
 
 
 if __name__ == "__main__":

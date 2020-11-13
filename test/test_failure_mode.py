@@ -115,7 +115,6 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         fm.indicators["fast_degrading"].set_condition(10)
         fm.set_states(dict(initiation=True, detection=True))
 
-    
         # Act
         fm.sim_timeline(200)
 
@@ -437,6 +436,22 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         er = fm._expected_risk()
 
         np.testing.assert_array_equal(er["time"], [])
+
+    # **************** Test expected_pof **************
+
+    def test_expected_pof(self):
+
+        # Arrange
+        fm = FailureMode(untreated={"alpha": 30, "beta": 3, "gamma": 5})
+        fm.mc_timeline(t_end=100, n_iterations=1000)
+
+        # Act
+        treated = fm.expected_pof()
+
+        # Assert
+        np.testing.assert_almost_equal(treated.alpha, fm.untreated.alpha, decimal=0)
+        np.testing.assert_almost_equal(treated.beta, fm.untreated.beta, decimal=0)
+        np.testing.assert_almost_equal(treated.gamma, fm.untreated.gamma, decimal=0)
 
     # ------------ Integration Tests ---------------
 
