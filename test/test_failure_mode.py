@@ -108,52 +108,96 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         """
         Check an on condition replacement task is triggered when the conditions are met
         """
+        task_name = "on_condition_replacement"
+        test_data = fixtures.failure_mode_data["slow_aging"]
 
-        # Arrange so replacement should occur immediately
-        fm = FailureMode.demo()
-        fm.indicators["slow_degrading"].set_condition(10)
-        fm.indicators["fast_degrading"].set_condition(10)
-        fm.set_states(dict(initiation=True, detection=True))
+        param_list = [
+            (True, 0, None),
+            (False, 0, 2),
+        ]
 
-        # Act
-        fm.sim_timeline(200)
+        for remain_failed, t_task_expected, t_impact_expected in param_list:
+            with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):
+                # Arrange so replacement should occur immediately
+                fm = FailureMode.from_dict(test_data)
+                fm.indicators["slow_degrading"].set_condition(10)
+                fm.indicators["fast_degrading"].set_condition(10)
+                fm.set_states(dict(initiation=True, detection=True))
 
-        # Assert task is triggered and reset occurs
-        self.assertEqual(fm.timeline["on_condition_replacement"][0], 0, "no triggered")
-        for state, value in (
-            fm.tasks["on_condition_replacement"].impacts["state"].items()
-        ):
-            self.assertEqual(fm.timeline[state][1], value, "impact not completed")
+                # Act
+                fm.sim_timeline(200)
+
+                # Assert
+                self.assertEqual(
+                    fm.timeline[task_name][t_task_expected],
+                    0,
+                    f"task should be triggered at t={t_task_expected}",
+                )
+
+                if not remain_failed:
+                    for state, value in fm.tasks[task_name].impacts["state"].items():
+                        self.assertEqual(
+                            fm.timeline[state][t_impact_expected],
+                            value,
+                            "impact not completed",
+                        )
 
     def test_sim_timeline_task_on_failure_replacement(self):
-        # Arrange
-        fm = FailureMode(
-            untreated=fixtures.distribution_data["slow_aging"],
-            conditions={
+        """
+        Check that tasks are triggered at the correct time and any impacts occur
+        """
+
+        task_name = "on_failure_replacement"
+        test_data = {
+            "untreated": fixtures.distribution_data["slow_aging"],
+            "conditions": {
                 "slow_degrading": fixtures.condition_data["slow_degrading"],
                 "fast_degrading": fixtures.condition_data["fast_degrading"],
             },
-            tasks={"replacement": fixtures.replacement_data["on_failure"]},
-        )
-        fm.set_states({"initiation": True})
-        fm.indicators["slow_degrading"].set_condition(10)
-        fm.indicators["fast_degrading"].set_condition(10)
+            "tasks": {"replacement": fixtures.replacement_data["on_failure"]},
+        }
 
-        # Act
-        fm.sim_timeline(200)
+        # remain_failed, t_task_not_expected, t_task_expected, t_impact_expected
+        param_list = [
+            (True, 0, 1, None),
+            (False, 0, 1, 2),
+        ]
 
-        # Assert task is triggered and reset occurs
-        self.assertEqual(
-            fm.timeline["on_failure_replacement"][0],
-            -1,
-            "task should not trigger at the t=0",
-        )
-        self.assertEqual(
-            fm.timeline["on_failure_replacement"][1], 0, "task should trigger at t=1"
-        )
+        for (
+            remain_failed,
+            t_task_not_expected,
+            t_task_expected,
+            t_impact_expected,
+        ) in param_list:
+            with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):
+                # Arrange
+                fm = FailureMode.from_dict(test_data)
+                fm.set_states({"initiation": True})
+                fm.indicators["slow_degrading"].set_condition(10)
+                fm.indicators["fast_degrading"].set_condition(10)
 
-        for state, value in fm.tasks["on_failure_replacement"].impacts["state"].items():
-            self.assertEqual(fm.timeline[state][2], value, "impact not completed")
+                # Act
+                fm.sim_timeline(200)
+
+                # Assert
+                self.assertEqual(
+                    fm.timeline[task_name][t_task_not_expected],
+                    -1,
+                    f"task should not be triggered at the t={t_task_not_expected}",
+                )
+                self.assertEqual(
+                    fm.timeline[task_name][t_task_expected],
+                    0,
+                    f"task should be triggered at t={t_task_expected}",
+                )
+
+                if not remain_failed:
+                    for state, value in fm.tasks[task_name].impacts["state"].items():
+                        self.assertEqual(
+                            fm.timeline[state][t_impact_expected],
+                            value,
+                            "impact not completed",
+                        )
 
     def test_sim_timeline_remain_failed(self):
         """
@@ -441,17 +485,27 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     def test_expected_pof(self):
 
-        # Arrange
-        fm = FailureMode(untreated={"alpha": 30, "beta": 3, "gamma": 5})
-        fm.mc_timeline(t_end=100, n_iterations=1000)
+        param_untreated = [
+            (100, 3, 10),
+            (10, 1, 0),
+            (10, 1, 10),
+            (50, 3, 10),
+        ]
 
-        # Act
-        treated = fm.expected_pof()
+        t_end = 100
 
-        # Assert
-        np.testing.assert_almost_equal(treated.alpha, fm.untreated.alpha, decimal=0)
-        np.testing.assert_almost_equal(treated.beta, fm.untreated.beta, decimal=0)
-        np.testing.assert_almost_equal(treated.gamma, fm.untreated.gamma, decimal=0)
+        for alpha, beta, gamma in param_untreated:
+            # Arrange
+            fm = FailureMode(untreated={"alpha": alpha, "beta": beta, "gamma": gamma})
+            fm.mc_timeline(t_end=t_end, n_iterations=1000)
+
+            # Act
+            treated = fm.expected_pof()
+
+            # Assert
+            np.testing.assert_almost_equal(treated.alpha, fm.untreated.alpha, decimal=0)
+            np.testing.assert_almost_equal(treated.beta, fm.untreated.beta, decimal=0)
+            np.testing.assert_almost_equal(treated.gamma, fm.untreated.gamma, decimal=0)
 
     # ------------ Integration Tests ---------------
 

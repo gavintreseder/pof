@@ -99,7 +99,7 @@ class PofContainer(MutableMapping):
             # Check if the name has been updated
             if key != self.store[key].name:
 
-                logging.debug(f"Updating key to match name change")
+                logging.debug("Updating key to match name change")
                 new_key = self.store[key].name
 
                 # Change the key if it is already in the dict
@@ -107,7 +107,9 @@ class PofContainer(MutableMapping):
                     new_key = str(new_key).join(".1")
                     self.store[key].name = new_key
                     logging.debug(
-                        f"Key {key} is already in use. Name and key changed to {new_key}"
+                        "Key %s is already in use. Name and key changed to %s",
+                        key,
+                        new_key,
                     )
 
                 # Update the key

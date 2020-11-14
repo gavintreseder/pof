@@ -18,7 +18,7 @@ import scipy.stats as ss
 from collections.abc import Iterable
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from lifelines import WeibullFitter
 from reliability.Fitters import Fit_Weibull_2P, Fit_Weibull_3P
 
@@ -687,6 +687,9 @@ class FailureMode(Load):
         durations = np.array(durations)
         event_observed = np.array(event_observed)
         durations = durations - self.untreated.gamma
+
+        # Correct for zero times
+        durations[durations <= 0] = 0.0001
 
         # Fit the weibull
         wbf = WeibullFitter()
