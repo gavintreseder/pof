@@ -34,11 +34,7 @@ from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
 from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
-from pof.task import (
-    Task,
-    Inspection,
-    ConditionTask,
-)
+from pof.task import Task
 import pof.demo as demo
 from pof.load import Load
 from pof.decorators import check_arg_positive
@@ -51,41 +47,6 @@ from pof.decorators import check_arg_positive
 # TODO make it work with non zero start times
 
 cf = config["FailureMode"]
-
-seed(1)
-
-
-class FailureModeData(Load):
-    """
-    A class that contains the data for the FailureMode object.
-
-    This is a temporary fix due to issues with @property and @dataclass changing the constructor to only accept data with leading underscores
-    """
-
-    # pylint: disable=too-many-instance-attributes
-    # Reasonable in this implementation
-
-    name: str = "fm"
-    active: bool = True
-    pf_curve: str = "step"
-    pf_interval: int = 0
-    pf_std: int = 0
-
-    # Set methods used
-    dists: Dict = None
-    consequence: Dict = None
-    indicators: Dict = None
-    conditions: Dict = None
-    states: Dict = None
-    tasks: Dict = None
-    init_states: Dict = None
-
-    # Simulation Details
-    timeline: Dict = field(init=False, repr=False, default_factory=lambda: dict())
-    timelines: Dict = field(init=False, repr=False, default_factory=lambda: dict())
-    sim_counter: int = 0
-
-    untreated: Distribution = None
 
 
 class FailureMode(Load):
@@ -240,7 +201,7 @@ class FailureMode(Load):
 
             for cond_name, condition in self.conditions.items():
                 if cond_name not in self.indicators:
-                    indicator = ConditionIndicator.load(condition)
+                    indicator = Indicator.load(condition)
                     self.set_indicators(indicator)
         else:
             # Create a simple indicator
@@ -514,7 +475,7 @@ class FailureMode(Load):
                     # TODO make this conditionalsf
                     t_initiate = min(
                         t_end + 1,
-                        t_start + int(self.dists["init"].sample()),
+                        t_start + round(self.dists["init"].sample()[0]),
                     )
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True

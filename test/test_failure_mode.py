@@ -104,6 +104,16 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     # -------------Test sim_timleine ----------------------
 
+    def test_sim_timeline_correct_states(self):
+
+        t_init = 16
+        t_failure = 16
+
+        fm = FailureMode.demo()
+
+        fm.dists["init"].sample = Mock(return_value=16)
+        raise NotImplementedError()
+
     def test_sim_timeline_task_on_condition_replacement(self):
         """
         Check an on condition replacement task is triggered when the conditions are met
@@ -484,28 +494,31 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
     # **************** Test expected_pof **************
 
     def test_expected_pof(self):
-
+        """ Check the Distribution returned by expected pof is within the tolerance expected"""
         param_untreated = [
-            (100, 3, 10),
             (10, 1, 0),
             (10, 1, 10),
             (50, 3, 10),
+            (100, 3, 10),
         ]
 
         t_end = 100
+        n_iterations = 1000
 
         for alpha, beta, gamma in param_untreated:
             # Arrange
             fm = FailureMode(untreated={"alpha": alpha, "beta": beta, "gamma": gamma})
-            fm.mc_timeline(t_end=t_end, n_iterations=1000)
+            fm.mc_timeline(t_end=t_end, n_iterations=n_iterations)
 
             # Act
             treated = fm.expected_pof()
 
             # Assert
-            np.testing.assert_almost_equal(treated.alpha, fm.untreated.alpha, decimal=0)
-            np.testing.assert_almost_equal(treated.beta, fm.untreated.beta, decimal=0)
-            np.testing.assert_almost_equal(treated.gamma, fm.untreated.gamma, decimal=0)
+            for param in ["alpha", "beta", "gamma"]:
+                actual = getattr(treated, param)
+                expected = getattr(fm.untreated, param)
+                delta = expected * 20 / n_iterations
+                self.assertAlmostEqual(actual, expected, delta=delta)
 
     # ------------ Integration Tests ---------------
 
