@@ -447,7 +447,7 @@ class ConditionIndicator(Indicator):
             pf_std = self.pf_std
 
         # Adjust the pf_interval based on the expected variance in pf_std
-        if pf_std is not None:
+        if pf_std is not None and pf_std != 0:
             pf_interval = int(pf_interval + ss.norm.rvs(loc=0, scale=pf_std))
 
         # Set the condition profile if it hasn't been created already or if uncertainty is needed
@@ -488,7 +488,7 @@ class ConditionIndicator(Indicator):
         if pf_std is None:
             pf_std = self.pf_std
 
-        # Get the time to be investitaged #TODO Does this work GTGTGTGT
+        # Get the time to be investigated #TODO Does this work GTGTGTGT
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
         if self._pf_curve == "linear":

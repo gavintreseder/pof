@@ -41,6 +41,7 @@ def get_signature(obj):
         for parent in obj.__bases__:
             parent_signature = get_signature(parent)
             signature = {**signature, **parent_signature}
+            #TODO consider making the order consistent
             # for key, value in parent_signature.items():
             #    signature.setdefault({key: value})
 

@@ -497,7 +497,11 @@ class Component(Load):
                 if task.task_group_name not in update_ids:
                     update_ids[
                         task.task_group_name
-                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}"
+                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
+
+                    update_ids[
+                        task.task_group_name
+                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
 
         ids = ids + list(update_ids.values())
         return ids

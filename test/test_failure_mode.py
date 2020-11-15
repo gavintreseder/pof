@@ -106,12 +106,15 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     def test_sim_timeline_correct_states(self):
 
-        t_init = 16
-        t_failure = 16
+        t_init = 1
+        t_failure = 1
 
-        fm = FailureMode.demo()
+        fm = FailureMode.from_dict(fixtures.failure_mode_data["predictable"])
 
-        fm.dists["init"].sample = Mock(return_value=16)
+        fm.dists["init"].sample = Mock(return_value=[t_init])  # Override failure
+
+        fm.sim_timeline(200)
+
         raise NotImplementedError()
 
     def test_sim_timeline_task_on_condition_replacement(self):

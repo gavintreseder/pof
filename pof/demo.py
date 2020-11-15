@@ -39,6 +39,13 @@ distribution_data = dict(
         beta=10,
         gamma=10,
     ),
+
+    predictable=dict(
+        name="predictable",
+        alpha=25,
+        beta=100,
+        gamma=0,
+    ),
 )
 
 # *********************** condition data **********************************

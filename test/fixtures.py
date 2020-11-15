@@ -11,7 +11,7 @@ Notes:
 Use dict() to wrap data when reusing it so that data is copied. This prevents errors where raw data sets are modified
 """
 
-import testconfig # pylint: disable=unused-import
+import testconfig  # pylint: disable=unused-import
 import pof.demo as demo
 
 
@@ -206,6 +206,13 @@ state_data = dict(demo.state_data)
 # *********************** failure mode data **********************************
 
 failure_mode_data = dict(demo.failure_mode_data)
+
+failure_mode_data['predictable'] = dict(
+    name='predictable',
+    pf_curve='linear',
+    pf_interval=0,
+    untreated = dict(distribution_data['predictable']),
+)
 
 #TODO this hsould work with unique condtion names, but currenlty has an issue
 
