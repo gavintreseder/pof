@@ -28,38 +28,32 @@
     # Emergency - Failure
         Set up one demo for a triggers
 
-
-
+Complete
+    # Dash update id methods (see this from above)
+        # Complete tests for each of them
+    # Testing
+        # Finish load test for Task, ConditionTask, ScheduledTask, Inspection
+        # Write a test for different version of expected_risk_cost_df
+        # Load data test can return a load error, but this isn't checked
+    # Asset_model_loader
+        # update rename duplicates so it also checks for duplicates in the asset model (whole list) and in the failure mdoes(no duplicates within comp)
+    # Validation
+        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
+    # Review task update method
+    # Split set/update methods
+    # Init dist not working
+    
 # 09 Sep -> Illyse Tasks
 
     # Distribution
         # change all use of sample method to conditional survival rate
 
 
-    # Dash update id methods (see this from above)
-        # Complete tests for each of them
-
-    # Testing
-        # Finish load test for Task, ConditionTask, ScheduledTask, Inspection
-        # Write a test for different version of expected_risk_cost_df
-        # Load data test can return a load error, but this isn't checked
-
-    # Asset_model_loader
-        # update rename duplicates so it also checks for duplicates in the asset model (whole list) and in the failure mdoes(no duplicates within comp)
-
-    # Validation
-        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
-
-
-Completed
-    # Review task update method
-    # Split set/update methods
-
 # 08 Sep - Gav
     # Trigger active doesn't do anything
     # All task triggers acting as AND rather than or _> requires change for on_condition_replacement
 
-    # Init dist not working
+
 
     # Write get_dist methods that get the distributions for methods rather than the expected
 
