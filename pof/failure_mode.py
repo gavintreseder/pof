@@ -910,6 +910,15 @@ class FailureMode(Load):
         if untreated != self.untreated:
             self._set_init()
 
+    def update_task_group(self, data):
+        """ Update all the tasks with that task_group across the objects"""
+        # TODO replace with task group manager
+        task_group = list(data)
+
+        for task in self.task.values():
+            if task.task_group == task_group:
+                self.update_from_dict(data[task_group])
+
     # def update_from_dict(self, dict_data):
 
     #     for key, value in dict_data.items():

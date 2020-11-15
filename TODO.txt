@@ -9,6 +9,8 @@
     # Talk to Occa about representing probability of repeatable events
 
 
+    # Task group active on interface
+
 # Greg Changes
     # Time units
         # Graphs
@@ -42,7 +44,7 @@ Complete
     # Review task update method
     # Split set/update methods
     # Init dist not working
-    
+
 # 09 Sep -> Illyse Tasks
 
     # Distribution
