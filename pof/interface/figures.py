@@ -25,6 +25,8 @@ def update_cost_fig(local):
                 line_group="Failure Mode",
                 title="Maintenance Strategy Costs",
             )
+            fig.update_yaxes(automargin=True)
+            fig.update_xaxes(automargin=True)
         elif isinstance(local, FailureMode):
             fig = px.area(
                 df,
@@ -33,6 +35,8 @@ def update_cost_fig(local):
                 color="Task",
                 title="Maintenance Strategy Costs",
             )
+            fig.update_yaxes(automargin=True)
+            fig.update_xaxes(automargin=True)
         else:
             raise TypeError("local must be Component of FailureMode")
     except:
@@ -65,6 +69,8 @@ def update_pof_fig(local):
             title="Probability of Failure given Maintenance Strategy",
         )
         fig.layout.yaxis.tickformat = ",.0%"
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
     except:
         fig = go.Figure(
             layout=go.Layout(
@@ -75,18 +81,20 @@ def update_pof_fig(local):
     return fig
 
 
-def update_condition_fig(local):
+def update_condition_fig(local, conf=0.95):
     """ Updates the condition figure"""
 
     try:
 
         ecl = local.expected_condition()
 
+        subplot_titles = [x.replace("_", " ").title() for x in list(ecl.keys())]
+
         fig = make_subplots(
             rows=len(ecl),
             shared_xaxes=True,
-            vertical_spacing=0.05,
-            subplot_titles="Condition",
+            vertical_spacing=0.1,
+            subplot_titles=subplot_titles,
         )
 
         cmap = px.colors.qualitative.Safe
@@ -126,11 +134,19 @@ def update_condition_fig(local):
                 row=idx,
                 col=1,
             )
-            fig.update_yaxes(title_text=cond_name.replace("_", " ").title(), row=idx)
+            fig.update_yaxes(
+                title_text="".join(
+                    [x[0] for x in cond_name.replace("_", " ").title().split(" ")]
+                )
+                + " Measure",
+                row=idx,
+                automargin=True,
+            )
             idx = idx + 1
 
         fig.update_traces(mode="lines")
-        fig.update_xaxes(title_text="Time", row=len(ecl))
+        fig.update_xaxes(title_text="Time", row=len(ecl), automargin=True)
+        fig.update_layout(title="Expected Condition (Confidence = " + f"{conf}" + ")")
 
     except:
         fig = go.Figure(
@@ -146,9 +162,12 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
         df = local.expected_inspection_interval(
             t_min=t_min, t_max=t_max, step=step, n_iterations=n_iterations
         )
+        print(df)
         df_plot = df.melt(
             id_vars="inspection_interval", var_name="source", value_name="cost"
         )
+        print(df_plot)
+
         fig = px.line(
             df_plot,
             x="inspection_interval",
@@ -156,6 +175,9 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
             color="source",
             title="Risk v Cost at different Inspection Intervals",
         )
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
+
     except:
         fig = go.Figure(
             layout=go.Layout(

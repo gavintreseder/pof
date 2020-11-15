@@ -391,28 +391,20 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
     def sim_timeline(self, t_end, t_start=0, *args, **kwargs):
 
-        # TODO Stubbed out to only work for trigger time and simple tile
-        # TODO make it work like arange (start, stop, delay)
-
         if self.active:
 
-            # if self._t_delay > 0:
-            #     t_delay = min(self._t_delay, t_end)
-            #     np.linspace(t_delay, 0, t_delay + 1)
-
-            # old one
             schedule = np.tile(
-                np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
+                np.linspace(self.t_interval, 0, int(self.t_interval) + 1),
                 math.ceil(max((t_end - self.t_delay), 0) / self.t_interval),
             )
 
             if self.t_delay > 0:
-                sched_start = np.linspace(self.t_delay, 0, self.t_delay + 1)
+                self.t_delay = min(self.t_delay, t_end)
+                sched_start = np.linspace(self.t_interval, 0, self.t_delay + 1)
                 schedule = np.concatenate((sched_start, schedule))
 
-            schedule = np.concatenate(([schedule[0] + 1], schedule))[
-                t_start : t_end + 1
-            ]
+            schedule = schedule[t_start : t_end + 1]
+
         else:
             schedule = np.full(t_end - t_start + 1, -1)
 
