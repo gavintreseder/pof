@@ -226,7 +226,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             fm.set_states(dict(initiation=True, detection=True))
 
             # Trigger tasks
-            fm.dists["init"].sample = Mock(return_value=0)
+            fm.dists["init"].sample = Mock(return_value=[0])
             for task in fm.tasks.values():
                 task.sim_timeline = Mock(side_effect=side_effect_trigger_task)
 

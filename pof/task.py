@@ -49,6 +49,7 @@ class Task(Load):
         self,
         name="task",
         task_type="Factory method only",
+        task_category="Graphing purposes",
         trigger="unknown",
         active=True,
         cost=0,
@@ -67,6 +68,7 @@ class Task(Load):
 
         # Task information
         self.task_type = task_type
+        self.task_category = task_category
         self.trigger = trigger
         self.active = active
 

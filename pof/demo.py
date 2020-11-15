@@ -28,15 +28,15 @@ distribution_data = dict(
 
     slow_aging=dict(
         name="slow_aging",
-        alpha=50,
-        beta=10,
+        alpha=100,
+        beta=3.5,
         gamma=10,
     ),
 
     fast_aging=dict(
         name="fast_aging",
-        alpha=100,
-        beta=3.5,
+        alpha=50,
+        beta=10,
         gamma=10,
     ),
 )
