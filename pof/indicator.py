@@ -501,12 +501,9 @@ class ConditionIndicator(Indicator):
             y = m * x + b
 
         elif self._pf_curve == "step":
-            if pf_interval == 0:
-                y = np.array([self._perfect, self._failed])  # this one is changed
-            else:
-                y = np.append(
-                    np.full(pf_interval, self._perfect), (np.array(self._failed))
-                )
+            y = np.append(
+                np.full(pf_interval, self._perfect), (np.array(self._failed))
+            )
 
         elif self._pf_curve == "exponential" or self._pf_curve == "exp":
             raise NotImplementedError
@@ -543,7 +540,13 @@ class ConditionIndicator(Indicator):
 
         # Fill the start with the current condtiion
         if t_start < 0:
-            profile = np.append(np.full(t_start * -1, profile[0]), profile)
+            if self.decreasing:
+                current = accumulated
+            else:
+                current = self.perfect - accumulated
+            profile = np.append(
+                np.full(t_start * -1, current), profile
+            )  # Changed from profile[0]
 
         # Fill the end with the failed condition
         n_after_failure = t_stop - t_start - len(profile) + 1
