@@ -180,6 +180,16 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
 
         np.testing.assert_array_equal(cp, expected)
 
+    def test_sim_timeline_v_early_start_v_early_stop(self):
+        expected = np.full(11, 101)
+        cond = ConditionIndicator(
+            perfect=100, failed=50, pf_interval=50, pf_curve="linear"
+        )
+
+        cp = cond.sim_timeline(t_start=-10, t_stop=-1)
+
+        np.testing.assert_array_equal(cp, expected)
+
     def test_sim_timeline_early_start_late_stop(self):
         expected = np.concatenate(
             (np.full(10, 100), np.linspace(100, 50, 51), np.full(50, 50))

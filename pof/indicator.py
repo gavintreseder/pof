@@ -517,16 +517,16 @@ class ConditionIndicator(Indicator):
         """
 
         # Validate times
-        t_max = len(self._profile[pf_interval]) - 1
+        t_max = pf_interval  # len(self._profile[pf_interval]) - 1
         if t_stop == None:
             t_stop = t_max
 
         if t_start > t_stop:
             t_start = t_stop
 
-        if t_stop < 0:
+        if t_stop < -1:  # TODO rewrite this
             t_start = t_start - t_stop
-            t_stop = 0
+            t_stop = -1
 
         profile = self._profile[pf_interval][
             max(0, min(t_start, t_max)) : min(t_stop, t_max) + 1
@@ -555,6 +555,25 @@ class ConditionIndicator(Indicator):
             profile = np.append(profile, np.full(max(0, n_after_failure), self._failed))
 
         return profile
+
+    # def _accc_timeline(self, t_start=0, t_initiate=0, t_end=0, pf_interval=None):
+
+    #     # Adjust times
+    #     t_no_change = t_initiate - t_start
+    #     t_change_starts =
+    #     t_change_ends
+    #     t_end
+
+    #     # Start
+
+    #     # Profile
+    #     t_min = max(0, t_start - t_initiate)
+    #     t_max
+    #     profile = self._profile[pf_interval][
+    #         max(0, min(t_initiate, t_max)) : min(t_stop, t_max)  # + 1
+    #     ]
+
+    #     # Additions
 
     def sim_failure_timeline(
         self,
