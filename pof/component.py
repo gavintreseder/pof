@@ -133,14 +133,30 @@ class Component(Load):
 
     # ****************** Timeline ******************
 
+    def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
+        """ Simulate the timeline mutliple times"""
+        self.reset()
+        self.up_to_date = True
+        self.n = self.n_iterations
+
+        while self.n < self.n_max and self.up_to_date is True:
+            # Progress bar inputs
+            if self.n == self.n_iterations:
+                self.n_iterations = self.n * 4
+
+            # Do work
+            self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.save_timeline(i)
+            self.increment_counter()
+            self.reset_for_next_sim()
+
+            self.n = self.n + 1
+
     def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times"""
         self.reset()
 
         for i in tqdm(range(n_iterations)):
-            if self.stop_simulation:
-                break
-
             self.sim_timeline(t_end=t_end, t_start=t_start)
 
             self.save_timeline(i)
