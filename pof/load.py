@@ -41,7 +41,7 @@ def get_signature(obj):
         for parent in obj.__bases__:
             parent_signature = get_signature(parent)
             signature = {**signature, **parent_signature}
-            #TODO consider making the order consistent
+            # TODO consider making the order consistent
             # for key, value in parent_signature.items():
             #    signature.setdefault({key: value})
 
@@ -290,17 +290,6 @@ class Load:
                     % (self.__class__.__name__, self.name, attr),
                 )
 
-    def validate_inputs(self, *args, **kwargs):
-        # logging.debug(
-        #     "%s - %s - Unused variables - %s - %s",
-        #     self.__class__.__name__,
-        #     self.name,
-        #     args,
-        #     kwargs,
-        # )
-        # TODO make it validate the inputs against that class
-        return NotImplementedError
-
     def sensitivity(
         self,
         var_name,
@@ -332,7 +321,7 @@ class Load:
             )
 
         else:
-            print(
+            raise ValueError(
                 'ERROR: Cannot get "%s" sensitivity from string or dataframe'
                 % (self.__class__.__name__)
             )
@@ -430,6 +419,8 @@ class Load:
 
         return df
 
+    plot_type = ["line", "heatmap"]
+
     def make_sensitivity_plot(
         self, data, x_axis, y_axis, plot_type, failure_mode="agg", z_axis=None
     ):
@@ -470,7 +461,7 @@ class Load:
                 legend_title=z_axis,
             )
         else:
-            print("ERROR: Cannot plot")
+            raise Exception("ERROR: Cannot plot")
 
         return fig.show()
 

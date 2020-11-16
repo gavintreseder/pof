@@ -11,10 +11,19 @@
 
     # Task group active on interface
 
+
+    # Current failure rates
+    
+
+    # Replacement costs
+        # Average replacement cost (using cost model)
+
+
+# Illyse Tasks:
+    # Time units on graphs based on units from object
+
+
 # Greg Changes
-    # Time units
-        # Graphs
-        # In PoF objects
     # Set up one failure mode for hte most complex scenarios
         # Multiple inspection types (drones, groundline, aerial, protection trip) -> Tell the story around scenario analysis
         # Multiple condition measures (rot_ground_line, rot_pole_top)

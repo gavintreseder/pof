@@ -504,9 +504,10 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
     def test_expected_pof(self):
         """ Check the Distribution returned by expected pof is within the tolerance expected"""
         param_untreated = [
-            # (10, 1, 0),
-            # (10, 1, 10),
             (100, 1, 10),
+            (10, 1, 0),
+            (10, 1, 10),
+            (10, 3, 10),
             (50, 3, 10),
             (100, 3, 10),
         ]
@@ -525,8 +526,8 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             # Assert
             for param in ["alpha", "beta", "gamma"]:
                 actual = getattr(treated, param)
-                expected = getattr(fm.untreated, param)
-                delta = expected * 50 / n_iterations
+                expected = getattr(fm.dists["init"], param)
+                delta = expected / 10
                 self.assertAlmostEqual(actual, expected, delta=delta)
 
     # ------------ Integration Tests ---------------
