@@ -18,6 +18,7 @@ if __package__ is None or __package__ == "":
     import os
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from pof.decorators import check_arg_positive, coerce_arg_type
 from pof.load import Load
 from pof.helper import str_to_dict
 from config import config
@@ -175,7 +176,8 @@ class Indicator(Load):
         return self._pf_interval
 
     @pf_interval.setter
-    def pf_interval(self, value):
+    @coerce_arg_type
+    def pf_interval(self, value: int):
         self._pf_interval = value
 
     @property
@@ -441,14 +443,14 @@ class ConditionIndicator(Indicator):
 
         # Use the condition parameters if unique parameters aren't provided TODO maybe remove
         if pf_interval is None:
-            pf_interval = self.pf_interval
+            pf_interval = self._pf_interval
 
         if pf_std is None:
             pf_std = self.pf_std
 
         # Adjust the pf_interval based on the expected variance in pf_std
         if pf_std is not None and pf_std != 0:
-            pf_interval = int(pf_interval + ss.norm.rvs(loc=0, scale=pf_std))
+            pf_interval = int(pf_interval + round(ss.norm.rvs(loc=0, scale=pf_std)))
 
         # Set the condition profile if it hasn't been created already or if uncertainty is needed
         if pf_interval not in self._profile:
@@ -501,9 +503,7 @@ class ConditionIndicator(Indicator):
             y = m * x + b
 
         elif self._pf_curve == "step":
-            y = np.append(
-                np.full(pf_interval, self._perfect), (np.array(self._failed))
-            )
+            y = np.append(np.full(pf_interval, self._perfect), (np.array(self._failed)))
 
         elif self._pf_curve == "exponential" or self._pf_curve == "exp":
             raise NotImplementedError
@@ -541,9 +541,10 @@ class ConditionIndicator(Indicator):
         # Fill the start with the current condtiion
         if t_start < 0:
             if self.decreasing:
-                current = accumulated
-            else:
                 current = self.perfect - accumulated
+            else:
+                current = accumulated
+
             profile = np.append(
                 np.full(t_start * -1, current), profile
             )  # Changed from profile[0]

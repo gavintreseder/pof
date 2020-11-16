@@ -150,7 +150,7 @@ class FailureMode(Load):
 
     @pf_interval.setter
     @check_arg_positive("value")
-    def pf_interval(self, value):
+    def pf_interval(self, value: int):
         self._pf_interval = value
         if "untreated" in self.dists:
             self._set_init()
@@ -272,7 +272,7 @@ class FailureMode(Load):
         # TODO dlete
 
         if indicator is None:
-            self.indictors = dict()
+            self.indicators = dict()
         else:
             # If it is an iterable, link them all
             if isinstance(indicator, Iterable):
@@ -302,7 +302,7 @@ class FailureMode(Load):
         )
         if pf_interval is None:
             pf_interval = self.pf_interval
-        return pf_interval
+        return int(pf_interval)
 
     def get_pf_std(self, cond_name=None):
         return self.conditions.get(cond_name, {}).get("pf_std", self.pf_std)
@@ -369,7 +369,13 @@ class FailureMode(Load):
         if self.active:
             # Record any risk events
             if self.timeline["failure"][t_now]:
-                self._t_failures.append(t_now)
+                # TODO adjust this by the length of time it was failed for when multiple failures are possible
+                t_failure = np.flatnonzero(
+                    np.diff(
+                        np.r_[~self.timeline["failure"][0], self.timeline["failure"]]
+                    )
+                )[-1]
+                self._t_failures.append(t_failure)
 
             for task_name in task_names:
                 logging.debug(f"Time {t_now} - Tasks {task_names}")
@@ -467,15 +473,13 @@ class FailureMode(Load):
                     t_start, t_end, t_end - t_start + 1, dtype=int
                 )
 
-            # Check for initiation changes
             if "initiation" in updates:
                 if updates["initiation"]:
                     t_initiate = t_start
                 else:
                     # TODO make this conditionalsf
                     t_initiate = min(
-                        t_end + 1,
-                        t_start + round(self.dists["init"].sample()[0]),
+                        t_end + 1, t_start + int(round(self.dists["init"].sample()[0]))
                     )
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True
@@ -483,7 +487,7 @@ class FailureMode(Load):
                 if self.timeline["initiation"][t_start:].any():
                     t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
                 else:
-                    t_initiate = t_end
+                    t_initiate = t_end + 1  # Check for initiation changes
 
             # Check for condition changes
             for cond_name in self._cond_to_update():
@@ -649,8 +653,8 @@ class FailureMode(Load):
         event_observed = np.array(event_observed)
         durations = durations - self.untreated.gamma
 
-        # Correct for zero times
-        durations[durations <= 0] = 0.0001
+        # Correct for zero times to have occured halfway between the 0 and 0.5
+        durations[durations <= 0] = 0.25
 
         # Fit the weibull
         wbf = WeibullFitter()
@@ -915,7 +919,7 @@ class FailureMode(Load):
         # TODO replace with task group manager
         task_group = list(data)
 
-        for task in self.task.values():
+        for task in self.tasks.values():
             if task.task_group == task_group:
                 self.update_from_dict(data[task_group])
 

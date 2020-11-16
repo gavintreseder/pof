@@ -32,7 +32,7 @@ class TestAssetModelLoader(unittest.TestCase):
         aml = AssetModelLoader()
         data = aml.load(filename)
 
-        fm = FailureMode.load(data["pole"]["fm"]["termites"])
+        fm = FailureMode.load(data["pole"]["fm"]["lightning"])
         self.assertIsNotNone(
             fm, msg="FailureMode cannot be loaded with data from AssetModelLoader"
         )
@@ -100,7 +100,7 @@ class TestAssetModelLoader(unittest.TestCase):
         comp = Component.load(data["pole"])
 
         # TODO lightning add a test to make sure the timeline handles before and after correclty
-        fm = comp.fm["weathering"]
+        fm = comp.fm["termites"]
 
         fm.sim_timeline(200)
 

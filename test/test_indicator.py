@@ -146,6 +146,28 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
 
     # ********** Test sim_timeline **********
 
+    def test_sim_timeline_all(self):
+        expected = np.concatenate((np.full(10, 100), np.full(6, 100)))
+        cond = ConditionIndicator(
+            perfect=100, failed=50, pf_interval=10, pf_curve="step"
+        )
+
+        cp = cond.sim_timeline(t_start=-10, t_stop=5)
+
+        np.testing.assert_array_equal(cp, expected)
+
+        # t_start, t_stop, perfect, failed, pf_interval
+
+    def test_sim_timeline_step(self):
+
+        param_no_used = NotImplemented
+
+        def gradient(perfect, failed, pf_interval):
+
+            NotImplemented
+
+        NotImplemented
+
     # early start
 
     def test_sim_timeline_early_start_early_stop(self):

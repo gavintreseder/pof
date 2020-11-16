@@ -85,15 +85,15 @@ class Load:
             return self.__dict__ == other.__dict__
         return False
 
-    def __repr__(self):
-        # TODO alternative version that keens things simple
-        # sig = get_signature(self)
-        # _repr = f"'{self.__class__.__name__}("
-        # for param in sig:
-        #     _repr.join()
-        keys = sorted(self.__dict__)
-        items = ("{}={!r}".format(k, self.__dict__[k]) for k in keys)
-        return "{}({})".format(type(self).__name__, ", ".join(items))
+    # def __repr__(self):
+    #     # TODO alternative version that keens things simple
+    #     # sig = get_signature(self)
+    #     # _repr = f"'{self.__class__.__name__}("
+    #     # for param in sig:
+    #     #     _repr.join()
+    #     keys = sorted(self.__dict__)
+    #     items = ("{}={!r}".format(k, self.__dict__[k]) for k in keys)
+    #     return "{}({})".format(type(self).__name__, ", ".join(items))
 
     @property
     def name(self) -> str:
