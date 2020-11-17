@@ -82,7 +82,7 @@ class Component(Load):
         self.stop_simulation = False
 
         # Dash Tracking
-        self.n_iterations = 1
+        self.n_iterations = 10
         self.n = 1
 
     # ****************** Load data ******************
@@ -140,7 +140,29 @@ class Component(Load):
     def cancel_sim(self):
         self.up_to_date = False
 
-    def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
+    def next_sim_legacy(self, t_end, t_start=0, multiple=2):
+
+        while self.n < self.n_iterations:
+            if not self.up_to_date:
+                self.reset()
+                self.n = 1
+                self.n_iterations = min(self.n * multiple, n_iterations)
+                self.up_to_date = True
+
+            # Simulate
+            self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.save_timeline(self.n)
+            self.increment_counter()
+            self.reset_for_next_sim()
+
+            self.n = self.n + 1
+
+            if self.n == self.n_iterations:
+                self.n_
+
+        self.up_to_date = True
+
+    def next_sim_legacy(self, t_end, t_start=0, n_iterations=None, multiple=5):
 
         if n_iterations is not None:
             self.n_iterations = n_iterations
@@ -150,6 +172,7 @@ class Component(Load):
                 self.reset()
                 self.n = 1
                 self.n_iterations = min(self.n * multiple, n_iterations)
+                self.up_to_date = True
 
             # Simulate
             self.sim_timeline(t_end=t_end, t_start=t_start)
