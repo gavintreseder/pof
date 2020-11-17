@@ -285,15 +285,27 @@ class Component(Load):
 
     def expected_untreated(self, t_start=0, t_end=100):
 
-        sf = dict(all=np.full((t_end - t_start + 1), 1))
-
+        sf = dict(all=dict(pof=np.full((t_end - t_start + 1), 1)))
         for fm in self.fm.values():
+            sf[fm.name] = dict()
+            sf[fm.name]["pof"] = fm.untreated.sf(t_start=t_start, t_end=t_end)
+            sf[fm.name]["fm_active"] = fm.active
+
             if fm.active:
-                sf[fm.name] = fm.untreated.sf(t_start=t_start, t_end=t_end)
-                sf["all"] = sf["all"] * sf[fm.name]
+                sf["all"]["pof"] = sf["all"]["pof"] * sf[fm.name]["pof"]
+                sf["all"]["fm_active"] = True
 
         # Treat the failure modes as a series and combine together
-        cdf = {fm: 1 - sf for fm, sf in sf.items()}
+        # cdf = {fm: 1 - sf for fm, sf in sf.items()}
+        cdf = dict()
+
+        for fm in sf:
+            cdf[fm] = dict()
+            cdf[fm]["pof"] = 1 - sf[fm]["pof"]
+            cdf[fm]["fm_active"] = sf[fm]["fm_active"]
+            cdf[fm]["time"] = np.linspace(
+                t_start, t_end, t_end - t_start + 1, dtype=int
+            )
 
         return cdf
 
@@ -304,22 +316,31 @@ class Component(Load):
         cdf = dict()
 
         for fm in sf:
-            cdf[fm] = 1 - sf[fm]
+            cdf[fm] = dict()
+            cdf[fm]["pof"] = 1 - sf[fm]["pof"]
+            cdf[fm]["fm_active"] = sf[fm]["fm_active"]
+            cdf[fm]["time"] = np.linspace(
+                t_start, t_end, t_end - t_start + 1, dtype=int
+            )
 
         return cdf
 
     def expected_sf(self, t_start=0, t_end=100):
 
         # Calcuate the failure rates for each failure mode
-        sf = dict(all=np.full((t_end - t_start + 1), 1))
+        sf = dict(all=dict(pof=np.full((t_end - t_start + 1), 1)))
+        sf["all"]["fm_active"] = False
 
         for fm_name, fm in self.fm.items():
+            pof = fm.expected_pof()
+            sf[fm_name] = dict()
+            sf[fm_name]["pof"] = pof.sf(t_start, t_end)
+            sf[fm_name]["fm_active"] = fm.active
+
             if fm.active:
-                pof = fm.expected_pof()
+                sf["all"]["pof"] = sf["all"]["pof"] * sf[fm_name]["pof"]
+                sf["all"]["fm_active"] = True
 
-                sf[fm_name] = pof.sf(t_start, t_end)
-
-                sf["all"] = sf["all"] * sf[fm_name]
         # Treat the failure modes as a series and combine together
         # sf['all'] = np.array([fm.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
 
@@ -327,7 +348,7 @@ class Component(Load):
 
         return sf
 
-    def expected_risk_cost_df(self, t_start=0, t_end=None):
+    def expected_risk_cost_df_legacy(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
         erc = self.expected_risk_cost()
 
@@ -335,14 +356,17 @@ class Component(Load):
             t_end = t_start
             for timeline in erc.values():
                 for task in timeline.values():
-                    t_end = max(max(task["time"], default=t_start), t_end)
+                    if isinstance(task, bool):
+                        continue
+                    else:
+                        t_end = max(max(task["time"], default=t_start), t_end)
 
         df = pd.DataFrame().from_dict(erc, orient="index")
         df.index.name = "failure_mode"
         df = df.reset_index().melt(id_vars="failure_mode", var_name="task")
         df = pd.concat(
             [df.drop(columns=["value"]), df["value"].apply(pd.Series)], axis=1
-        )[["failure_mode", "task", "time", "cost"]].dropna()
+        )[["failure_mode", "task", "time", "cost", "task_active"]].dropna()
         df = df.apply(fill_blanks, axis=1, args=(t_start, t_end))
         df_cost = df.explode("cost")["cost"]
         df = df.explode("time")
@@ -352,6 +376,21 @@ class Component(Load):
         df["cost_cumulative"] = df.groupby(by=["failure_mode", "task"])[
             "cost"
         ].transform(pd.Series.cumsum)
+
+        return df
+
+    def expected_risk_cost_df(self, t_start=0, t_end=None):
+        """ A wrapper for expected risk cost that returns a dataframe"""
+        erc = dict()
+        for fm_name, fm in self.fm.items():
+            erc[fm_name] = fm.expected_risk_cost_df()
+
+        df = pd.concat(erc)
+        df = (
+            df.reset_index()
+            .drop(columns="level_1")
+            .rename(columns={"level_0": "failure_mode"})
+        )
 
         return df
 

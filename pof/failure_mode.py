@@ -753,6 +753,7 @@ class FailureMode(Load):
         df["cost_cumulative"] = df.groupby(by=["task"])["cost"].transform(
             pd.Series.cumsum
         )
+        df["fm_active"] = self.active
 
         return df.reset_index()
 
