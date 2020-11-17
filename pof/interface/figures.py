@@ -13,7 +13,7 @@ from pof import Component, FailureMode
 
 def get_color_map(df, column):
 
-    colors = px.colors.qualitative.Safe
+    colors = px.colors.qualitative.Plotly
 
     color_map = dict(zip(df[column].unique(), colors))
 
