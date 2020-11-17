@@ -339,8 +339,9 @@ class Component(Load):
 
         ec = dict()
         for fm_name, fm in self.fm.items():
-            if fm.active:
-                ec[fm_name] = fm.expected_risk_cost()
+            # if fm.active:
+            #     ec[fm_name] = fm.expected_risk_cost()
+            ec[fm_name] = fm.expected_risk_cost()
 
         return ec
 

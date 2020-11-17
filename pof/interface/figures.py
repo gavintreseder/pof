@@ -11,10 +11,25 @@ from plotly.subplots import make_subplots
 from pof import Component, FailureMode
 
 
+def get_color_map(df, column):
+
+    colors = px.colors.qualitative.Safe
+
+    color_map = dict(zip(df[column].unique(), colors))
+
+    return color_map
+
+
 def update_cost_fig(local):
     try:
         df = local.expected_risk_cost_df()
         df.columns = df.columns.str.replace("_", " ").str.title()
+
+        df.sort_values(by=["Task"], inplace=True)
+
+        color_map = get_color_map(df=df, column="Task")
+        # print(df["Task Active"].unique())
+        # df = df[df["Task Active"] == True]
 
         if isinstance(local, Component):
             fig = px.area(
@@ -22,6 +37,7 @@ def update_cost_fig(local):
                 x="Time",
                 y="Cost Cumulative",
                 color="Task",
+                color_discrete_map=color_map,
                 line_group="Failure Mode",
                 title="Maintenance Strategy Costs",
             )
@@ -33,10 +49,14 @@ def update_cost_fig(local):
                 x="Time",
                 y="Cost Cumulative",
                 color="Task",
+                color_discrete_map=color_map,
                 title="Maintenance Strategy Costs",
             )
             fig.update_yaxes(automargin=True)
             fig.update_xaxes(automargin=True)
+            fig.update_layout(
+                legend_traceorder="normal",
+            )
         else:
             raise TypeError("local must be Component of FailureMode")
     except:
@@ -59,11 +79,18 @@ def update_pof_fig(local):
         df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
         df = df.melt(id_vars=["time", "strategy"], var_name="source", value_name="pof")
 
+        df.sort_values(by=["source"], inplace=True)
+
+        color_map = get_color_map(df=df, column="source")
+        # print(df)
+        # df = df[df["Task Active"] == True].drop(columns="Task Active")
+
         fig = px.line(
             df,
             x="time",
             y="pof",
             color="source",
+            color_discrete_map=color_map,
             line_dash="strategy",
             line_group="strategy",
             title="Probability of Failure given Maintenance Strategy",
@@ -146,7 +173,10 @@ def update_condition_fig(local, conf=0.95):
 
         fig.update_traces(mode="lines")
         fig.update_xaxes(title_text="Time", row=len(ecl), automargin=True)
-        fig.update_layout(title="Expected Condition (Confidence = " + f"{conf}" + ")")
+        fig.update_layout(
+            title="Expected Condition (Confidence = " + f"{conf}" + ")",
+            legend_traceorder="normal",
+        )
 
     except:
         fig = go.Figure(

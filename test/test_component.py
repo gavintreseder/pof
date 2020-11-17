@@ -271,6 +271,18 @@ class TestComponent(TestPofBase, unittest.TestCase):
     def test_replace(self):
         NotImplemented
 
+    def test_delete(self):
+        from pof.interface.figures import (
+            update_condition_fig,
+            update_cost_fig,
+            update_pof_fig,
+            make_inspection_interval_fig,
+        )
+
+        comp = Component.demo()
+        comp.mc_timeline(5)
+        update_pof_fig(comp)
+
 
 if __name__ == "__main__":
     unittest.main()
