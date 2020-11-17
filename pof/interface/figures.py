@@ -11,10 +11,23 @@ from plotly.subplots import make_subplots
 from pof import Component, FailureMode
 
 
+def get_color_map(df, column):
+
+    colors = px.colors.qualitative.Safe
+
+    color_map = dict(zip(df[column].unique(), colors))
+
+    return color_map
+
+
 def update_cost_fig(local):
     try:
         df = local.expected_risk_cost_df()
         df.columns = df.columns.str.replace("_", " ").str.title()
+        df.sort_values(by=["Task"], inplace=True)
+        color_map = get_color_map(df=df, column="Task")
+
+        df = df[df["Task Active"] == True]
 
         if isinstance(local, Component):
             fig = px.area(
@@ -22,23 +35,27 @@ def update_cost_fig(local):
                 x="Time",
                 y="Cost Cumulative",
                 color="Task",
+                color_discrete_map=color_map,
                 line_group="Failure Mode",
                 title="Maintenance Strategy Costs",
             )
-            fig.update_yaxes(automargin=True)
-            fig.update_xaxes(automargin=True)
         elif isinstance(local, FailureMode):
             fig = px.area(
                 df,
                 x="Time",
                 y="Cost Cumulative",
                 color="Task",
+                color_discrete_map=color_map,
                 title="Maintenance Strategy Costs",
             )
-            fig.update_yaxes(automargin=True)
-            fig.update_xaxes(automargin=True)
         else:
             raise TypeError("local must be Component of FailureMode")
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
+        fig.update_layout(
+            legend_traceorder="reversed",
+        )
+
     except:
         fig = go.Figure(
             layout=go.Layout(
@@ -56,14 +73,51 @@ def update_pof_fig(local):
             no_maint=pd.DataFrame(local.expected_untreated(t_end=200)),
         )
 
-        df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
-        df = df.melt(id_vars=["time", "strategy"], var_name="source", value_name="pof")
+        # OLD CODE
+        # df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
+        # df.index.names = ["strategy", "key"]
+        # df = df.rename(columns={"variable": "source"})
+
+        # df = df.melt(
+        #     id_vars=["time", "strategy", "fm_active"],
+        #     var_name="source",
+        #     value_name="pof",
+        # )
+
+        df = pd.concat(pof).rename_axis(["strategy", "key"]).reset_index()
+
+        df_pof = df[df["key"] == "pof"]
+        df_pof = pd.melt(
+            df_pof, id_vars=["strategy"], value_vars=df_pof.columns[2:]
+        ).rename(columns={"variable": "source", "value": "pof"})
+        df_pof = df_pof.explode("pof", ignore_index=True)
+
+        df_active = df[df["key"] == "fm_active"]
+        df_active = pd.melt(
+            df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
+        ).rename(columns={"variable": "source", "value": "fm_active"})
+
+        df_time = df[df["key"] == "time"]
+        df_time = pd.melt(
+            df_time, id_vars=["strategy"], value_vars=df_time.columns[2:]
+        ).rename(columns={"variable": "source", "value": "time"})
+        df_time = df_time.explode("time", ignore_index=True)["time"]
+
+        df = df_pof.merge(df_active, on=["strategy", "source"])
+        df["time"] = df_time
+
+        df.sort_values(by=["source"], inplace=True)
+
+        color_map = get_color_map(df=df, column="source")
+
+        df = df[df["fm_active"] == True]
 
         fig = px.line(
             df,
             x="time",
             y="pof",
             color="source",
+            color_discrete_map=color_map,
             line_dash="strategy",
             line_group="strategy",
             title="Probability of Failure given Maintenance Strategy",
@@ -146,7 +200,10 @@ def update_condition_fig(local, conf=0.95):
 
         fig.update_traces(mode="lines")
         fig.update_xaxes(title_text="Time", row=len(ecl), automargin=True)
-        fig.update_layout(title="Expected Condition (Confidence = " + f"{conf}" + ")")
+        fig.update_layout(
+            title="Expected Condition (Confidence = " + f"{conf}" + ")",
+            legend_traceorder="normal",
+        )
 
     except:
         fig = go.Figure(
