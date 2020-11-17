@@ -187,6 +187,11 @@ class TestComponent(TestPofBase, unittest.TestCase):
         comp.fm[list(comp.fm)[0]].active = False
         comp.sim_timeline(200)
 
+    def test_mp_timeline(self):
+        comp = Component.demo()
+
+        comp.mp_timeline(t_end=100)
+
     def test_mc_timeline(self):
         comp = Component.demo()
 

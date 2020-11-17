@@ -81,6 +81,10 @@ class Component(Load):
         self._replacement = []
         self.stop_simulation = False
 
+        # Dash Tracking
+        self.n_iterations = 1
+        self.n = 1
+
     # ****************** Load data ******************
 
     def load_asset_data(self, *args, **kwargs):
@@ -133,20 +137,20 @@ class Component(Load):
 
     # ****************** Timeline ******************
 
-    def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
+    def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple= 4):
         """ Simulate the timeline mutliple times"""
         self.reset()
         self.up_to_date = True
         self.n = self.n_iterations
 
-        while self.n < self.n_max and self.up_to_date is True:
+        while self.n < n_iterations and self.up_to_date is True:
             # Progress bar inputs
             if self.n == self.n_iterations:
-                self.n_iterations = self.n * 4
+                self.n_iterations = self.n * trigger_mutliple
 
             # Do work
             self.sim_timeline(t_end=t_end, t_start=t_start)
-            self.save_timeline(i)
+            self.save_timeline(self.n)
             self.increment_counter()
             self.reset_for_next_sim()
 
