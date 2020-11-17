@@ -137,16 +137,15 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self.assertEqual(next_task, expected)
         self.assertEqual(t_next, 5)
 
-    def test_next_tasks_many_fm_many_tasks_new_method(self):
-        # TODO new method
-        # Three different task intervals for each of the failure_modes
-        param_next_task = [(5, 5, 5), (5, 5, 5), (10, 5, 5), (10, 10, 5)]
-
-        for e_l, s_a, f_a, rand in param_next_task:
-            NotImplemented
-
     def test_next_tasks_many_fm_many_task(self):
         """ Mock next tasks """
+
+        #         # TODO new method
+        # # Three different task intervals for each of the failure_modes
+        # param_next_task = [(5, 5, 5), (5, 5, 5), (10, 5, 5), (10, 10, 5)]
+
+        # for e_l, s_a, f_a, rand in param_next_task:
+        #     NotImplemented
         times = dict(
             early_life=[5, 5, 5, 5],
             slow_aging=[5, 5, 5],

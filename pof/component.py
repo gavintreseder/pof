@@ -84,6 +84,8 @@ class Component(Load):
         # Dash Tracking
         self.n_iterations = 10
         self.n = 1
+        self.n_sens = 1
+        self.n_sens_steps = 10
 
     # ****************** Load data ******************
 
@@ -140,7 +142,6 @@ class Component(Load):
     def cancel_sim(self):
         self.up_to_date = False
 
-
     def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
 
         if n_iterations is not None:
@@ -164,12 +165,12 @@ class Component(Load):
         self.up_to_date = True
 
     def mp_timeline(
-        self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4
+        self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4, n=1
     ):
         """ Simulate the timeline mutliple times"""
         self.reset()
         self.up_to_date = True
-        self.n = 1
+        self.n = n
 
         while self.n < n_iterations and self.up_to_date is True:
             # Progress bar inputs
@@ -450,23 +451,30 @@ class Component(Load):
 
     def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
         # TODO add an optimal onto this
+
+        self.n_sens_steps = int((t_max - t_min) / step)
+        self.n_sens = 1
+
         rc = dict()
         self.reset()
 
-        for i in range(max(1, t_min), t_max, step):
+        for i in range(t_min, t_max, step):
 
             # Set t_interval
             for fm in self.fm.values():
                 if "inspection" in list(fm.tasks):
                     fm.tasks["inspection"].t_interval = i
 
-            self.mc_timeline(t_end=100, n_iterations=n_iterations)
+            # self.mc_timeline(t_end=100, n_iterations=n_iterations)
+            self.mp_timeline(t_end=100, n_iterations=n_iterations)
 
             rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
             rc[i]["inspection_interval"] = i
 
             # Reset component
             self.reset()
+
+            self.n_sens = self.n_sens + 1
 
         df = (
             pd.DataFrame()
@@ -479,6 +487,13 @@ class Component(Load):
         df["total"] = df["direct_cost"] + df["risk_cost"]
 
         return df
+
+    def sens_progress(self):
+
+        return int(
+            (self.n_sens * self.n_iterations + self.n)
+            / (self.n_iterations * self.n_sens_steps)
+        )
 
     # def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):
     #     """"""
