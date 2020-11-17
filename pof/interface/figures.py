@@ -106,8 +106,6 @@ def update_pof_fig(local):
         df = df_pof.merge(df_active, on=["strategy", "source"])
         df["time"] = df_time
 
-        df.sort_values(by=["source"], inplace=True)
-
         color_map = get_color_map(df=df, column="source")
 
         df = df[df["fm_active"] == True]
