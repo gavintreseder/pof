@@ -35,14 +35,17 @@ The load module is used to overload other pof classes so that they can use a com
 
 def get_signature(obj):
     """ Get the constructor signature"""
-    signatures = inspect.signature(obj).parameters
+    signature = inspect.signature(obj).parameters
 
     if bool(obj.__bases__):
         for parent in obj.__bases__:
             parent_signature = get_signature(parent)
-            signatures = {**signatures, **parent_signature}
+            signature = {**signature, **parent_signature}
+            # TODO consider making the order consistent
+            # for key, value in parent_signature.items():
+            #    signature.setdefault({key: value})
 
-    return signatures
+    return signature
 
 
 def valid_signature(obj, inputs):
@@ -70,6 +73,9 @@ class Load:
 
         self.name = name
 
+        # Dash feature
+        self.up_to_date = True
+
         if args or kwargs:
             msg = f"Invalid Data {args} - {kwargs}"
             if cf.get("handle_invalid_data", False):
@@ -81,6 +87,16 @@ class Load:
         if type(other) is type(self):
             return self.__dict__ == other.__dict__
         return False
+
+    # def __repr__(self):
+    #     # TODO alternative version that keens things simple
+    #     # sig = get_signature(self)
+    #     # _repr = f"'{self.__class__.__name__}("
+    #     # for param in sig:
+    #     #     _repr.join()
+    #     keys = sorted(self.__dict__)
+    #     items = ("{}={!r}".format(k, self.__dict__[k]) for k in keys)
+    #     return "{}({})".format(type(self).__name__, ", ".join(items))
 
     @property
     def name(self) -> str:
@@ -187,6 +203,8 @@ class Load:
     def update(self, id_object, value=None):
         """ An update method with some error handling"""
         try:
+            self.up_to_date = False
+
             if isinstance(id_object, str):
                 self.update_from_str(id_object, value, sep="-")
 
@@ -277,17 +295,6 @@ class Load:
                     % (self.__class__.__name__, self.name, attr),
                 )
 
-    def validate_inputs(self, *args, **kwargs):
-        # logging.debug(
-        #     "%s - %s - Unused variables - %s - %s",
-        #     self.__class__.__name__,
-        #     self.name,
-        #     args,
-        #     kwargs,
-        # )
-        # TODO make it validate the inputs against that class
-        return NotImplementedError
-
     def sensitivity(
         self,
         var_name,
@@ -319,7 +326,7 @@ class Load:
             )
 
         else:
-            print(
+            raise ValueError(
                 'ERROR: Cannot get "%s" sensitivity from string or dataframe'
                 % (self.__class__.__name__)
             )
@@ -417,6 +424,8 @@ class Load:
 
         return df
 
+    plot_type = ["line", "heatmap"]
+
     def make_sensitivity_plot(
         self, data, x_axis, y_axis, plot_type, failure_mode="agg", z_axis=None
     ):
@@ -457,7 +466,7 @@ class Load:
                 legend_title=z_axis,
             )
         else:
-            print("ERROR: Cannot plot")
+            raise Exception("ERROR: Cannot plot")
 
         return fig.show()
 

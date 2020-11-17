@@ -18,8 +18,9 @@ import scipy.stats as ss
 from collections.abc import Iterable
 from scipy.linalg import circulant
 from matplotlib import pyplot as plt
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from lifelines import WeibullFitter
+from reliability.Fitters import Fit_Weibull_2P, Fit_Weibull_3P
 
 # Change the system path when this is run directly
 if __package__ is None or __package__ == "":
@@ -33,7 +34,7 @@ from pof.helper import fill_blanks, id_update, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
 from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
-from pof.task import Task, Inspection, ConditionTask
+from pof.task import Task
 import pof.demo as demo
 from pof.load import Load
 from pof.decorators import check_arg_positive
@@ -46,41 +47,6 @@ from pof.decorators import check_arg_positive
 # TODO make it work with non zero start times
 
 cf = config["FailureMode"]
-
-seed(1)
-
-
-class FailureModeData(Load):
-    """
-    A class that contains the data for the FailureMode object.
-
-    This is a temporary fix due to issues with @property and @dataclass changing the constructor to only accept data with leading underscores
-    """
-
-    # pylint: disable=too-many-instance-attributes
-    # Reasonable in this implementation
-
-    name: str = "fm"
-    active: bool = True
-    pf_curve: str = "step"
-    pf_interval: int = 0
-    pf_std: int = 0
-
-    # Set methods used
-    dists: Dict = None
-    consequence: Dict = None
-    indicators: Dict = None
-    conditions: Dict = None
-    states: Dict = None
-    tasks: Dict = None
-    init_states: Dict = None
-
-    # Simulation Details
-    timeline: Dict = field(init=False, repr=False, default_factory=lambda: dict())
-    timelines: Dict = field(init=False, repr=False, default_factory=lambda: dict())
-    sim_counter: int = 0
-
-    untreated: Distribution = None
 
 
 class FailureMode(Load):
@@ -184,7 +150,7 @@ class FailureMode(Load):
 
     @pf_interval.setter
     @check_arg_positive("value")
-    def pf_interval(self, value):
+    def pf_interval(self, value: int):
         self._pf_interval = value
         if "untreated" in self.dists:
             self._set_init()
@@ -235,7 +201,7 @@ class FailureMode(Load):
 
             for cond_name, condition in self.conditions.items():
                 if cond_name not in self.indicators:
-                    indicator = ConditionIndicator.load(condition)
+                    indicator = Indicator.load(condition)
                     self.set_indicators(indicator)
         else:
             # Create a simple indicator
@@ -306,7 +272,7 @@ class FailureMode(Load):
         # TODO dlete
 
         if indicator is None:
-            self.indictors = dict()
+            self.indicators = dict()
         else:
             # If it is an iterable, link them all
             if isinstance(indicator, Iterable):
@@ -336,7 +302,7 @@ class FailureMode(Load):
         )
         if pf_interval is None:
             pf_interval = self.pf_interval
-        return pf_interval
+        return int(pf_interval)
 
     def get_pf_std(self, cond_name=None):
         return self.conditions.get(cond_name, {}).get("pf_std", self.pf_std)
@@ -357,8 +323,11 @@ class FailureMode(Load):
     def get_expected_pof(self):
 
         # TODO add a check if it has been simulated yet self.pof is None, self._timlines = None
-
+        raise NotImplementedError()
         return self.pof
+
+    def get_t_max(self):
+        pass
 
     # ****************** Timeline ******************
 
@@ -367,7 +336,7 @@ class FailureMode(Load):
         self.reset()  # TODO ditch this
 
         for i in tqdm(range(n_iterations)):
-            self.sim_timeline(t_end=t_end + i, t_start=t_start)
+            self.sim_timeline(t_end=t_end, t_start=t_start)
             self.increment_counter()
             self.save_timeline(i)
             self.reset_for_next_sim()
@@ -400,7 +369,13 @@ class FailureMode(Load):
         if self.active:
             # Record any risk events
             if self.timeline["failure"][t_now]:
-                self._t_failures.append(t_now)
+                # TODO adjust this by the length of time it was failed for when multiple failures are possible
+                t_failure = np.flatnonzero(
+                    np.diff(
+                        np.r_[~self.timeline["failure"][0], self.timeline["failure"]]
+                    )
+                )[-1]
+                self._t_failures.append(t_failure)
 
             for task_name in task_names:
                 logging.debug(f"Time {t_now} - Tasks {task_names}")
@@ -498,15 +473,13 @@ class FailureMode(Load):
                     t_start, t_end, t_end - t_start + 1, dtype=int
                 )
 
-            # Check for initiation changes
             if "initiation" in updates:
                 if updates["initiation"]:
                     t_initiate = t_start
                 else:
                     # TODO make this conditionalsf
                     t_initiate = min(
-                        t_end + 1,
-                        t_start + int(self.dists["init"].sample()),
+                        t_end + 1, t_start + int(round(self.dists["init"].sample()[0]))
                     )
                 self.timeline["initiation"][t_start:t_initiate] = updates["initiation"]
                 self.timeline["initiation"][t_initiate:] = True
@@ -514,7 +487,7 @@ class FailureMode(Load):
                 if self.timeline["initiation"][t_start:].any():
                     t_initiate = np.argmax(self.timeline["initiation"][t_start:] > 0)
                 else:
-                    t_initiate = t_end
+                    t_initiate = t_end + 1  # Check for initiation changes
 
             # Check for condition changes
             for cond_name in self._cond_to_update():
@@ -661,29 +634,38 @@ class FailureMode(Load):
         return self.expected
 
     def expected_pof(self):
+        """ Returns a weibull distribution given the first failure observed over a time period"""
         # TODO general into expected event = 'failure', cumulative = True/False method
-        t_failures = []
+        # TODO generalise to work with any event and for cumulative events
+        event = "failure"
+        durations = []
+        event_observed = []
 
-        t_max = self._timelines[0]["time"][-1] + 1
-
-        # Get the time of first failure or age at failure
         for timeline in self._timelines.values():
-            if timeline["failure"].any():
-                t_failures.append(timeline["time"][timeline["failure"]][0])
+            event_observed.append(timeline[event].any())
+            if event_observed[-1]:
+                durations.append(timeline["time"][timeline[event]][0])
             else:
-                t_failures.append(t_max)
+                durations.append(timeline["time"][-1])
+
+        # Adjust durations based on the gamma to speed up the fitting process
+        durations = np.array(durations)
+        event_observed = np.array(event_observed)
+        durations = durations - self.untreated.gamma
+
+        # Correct for zero times to have occured halfway between the 0 and 0.5
+        durations[durations <= 0] = 0.25
 
         # Fit the weibull
         wbf = WeibullFitter()
-
-        event_observed = t_failures != t_max
-
-        wbf.fit(durations=t_failures, event_observed=event_observed)
+        wbf.fit(durations=durations, event_observed=event_observed)
 
         self.pof = Distribution(
             alpha=wbf.lambda_,
             beta=wbf.rho_,
+            gamma=self.untreated.gamma,
         )
+        # self.pof = fit_weibull(durations, event_observed)
 
         return self.pof
 
@@ -715,6 +697,7 @@ class FailureMode(Load):
         wbf.fit(durations=t_failures, event_observed=event_observed)
 
         self.wbf = wbf
+        raise NotImplementedError()
 
     def expected_condition(self):
         """Get the expected condition for a failure mode"""
@@ -932,6 +915,15 @@ class FailureMode(Load):
         if untreated != self.untreated:
             self._set_init()
 
+    def update_task_group(self, data):
+        """ Update all the tasks with that task_group across the objects"""
+        # TODO replace with task group manager
+        task_group = list(data)
+
+        for task in self.tasks.values():
+            if task.task_group == task_group:
+                self.update_from_dict(data[task_group])
+
     # def update_from_dict(self, dict_data):
 
     #     for key, value in dict_data.items():
@@ -1067,6 +1059,41 @@ class FailureMode(Load):
     @classmethod
     def demo(self):
         return self.load(demo.failure_mode_data["slow_aging"])
+
+
+def fit_weibull(durations, event_observed):
+    """ Fit a weibull with an available method"""
+
+    durations = np.array(durations)
+    event_observed = np.array(event_observed)
+
+    try:
+
+        failures = durations[event_observed]
+        right_censored = durations[~event_observed]
+
+        wbf = Fit_Weibull_3P(
+            failures=failures,
+            right_censored=right_censored,
+            show_probability_plot=False,
+            print_results=False,
+        )
+
+        pof = Distribution(alpha=wbf.alpha, beta=wbf.beta, gamma=wbf.gamma)
+
+    except:
+        logging.warning(f"Insufficient failure data for 3P weibull. Using Lifelines")
+
+        wbf = WeibullFitter()
+        wbf.fit(durations=durations, event_observed=event_observed)
+
+        pof = Distribution(
+            alpha=wbf.lambda_,
+            beta=wbf.rho_,
+            gamma=0,
+        )
+
+    return pof
 
 
 if __name__ == "__main__":

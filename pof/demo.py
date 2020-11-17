@@ -28,16 +28,23 @@ distribution_data = dict(
 
     slow_aging=dict(
         name="slow_aging",
-        alpha=50,
-        beta=10,
+        alpha=100,
+        beta=3.5,
         gamma=10,
     ),
 
     fast_aging=dict(
         name="fast_aging",
-        alpha=100,
-        beta=3.5,
+        alpha=50,
+        beta=10,
         gamma=10,
+    ),
+
+    predictable=dict(
+        name="predictable",
+        alpha=25,
+        beta=100,
+        gamma=0,
     ),
 )
 
@@ -49,7 +56,7 @@ condition_data = dict(
         perfect=100,
         failed=0,
         pf_curve='linear',
-        pf_interval=10,
+        pf_interval=15,
         pf_std=0.5
     ),
     fast_degrading=dict(
@@ -57,7 +64,7 @@ condition_data = dict(
         perfect=100,
         failed=0,
         pf_curve='linear',
-        pf_interval=10,
+        pf_interval=8,
         pf_std=0.5
     ),
     uncertain_degrading=dict(

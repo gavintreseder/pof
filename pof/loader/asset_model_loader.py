@@ -299,8 +299,8 @@ class AssetModelLoader:
             except:
                 state = df_task["impact_model"]["state"].dropna().to_dict()
 
-            #TODO revist how system impact is set
-            system = df_task["impact_model"]["system"]['level'].iloc[0]
+            # TODO revist how system impact is set
+            system = df_task["impact_model"]["system"]["level"].iloc[0]
             if system is None:
                 system = []
             else:

@@ -81,6 +81,10 @@ class Component(Load):
         self._replacement = []
         self.stop_simulation = False
 
+        # Dash Tracking
+        self.n_iterations = 1
+        self.n = 1
+
     # ****************** Load data ******************
 
     def load_asset_data(self, *args, **kwargs):
@@ -133,14 +137,32 @@ class Component(Load):
 
     # ****************** Timeline ******************
 
+    def mp_timeline(
+        self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4
+    ):
+        """ Simulate the timeline mutliple times"""
+        self.reset()
+        self.up_to_date = True
+        self.n = 1
+
+        while self.n < n_iterations and self.up_to_date is True:
+            # Progress bar inputs
+            if self.n == self.n_iterations:
+                self.n_iterations = min(self.n * trigger_mutliple, n_iterations)
+
+            # Do work
+            self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.save_timeline(self.n)
+            self.increment_counter()
+            self.reset_for_next_sim()
+
+            self.n = self.n + 1
+
     def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times"""
         self.reset()
 
         for i in tqdm(range(n_iterations)):
-            if self.stop_simulation:
-                break
-
             self.sim_timeline(t_end=t_end, t_start=t_start)
 
             self.save_timeline(i)
@@ -451,6 +473,24 @@ class Component(Load):
 
     # ****************** Interface ******************
 
+    def update_from_dict(self, data):
+        """ Adds an additional update method for task groups"""
+
+        # Loop through all the varaibles to update
+        for attr, detail in data.items():
+            if attr == "task_group":
+                self.update_task_group({attr: detail})
+
+            else:
+                super().update_from_dict({attr: detail})
+
+    def update_task_group(self, data):
+        """ Update all the tasks with that task_group across the objects"""
+        # TODO replace with task group manager
+
+        for fm in self.fm.values():
+            self.update_task_group(data)
+
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""
 
@@ -466,6 +506,28 @@ class Component(Load):
         dash_ids = comp_ids + fm_ids
 
         return dash_ids
+
+    def get_update_ids(self, prefix="", sep="-"):
+        """ Get the ids for all objects that should be updated"""
+        # TODO remove this once task groups added to the interface
+        # TODO fix encapsulation
+
+        ids = self.get_dash_ids()
+
+        update_ids = dict()
+        for fm in self.fm.values():
+            for task in fm.tasks.values():
+                if task.task_group_name not in update_ids:
+                    update_ids[
+                        task.task_group_name
+                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
+
+                    update_ids[
+                        task.task_group_name
+                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
+
+        ids = ids + list(update_ids.values())
+        return ids
 
     def get_objects(self, prefix="", sep="-"):
 

@@ -18,6 +18,7 @@ if __package__ is None or __package__ == "":
     import os
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from pof.decorators import check_arg_positive, coerce_arg_type
 from pof.load import Load
 from pof.helper import str_to_dict
 from config import config
@@ -175,7 +176,8 @@ class Indicator(Load):
         return self._pf_interval
 
     @pf_interval.setter
-    def pf_interval(self, value):
+    @coerce_arg_type
+    def pf_interval(self, value: int):
         self._pf_interval = value
 
     @property
@@ -441,14 +443,14 @@ class ConditionIndicator(Indicator):
 
         # Use the condition parameters if unique parameters aren't provided TODO maybe remove
         if pf_interval is None:
-            pf_interval = self.pf_interval
+            pf_interval = self._pf_interval
 
         if pf_std is None:
             pf_std = self.pf_std
 
         # Adjust the pf_interval based on the expected variance in pf_std
-        if pf_std is not None:
-            pf_interval = int(pf_interval + ss.norm.rvs(loc=0, scale=pf_std))
+        if pf_std is not None and pf_std != 0:
+            pf_interval = int(pf_interval + round(ss.norm.rvs(loc=0, scale=pf_std)))
 
         # Set the condition profile if it hasn't been created already or if uncertainty is needed
         if pf_interval not in self._profile:
@@ -488,7 +490,7 @@ class ConditionIndicator(Indicator):
         if pf_std is None:
             pf_std = self.pf_std
 
-        # Get the time to be investitaged #TODO Does this work GTGTGTGT
+        # Get the time to be investigated #TODO Does this work GTGTGTGT
         x = np.linspace(0, pf_interval, pf_interval + 1)
 
         if self._pf_curve == "linear":
@@ -501,12 +503,7 @@ class ConditionIndicator(Indicator):
             y = m * x + b
 
         elif self._pf_curve == "step":
-            if pf_interval == 0:
-                y = np.array([self._perfect, self._failed])  # this one is changed
-            else:
-                y = np.append(
-                    np.full(pf_interval, self._perfect), (np.array(self._failed))
-                )
+            y = np.append(np.full(pf_interval, self._perfect), (np.array(self._failed)))
 
         elif self._pf_curve == "exponential" or self._pf_curve == "exp":
             raise NotImplementedError
@@ -520,16 +517,16 @@ class ConditionIndicator(Indicator):
         """
 
         # Validate times
-        t_max = len(self._profile[pf_interval]) - 1
+        t_max = pf_interval  # len(self._profile[pf_interval]) - 1
         if t_stop == None:
             t_stop = t_max
 
         if t_start > t_stop:
             t_start = t_stop
 
-        if t_stop < 0:
+        if t_stop < -1:  # TODO rewrite this
             t_start = t_start - t_stop
-            t_stop = 0
+            t_stop = -1
 
         profile = self._profile[pf_interval][
             max(0, min(t_start, t_max)) : min(t_stop, t_max) + 1
@@ -543,7 +540,14 @@ class ConditionIndicator(Indicator):
 
         # Fill the start with the current condtiion
         if t_start < 0:
-            profile = np.append(np.full(t_start * -1, profile[0]), profile)
+            if self.decreasing:
+                current = self.perfect - accumulated
+            else:
+                current = accumulated
+
+            profile = np.append(
+                np.full(t_start * -1, current), profile
+            )  # Changed from profile[0]
 
         # Fill the end with the failed condition
         n_after_failure = t_stop - t_start - len(profile) + 1
@@ -551,6 +555,25 @@ class ConditionIndicator(Indicator):
             profile = np.append(profile, np.full(max(0, n_after_failure), self._failed))
 
         return profile
+
+    # def _accc_timeline(self, t_start=0, t_initiate=0, t_end=0, pf_interval=None):
+
+    #     # Adjust times
+    #     t_no_change = t_initiate - t_start
+    #     t_change_starts =
+    #     t_change_ends
+    #     t_end
+
+    #     # Start
+
+    #     # Profile
+    #     t_min = max(0, t_start - t_initiate)
+    #     t_max
+    #     profile = self._profile[pf_interval][
+    #         max(0, min(t_initiate, t_max)) : min(t_stop, t_max)  # + 1
+    #     ]
+
+    #     # Additions
 
     def sim_failure_timeline(
         self,

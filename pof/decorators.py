@@ -66,7 +66,8 @@ def coerce_arg_type(func):
         args = list(args)
         for index, arg in enumerate(inspect.getfullargspec(func)[0]):
             if arg in func.__annotations__:
-                args[index] = func.__annotations__[arg](args[index])
+                if args[index] is not None:  # TODO move to another decorator
+                    args[index] = func.__annotations__[arg](args[index])
         return func(*tuple(args), **kwargs)
 
     return wrapper
@@ -124,16 +125,6 @@ def check_arg_positive(*params):
         return wrapper
 
     return inner
-
-
-def check_value_positive(func):
-    def wrapper(self, value):
-
-        # check here
-
-        return func(self, value)
-
-    return wrapper
 
 
 # Options

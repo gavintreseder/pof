@@ -6,6 +6,53 @@
     # Expected failures
 
 
+    # Talk to Occa about representing probability of repeatable events
+
+
+    # Task group active on interface
+
+
+    # Current failure rates
+    
+
+    # Replacement costs
+        # Average replacement cost (using cost model)
+
+
+# Illyse Tasks:
+    # Time units on graphs based on units from object
+
+
+# Greg Changes
+    # Set up one failure mode for hte most complex scenarios
+        # Multiple inspection types (drones, groundline, aerial, protection trip) -> Tell the story around scenario analysis
+        # Multiple condition measures (rot_ground_line, rot_pole_top)
+
+    
+    # Set up demo for the impact of changing the lower/upper intervention limits
+        # Safety Factor -> First pass
+        # Intervention threshold (50mm) -> second pass
+
+    # CAT3/4 - AND State AND Condition
+        # Set minimum limits for MWT from OIM
+    # CAT1/2 - AND State OR Condition
+    # Emergency - Failure
+        Set up one demo for a triggers
+
+Complete
+    # Dash update id methods (see this from above)
+        # Complete tests for each of them
+    # Testing
+        # Finish load test for Task, ConditionTask, ScheduledTask, Inspection
+        # Write a test for different version of expected_risk_cost_df
+        # Load data test can return a load error, but this isn't checked
+    # Asset_model_loader
+        # update rename duplicates so it also checks for duplicates in the asset model (whole list) and in the failure mdoes(no duplicates within comp)
+    # Validation
+        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
+    # Review task update method
+    # Split set/update methods
+    # Init dist not working
 
 # 09 Sep -> Illyse Tasks
 
@@ -13,30 +60,11 @@
         # change all use of sample method to conditional survival rate
 
 
-    # Dash update id methods (see this from above)
-        # Complete tests for each of them
-
-    # Testing
-        # Finish load test for Task, ConditionTask, ScheduledTask, Inspection
-        # Write a test for different version of expected_risk_cost_df
-        # Load data test can return a load error, but this isn't checked
-
-    # Asset_model_loader
-        # update rename duplicates so it also checks for duplicates in the asset model (whole list) and in the failure mdoes(no duplicates within comp)
-
-    # Validation
-        # Failure Mode / Condition -> Make tasks check the fm tasks are only triggered by conditions associated with that failure mode
-
-
-Completed
-    # Review task update method
-    # Split set/update methods
-
 # 08 Sep - Gav
     # Trigger active doesn't do anything
     # All task triggers acting as AND rather than or _> requires change for on_condition_replacement
 
-    # Init dist not working
+
 
     # Write get_dist methods that get the distributions for methods rather than the expected
 
