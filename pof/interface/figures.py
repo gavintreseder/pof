@@ -13,7 +13,7 @@ from pof import Component, FailureMode
 
 def get_color_map(df, column):
 
-    colors = px.colors.qualitative.Safe
+    colors = px.colors.qualitative.Bold
 
     color_map = dict(zip(df[column].unique(), colors))
 
@@ -245,7 +245,9 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
     return fig
 
 
-def make_sensitivity_fig(local, var_name, lower=0, upper=10, step=1, n_iterations=10):
+def make_sensitivity_fig(
+    local, var_name, lower=0, upper=10, n_increments=1, n_iterations=10
+):
 
     var = var_name.split("-")[-1]
 
@@ -254,7 +256,7 @@ def make_sensitivity_fig(local, var_name, lower=0, upper=10, step=1, n_iteration
             var_name=var_name,
             lower=lower,
             upper=upper,
-            step=step,
+            n_increments=n_increments,
             n_iterations=n_iterations,
         )
         df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
