@@ -140,12 +140,12 @@ class Component(Load):
     def cancel_sim(self):
         self.up_to_date = False
 
-    def next_sim(self, t_end, t_start=0, multiple=2, n_iterations=None):
+    def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
 
         if n_iterations is not None:
             self.n_iterations = n_iterations
 
-        while self.n <= self.n_iterations:
+        while self.n < self.n_iterations:
             if not self.up_to_date:
                 self.reset()
                 self.n = 1
@@ -158,6 +158,8 @@ class Component(Load):
             self.reset_for_next_sim()
 
             self.n = self.n + 1
+
+        self.up_to_date = True
 
     def mp_timeline(
         self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4
