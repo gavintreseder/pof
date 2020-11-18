@@ -82,19 +82,20 @@ class Component(Load):
         self.stop_simulation = False
 
         # Dash Tracking
-        self.n_iterations = 10
+        self.up_to_date = True
         self.n = 1
+        self.n_iterations = 10
         self.n_sens = 1
-        self.n_sens_steps = 10
+        self.n_sens_iterations = 10
 
     # ***************** Property methods ************
 
     @property
-    def unit(self):
-        return self._unit
+    def units(self):
+        return self._units
 
-    @unit.setter
-    def unit(self, value):
+    @units.setter
+    def units(self, value):
         """ Takes a unit and updates any time values to reflect the new units"""
 
         # TODO add a valid unit to the test data set
@@ -113,7 +114,7 @@ class Component(Load):
 
         # Adjust every time value by this ratio and make sure they ints?
 
-        self._unit = value
+        self._units = value
 
     # ****************** Load data ******************
 
@@ -193,7 +194,7 @@ class Component(Load):
         self.up_to_date = True
 
     def mp_timeline(
-        self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4, n=1
+        self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4
     ):
         """ Simulate the timeline mutliple times"""
         self.reset()
@@ -339,9 +340,7 @@ class Component(Load):
     # PoF
 
     def expected_cf(self):
-        """
-        Returns the conditional failures for the component
-        """
+        """ Returns the conditional failures for the component """
         return self._t_replacement
 
     def expected_ff(self):
@@ -510,8 +509,8 @@ class Component(Load):
     def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
         # TODO add an optimal onto this
 
-        self.n_sens_steps = int((t_max - t_min) / step)
         self.n_sens = 1
+        self.n_sens_iterations = int((t_max - t_min) / step + 1)
 
         rc = dict()
         self.reset()
@@ -546,11 +545,14 @@ class Component(Load):
 
         return df
 
-    def sens_progress(self):
+    def progress(self) -> float:
+        """ Returns the progress of the primary simulation"""
+        return self.n / self.n_iterations
 
-        return int(
-            (self.n_sens * self.n_iterations + self.n)
-            / (self.n_iterations * self.n_sens_steps)
+    def sens_progress(self) -> float:
+        """ Returns the progress of the sensitivity simulation"""
+        return (self.n_sens * self.n_iterations + self.n) / (
+            self.n_iterations * self.n_sens_iterations
         )
 
     # def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):

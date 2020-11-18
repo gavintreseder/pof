@@ -406,8 +406,8 @@ class Load:
                 # Reset component
                 self.reset()
 
-            except Exception as e:
-                logging.error("Error at %s", exc_info=e)
+            except Exception as error:
+                logging.error("Error at %s", exc_info=error)
 
         df = (
             pd.DataFrame()
