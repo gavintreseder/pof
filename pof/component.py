@@ -81,14 +81,11 @@ class Component(Load):
         self._t_replacement = []
         self.stop_simulation = False
 
-        self._units = 
-
         # Dash Tracking
         self.n_iterations = 10
         self.n = 1
         self.n_sens = 1
         self.n_sens_steps = 10
-
 
     # ***************** Property methods ************
 
@@ -100,18 +97,23 @@ class Component(Load):
     def unit(self, value):
         """ Takes a unit and updates any time values to reflect the new units"""
 
+        # TODO add a valid unit to the test data set
+        # TODO add an invalid unit to the test data set
+        # TODO update the complete test data set
+
+        # TODO move this property to load
+
         # Check that it is a valid value
-            # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
+        # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
 
         # Get the ratio between the current units and the new units
-            # TODO Repeat this function across all of the pof objects
-            # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times 
-            # and list of attrs that have a unit method
+        # TODO Repeat this function across all of the pof objects
+        # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times
+        # and list of attrs that have a unit method
 
         # Adjust every time value by this ratio and make sure they ints?
 
         self._unit = unit
-
 
     # ****************** Load data ******************
 
@@ -155,8 +157,6 @@ class Component(Load):
         for ind in self.indicator.values():
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
-
-
 
     # ****************** Set data ******************
 
@@ -346,12 +346,11 @@ class Component(Load):
 
     def expected_ff(self):
         """Returns the functional failures for the component"""
-        ff =[]
+        ff = []
         for fm in self.fm.values():
             ff.append(fm._t_failures)
 
         return ff
-
 
     def expected_untreated(self, t_start=0, t_end=100):
 
@@ -642,7 +641,7 @@ class Component(Load):
             for task in fm.tasks.values():
                 if task.task_group_name not in update_ids:
                     update_ids[
-                        task.task_group_name + 't_interval'
+                        task.task_group_name + "t_interval"
                     ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
 
                     update_ids[
