@@ -81,11 +81,35 @@ class Component(Load):
         self._t_replacement = []
         self.stop_simulation = False
 
+        self._units = 
+
         # Dash Tracking
         self.n_iterations = 10
         self.n = 1
         self.n_sens = 1
         self.n_sens_steps = 10
+
+
+    # ***************** Property methods ************
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        """ Takes a unit and updates any time values to reflect the new units"""
+
+        # Check that it is a valid value
+            # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
+
+        # Get the ratio between the current units and the new units
+            # TODO Repeat this function across all of the s
+
+        # Adjust every time value by this ratio and make sure they ints?
+
+        self._unit = unit
+
 
     # ****************** Load data ******************
 
@@ -129,6 +153,8 @@ class Component(Load):
         for ind in self.indicator.values():
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
+
+
 
     # ****************** Set data ******************
 
