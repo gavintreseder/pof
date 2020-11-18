@@ -333,7 +333,7 @@ class Load:
 
         return df
 
-    def _sensitivity_many(self, df, conf, n_increments=1, n_iterations=100):
+    def _sensitivity_many(self, df, conf, n_increments=50, n_iterations=100):
         """
         Returns dataframe of sensitivity data for a dataframe of variables using a given confidence.
         """

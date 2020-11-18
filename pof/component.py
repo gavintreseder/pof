@@ -318,12 +318,11 @@ class Component(Load):
 
     def expected_ff(self):
         """Returns the functional failures for the component"""
-        ff =[]
+        ff = []
         for fm in self.fm.values():
             ff.append(fm._t_failures)
 
         return ff
-
 
     def expected_untreated(self, t_start=0, t_end=100):
 
@@ -503,6 +502,40 @@ class Component(Load):
 
         return df
 
+    def expected_inspection_interval_mod(
+        self, var_name, max, min=0, step_size=1, n_iterations=100
+    ):
+        """
+        Returns dataframe of sensitivity data for a given variable name using a given confidence.
+        """
+        rc = dict()
+        self.reset()
+
+        var = var_name.split("-")[-1]
+
+        for i in np.arange(min, max, step_size):
+            try:
+                self.update(var_name, i)
+                self.mc_timeline(t_end=100, n_iterations=n_iterations)
+                rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+                rc[i][var] = i
+
+                # Reset component
+                self.reset()
+
+            except Exception as e:
+                logging.error("Error at %s", exc_info=e)
+
+            df = (
+                pd.DataFrame()
+                .from_dict(rc, orient="index")
+                .rename(columns={"risk": "risk_cost"})
+            )
+            df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
+            df["total"] = df["direct_cost"] + df["risk_cost"]
+
+        return df
+
     def sens_progress(self):
 
         return int(
@@ -614,7 +647,7 @@ class Component(Load):
             for task in fm.tasks.values():
                 if task.task_group_name not in update_ids:
                     update_ids[
-                        task.task_group_name + 't_interval'
+                        task.task_group_name + "t_interval"
                     ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
 
                     update_ids[
