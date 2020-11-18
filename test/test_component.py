@@ -275,6 +275,13 @@ class TestComponent(TestPofBase, unittest.TestCase):
     def test_replace(self):
         NotImplemented
 
+    def test_delete(self):
+        from pof.interface.figures import make_sensitivity_fig
+
+        comp = Component.demo()
+        comp.mc_timeline(1000)
+        make_sensitivity_fig(comp)
+
 
 if __name__ == "__main__":
     unittest.main()

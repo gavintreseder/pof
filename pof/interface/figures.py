@@ -106,8 +106,6 @@ def update_pof_fig(local):
         df = df_pof.merge(df_active, on=["strategy", "source"])
         df["time"] = df_time
 
-        df.sort_values(by=["source"], inplace=True)
-
         color_map = get_color_map(df=df, column="source")
 
         df = df[df["fm_active"] == True]
@@ -245,7 +243,9 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
     return fig
 
 
-def make_sensitivity_fig(local, var_name, lower=0, upper=10, step=1, n_iterations=10):
+def make_sensitivity_fig(
+    local, var_name, lower=0, upper=10, n_increments=1, n_iterations=10
+):
 
     var = var_name.split("-")[-1]
 
@@ -254,7 +254,7 @@ def make_sensitivity_fig(local, var_name, lower=0, upper=10, step=1, n_iteration
             var_name=var_name,
             lower=lower,
             upper=upper,
-            step=step,
+            n_increments=n_increments,
             n_iterations=n_iterations,
         )
         df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
