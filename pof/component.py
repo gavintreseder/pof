@@ -85,7 +85,7 @@ class Component(Load):
         self.up_to_date = True
         self.n = 0
         self.n_iterations = 10
-        self.n_sens = 1
+        self.n_sens = 0
         self.n_sens_iterations = 10
 
     # ***************** Property methods ************

@@ -248,7 +248,7 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
 
 
 def make_inspection_interval_fig_mod(
-    local, var_name="", min=0, max=10, step_size=1, n_iterations=10
+    local, var_name="", t_min=0, t_max=10, step_size=1, n_iterations=10
 ):
 
     var = var_name.split("-")[-1]
@@ -258,8 +258,8 @@ def make_inspection_interval_fig_mod(
     try:
         df = local.expected_inspection_interval_mod(
             var_name=var_name,
-            min=min,
-            max=max,
+            min=t_min,
+            max=t_max,
             step_size=step_size,
             n_iterations=n_iterations,
         )
