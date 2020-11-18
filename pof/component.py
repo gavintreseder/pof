@@ -451,7 +451,7 @@ class Component(Load):
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
 
-        #TODO encapsualte in failure_mode and task
+        # TODO encapsualte in failure_mode and task
 
         # Create the erc_df
         d_comp = {}
@@ -473,9 +473,9 @@ class Component(Load):
         )
 
         # Get the desired time steps
-        t_start = int(df_comp['time'].min()) if t_start is None
-        t_end = int(df_comp['time'].max()) if t_end is None
-        time =np.linspace(t_min, t_max, t_max - t_min + 1).astype(int)
+        t_start = 0  # int(df_comp['time'].min()) if t_start is None
+        t_end = 200  # int(df_comp['time'].max()) if t_end is None
+        time = np.linspace(t_start, t_end, t_end - t_start + 1).astype(int)
 
         df = df_comp[["failure_mode", "source", "active"]].drop_duplicates()
         df_time = pd.DataFrame({"time": time})
@@ -498,26 +498,11 @@ class Component(Load):
         return df
 
     def expected_risk_cost(self):
-
-        erc = dict()
-        for fm_name, fm in self.fm.items():
-            erc[fm_name] = fm.expected_risk_cost()
-
-        return erc
+        return {fm.name: fm.expected_risk_cost() for fm in self.fm.values()}
 
     def expected_condition(self, conf=0.95):
+        return {ind.name: ind.expected_condition(conf) for ind in self.indicator.values()}
 
-        expected = dict()
-
-        for ind in self.indicator.values():
-
-            e = ind.expected_condition(conf=conf)
-
-            expected[ind.name] = e
-
-        return expected
-
-    # Cost
 
     # ****************** Optimal? ******************
 

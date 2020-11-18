@@ -779,10 +779,9 @@ class FailureMode(Load):
             "risk": {
                 "time": time,
                 "cost": cost,
-                "active": self.active,
+                "task_active": self.active,
             }
         }
-        
 
         return {**risk_cost, **task_cost}
 
