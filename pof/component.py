@@ -78,7 +78,7 @@ class Component(Load):
         # Simulation traking
         self._in_service = True
         self._sim_counter = 0
-        self._replacement = []
+        self._t_replacement = []
         self.stop_simulation = False
 
         # Dash Tracking
@@ -282,7 +282,7 @@ class Component(Load):
             for fm in self.fm.values():
                 fm.renew(t_renew)
 
-        self._replacement.append(t_renew)
+        self._t_replacement.append(t_renew)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
@@ -309,6 +309,21 @@ class Component(Load):
         NotImplemented
 
     # PoF
+
+    def expected_cf(self):
+        """
+        Returns the conditional failures for the component
+        """
+        return self._t_replacement
+
+    def expected_ff(self):
+        """Returns the functional failures for the component"""
+        ff =[]
+        for fm in self.fm.values():
+            ff.append(fm._t_failures)
+
+        return ff
+
 
     def expected_untreated(self, t_start=0, t_end=100):
 
@@ -548,7 +563,7 @@ class Component(Load):
 
         # Reset counters
         self._sim_counter = 0
-        self._replacement = []
+        self._t_replacement = []
         self.stop_simulation = False
 
     # ****************** Interface ******************
@@ -599,7 +614,7 @@ class Component(Load):
             for task in fm.tasks.values():
                 if task.task_group_name not in update_ids:
                     update_ids[
-                        task.task_group_name
+                        task.task_group_name + 't_interval'
                     ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
 
                     update_ids[
