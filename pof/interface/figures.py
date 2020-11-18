@@ -11,9 +11,14 @@ from plotly.subplots import make_subplots
 from pof import Component, FailureMode
 
 
-def get_color_map(df, column):
+def get_color_map(df, column, colour_scheme=None):
 
-    colors = px.colors.qualitative.Plotly
+    if colour_scheme == "plotly":
+        colors = px.colors.qualitative.Plotly
+    elif colour_scheme == "bold":
+        colors = px.colors.qualitative.Bold
+    else:
+        colors = px.colors.qualitative.Safe
 
     color_map = dict(zip(df[column].unique(), colors))
 
@@ -24,8 +29,8 @@ def update_cost_fig(local):
     try:
         df = local.expected_risk_cost_df()
         df.columns = df.columns.str.replace("_", " ").str.title()
-        df.sort_values(by=["Task"], inplace=True)
-        color_map = get_color_map(df=df, column="Task")
+        # df.sort_values(by=["Task"], inplace=True)
+        color_map = get_color_map(df=df, column="Task", colour_scheme="bold")
 
         df = df[df["Task Active"] == True]
 
@@ -106,7 +111,7 @@ def update_pof_fig(local):
         df = df_pof.merge(df_active, on=["strategy", "source"])
         df["time"] = df_time
 
-        color_map = get_color_map(df=df, column="source")
+        color_map = get_color_map(df=df, column="source", colour_scheme="plotly")
 
         df = df[df["fm_active"] == True]
 
