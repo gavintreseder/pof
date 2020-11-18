@@ -177,6 +177,10 @@ class Component(Load):
             self.n_iterations = n_iterations
 
         while self.n < self.n_iterations:
+            # Concept for continuin loop
+            # if self.n == self.n_iterations:
+            #    self.n_iterations = min(self.n * trigger_mutliple, n_iterations)
+
             if not self.up_to_date:
                 self.reset()
                 self.n = 1
@@ -193,18 +197,13 @@ class Component(Load):
 
         self.up_to_date = True
 
-    def mp_timeline(
-        self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS, trigger_mutliple=4
-    ):
-        """ Simulate the timeline mutliple times"""
+    def mp_timeline(self, t_end, t_start=0, n_iterations=10):
+        """ Simulate the timeline mutliple times and exit immediately if updated"""
         self.reset()
         self.up_to_date = True
-        self.n = n
+        self.n = 1
 
-        while self.n < n_iterations and self.up_to_date is True:
-            # Progress bar inputs
-            if self.n == self.n_iterations:
-                self.n_iterations = min(self.n * trigger_mutliple, n_iterations)
+        while self.n < n_iterations and self.up_to_date:
 
             # Do work
             self.sim_timeline(t_end=t_end, t_start=t_start)
