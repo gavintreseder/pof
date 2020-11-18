@@ -69,9 +69,10 @@ class Load:
 
     # name: str = field_property("load")
 
-    def __init__(self, name="load", *args, **kwargs):
+    def __init__(self, name="load", units="years", *args, **kwargs):
 
         self.name = name
+        self.units = units
 
         # Dash feature
         self.up_to_date = True

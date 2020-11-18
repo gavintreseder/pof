@@ -87,6 +87,34 @@ class Component(Load):
         self.n_sens = 1
         self.n_sens_steps = 10
 
+    # ***************** Property methods ************
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        """ Takes a unit and updates any time values to reflect the new units"""
+
+        # TODO add a valid unit to the test data set
+        # TODO add an invalid unit to the test data set
+        # TODO update the complete test data set
+
+        # TODO move this property to load
+
+        # Check that it is a valid value
+        # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
+
+        # Get the ratio between the current units and the new units
+        # TODO Repeat this function across all of the pof objects
+        # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times
+        # and list of attrs that have a unit method
+
+        # Adjust every time value by this ratio and make sure they ints?
+
+        self._unit = unit
+
     # ****************** Load data ******************
 
     def load_asset_data(self, *args, **kwargs):
