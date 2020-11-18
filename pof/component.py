@@ -83,7 +83,7 @@ class Component(Load):
 
         # Dash Tracking
         self.up_to_date = True
-        self.n = 1
+        self.n = 0
         self.n_iterations = 10
         self.n_sens = 1
         self.n_sens_iterations = 10
@@ -346,7 +346,7 @@ class Component(Load):
         """Returns the functional failures for the component"""
         ff = []
         for fm in self.fm.values():
-            ff.append(fm.expected_ff())
+            ff.extend(fm.expected_ff())
 
         return ff
 
