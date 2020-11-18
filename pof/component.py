@@ -348,7 +348,7 @@ class Component(Load):
         """Returns the functional failures for the component"""
         ff = []
         for fm in self.fm.values():
-            ff.append(fm._t_failures)
+            ff.append(fm.expected_ff())
 
         return ff
 

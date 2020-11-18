@@ -18,6 +18,8 @@
     # Replacement costs
         # Average replacement cost (using cost model)
 
+    # Scale costs for task group
+
 
 # Illyse Tasks:
     # Time units on graphs based on units from object

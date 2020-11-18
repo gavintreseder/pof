@@ -612,6 +612,10 @@ class FailureMode(Load):
 
     # ****************** Expected Methods  ************
 
+    def expected_ff(self):
+        """ Returns the expected functional failures"""
+        return self._t_failures
+
     def expected_simple(self):
         """Returns all expected outcomes using a simple average formula"""
 
@@ -766,32 +770,27 @@ class FailureMode(Load):
 
         return profile
 
-    def _expected_cost(self, scaling=1):
+    def _expected_risk_cost(self, scaling=1):
 
-        task_cost = dict()
+        # Get the Task Costs
+        task_cost = {
+            task_name: task.expected_costs(scaling) for task_name, task in self.tasks.items()
+        }
 
-        # Get the costs causes by tasks
-        for task_name, task in self.tasks.items():
-            # if task.active:
-            #     task_cost[task_name] = task.expected_costs(scaling)
-            task_cost[task_name] = task.expected_costs(scaling)
-
-        return task_cost
-
-    def _expected_risk(self, scaling=1):
-        # TODO expected risk with or without replacement
-
-        # t_failures = []
-        # for timeline in self._timelines.values():
-        #     if timeline["failure"].any():
-        #         t_failures.append(np.argmax(timeline["failure"]))
-
-        # time, cost = np.unique(t_failures, return_counts=True)
-
+        # Get the Risks
         time, cost = np.unique(self._t_failures, return_counts=True)
         cost = cost * self.consequence.get_cost() / scaling
+        risk_cost = {
+            "risk": {
+                "time": time,
+                "cost": cost,
+                "active": self.active,
+            }
+        }
 
-        return dict(time=time, cost=cost)
+
+
+        return {**risk_cost, **task_cost}
 
     def _expected_life(self):
         """ Get the expected life from each timeline"""
