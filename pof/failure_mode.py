@@ -770,6 +770,21 @@ class FailureMode(Load):
 
         return profile
 
+    def _expected_cost(self, scaling=1):
+
+        task_cost = dict()
+        for task_name, task in self.tasks.items():
+            task_cost[task_name] = task.expected_costs(scaling)
+
+        return task_cost
+
+    def _expected_risk(self, scaling=1):
+
+        time, cost = np.unique(self._t_failures, return_counts=True)
+        cost = cost * self.consequence.get_cost() / scaling
+
+        return dict(time=time, cost=cost)
+
     def _expected_risk_cost(self, scaling=1):
 
         # Get the Task Costs
@@ -787,8 +802,6 @@ class FailureMode(Load):
                 "active": self.active,
             }
         }
-
-
 
         return {**risk_cost, **task_cost}
 
