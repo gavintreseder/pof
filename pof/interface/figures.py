@@ -29,7 +29,7 @@ def update_cost_fig(local):
     try:
         df = local.expected_risk_cost_df()
         df.columns = df.columns.str.replace("_", " ").str.title()
-        # df.sort_values(by=["Task"], inplace=True)
+
         color_map = get_color_map(df=df, column="Task", colour_scheme="bold")
 
         df = df[df["Task Active"] == True]
@@ -222,11 +222,10 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
         df = local.expected_inspection_interval(
             t_min=t_min, t_max=t_max, step=step, n_iterations=n_iterations
         )
-        print(df)
+
         df_plot = df.melt(
             id_vars="inspection_interval", var_name="source", value_name="cost"
         )
-        print(df_plot)
 
         fig = px.line(
             df_plot,
@@ -248,28 +247,249 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
     return fig
 
 
-def make_sensitivity_fig(
-    local, var_name, lower=0, upper=10, n_increments=1, n_iterations=10
+def make_inspection_interval_fig_mod(
+    local, var_name="", min=0, max=10, step_size=1, n_iterations=10
 ):
 
     var = var_name.split("-")[-1]
 
+    title_var = var.replace("_", " ").title()
+
     try:
-        df = local.sensitivity(
+        df = local.expected_inspection_interval_mod(
+            var_name=var_name,
+            min=min,
+            max=max,
+            step_size=step_size,
+            n_iterations=n_iterations,
+        )
+
+        df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
+
+        fig = px.line(
+            df_plot,
+            x=var,
+            y="cost",
+            color="source",
+            title="Risk v Cost at different " + title_var + "s",
+        )
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
+
+    except:
+        fig = go.Figure(
+            layout=go.Layout(
+                title=go.layout.Title(text="Error Producing Inspection Interval")
+            )
+        )
+
+    return fig
+
+
+def get_ids_for_sensitivity(local, sd_perc=0.2):
+
+    d = {}
+    d_split = {}
+    for id_ in local.get_dash_ids():
+
+        id_str = id_.split("comp" + "-", 1)[1]
+        id_str = id_str.split("-")
+
+        value = local
+
+        for s in id_str:
+            if s == "fm":
+                value = value.fm
+            elif s == "active":
+                value = value.active
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "pf_curve":
+                value = value.pf_curve
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "pf_interval":
+                value = value.pf_interval
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "pf_std":
+                value = value.pf_std
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "dists":
+                value = value.dists
+            elif s == "alpha":
+                value = value.alpha
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "beta":
+                value = value.beta
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "gamma":
+                value = value.gamma
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "tasks":
+                value = value.tasks
+            elif s == "p_effective":
+                value = value.p_effective
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "cost":
+                value = value.cost
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "t_interval":
+                value = value.t_interval
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "t_delay":
+                value = value.t_delay
+                if isinstance(value, str):
+                    continue
+                elif isinstance(value, bool):
+                    continue
+                else:
+                    d[id_] = value
+                    d_split[id_] = id_.split("-")
+            elif s == "states":
+                value = value.states
+            elif s == "impact":
+                value = value.impacts
+            elif s == "trigger":
+                value = value.triggers
+            elif s == id_str[-1]:
+                if isinstance(value[s], str):
+                    continue
+                elif isinstance(value[s], bool):
+                    continue
+                if isinstance(value[s], list):
+                    continue
+                else:
+                    d[id_] = value[s]
+                    d_split[id_] = id_.split("-")
+            else:
+                value = value[s]
+    df = pd.DataFrame(d.items(), columns=["name", "mean"])
+    df["sd"] = df["mean"] * sd_perc
+
+    return df
+
+
+def make_sensitivity_fig(
+    local,
+    var_name,
+    lower=0,
+    upper=10,
+    n_increments=10,
+    n_iterations=10,
+    x_axis="conf",
+    y_axis="var_name",
+    plot_type="heatmap",
+    failure_mode="agg",
+    z_axis="risk_cost",
+):
+
+    # var_name = var_name[var_name["name"].str.contains("cost")]
+    var = "cost"
+    try:
+
+        data = local.sensitivity(
             var_name=var_name,
             lower=lower,
             upper=upper,
             n_increments=n_increments,
             n_iterations=n_iterations,
         )
-        df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
-        fig = px.line(
-            df_plot,
-            x=var,
-            y="Cost",
-            color="source",
-            title="Risk v Cost at different " + var,
-        )
+        # df_plot = df.melt(id_vars=var, var_name="source", value_name="Cost")
+        # fig = px.line(
+        #     df_plot,
+        #     x=var,
+        #     y="Cost",
+        #     color="source",
+        #     title="Risk v Cost at different " + var,
+        # )
+        print(data[(failure_mode)])
+        if plot_type == "line":
+
+            fig = px.line(
+                data[(failure_mode)], x=data[x_axis], y=y_axis, color=data["var_name"]
+            )
+            fig.update_layout(
+                title="Risk v Cost at different " + y_axis,
+                xaxis_title=x_axis,
+                legend_title="changing variable",
+                showlegend=False,
+            )
+
+        else:
+            fig = go.Figure(
+                data=go.Heatmap(
+                    x=data[x_axis],
+                    y=data[y_axis],
+                    z=data[(failure_mode, z_axis)],
+                    hoverongaps=False,
+                    colorscale="fall",
+                )
+            )
+            fig.update_layout(
+                title="Risk v Cost at different " + z_axis,
+                xaxis_title=x_axis,
+                legend_title=z_axis,
+            )
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
     except:
         fig = go.Figure(
             layout=go.Layout(title=go.layout.Title(text="Error Producing " + var))
