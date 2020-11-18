@@ -450,30 +450,60 @@ class Component(Load):
 
     def expected_risk_cost_df(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
-        erc = dict()
-        for fm_name, fm in self.fm.items():
-            erc[fm_name] = fm.expected_risk_cost_df()
 
-        df = pd.concat(erc)
-        df = (
-            df.reset_index()
-            .drop(columns="level_1")
-            .rename(columns={"level_0": "failure_mode"})
+        #TODO encapsualte in failure_mode and task
+
+        # Create the erc_df
+        d_comp = {}
+        for fm in self.fm.values():
+            d_fm = {}
+            for task in fm.tasks.values():
+                d_fm[task.name] = pd.DataFrame(task.expected_costs())
+            df_fm = (
+                pd.concat(d_fm, names=["source", "drop"])
+                .reset_index()
+                .drop("drop", axis=1)
+            )
+            d_comp[fm.name] = df_fm
+
+        df_comp = (
+            pd.concat(d_fm, names=["failure_mode", "drop"])
+            .reset_index()
+            .drop("drop", axis=1)
         )
 
+        # Get the desired time steps
+        t_start = int(df_comp['time'].min()) if t_start is None
+        t_end = int(df_comp['time'].max()) if t_end is None
+        time =np.linspace(t_min, t_max, t_max - t_min + 1).astype(int)
+
+        df = df_comp[["failure_mode", "source", "active"]].drop_duplicates()
+        df_time = pd.DataFrame({"time": time})
+
+        # Cross join
+        df["key"] = 1
+        df_time["key"] = 1
+        df = pd.merge(df, df_time, on="key")
+        df = pd.merge(
+            df, df_fm, on=["failure_mode", "source", "time", "active"], how="left"
+        ).drop("key", axis=1)
+
+        # Fill blanks
+        df["cost"].fillna(0, inplace=True)
+
+        # Calculate other forms of cost
+        df["cost_cumulative"] = df.groupby(by=["failure_mode", "source"])[
+            "cost"
+        ].transform(pd.Series.cumsum)
         return df
 
     def expected_risk_cost(self):
 
-        # Add scaling
-
-        ec = dict()
+        erc = dict()
         for fm_name, fm in self.fm.items():
-            # if fm.active:
-            #     ec[fm_name] = fm.expected_risk_cost()
-            ec[fm_name] = fm.expected_risk_cost()
+            erc[fm_name] = fm.expected_risk_cost()
 
-        return ec
+        return erc
 
     def expected_condition(self, conf=0.95):
 

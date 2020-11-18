@@ -765,10 +765,10 @@ class FailureMode(Load):
         if scaling is None:
             scaling = self._sim_counter
 
-        profile = self._expected_cost(scaling=scaling)
-        profile["risk"] = self._expected_risk(scaling=scaling)
+        erc = self._expected_cost(scaling=scaling)
+        erc["risk"] = self._expected_risk(scaling=scaling)
 
-        return profile
+        return erc
 
     def _expected_cost(self, scaling=1):
 
@@ -786,6 +786,8 @@ class FailureMode(Load):
         return dict(time=time, cost=cost)
 
     def _expected_risk_cost(self, scaling=1):
+        if scaling is None:
+            scaling = self._sim_counter
 
         # Get the Task Costs
         task_cost = {
