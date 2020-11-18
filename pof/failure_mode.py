@@ -742,11 +742,12 @@ class FailureMode(Load):
         erc = self.expected_risk_cost()
 
         # Set the end to the largest time if no time is given
-        if t_end == None:
+        if t_end is None:
             t_end = t_start
             for task in erc.values():
                 t_end = max(max(task["time"], default=t_start), t_end)
 
+        # Fill the blanks
         df = pd.DataFrame(erc).T.apply(fill_blanks, axis=1, args=(t_start, t_end))
         df.index.name = "task"
         df_cost = df.explode("cost")["cost"]
@@ -762,36 +763,13 @@ class FailureMode(Load):
         return df.reset_index()
 
     def expected_risk_cost(self, scaling=None):
-        if scaling is None:
-            scaling = self._sim_counter
 
-        erc = self._expected_cost(scaling=scaling)
-        erc["risk"] = self._expected_risk(scaling=scaling)
-
-        return erc
-
-    def _expected_cost(self, scaling=1):
-
-        task_cost = dict()
-        for task_name, task in self.tasks.items():
-            task_cost[task_name] = task.expected_costs(scaling)
-
-        return task_cost
-
-    def _expected_risk(self, scaling=1):
-
-        time, cost = np.unique(self._t_failures, return_counts=True)
-        cost = cost * self.consequence.get_cost() / scaling
-
-        return dict(time=time, cost=cost)
-
-    def _expected_risk_cost(self, scaling=1):
         if scaling is None:
             scaling = self._sim_counter
 
         # Get the Task Costs
         task_cost = {
-            task_name: task.expected_costs(scaling) for task_name, task in self.tasks.items()
+            task.name: task.expected_costs(scaling) for task in self.tasks.values()
         }
 
         # Get the Risks
@@ -804,6 +782,7 @@ class FailureMode(Load):
                 "active": self.active,
             }
         }
+        
 
         return {**risk_cost, **task_cost}
 

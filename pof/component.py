@@ -417,7 +417,7 @@ class Component(Load):
 
         return sf
 
-    def expected_risk_cost_df_legacy(self, t_start=0, t_end=None):
+    def expected_risk_cost_df(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
         erc = self.expected_risk_cost()
 
@@ -448,7 +448,7 @@ class Component(Load):
 
         return df
 
-    def expected_risk_cost_df(self, t_start=0, t_end=None):
+    def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
 
         #TODO encapsualte in failure_mode and task
