@@ -113,7 +113,7 @@ class Component(Load):
 
         # Adjust every time value by this ratio and make sure they ints?
 
-        self._unit = unit
+        self._unit = value
 
     # ****************** Load data ******************
 
@@ -501,8 +501,9 @@ class Component(Load):
         return {fm.name: fm.expected_risk_cost() for fm in self.fm.values()}
 
     def expected_condition(self, conf=0.95):
-        return {ind.name: ind.expected_condition(conf) for ind in self.indicator.values()}
-
+        return {
+            ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
+        }
 
     # ****************** Optimal? ******************
 
@@ -542,40 +543,6 @@ class Component(Load):
             axis=1
         )
         df["total"] = df["direct_cost"] + df["risk_cost"]
-
-        return df
-
-    def expected_inspection_interval_mod(
-        self, var_name, max, min=0, step_size=1, n_iterations=100
-    ):
-        """
-        Returns dataframe of sensitivity data for a given variable name using a given confidence.
-        """
-        rc = dict()
-        self.reset()
-
-        var = var_name.split("-")[-1]
-
-        for i in np.arange(min, max, step_size):
-            try:
-                self.update(var_name, i)
-                self.mc_timeline(t_end=100, n_iterations=n_iterations)
-                rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-                rc[i][var] = i
-
-                # Reset component
-                self.reset()
-
-            except Exception as e:
-                logging.error("Error at %s", exc_info=e)
-
-            df = (
-                pd.DataFrame()
-                .from_dict(rc, orient="index")
-                .rename(columns={"risk": "risk_cost"})
-            )
-            df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
-            df["total"] = df["direct_cost"] + df["risk_cost"]
 
         return df
 
