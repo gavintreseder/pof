@@ -279,9 +279,6 @@ class TestComponent(TestPofBase, unittest.TestCase):
         # import sys
         # import os
         from pof.interface.figures import (
-            make_sensitivity_fig,
-            update_cost_fig,
-            get_ids_for_sensitivity,
             make_inspection_interval_fig_mod,
         )
 
@@ -302,8 +299,8 @@ class TestComponent(TestPofBase, unittest.TestCase):
         make_inspection_interval_fig_mod(
             comp,
             var_name="comp-fm-early_life-pf_interval",
-            min=0,
-            max=10,
+            t_min=0,
+            t_max=10,
             step_size=1,
             n_iterations=10,
         )

@@ -555,36 +555,37 @@ class Component(Load):
             self.n_iterations * self.n_sens_iterations
         )
 
-    # def sensitivity(self, var_name, lower, upper, step=1, n_iterations=10):
-    #     """"""
-    #     # TODO add an optimal onto this
-    #     rc = dict()
-    #     self.reset()
+    def expected_inspection_interval_mod(
+        self, var_name, t_min, t_max, step_size=1, n_iterations=100
+    ):
+        """
+        Returns dataframe of sensitivity data for a given variable name using a given confidence.
+        """
+        rc = dict()
+        self.reset()
 
-    #     var = var_name.split("-")[-1]
+        var = var_name.split("-")[-1]
 
-    #     for i in range(max(1, lower), upper, step):
+        for i in np.arange(t_min, t_max, step_size):
+            try:
+                self.update(var_name, i)
+                self.mc_timeline(t_end=100, n_iterations=n_iterations)
+                rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+                rc[i][var] = i
 
-    #         self.update(var_name, i)
+                # Reset component
+                self.reset()
 
-    #         self.mc_timeline(t_end=100, n_iterations=n_iterations)
+            except Exception as error:
+                logging.error("Error at %s", exc_info=error)
 
-    #         rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-    #         rc[i][var] = i
+        df = (
+            pd.DataFrame()
+            .from_dict(rc, orient="index")
+            .rename(columns={"risk": "risk_cost"})
+        )
 
-    #         # Reset component
-    #         self.reset()
-
-    #     df = (
-    #         pd.DataFrame()
-    #         .from_dict(rc, orient="index")
-    #         .rename(columns={"risk": "risk_cost"})
-    #     )
-    #     df["direct_cost"] = df.drop([var, "risk_cost"], axis=1).sum(axis=1)
-    #     df["total"] = df["direct_cost"] + df["risk_cost"]
-    #     df = df[[var, "direct_cost", "risk_cost", "total"]]
-
-    #     return df
+        return df
 
     # ****************** Reset ******************
 
