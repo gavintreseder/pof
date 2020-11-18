@@ -202,6 +202,7 @@ class Component(Load):
         self.reset()
         self.up_to_date = True
         self.n = 1
+        self.n_iterations = n_iterations
 
         while self.n < n_iterations and self.up_to_date:
 
