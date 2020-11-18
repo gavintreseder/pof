@@ -104,7 +104,9 @@ class Component(Load):
             # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
 
         # Get the ratio between the current units and the new units
-            # TODO Repeat this function across all of the s
+            # TODO Repeat this function across all of the pof objects
+            # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times 
+            # and list of attrs that have a unit method
 
         # Adjust every time value by this ratio and make sure they ints?
 
