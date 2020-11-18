@@ -204,8 +204,11 @@ class Component(Load):
         self.n = 1
         self.n_iterations = n_iterations
 
-        while self.n < n_iterations and self.up_to_date:
-
+        #while self.n < n_iterations and self.up_to_date:
+        
+        for i in range(self.n_iterations):
+            if not self.up_to_date:
+                break
             # Do work
             self.sim_timeline(t_end=t_end, t_start=t_start)
             self.save_timeline(self.n)
