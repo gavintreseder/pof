@@ -204,8 +204,8 @@ class Component(Load):
         self.n = 1
         self.n_iterations = n_iterations
 
-        #while self.n < n_iterations and self.up_to_date:
-        
+        # while self.n < n_iterations and self.up_to_date:
+
         for i in range(self.n_iterations):
             if not self.up_to_date:
                 break
@@ -437,7 +437,8 @@ class Component(Load):
         df = df.reset_index().melt(id_vars="failure_mode", var_name="task")
         df = pd.concat(
             [df.drop(columns=["value"]), df["value"].apply(pd.Series)], axis=1
-        )[["failure_mode", "task", "time", "cost", "task_active"]].dropna()
+        )[["failure_mode", "task", "time", "cost", "fm_active", "task_active"]].dropna()
+
         df = df.apply(fill_blanks, axis=1, args=(t_start, t_end))
         df_cost = df.explode("cost")["cost"]
         df = df.explode("time")
@@ -558,13 +559,15 @@ class Component(Load):
             self.n_iterations * self.n_sens_iterations
         )
 
-    def expected_inspection_interval_mod(
+    def expected_sensitivity(
         self, var_name, t_min, t_max, step_size=1, n_iterations=100
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given confidence.
         """
         rc = dict()
+        ta = pd.DataFrame()
+        fma = pd.DataFrame()
         self.reset()
 
         var = var_name.split("-")[-1]
@@ -573,7 +576,9 @@ class Component(Load):
             try:
                 self.update(var_name, i)
                 self.mc_timeline(t_end=100, n_iterations=n_iterations)
-                rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
+                erc = self.expected_risk_cost_df()
+                rc[i] = erc.groupby(by=["task"])["cost"].sum()
+
                 rc[i][var] = i
 
                 # Reset component
@@ -582,13 +587,18 @@ class Component(Load):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
+        ta = erc.groupby(by=["task"])["task_active"].all().reset_index()
+        fma = erc.groupby(by=["task"])["fm_active"].all().reset_index()
+
+        df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
+
         df = (
             pd.DataFrame()
             .from_dict(rc, orient="index")
             .rename(columns={"risk": "risk_cost"})
         )
 
-        return df
+        return df, df_active
 
     # ****************** Reset ******************
 

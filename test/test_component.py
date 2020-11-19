@@ -279,24 +279,15 @@ class TestComponent(TestPofBase, unittest.TestCase):
         # import sys
         # import os
         from pof.interface.figures import (
-            make_inspection_interval_fig_mod,
+            update_cost_fig,
+            make_sensitivity_fig,
         )
 
-        # from pof.loader.asset_model_loader import AssetModelLoader
-
-        # filename = (
-        #     os.path.dirname(os.getcwd()) + r"\data\inputs\Asset Model - Demo.xlsx"
-        # )
-
-        # aml = AssetModelLoader(filename)
-        # comp_data = aml.load()
-        # comp = Component.from_dict(comp_data["pole"])
-
         comp = Component.demo()
-        # comp.mc_timeline(1000)
-        # update_cost_fig(comp)
-        # df = get_ids_for_sensitivity(comp)
-        make_inspection_interval_fig_mod(
+        comp.__dict__["fm"]["fast_aging"].__dict__["active"] = False
+        comp.__dict__["fm"]["slow_aging"].__dict__["active"] = False
+
+        make_sensitivity_fig(
             comp,
             var_name="comp-fm-early_life-pf_interval",
             t_min=0,

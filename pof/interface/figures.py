@@ -28,10 +28,12 @@ def get_color_map(df, column, colour_scheme=None):
 def update_cost_fig(local):
     try:
         df = local.expected_risk_cost_df()
+
         df.columns = df.columns.str.replace("_", " ").str.title()
 
         color_map = get_color_map(df=df, column="Task", colour_scheme="bold")
 
+        df = df[df["Fm Active"] == True]
         df = df[df["Task Active"] == True]
 
         if isinstance(local, Component):
@@ -247,7 +249,7 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
     return fig
 
 
-def make_inspection_interval_fig_mod(
+def make_sensitivity_fig(
     local, var_name="", t_min=0, t_max=10, step_size=1, n_iterations=10
 ):
 
@@ -256,7 +258,7 @@ def make_inspection_interval_fig_mod(
     title_var = var.replace("_", " ").title()
 
     try:
-        df = local.expected_inspection_interval_mod(
+        df, df_active = local.expected_sensitivity(
             var_name=var_name,
             t_min=t_min,
             t_max=t_max,
@@ -266,12 +268,21 @@ def make_inspection_interval_fig_mod(
 
         df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
 
+        df_plot = df_plot.merge(df_active, on="source")
+
+        color_map = get_color_map(df=df_plot, column="source")
+
+        df_plot = df_plot[df_plot["fm_active"] == True]
+        df_plot = df_plot[df_plot["task_active"] == True]
+        print(df_plot)
+
         fig = px.line(
             df_plot,
             x=var,
             y="cost",
             color="source",
-            title="Risk v Cost at different " + title_var + "s",
+            color_discrete_map=color_map,
+            title="Risk v Cost at different " + f"{title_var}" + "s",
         )
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
