@@ -588,7 +588,7 @@ class Component(Load):
                 logging.error("Error at %s", exc_info=error)
 
         ta = erc.groupby(by=["task"])["task_active"].all().reset_index()
-        fma = erc.groupby(by=["task"])["fm_active"].all().reset_index()
+        fma = erc.groupby(by=["task", "failure_mode"])["fm_active"].all().reset_index()
 
         df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
 

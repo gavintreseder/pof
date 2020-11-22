@@ -267,14 +267,12 @@ def make_sensitivity_fig(
         )
 
         df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
-
-        df_plot = df_plot.merge(df_active, on="source")
+        df_plot = df_plot.merge(df_active, on=["source"])
 
         color_map = get_color_map(df=df_plot, column="source")
 
         df_plot = df_plot[df_plot["fm_active"] == True]
         df_plot = df_plot[df_plot["task_active"] == True]
-        print(df_plot)
 
         fig = px.line(
             df_plot,
