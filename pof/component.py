@@ -201,7 +201,7 @@ class Component(Load):
         """ Simulate the timeline mutliple times and exit immediately if updated"""
         self.reset()
         self.up_to_date = True
-        self.n = 1
+        self.n = 0
         self.n_iterations = n_iterations
 
         # while self.n < n_iterations and self.up_to_date:
