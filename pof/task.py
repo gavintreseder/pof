@@ -404,7 +404,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
             if self.t_delay > 0:
                 self.t_delay = min(self.t_delay, t_end)
-                sched_start = np.linspace(self.t_interval, 0, self.t_delay + 1)
+                sched_start = np.linspace(self.t_delay, 0, self.t_delay + 1)
                 schedule = np.concatenate((sched_start, schedule))
 
             schedule = schedule[t_start : t_end + 1]

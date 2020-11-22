@@ -89,7 +89,7 @@ class TestScheduledTask(TestTaskCommon, unittest.TestCase):
                     if t_delay == 0:
                         delay = []
                     else:
-                        delay = np.linspace(t_interval, 0, t_delay + 1)
+                        delay = np.linspace(t_delay, 0, t_delay + 1)
 
                     expected = np.concatenate(
                         [
