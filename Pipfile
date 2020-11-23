@@ -25,6 +25,7 @@ lifelines = "*"
 xlrd = "*"
 dash-bootstrap-components = "*"
 celery = "*"
+dask = "*"
 
 [requires]
 python_version = "*"

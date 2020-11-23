@@ -20,7 +20,6 @@ if __package__ is None or __package__ == "":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.helper import flatten, str_to_dict
-from pof.condition import Condition
 from pof.consequence import Consequence
 from pof.distribution import Distribution
 import pof.demo as demo

@@ -13,6 +13,7 @@ from pof.component import Component
 from pof.failure_mode import FailureMode
 
 # TODO move this all to a test file rather than demo
+path
 filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential Energy\Probability of Failure Model\pof\data\inputs\Asset Model - Demo.xlsx"
 
 
