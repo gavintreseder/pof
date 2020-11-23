@@ -275,27 +275,6 @@ class TestComponent(TestPofBase, unittest.TestCase):
     def test_replace(self):
         NotImplemented
 
-    def test_delete(self):
-        # import sys
-        # import os
-        from pof.interface.figures import (
-            update_cost_fig,
-            make_sensitivity_fig,
-        )
-
-        comp = Component.demo()
-        comp.__dict__["fm"]["fast_aging"].__dict__["active"] = False
-        comp.__dict__["fm"]["slow_aging"].__dict__["active"] = False
-
-        make_sensitivity_fig(
-            comp,
-            var_name="comp-fm-early_life-pf_interval",
-            t_min=0,
-            t_max=10,
-            step_size=1,
-            n_iterations=10,
-        )
-
 
 if __name__ == "__main__":
     unittest.main()
