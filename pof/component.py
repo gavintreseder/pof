@@ -118,7 +118,7 @@ class Component(Load):
 
     # ****************** Load data ******************
 
-    def load_asset_data(self, *args, **kwargs):
+    def load_asset_data(self,):
 
         # TODO Hook up data
         self.info = dict(
@@ -134,7 +134,7 @@ class Component(Load):
             # Set perfect
 
             # Set current
-            NotImplemented
+            raise NotImplementedError
 
     def set_indicator(self, indicator_input):
         """

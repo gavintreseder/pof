@@ -283,7 +283,7 @@ class FailureMode(Load):
             # If there is only one update
             else:
                 if indicator.name in self.conditions:
-                    self.conditions[indicator.name] = indicator
+                    self.indicators[indicator.name] = indicator
 
     # ************** Get Functions *****************
 

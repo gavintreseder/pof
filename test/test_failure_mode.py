@@ -356,7 +356,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     # ************ Test link indicators ***************
 
-    # TODO change to use set methods
+    # TODO Remove because function no longer used
 
     def test_link_indicators_if_present(self):
 
@@ -365,26 +365,26 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         fm3 = FailureMode.from_dict(demo.failure_mode_data["slow_aging"])
         fm4 = FailureMode.from_dict(demo.failure_mode_data["fast_aging"])
 
-        fm1.link_indicator(fm2.conditions["instant"])
-        fm1.conditions["instant"].pf_interval = -100
-        fm2.conditions["instant"].pf_interval = -1000
+        fm1.link_indicator(fm2.indicators["instant"])
+        fm1.indicators["instant"].pf_interval = 100
+        fm2.indicators["instant"].pf_interval = 1000
 
-        fm3.link_indicator(fm4.conditions["slow_degrading"])
+        fm3.link_indicator(fm4.indicators["slow_degrading"])
         fm3.sim_timeline(200)
 
         self.assertEqual(
-            fm1.conditions,
-            fm2.conditions,
+            fm1.indicators,
+            fm2.indicators,
             msg="Indicators should be the same after values are assigned",
         )
         self.assertEqual(
-            fm3.conditions["slow_degrading"],
-            fm4.conditions["slow_degrading"],
+            fm3.indicators["slow_degrading"],
+            fm4.indicators["slow_degrading"],
             msg="Indicators should be the same after methods are executed",
         )
         self.assertNotEqual(
-            fm3.conditions["fast_degrading"],
-            fm4.conditions["fast_degrading"],
+            fm3.indicators["fast_degrading"],
+            fm4.indicators["fast_degrading"],
             msg="Only named indicators should be linked",
         )
 
@@ -398,7 +398,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         fm1.link_indicator(fm2.conditions["instant"])
         fm3.link_indicator(fm2.conditions["instant"])
         fm4.link_indicator(fm2.conditions["instant"])
-        fm1.conditions["instant"].pf_interval = -100
+        fm1.conditions["instant"].pf_interval = 100
         fm3.sim_timeline(100)
 
         with self.assertRaises(
@@ -484,15 +484,17 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     # ------------------ Test Expected Risk ------------------------
 
-    def test_expected_risk(self):
+    # def test_expected_risk(self):
 
-        fm = FailureMode.demo()
+    #     # Arranage
+    #     fm = FailureMode.demo()
+    #     fm.timeline["failure"] = np.full(0, 200)
 
-        fm._timeline["failure"] = np.full(0, 200)
+    #     # Act
+    #     er = fm.expected_risk()
 
-        er = fm._expected_risk()
-
-        np.testing.assert_array_equal(er["time"], [])
+    #     # Assert
+    #     np.testing.assert_array_equal(er["time"], [])
 
     # **************** Test expected_pof **************
 

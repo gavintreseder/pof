@@ -74,3 +74,7 @@ mtif = make_condition_impact_form(condition_impact)
 # Distribution Tests
 failure_dist = fm.failure_dist
 mdl = make_dist_layout(failure_dist)"""
+
+
+if __name__ == "__main__":
+    unittest.main()

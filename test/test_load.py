@@ -232,9 +232,9 @@ class TestPofBase(object):
             instance_1.update(d)
 
         msg = []
-        for k, v in instance_0.__dict__.items():
-            if instance_1.__dict__[k] != v:
-                msg.append((k, v))
+        for key, val in instance_0.__dict__.items():
+            if instance_1.__dict__[key] != val:
+                msg.append((key, val))
 
         # Assert
         # TODO simple fix
@@ -243,7 +243,7 @@ class TestPofBase(object):
         self.tc.assertEqual(instance_0, instance_1, msg=msg)
 
     def test_update_errors_raised(self):
-
+        """ Checks that an error is raised when invlid input data is provided"""
         # Arrange
         instance = self._class.demo()
 
@@ -266,7 +266,7 @@ class TestLoad(TestPofBase, unittest.TestCase):
         self._data_valid = [{"name": "name"}]
         self._data_invalid_values = [{"name": 1234}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
-        self._data_complete = [{"name": "name"}]
+        self._data_complete = [{"name": "name_0"}, {"name": "name_1"}]
 
         # Mock the pof object
         self.pof_obj = Mock()

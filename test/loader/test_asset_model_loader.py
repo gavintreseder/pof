@@ -13,11 +13,7 @@ from pof.component import Component
 from pof.failure_mode import FailureMode
 
 # TODO move this all to a test file rather than demo
-path
-filename = r"C:\Users\gtreseder\OneDrive - KPMG\Documents\3. Client\Essential Energy\Probability of Failure Model\pof\data\inputs\Asset Model - Demo.xlsx"
-
-
-# TODO move this file into test_loader
+FILENAME = r".\data\inputs\Asset Model - Demo.xlsx"
 
 
 class TestAssetModelLoader(unittest.TestCase):
@@ -31,7 +27,7 @@ class TestAssetModelLoader(unittest.TestCase):
     def test_load_failure_mode_loads_and_works_correctly(self):
         """ Load an Asset model and then check a FailureMode can be created from the data and that the object works correctly"""
         aml = AssetModelLoader()
-        data = aml.load(filename)
+        data = aml.load(FILENAME)
 
         fm = FailureMode.load(data["pole"]["fm"]["lightning"])
         self.assertIsNotNone(
@@ -50,7 +46,7 @@ class TestAssetModelLoader(unittest.TestCase):
 
     def test_load_component_loads_and_works_correctly(self):
         aml = AssetModelLoader()
-        data = aml.load(filename)
+        data = aml.load(FILENAME)
 
         comp = Component.load(data["pole"])
         self.assertIsNotNone(comp, msg="Component cannot be loaded with data")
@@ -72,7 +68,7 @@ class TestAssetModelLoader(unittest.TestCase):
 
     def test_load_failure_mode_condition_tasks(self):
         aml = AssetModelLoader()
-        data = aml.load(filename)
+        data = aml.load(FILENAME)
 
         fm = FailureMode.load(data["pole"]["fm"]["termites"])
 
@@ -96,7 +92,7 @@ class TestAssetModelLoader(unittest.TestCase):
     def test_load_lightning_problem(self):
 
         aml = AssetModelLoader()
-        data = aml.load(filename)
+        data = aml.load(FILENAME)
 
         comp = Component.load(data["pole"])
 
