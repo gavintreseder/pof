@@ -264,27 +264,6 @@ class FailureMode(Load):
         """
         self.set_obj("tasks", Task, tasks)
 
-    def link_indicator(self, indicator):
-        """
-        Takes an indicator ojbect, or an iterable list of objects and links condition
-        """
-
-        # TODO dlete
-
-        if indicator is None:
-            self.indicators = dict()
-        else:
-            # If it is an iterable, link them all
-            if isinstance(indicator, Iterable):
-                for indicator in indicator.values():
-                    if indicator.name in self.conditions:
-                        self.indicators[indicator.name] = indicator
-
-            # If there is only one update
-            else:
-                if indicator.name in self.conditions:
-                    self.indicators[indicator.name] = indicator
-
     # ************** Get Functions *****************
 
     def get_states(self):

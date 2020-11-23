@@ -354,62 +354,6 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # Assert
         self.assertEquals(fm1, fm2)
 
-    # ************ Test link indicators ***************
-
-    # TODO Remove because function no longer used
-
-    def test_link_indicators_if_present(self):
-
-        fm1 = FailureMode.from_dict(demo.failure_mode_data["early_life"])
-        fm2 = FailureMode.from_dict(demo.failure_mode_data["random"])
-        fm3 = FailureMode.from_dict(demo.failure_mode_data["slow_aging"])
-        fm4 = FailureMode.from_dict(demo.failure_mode_data["fast_aging"])
-
-        fm1.link_indicator(fm2.indicators["instant"])
-        fm1.indicators["instant"].pf_interval = 100
-        fm2.indicators["instant"].pf_interval = 1000
-
-        fm3.link_indicator(fm4.indicators["slow_degrading"])
-        fm3.sim_timeline(200)
-
-        self.assertEqual(
-            fm1.indicators,
-            fm2.indicators,
-            msg="Indicators should be the same after values are assigned",
-        )
-        self.assertEqual(
-            fm3.indicators["slow_degrading"],
-            fm4.indicators["slow_degrading"],
-            msg="Indicators should be the same after methods are executed",
-        )
-        self.assertNotEqual(
-            fm3.indicators["fast_degrading"],
-            fm4.indicators["fast_degrading"],
-            msg="Only named indicators should be linked",
-        )
-
-    def test_link_indicators_if_not_present(self):
-
-        fm1 = FailureMode.from_dict(demo.failure_mode_data["early_life"])
-        fm2 = FailureMode.from_dict(demo.failure_mode_data["random"])
-        fm3 = FailureMode.from_dict(demo.failure_mode_data["slow_aging"])
-        fm4 = FailureMode.from_dict(demo.failure_mode_data["fast_aging"])
-
-        fm1.link_indicator(fm2.conditions["instant"])
-        fm3.link_indicator(fm2.conditions["instant"])
-        fm4.link_indicator(fm2.conditions["instant"])
-        fm1.conditions["instant"].pf_interval = 100
-        fm3.sim_timeline(100)
-
-        with self.assertRaises(
-            KeyError,
-            msg="Indicator should not be able to link if there isn't an indicator by that name",
-        ):
-            fm3.conditions["instant"].pf_interval = 200
-
-        self.assertEqual(fm1.conditions, fm2.conditions)
-        self.assertNotEqual(fm3.conditions, fm4.conditions)
-
     # ************ Test reset methods *****************
 
     # Change all condition, state and task count. Check values change or don't change for each of them
