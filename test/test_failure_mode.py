@@ -92,30 +92,31 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             # TODO rewrite time function in tasks first
 
     # ------------ Test update_timeline --------------------
+    # TODO robust test for update timelines
+    # def test_update_timeline(self):
 
-    def test_update_timeline(self):
+    #     # Arrange
+    #     fm = FailureMode.demo()
 
-        # Arrange
-        fm = FailureMode.demo()
+    #     fm.update_timeline(t_start=10, updates=dict(initiation=False))
 
-        fm.update_timeline(t_start=10, updates=dict(initiation=False))
-
-        fm.update_timeline(t_start=5, updates=dict(initiation=False))
+    #     fm.update_timeline(t_start=5, updates=dict(initiation=False))
 
     # -------------Test sim_timleine ----------------------
 
-    def test_sim_timeline_correct_states(self):
+    # TODO figure out what this test was meant to target
+    # def test_sim_timeline_correct_states(self):
 
-        t_init = 1
-        t_failure = 1
+    #     t_init = 1
+    #     t_failure = 1
 
-        fm = FailureMode.from_dict(fixtures.failure_mode_data["predictable"])
+    #     fm = FailureMode.from_dict(fixtures.failure_mode_data["predictable"])
 
-        fm.dists["init"].sample = Mock(return_value=[t_init])  # Override failure
+    #     fm.dists["init"].sample = Mock(return_value=[t_init])  # Override failure
 
-        fm.sim_timeline(200)
+    #     fm.sim_timeline(200)
 
-        raise NotImplementedError()
+    #     raise NotImplementedError()
 
     def test_sim_timeline_task_on_condition_replacement(self):
         """
@@ -338,7 +339,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
 
     # ************ Test update methods *****************
 
-    def test_update_on_property_method(self):
+    def test_update_invokes_property_method(self):
 
         # Arrange
         fm1 = FailureMode.demo()

@@ -225,8 +225,7 @@ class TestPofBase(object):
         instance_1 = self._class.from_dict(self._data_complete[1])
 
         for var, val in data.items():
-            d = {}
-            d[var] = val
+            d = {var: val}
 
             # Act
             instance_1.update(d)
@@ -237,9 +236,6 @@ class TestPofBase(object):
                 msg.append((key, val))
 
         # Assert
-        # TODO simple fix
-        instance_0.up_to_date = instance_1.up_to_date
-
         self.tc.assertEqual(instance_0, instance_1, msg=msg)
 
     def test_update_errors_raised(self):

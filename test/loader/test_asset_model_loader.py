@@ -2,7 +2,6 @@
     Filename: test_asset_model_loader.py
     Description: Contains the code for testing the AssetModelLoader class
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
- 
 """
 
 import unittest

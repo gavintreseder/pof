@@ -204,7 +204,6 @@ class Load:
     def update(self, id_object, value=None):
         """ An update method with some error handling"""
         try:
-            self.up_to_date = False
 
             if isinstance(id_object, str):
                 self.update_from_str(id_object, value, sep="-")

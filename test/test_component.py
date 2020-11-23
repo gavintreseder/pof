@@ -18,7 +18,7 @@ cf = config["Component"]
 
 class TestComponent(TestPofBase, unittest.TestCase):
     """
-    Unit tests for the Component class
+    Unit tests for the Component class incldding common tests from TestPoFBase
     """
 
     def setUp(self):
@@ -228,15 +228,6 @@ class TestComponent(TestPofBase, unittest.TestCase):
         comp = Component.demo()
         comp.mc_timeline(10)
         comp.expected_condition()
-
-    # ************ Test update methods *****************
-
-    def test_update(self):
-        # TODO test all values
-        comp = Component.demo()
-
-        comp.update("comp-fm-slow_aging-active", False)
-        self.assertEqual(comp.fm["slow_aging"].active, False)
 
     def test_expected_inspection_interval(self):
 
