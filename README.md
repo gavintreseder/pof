@@ -12,8 +12,6 @@ Title (A Title Image too if possible…Edit them on canva.com if you are not a g
 
 ### Installation
 
-
-
 '''
 pip install pof
 '''
@@ -23,7 +21,44 @@ Technologies Used
 Special Gotchas of your projects (Problems you faced, unique elements of your project)
 Technical Description of your project like- Installation, Setup, How to contribute.
 
+### Get the source code up and running
 
+
+#### Clone Repo
+
+
+### Select Interpreter
+ctrl + shift + p
+https://code.visualstudio.com/docs/python/environments 
+#### Setup a virtual environment
+Create a new virtual environment so that previous python installations work
+>>> virtualenv .venv -p python3.9
+
+Activate the venv or launch a new terminal. You will know this has worked if you have (.venv) in front of your path in the terminal
+>>> ./venv/bin/activate
+
+Upgrade pip to make sure everything installs correctly
+
+>>> python -m pip install --upgrade pip
+
+Install the packages for this module
+
+>>> pip install -r requirements.txt
+
+Install some dev 
+
+>>> pip install black pylint
+
+If using notebooks you may need to link the ipykernel
+
+[instructions from Mel K]
+
+### Check the unit tests are running correctly
+
+ctrl + shift + p
+Configure Test Framework
+
+#### Open 
 
 # Gotchas
 Problem: Errors using virtual enrironment
