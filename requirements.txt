@@ -145,3 +145,4 @@ widgetsnbextension==3.5.1
 wrapt==1.12.1
 xlrd==1.2.0
 zict==2.0.0
+gunicorn
