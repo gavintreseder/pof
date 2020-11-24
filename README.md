@@ -12,6 +12,8 @@ Title (A Title Image too if possible…Edit them on canva.com if you are not a g
 
 ### Installation
 
+
+
 '''
 pip install pof
 '''
@@ -46,3 +48,6 @@ How to get the virtual environment working - https://medium.com/@vladbezden/new-
 Structure - https://docs.python-guide.org/writing/structure/ 
 
 https://opensource.com/article/18/2/why-python-devs-should-use-pipenv 
+
+
+## Ipykernel issue
