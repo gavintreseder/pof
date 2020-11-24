@@ -105,7 +105,6 @@ Pygments==2.6.1
 pylint==2.6.0
 Pympler==0.9
 pyparsing==2.4.7
-pypiwin32==223
 pyrsistent==0.16.0
 python-dateutil==2.8.1
 pytz==2020.1
