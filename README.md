@@ -68,12 +68,25 @@ https://python-poetry.org/docs/
 (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
 
 
+Adding new packages 
+>>> poetry add <package>
+>>> poetry add --dev <package>
+
+Creating the requirements.txt
+>>> poetry export --output requirements.txt --without-hashes
+
 ### Check the unit tests are running correctly
 
 ctrl + shift + p
 Configure Test Framework
 
 # Heroku
+
+Login to heroku
+>>> heroku login -i
+
+Access the pof-engine
+>>> heroku git:remote -a pof-engine
 #### Open 
 
 # Gotchas
