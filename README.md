@@ -1,46 +1,59 @@
-# pof
-
-
 
 # PoF
 Title (A Title Image too if possible…Edit them on canva.com if you are not a graphic designer.)
 ## Description
-
+Description(Describe by words and images alike)
 ## Demo
+Demo(Images, Video links, Live Demo links)
 
+
+Larger more detailed demonstrations can be found in notebooks/
+
+## Technology
+The key packages used for this project are:
+- Dash: Interface in a browser session
+- Plotly: Interactive graphs
+- Lifelines: Survival analysis
+- Reliability: Survival analysis
+
+A full like of the packages can be found in pyproject.toml. 
 ## Technical
 
+### Setup
+To download, view and execute the code base you will need:
+- Python: The easiest way to setup python is through anaconda. https://www.anaconda.com/products/individual 
+- Visual Studio Code: The IDE for navigating and executing the code. https://code.visualstudio.com/download 
+- Git: An application for downloading the current repository from GitHub. https://git-scm.com/downloads 
+
+The setup process to run the application on an Essential Energy computer requires a software request for:
+1. Anaconda
+2. Visual Studio Code
+3. Git
+
 ### Installation
-
-'''
-pip install pof
-'''
-Description(Describe by words and images alike)
-Demo(Images, Video links, Live Demo links)
-Technologies Used
-Special Gotchas of your projects (Problems you faced, unique elements of your project)
-Technical Description of your project like- Installation, Setup, How to contribute.
-
-### Get the source code up and running
-
-
+To access the development code base the following steps are requried:
+1. Clone the repository
+2. 
 #### Clone Repo
 
+https://github.com/gavintreseder/pof
 
-### Select Interpreter
+#### Select Interpreter
 ctrl + shift + p
 
 https://code.visualstudio.com/docs/python/environments 
 
 
 #### Setup a virtual environment
+##### Execution only
+Python applications 
 Create a new virtual environment so that previous python installations work
 >>> virtualenv .venv -p python3.9
 
 Activate the venv or launch a new terminal. You will know this has worked if you have (.venv) in front of your path in the terminal
->>> ./venv/bin/activate
+>>> /.venv/bin/activate
 
-Upgrade pip to make sure everything installs correctly
+Upgrade pip to the latest version to make sure packages install correctly
 
 >>> python -m pip install --upgrade pip
 
@@ -48,12 +61,13 @@ Install the dependencies that are for this module to run
 
 >>> pip install -r requirements.txt
 
+##### Optional steps for development
 Install the dependencies that are required to develop this module
 
 >>> pip install poetry
 >>> poetry install
 
-If using notebooks are not detecting the venv you have set up you may need to link the ipykernel. The symptom to observe is that unittests pass, but the notebooks raise ModuleNotFoundError for dependencies that have been 
+In some instances notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raise ModuleNotFoundError then this is the likely cause
 
 >>> ipython kernel install --user --name=.venv
 
@@ -90,6 +104,8 @@ Access the pof-engine
 #### Open 
 
 # Gotchas
+Special Gotchas of your projects (Problems you faced, unique elements of your project)
+
 Problem: Errors using virtual enrironment
 Solution: https://stackoverflow.com/questions/45954528/pip-is-configured-with-locations-that-require-tls-ssl-however-the-ssl-module-in/61429593#61429593
 Specifically, I copied the following files from C:\Users\MyUser\Miniconda3\Library\bin to C:\Users\MyUser\Miniconda3\DLLs:

@@ -187,7 +187,6 @@ def update_parameter(graph_y_limit_active, graph_y_limit, *args):
 
         # update the model
         comp.update(dash_id, value)
-        comp.cancel_sim()
 
     return f"Update State: {dash_id} - {value}"
 
@@ -209,6 +208,7 @@ def update_simulation(
     global sim_err_count
 
     pof_sim.cancel_sim()
+
     # time.sleep(1)
     if active:
         pof_sim = copy.copy(comp)
@@ -308,8 +308,6 @@ def update_insp_interval(
             step_size=1,
             n_iterations=n_iterations,
         )
-
-        # insp_interval_fig = make_inspection_interval_fig(sens_sim, t_min=1, t_max=10, step=1, n_iterations = n_iterations)
 
         return insp_interval_fig
     else:
