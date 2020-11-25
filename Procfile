@@ -1,1 +1,1 @@
-web: gunicorn pof.main:server --log-file -
+web: gunicorn main:server --log-file -
