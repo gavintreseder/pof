@@ -30,7 +30,7 @@ logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 # Build App
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-app = JupyterDash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 
