@@ -3,9 +3,10 @@ Decoarators that can be used to validate pof class methods
 """
 
 from functools import wraps
-import makefun
 import logging
 import inspect
+
+import makefun
 
 
 def check_arg_type(func):

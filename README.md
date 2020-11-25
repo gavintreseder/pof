@@ -29,7 +29,10 @@ Technical Description of your project like- Installation, Setup, How to contribu
 
 ### Select Interpreter
 ctrl + shift + p
+
 https://code.visualstudio.com/docs/python/environments 
+
+
 #### Setup a virtual environment
 Create a new virtual environment so that previous python installations work
 >>> virtualenv .venv -p python3.9
@@ -41,23 +44,36 @@ Upgrade pip to make sure everything installs correctly
 
 >>> python -m pip install --upgrade pip
 
-Install the packages for this module
+Install the dependencies that are for this module to run
 
 >>> pip install -r requirements.txt
 
-Install some dev 
+Install the dependencies that are required to develop this module
 
->>> pip install black pylint
+>>> pip install poetry
+>>> poetry install
 
-If using notebooks you may need to link the ipykernel
+If using notebooks are not detecting the venv you have set up you may need to link the ipykernel. The symptom to observe is that unittests pass, but the notebooks raise ModuleNotFoundError for dependencies that have been 
 
-[instructions from Mel K]
+>>> ipython kernel install --user --name=.venv
+
+Note: If this causes issues try looking here
+- https://stackoverflow.com/questions/58119823/jupyter-notebooks-in-vscode-does-not-use-active-virtual-environment
+- https://jupyter-notebook.readthedocs.io/en/latest/troubleshooting.html#python-environments
+
+
+### poetry
+https://python-poetry.org/docs/
+
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
+
 
 ### Check the unit tests are running correctly
 
 ctrl + shift + p
 Configure Test Framework
 
+# Heroku
 #### Open 
 
 # Gotchas
@@ -86,3 +102,9 @@ https://opensource.com/article/18/2/why-python-devs-should-use-pipenv
 
 
 ## Ipykernel issue
+
+
+
+## Brotli install error
+
+https://visualstudio.microsoft.com/downloads/

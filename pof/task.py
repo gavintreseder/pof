@@ -11,8 +11,6 @@ from random import random, seed
 import logging
 from typing import Dict, List
 
-from dataclassy import dataclass
-
 if __package__ is None or __package__ == "":
     import sys
     import os
