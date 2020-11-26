@@ -1,5 +1,4 @@
 import copy
-import os
 import logging
 
 import dash
@@ -23,12 +22,7 @@ from pof.interface.figures import (
 )
 
 # Quick test to make sure everything is works
-file_name = r"\data\inputs\Asset Model - Pole - Timber.xlsx"
-filename = os.path.dirname(os.getcwd()) + file_name
-
-aml = AssetModelLoader(filename)
-comp_data = aml.load()
-comp = Component.from_dict(comp_data["pole"])
+comp = Component.demo()
 
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.CRITICAL)
@@ -65,7 +59,7 @@ def layout():
             html.P(id="ffcf"),
             html.Div(
                 [
-                    dcc.Interval(id="progress-interval", n_intervals=0, interval=100),
+                    dcc.Interval(id="progress-interval", n_intervals=0, interval=50),
                     dbc.Row(
                         [
                             dbc.Col(

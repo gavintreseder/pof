@@ -90,7 +90,9 @@ class Component(Load):
 
     # ****************** Load data ******************
 
-    def load_asset_data(self,):
+    def load_asset_data(
+        self,
+    ):
 
         # TODO Hook up data
         self.info = dict(
@@ -542,12 +544,16 @@ class Component(Load):
         fma = pd.DataFrame()
         self.reset()
 
+        # Progress bars
+        self.n_sens = 1
+        self.n_sens_iterations = int((t_max - t_min) / step + 1)
+
         var = var_name.split("-")[-1]
 
         for i in np.arange(lower, upper, step_size):
             try:
                 self.update(var_name, i)
-                self.mc_timeline(t_end=t_end, n_iterations=n_iterations)
+                self.mp_timeline(t_end=100, n_iterations=n_iterations)
                 erc = self.expected_risk_cost_df()
                 rc[i] = erc.groupby(by=["task"])["cost"].sum()
 
@@ -555,6 +561,8 @@ class Component(Load):
 
                 # Reset component
                 self.reset()
+
+                self.n_sens = self.n_sens + 1
 
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
