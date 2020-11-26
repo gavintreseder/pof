@@ -66,7 +66,10 @@ class AssetModelLoader:
         Transform a .xlsx file into a dictionary which can be used to create an asset model
         """
 
-        df = pd.read_excel(self.filename, sheet_name="Model Input", header=[0, 1, 2])
+        try:
+            df = pd.read_excel(self.filename, sheet_name="Model Input", header=[0, 1, 2], engine='openpyxl')
+        except AttributeError:
+            ddf = pd.read_excel(self.filename, sheet_name="Model Input", header=[0, 1, 2], engine='xlrd')
 
         # Create keys
         keys = dict(

@@ -21,24 +21,27 @@ A full like of the packages can be found in pyproject.toml.
 
 
 
-## Installation
-Here is a step by step guide on how to install the pof-engine. It will get you to the point of having a local running instance
-### Requirements
+# Installation
+Here is a step by step guide on how to install the pof-engine. It will get you to the point of having a local running instance.
+To access the development code base the following steps are requried:
+1. Install requirements
+2. Setup VSCode
+3. Clone the repository
+4. Setup a virtual environment
+
+The steps below explain how to complete this process in VS Code
+## Requirements
 To download, view and execute the code base you will need:
 - Python: The easiest way to setup python is through anaconda. https://www.anaconda.com/products/individual 
 - Git: An application for downloading the current repository from GitHub. https://git-scm.com/downloads 
 - Visual Studio Code: The IDE for navigating and executing the code. https://code.visualstudio.com/download 
 
-The setup process to run the application on an Essential Energy computer requires a software request for:
+Note: The setup process to run the application on an Essential Energy computer requires a software request for:
 1. Anaconda
-2. Visual Studio Code
-3. Git
+2. Git
+3. Visual Studio Code
 
-To access the development code base the following steps are requried:
-1. Clone the repository
-2. Setup a virtual environment
-
-The steps below explain how to complete this process in VS Code
+Once this has been approved they will be available for installation through the software centre
 
 ### VSCode Setup
 VSCode requires several extensions to be enabled. The following extensions can be installed by searching and installing from the activity bar (The box icon on the left hand side):
@@ -51,7 +54,7 @@ Terminal: Select Default Shell
 Command Prompt
 
 Launch a new terminal through the ribbon or via the shortcut (ctrl + shift + `)
-### Clone the repository
+## Clone the repository
 The code base is hosted on an online repository called github. To obtain the latest version of the source code the repo can be cloned onto your local machine.
 
 In VScode:
@@ -107,6 +110,10 @@ test_*.py
 To execute the tests:
 - select the test icon in the activity bar (it resembles a beaker)
 - Run all tests
+
+# Usage
+
+## Dash
 
 # Heroku
 
