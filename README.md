@@ -19,15 +19,19 @@ The key packages used for this project are:
 A full like of the packages can be found in pyproject.toml. 
 ## Technical
 
+There are two areas where we will be providing inputs to setup; the terminal and he vscode pallete
+
+Terminal commands are typed into the terminal on the bottom edge
+>>> You 
 
 
 # Installation
 Here is a step by step guide on how to install the pof-engine. It will get you to the point of having a local running instance.
 To access the development code base the following steps are requried:
-1. Install requirements
-2. Setup VSCode
-3. Clone the repository
-4. Setup a virtual environment
+1. Requirements - Install the pre-requisite software
+2. VSCode Setup - Get VSCode setup for python
+3. Clone the repository - Get the code for the pof project from the cloud
+4. Virtual environment Setup - Get the code 
 
 The steps below explain how to complete this process in VS Code
 ## Requirements
@@ -47,6 +51,8 @@ Once this has been approved they will be available for installation through the 
 VSCode requires several extensions to be enabled. The following extensions can be installed by searching and installing from the activity bar (The box icon on the left hand side):
 - Python
 
+If Vsco may prompt you to select an interpreter
+
 The default installation at EE does not add python variables to the PATH so will need to change your default terminal
 
 ctrl + shift + p
@@ -60,17 +66,16 @@ The code base is hosted on an online repository called github. To obtain the lat
 In VScode:
 ctrl + shift + p
 Git:Clone
-https://github.com/gavintreseder/pof
+https://github.com/gavintreseder/pof.git
 
-
-## Setup a virtual environment
+Open the 
+## Virtual environment setup
 A virtual environment will keep all the requirements for this project in a single location and reduce the chance of any conflicts with other python projects you have. 
 
-Create a new virtual environment:
+Create a new virtual environment
 >>> python -m venv .venv
-#>>> virtualenv .venv -p python3.9
 
-Activate to the new virtual environment and launch a new terminal for this environment:
+Activate the new virtual environment and launch a new terminal for this environment:
 
 ctrl + shift + p
 Python: Select Interpreter
@@ -82,6 +87,7 @@ Upgrade pip to the latest version to make sure packages install correctly
 
 >>> python -m pip install --upgrade pip
 
+You may see a yellow warning after this command. This will change as 
 ### To execute the project
 Install the dependencies that are for this module to run
 
