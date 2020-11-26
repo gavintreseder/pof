@@ -81,6 +81,8 @@ class FailureMode(Load):
     # Class Variables
     PF_CURVES = ["linear", "step"]
     REQUIRED_STATES = ["initiation", "detection", "failure"]
+    TIME_VARIABLES = ["pf_interval"]
+    POF_VARIABLES = ["tasks"]
 
     def __init__(
         self,
@@ -127,57 +129,6 @@ class FailureMode(Load):
         self._sim_counter = 0
         self._t_failures = []
         self._risk_failures = []
-
-    @property
-    def units(self):
-        return self._units
-
-    @units.setter
-    def units(self, value):
-        """ Takes a unit and updates any time values to reflect the new units"""
-
-        # TODO add a valid unit to the test data set
-        # TODO add an invalid unit to the test data set
-        # TODO update the complete test data set
-        # TODO move this property to load
-
-        #Start this on failure mode (this plus task and distributions have times - double check but)
-        #Check that it is a valid value
-        #self.timeunits() # have a dictionary of time units expressed in hours (hrs = 1, days = 24, weeks = etc)
-        #if value is not in units, raise value error, else continue
-
-        # valid_units = dict(
-        #     seconds: ,
-        #     minutes: ,
-        #     hours: ,
-            
-        # )
-
-        # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
-
-        # Get the ratio between the current units and the new units
-        #Lookup self.UNITTABLE[self.units] and get the current unit
-        #New unit loaded in spreadsheet
-        #Then get ratio
-        #Loop through all of the attributed affected by this ratio and multiply them
-        #Have another class attribute self.timeattributes() make it a list (constant)
-        #For attribute in self.timeattributes, getattr(self, 't_interval') = getattr(self, )*ratio
-        
-        #Tell all of the pof objects attached to component that they need to update their units
-        #Have another list self.pofobjects
-        #Loop through the pof objects and trigger them to update their units
-        #Do this via 
-
-        #Examples in load
-        #move this function to load.py
-
-        # TODO Repeat this function across all of the pof objects
-        # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times
-        # and list of attrs that have a unit method
-
-        # Adjust every time value by this ratio and make sure they ints?
-
-        self._units = value
 
     @property
     def pf_curve(self):

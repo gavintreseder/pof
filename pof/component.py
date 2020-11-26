@@ -88,8 +88,6 @@ class Component(Load):
         self.n_sens = 0
         self.n_sens_iterations = 10
 
-    # ***************** Property methods ************
-
     # ****************** Load data ******************
 
     def load_asset_data(self,):
