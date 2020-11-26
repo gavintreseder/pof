@@ -129,10 +129,11 @@ Structure - https://docs.python-guide.org/writing/structure/
 
 https://opensource.com/article/18/2/why-python-devs-should-use-pipenv 
 
-
 ## Ipykernel issue
 
-
+ipykernel issue:
+ipython kernel install --user --name=projectname
+https://anbasile.github.io/posts/2017-06-25-jupyter-venv/
 
 ## Brotli install error
 
