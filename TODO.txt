@@ -1,3 +1,6 @@
+# Changes
+    # Why does git.ignore not work on GB computer
+
 # Priority
 
     # Annualised cost button
