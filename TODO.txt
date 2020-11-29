@@ -7,6 +7,8 @@
     # Turn on timeline progress in terminal 
     
     # Definitely need to split out the two types of inspetions (protection v groundline)
+        # Option 1 - check how pf-interval is overriding
+        # Option 2 - Add pf_interval back onto the task display
 
 # Changes
     # Why does git.ignore not work on GB computer
