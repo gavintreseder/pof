@@ -23,8 +23,8 @@ from pof.interface.figures import (
 )
 
 # Quick test to make sure everything is works
-file_name = r"\data\inputs\Asset Model - Pole - Timber.xlsx"
-filename = os.path.dirname(os.getcwd()) + file_name
+file_name = r"Asset Model - Pole - Timber.xlsx"
+filename = os.getcwd() + r"\data\inputs" + os.sep + file_name
 
 aml = AssetModelLoader(filename)
 comp_data = aml.load()

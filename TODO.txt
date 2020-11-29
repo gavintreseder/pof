@@ -1,3 +1,13 @@
+
+# Change the timeframe for historical data
+
+    # Histogram of age at failures for each type
+    # Condition v intervention time
+
+    # Turn on timeline progress in terminal 
+    
+    # Definitely need to split out the two types of inspetions (protection v groundline)
+
 # Changes
     # Why does git.ignore not work on GB computer
 
