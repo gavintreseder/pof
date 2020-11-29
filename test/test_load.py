@@ -224,11 +224,10 @@ class TestPofBase(object):
         instance_0 = self._class.from_dict(data)
         instance_1 = self._class.from_dict(self._data_complete[1])
 
-        for var, val in data.items():
-            d = {var: val}
+        with patch.dict("pof.load.cf", {"handle_update_error": False}):
 
             # Act
-            instance_1.update(d)
+            instance_1.update(data)
 
         msg = []
         for key, val in instance_0.__dict__.items():
@@ -238,20 +237,36 @@ class TestPofBase(object):
         # Assert
         self.tc.assertEqual(instance_0, instance_1, msg=msg)
 
-    def test_update_errors_raised(self):
-        """ Checks that an error is raised when invlid input data is provided"""
+    def test_update_errors_logged(self):
+        """ Checks that an error is raised when invalid input data is provided"""
         # Arrange
+        class_config = "pof.load.cf"
         instance = self._class.demo()
 
         invalid_data = self._data_invalid_types + self._data_invalid_values
 
         for data in invalid_data:
-            with self.tc.assertLogs(level="DEBUG") as log:
-                # Act
-                instance.update(data)
+            with patch.dict(class_config, {"handle_update_error": True}):
+                with self.tc.assertLogs(level="DEBUG") as log:
+                    # Act
+                    instance.update(data)
 
-                # Assert
-                self.tc.assertTrue("Update Failed" in log.output[-1])
+                    # Assert
+                    self.tc.assertTrue("Update Failed" in log.output[-1])
+
+    def test_update_errors_raised(self):
+        """ Checks that an error is raised when invalid input data is provided"""
+        # Arrange
+        class_config = "pof.load.cf"
+        instance = self._class.demo()
+
+        invalid_data = self._data_invalid_types + self._data_invalid_values
+
+        for data in invalid_data:
+            with patch.dict(class_config, {"handle_update_error": False}):
+                with self.tc.assertRaises((ValueError, AttributeError, KeyError)):
+                    # Act
+                    instance.update(data)
 
 
 class TestLoad(TestPofBase, unittest.TestCase):

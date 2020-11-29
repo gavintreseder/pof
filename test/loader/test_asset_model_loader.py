@@ -65,28 +65,29 @@ class TestAssetModelLoader(unittest.TestCase):
         except:
             self.fail(msg="Component cannot get expected_condition after being loaded")
 
-    def test_load_failure_mode_condition_tasks(self):
-        aml = AssetModelLoader()
-        data = aml.load(FILENAME)
+    # TODO redo test later
+    # def test_load_failure_mode_condition_tasks(self):
+    #     aml = AssetModelLoader()
+    #     data = aml.load(FILENAME)
 
-        fm = FailureMode.load(data["pole"]["fm"]["termites"])
+    #     fm = FailureMode.load(data["pole"]["fm"]["termites"])
 
-        # Change the condition so that the termite powder should be triggered straight away #TODO replace this with asset data
-        fm.set_init_states({"initiation": True})
-        fm.set_states({"initiation": True})
-        for ind in fm.indicators.values():
-            ind.update_from_dict(
-                dict(
-                    pf_interval=100,
-                    condition=49,
-                )
-            )
+    #     # Change the condition so that the termite powder should be triggered straight away #TODO replace this with asset data
+    #     fm.set_init_states({"initiation": True})
+    #     fm.set_states({"initiation": True})
+    #     for ind in fm.indicators.values():
+    #         ind.update_from_dict(
+    #             dict(
+    #                 pf_interval=100,
+    #                 condition=49,
+    #             )
+    #         )
 
-        fm.sim_timeline(400)
-        fm.plot_timeline()
+    #     fm.sim_timeline(400)
+    #     fm.plot_timeline()
 
-        # Load asset with initiated failure mode, condition already in window and condition task with 100% effectiveness
-        # self.assertEqual()
+    #     # Load asset with initiated failure mode, condition already in window and condition task with 100% effectiveness
+    #     # self.assertEqual()
 
     def test_load_lightning_problem(self):
 

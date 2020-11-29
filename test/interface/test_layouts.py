@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-import .testconfig  # pylint: disable=unused-import
+import testconfig  # pylint: disable=unused-import
 from pof import Component, FailureMode
 from pof.interface.layouts import (
     make_component_layout,
