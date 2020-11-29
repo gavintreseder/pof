@@ -24,6 +24,7 @@ if __package__ is None or __package__ == "":
 
 from pof.helper import str_to_dict
 from config import config
+from pof.units import valid_units
 
 # Use config for load
 cf = config["Load"]
@@ -67,11 +68,18 @@ class Load:
     A class with methods for loading data that
     """
 
+    # Class Variables
+    TIME_VARIABLES = []
+    POF_VARIABLES = []
+
+    ###Move them back
+
     # name: str = field_property("load")
 
     def __init__(self, name="load", units="years", *args, **kwargs):
 
         self.name = name
+        self._units = units
         self.units = units
 
         # Dash feature
@@ -154,10 +162,38 @@ class Load:
         return self._units
 
     @units.setter
-    def units(self, value):
+    def units(self, loaded_unit):  # TODO - Make this dependant on csv
         """ Takes a unit and updates any time values to reflect the new units"""
-        # TODO - Move this function from notebook
-        self._units = value
+        print(f"The loaded unit is {loaded_unit}")
+        print(f"The current unit is {self.units}")
+
+        # Check if the uploaded unit is valid
+        if loaded_unit.lower() in valid_units:
+            if self._units is not None:
+                # Determine the ratio between the current and uploaded unit
+                ratio = (
+                    valid_units[self.units] / valid_units[loaded_unit]
+                )  # Current value over loaded value
+
+                # Update the variables on this instance
+                for variable in self.TIME_VARIABLES:
+                    i = getattr(self, variable) * ratio
+                    setattr(self, variable, i)
+                    print(f"{variable} has been changed to {getattr(self, variable)}")
+
+                # Update the variables on the child instance
+                for variable in self.POF_VARIABLES:
+                    if isinstance(variable, Iterable):
+                        for key, val in variable.items():
+                            val.units = loaded_unit
+                    elif variable is not None:
+                        variable.units = loaded_unit
+                    else:
+                        raise ValueError(f"Something is wrong")
+        else:
+            raise ValueError(f"Unit must be in {valid_units.keys()}")
+
+        self._units = loaded_unit
 
     def set_obj(self, attr, d_type, value):
         """
@@ -245,7 +281,6 @@ class Load:
 
     # def update_from_dict(self, *args, **kwargs):
     #     """
-    #     Update_from_dict is overloaded in each of the child classes
     #     """
     #     raise NotImplementedError()
 
