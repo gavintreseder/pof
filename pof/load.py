@@ -227,7 +227,10 @@ class Load:
                     self.__class__.__name__,
                 )
         except (KeyError, AttributeError, ValueError) as error:
-            logging.warning("Update Failed. {error}")
+            if config["Load"]["handle_update_error"]:
+                logging.warning("Update Failed. {error}")
+            else:
+                raise error
 
     def update_from_str(self, id_str, value, sep="-"):
         """
