@@ -254,7 +254,7 @@ def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=
 
 
 def make_sensitivity_fig(
-    local, var_name="", t_min=0, t_max=10, step_size=1, n_iterations=10
+    local, var_name="", lower=0, upper=10, step_size=1, n_iterations=10
 ):
 
     var = var_name.split("-")[-1]
@@ -264,13 +264,13 @@ def make_sensitivity_fig(
     try:
         df, df_active = local.expected_sensitivity(
             var_name=var_name,
-            t_min=t_min,
-            t_max=t_max,
+            lower=lower,
+            upper=upper,
             step_size=step_size,
             n_iterations=n_iterations,
         )
 
-        df_plot = df.melt(id_vars=var, var_name="source", value_name="cost")
+        df_plot = df.melt(id_vars=var, var_name="source", value_name="source_cost")
         df_plot = df_plot.merge(df_active, on=["source"])
 
         color_map = get_color_map(df=df_plot, column="source")
@@ -281,7 +281,7 @@ def make_sensitivity_fig(
         fig = px.line(
             df_plot,
             x=var,
-            y="cost",
+            y="source_cost",
             color="source",
             color_discrete_map=color_map,
             title="Risk v Cost at different " + f"{title_var}" + "s",
@@ -289,7 +289,8 @@ def make_sensitivity_fig(
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
 
-    except:
+    except Exception as error:
+        raise error
         fig = go.Figure(
             layout=go.Layout(
                 title=go.layout.Title(text="Error Producing Inspection Interval")

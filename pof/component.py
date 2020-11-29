@@ -88,34 +88,6 @@ class Component(Load):
         self.n_sens = 0
         self.n_sens_iterations = 10
 
-    # ***************** Property methods ************
-
-    @property
-    def units(self):
-        return self._units
-
-    @units.setter
-    def units(self, value):
-        """ Takes a unit and updates any time values to reflect the new units"""
-
-        # TODO add a valid unit to the test data set
-        # TODO add an invalid unit to the test data set
-        # TODO update the complete test data set
-
-        # TODO move this property to load
-
-        # Check that it is a valid value
-        # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
-
-        # Get the ratio between the current units and the new units
-        # TODO Repeat this function across all of the pof objects
-        # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times
-        # and list of attrs that have a unit method
-
-        # Adjust every time value by this ratio and make sure they ints?
-
-        self._units = value
-
     # ****************** Load data ******************
 
     def load_asset_data(
@@ -562,7 +534,7 @@ class Component(Load):
         )
 
     def expected_sensitivity(
-        self, var_name, t_min, t_max, step_size=1, n_iterations=100
+        self, var_name, lower, upper, step_size=1, n_iterations=100, t_end=100
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given confidence.
@@ -578,7 +550,7 @@ class Component(Load):
 
         var = var_name.split("-")[-1]
 
-        for i in np.arange(t_min, t_max, step_size):
+        for i in np.arange(lower, upper, step_size):
             try:
                 self.update(var_name, i)
                 self.mp_timeline(t_end=100, n_iterations=n_iterations)

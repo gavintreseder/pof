@@ -149,6 +149,16 @@ class Load:
     def demo(cls):
         return cls("Not Implemented")
 
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):
+        """ Takes a unit and updates any time values to reflect the new units"""
+        # TODO - Move this function from notebook
+        self._units = value
+
     def set_obj(self, attr, d_type, value):
         """
 
