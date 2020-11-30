@@ -10,6 +10,16 @@
         # Option 1 - check how pf-interval is overriding
         # Option 2 - Add pf_interval back onto the task display
 
+    # Turn failure numbers on -> interface
+
+    # Strategy effectiveness (percentage -> Sub population of interest)
+        # Effective inspection effectiveness
+        # Functional failures
+        # Conditional Failures 
+
+    # Change to age and add units
+
+
 # Changes
     # Why does git.ignore not work on GB computer
 

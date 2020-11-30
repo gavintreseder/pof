@@ -164,34 +164,34 @@ class Load:
     @units.setter
     def units(self, loaded_unit):  # TODO - Make this dependant on csv
         """ Takes a unit and updates any time values to reflect the new units"""
-        print(f"The loaded unit is {loaded_unit}")
-        print(f"The current unit is {self.units}")
+        # print(f"The loaded unit is {loaded_unit}")
+        # print(f"The current unit is {self.units}")
 
-        # Check if the uploaded unit is valid
-        if loaded_unit.lower() in valid_units:
-            if self._units is not None:
-                # Determine the ratio between the current and uploaded unit
-                ratio = (
-                    valid_units[self.units] / valid_units[loaded_unit]
-                )  # Current value over loaded value
+        # # Check if the uploaded unit is valid
+        # if loaded_unit.lower() in valid_units:
+        #     if self._units is not None:
+        #         # Determine the ratio between the current and uploaded unit
+        #         ratio = (
+        #             valid_units[self.units] / valid_units[loaded_unit]
+        #         )  # Current value over loaded value
 
-                # Update the variables on this instance
-                for variable in self.TIME_VARIABLES:
-                    i = getattr(self, variable) * ratio
-                    setattr(self, variable, i)
-                    print(f"{variable} has been changed to {getattr(self, variable)}")
+        #         # Update the variables on this instance
+        #         for variable in self.TIME_VARIABLES:
+        #             i = getattr(self, variable) * ratio
+        #             setattr(self, variable, i)
+        #             print(f"{variable} has been changed to {getattr(self, variable)}")
 
-                # Update the variables on the child instance
-                for variable in self.POF_VARIABLES:
-                    if isinstance(variable, Iterable):
-                        for key, val in variable.items():
-                            val.units = loaded_unit
-                    elif variable is not None:
-                        variable.units = loaded_unit
-                    else:
-                        raise ValueError(f"Something is wrong")
-        else:
-            raise ValueError(f"Unit must be in {valid_units.keys()}")
+        #         # Update the variables on the child instance
+        #         for variable in self.POF_VARIABLES:
+        #             if isinstance(variable, Iterable):
+        #                 for key, val in variable.items():
+        #                     val.units = loaded_unit
+        #             elif variable is not None:
+        #                 variable.units = loaded_unit
+        #             else:
+        #                 raise ValueError(f"Something is wrong")
+        # else:
+        #     raise ValueError(f"Unit must be in {valid_units.keys()}")
 
         self._units = loaded_unit
 
