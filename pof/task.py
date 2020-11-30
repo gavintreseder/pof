@@ -41,7 +41,8 @@ class Task(Load):
     CONDITION_IMPACT_AXIS = ["condition", "time"]
     CONDITION_IMPACT_METHODS = ["reduction_factor", "tbc"]
     SYSTEM_IMPACT = [None, "fm", "component", "asset"]
-    TIME_VARIABLES = ["trigger"]
+    TIME_VARIABLES = []
+    POF_VARIABLES = []
 
     def __init__(
         self,

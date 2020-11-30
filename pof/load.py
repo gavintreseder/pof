@@ -79,7 +79,6 @@ class Load:
     def __init__(self, name="load", units="years", *args, **kwargs):
 
         self.name = name
-        # self._units = units
         self.units = units
 
         # Dash feature
