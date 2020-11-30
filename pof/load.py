@@ -79,6 +79,7 @@ class Load:
     def __init__(self, name="load", units="years", *args, **kwargs):
 
         self.name = name
+        # self._units = units
         self.units = units
 
         # Dash feature
@@ -162,40 +163,43 @@ class Load:
 
     @units.setter
     def units(self, value):  # TODO - Make this dependant on csv
-        # """ Takes a unit and updates any time values to reflect the new units"""
-        # print(f"The loaded unit is {value}")
-        # print(f"The current unit is {self.units}")
+        """ Takes a unit and updates any time values to reflect the new units"""
 
-        # # Check if the uploaded unit is valid
-        # if value.lower() in valid_units:
-        #     if self._units is not None:
-        #         # Determine the ratio between the current and uploaded unit
-        #         ratio = (
-        #             valid_units[self.units] / valid_units[value]
-        #         )  # Current value over loaded value
+        # Check if the uploaded unit is valid
+        if value.lower() in valid_units:  # TODO how to handle if they load None
 
-        #         # Update the variables on this instance
-        #         for variable in self.TIME_VARIABLES:
-        #             # print(variable)
-        #             i = getattr(self, variable) * ratio
-        #             setattr(self, variable, i)
-        #             print(f"{variable} has been changed to {getattr(self, variable)}")
+            # Check if units is defined, if not set it to None
+            current_units = getattr(self, "_units", None)
 
-        #         # Update the variables on the child instance
-        #         for variable in self.POF_VARIABLES:
-        #             if isinstance(variable, Iterable):
-        #                 for key, val in variable.items():
-        #                     val.units = value
-        #             elif variable is not None:
-        #                 variable.units = value
-        #             else:
-        #                 raise ValueError(f"Something is wrong")
-        #     else:
-        #         self._units = value
-        # else:
-        #     raise ValueError(f"Unit must be in {valid_units.keys()}")
+            # If old_units is not null call scale_units to scale
+            if current_units is not None:
+                self._scale_units(value, current_units)
 
-        self._units = value
+            self._units = value
+
+        else:
+            raise ValueError(f"Unit must be in {valid_units.keys()}")
+
+    def _scale_units(self, value, current_units):
+        """ Take current and loaded units and return the ratio between """
+        # Determine the ratio between the current and uploaded unit
+        ratio = (
+            valid_units[current_units] / valid_units[value]
+        )  # Current value over loaded value
+
+        # Update the variables on this instance
+        for var in self.TIME_VARIABLES:
+            setattr(self, var, getattr(self, var) * ratio)
+
+        # Update the variables on the child instance
+        for var in self.POF_VARIABLES:
+            if isinstance(var, Iterable):
+                for val in var.items():
+                    val.units = value
+            elif var is not None:
+                var.units = value
+            else:
+                raise ValueError(f"Something is wrong")
 
     def set_obj(self, attr, d_type, value):
         """
