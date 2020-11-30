@@ -42,6 +42,7 @@ class TestPofBase(object):
         # Class data
         self._class = Mock(spec=object, return_value=None)
         self._class.from_dict = Mock(return_value=None)
+        # self._class._scale_units = Mock(return_value=None) #TODO
 
         # Valid and invalid Data that will cause errors if not overloaded
         self._data_valid = [Mock(return_value=None)]
@@ -547,6 +548,17 @@ class TestLoad(TestPofBase, unittest.TestCase):
             # Act / Assert
             with self.assertRaises(error):
                 load.update_from_dict(test_data)
+
+
+class TestNewtest(TestPofBase, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+
+    def test_passes(self):
+        pass
+
+    def test_fails(self):
+        self.tc.fail()
 
 
 if __name__ == "__main__":
