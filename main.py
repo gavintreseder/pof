@@ -309,8 +309,8 @@ def update_insp_interval(
         insp_interval_fig = make_sensitivity_fig(
             sens_sim,
             var_name=var_name,
-            t_min=1,
-            t_max=10,
+            lower=1,
+            upper=10,
             step_size=1,
             n_iterations=n_iterations,
         )

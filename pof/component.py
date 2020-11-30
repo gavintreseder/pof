@@ -546,7 +546,7 @@ class Component(Load):
 
         # Progress bars
         self.n_sens = 1
-        self.n_sens_iterations = int((t_max - t_min) / step_size + 1)
+        self.n_sens_iterations = int((upper - lower) / step_size + 1)
 
         var = var_name.split("-")[-1]
 
