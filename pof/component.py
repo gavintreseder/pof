@@ -545,15 +545,15 @@ class Component(Load):
         self.reset()
 
         # Progress bars
-        self.n_sens = 1
-        self.n_sens_iterations = int((t_max - t_min) / step_size + 1)
+        self.n_sens = 0
+        self.n_sens_iterations = int((upper - lower) / step_size + 1)
 
         var = var_name.split("-")[-1]
 
         for i in np.arange(lower, upper, step_size):
             try:
                 self.update(var_name, i)
-                self.mp_timeline(t_end=100, n_iterations=n_iterations)
+                self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 erc = self.expected_risk_cost_df()
                 rc[i] = erc.groupby(by=["task"])["cost"].sum()
 

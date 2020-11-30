@@ -82,7 +82,7 @@ class FailureMode(Load):
     PF_CURVES = ["linear", "step"]
     REQUIRED_STATES = ["initiation", "detection", "failure"]
     TIME_VARIABLES = ["pf_interval"]
-    POF_VARIABLES = ["tasks"]
+    POF_VARIABLES = []
 
     def __init__(
         self,
