@@ -15,7 +15,7 @@ from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import make_component_layout, cf  # TODO fix this
 from pof.interface.figures import (
-    update_condition_fig,f
+    update_condition_fig,
     update_cost_fig,
     update_pof_fig,
     make_sensitivity_fig,

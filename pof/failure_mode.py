@@ -128,6 +128,7 @@ class FailureMode(Load):
         self._timelines = dict()
         self._sim_counter = 0
         self._t_failures = []
+        self._t_renew = []
         self._risk_failures = []
 
     @property
@@ -374,7 +375,9 @@ class FailureMode(Load):
 
                 if bool(system_impact):
                     self.renew(t_now + 1)
+                    self._t_renew.append(t_now + 1)
                     system_impacts.append(system_impact)
+        
                 else:
                     # Update timeline
                     self.set_states(states)
@@ -601,14 +604,16 @@ class FailureMode(Load):
 
         # Consider the impact of all inspections
         for task in self.tasks.values():
-            if task.task_type == "inspection":
+            if task.task_type == "Inspection":
 
                 # Get the probability of task being effecitve
+                pf_interval = min([self.get_pf_interval(cond_name) for cond_name in self.conditions])
                 p_ie = task.effectiveness(
-                    pf_interval=self.pf_interval, failure_dist=self.untreated
+                    pf_interval=pf_interval, failure_dist=self.untreated
                 )
                 p_all_ie.append(p_ie)
 
+        print (p_all_ie)
         p_all_effective = 1 - math.prod(1 - np.array(p_all_ie))
 
         return p_all_effective
@@ -618,6 +623,10 @@ class FailureMode(Load):
     def expected_ff(self):
         """ Returns the expected functional failures"""
         return self._t_failures
+
+    def expected_cf(self):
+        """ Returns the expected functional failures"""
+        return self._t_renew
 
     def expected_replacements(self):
         """ Returns the expected conditional failures"""
@@ -857,6 +866,7 @@ class FailureMode(Load):
         # Reset counters
         self._sim_counter = 0
         self._t_failures = []
+        self._t_renew = []
 
     # ****************** Optimise routines ***********
 

@@ -20,6 +20,7 @@
     # Button to freeze graph axis
     # Min, max, step_size for sensitivity
     # Split main into app.py, layouts.py, callbacks.py
+    # Add units to figure axis
 
 
 
