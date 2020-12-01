@@ -88,7 +88,6 @@ class Component(Load):
         self.n_sens = 0
         self.n_sens_iterations = 10
 
-
     # ****************** Load data ******************
 
     def load_asset_data(
@@ -321,7 +320,7 @@ class Component(Load):
 
     def expected_cf(self):
         """ Returns the conditional failures for the component """
-        return self._t_replacement
+        return self._t_replacement - self.expected_ff()
 
     def expected_ff(self):
         """Returns the functional failures for the component"""
