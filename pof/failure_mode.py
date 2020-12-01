@@ -760,7 +760,9 @@ class FailureMode(Load):
                 t_end = max(max(task["time"], default=t_start), t_end)
 
         # Fill the blanks
-        df = pd.DataFrame(erc).T.apply(fill_blanks, axis=1, args=(t_start, t_end))
+        df = pd.DataFrame(erc).T.apply(
+            fill_blanks, axis=1, args=(t_start, t_end, ["count", "cost"])
+        )
         df.index.name = "task"
         df_cost = df.explode("cost")["cost"]
         df = df.explode("time")
@@ -780,35 +782,31 @@ class FailureMode(Load):
             scaling = self._sim_counter
 
         # Get the Task Costs
-        task_cost = {
-            task.name: task.expected_costs(scaling) for task in self.tasks.values()
-        }
 
-        for task_name in task_cost:
-            task_cost[task_name]["fm_active"] = self.active
+        task_cost = {}
+        for task in self.tasks.values():
+            task_cost[task.name] = task.expected(scaling)
+            task_cost[task.name]["fm_active"] = self.active
 
         # Get the Risks
-        time, cost = np.unique(self._t_failures, return_counts=True)
-        cost = cost * self.consequence.get_cost() / scaling
-        risk_cost = {
+        risk = self.expected_risk(scaling)
+
+        return {**risk, **task_cost}
+
+    def expected_risk(self, scaling=1):
+        time, count = np.unique(self._t_failures, return_counts=True)
+        count = count / scaling
+        cost = count * self.consequence.get_cost()
+        risk = {
             "risk": {
                 "time": time,
+                "count": count,
                 "cost": cost,
                 "task_active": self.active,
                 "fm_active": self.active,
             }
         }
-
-        return {**risk_cost, **task_cost}
-
-    def _expected_life(self):
-        """ Get the expected life from each timeline"""
-
-        expected_life = []
-        for timeline in self._timelines.items():
-            expected_life.append(timeline["time"][-1])
-
-        return expected_life
+        return risk
 
     def expected_tasks(self):
 

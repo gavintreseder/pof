@@ -10,16 +10,15 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from config import config
+from pof import Component
 from pof.loader.asset_model_loader import AssetModelLoader
-from pof import Component, FailureMode, Task
 from pof.interface.dashlogger import DashLogger
-from pof.interface.layouts import *
+from pof.interface.layouts import make_component_layout, cf  # TODO fix this
 from pof.interface.figures import (
     update_condition_fig,
     update_cost_fig,
     update_pof_fig,
     make_sensitivity_fig,
-    make_inspection_interval_fig,
 )
 
 # Quick test to make sure everything is works

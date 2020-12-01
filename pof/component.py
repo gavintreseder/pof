@@ -88,6 +88,7 @@ class Component(Load):
         self.n_sens = 0
         self.n_sens_iterations = 10
 
+
     # ****************** Load data ******************
 
     def load_asset_data(
@@ -413,17 +414,29 @@ class Component(Load):
         df = df.reset_index().melt(id_vars="failure_mode", var_name="task")
         df = pd.concat(
             [df.drop(columns=["value"]), df["value"].apply(pd.Series)], axis=1
-        )[["failure_mode", "task", "time", "cost", "fm_active", "task_active"]].dropna()
+        )[
+            [
+                "failure_mode",
+                "task",
+                "time",
+                "count",
+                "cost",
+                "fm_active",
+                "task_active",
+            ]
+        ].dropna()
 
-        df = df.apply(fill_blanks, axis=1, args=(t_start, t_end))
-        df_cost = df.explode("cost")["cost"]
-        df = df.explode("time")
-        df["cost"] = df_cost
+        fill_cols = ["cost", "count"]  # time not needed
+        df_filled = df.apply(fill_blanks, axis=1, args=(t_start, t_end, fill_cols))
+        df = df_filled.explode("time")
+        for col in fill_cols:
+            df[col] = df_filled.explode(col)[col]
 
         # Add a cumulative cost
-        df["cost_cumulative"] = df.groupby(by=["failure_mode", "task"])[
-            "cost"
-        ].transform(pd.Series.cumsum)
+        cum_cols = [col + "_cumulative" for col in fill_cols]
+        df[cum_cols] = df.groupby(by=["failure_mode", "task"])[fill_cols].transform(
+            pd.Series.cumsum
+        )
 
         return df
 
@@ -574,11 +587,7 @@ class Component(Load):
 
         df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
 
-        df = (
-            pd.DataFrame()
-            .from_dict(rc, orient="index")
-            .rename(columns={"risk": "risk_cost"})
-        )
+        df = pd.DataFrame().from_dict(rc, orient="index")
 
         return df, df_active
 
