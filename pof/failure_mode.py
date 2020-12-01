@@ -6,7 +6,7 @@ Author: Gavin Treseder
 # ************ Packages ********************
 
 import copy
-from dataclasses import dataclass, field
+import math
 import logging
 from typing import Dict, Optional
 from random import random, seed
@@ -359,7 +359,7 @@ class FailureMode(Load):
                 self._t_failures.append(t_failure)
 
             for task_name in task_names:
-                logging.debug(f"Time {t_now} - Tasks {task_names}")
+                logging.debug("Time %s - Tasks %s", t_now, task_names)
 
                 # Complete the tasks
                 states = self.tasks[task_name].sim_completion(
@@ -393,6 +393,7 @@ class FailureMode(Load):
                 detection=self.is_detected(),
                 failure=self.is_failed(),
             )
+
             for task in self.tasks.values():
                 updates[task.name] = None
 
@@ -618,8 +619,14 @@ class FailureMode(Load):
         """ Returns the expected functional failures"""
         return self._t_failures
 
-    def expected_cf(self):
-        raise NotImplementedError()
+    def expected_replacements(self):
+        """ Returns the expected conditional failures"""
+        replacements = []
+        for task in self.tasks.values():
+            if task.task_type == "replacement":
+                replacements.append(task.t_completion)
+
+        return replacements
 
     def expected_simple(self):
         """Returns all expected outcomes using a simple average formula"""

@@ -215,7 +215,7 @@ class Task(Load):
 
         return timeline
 
-    def _sim_timeline(*args, **kwargs):
+    def _sim_timeline(self, *args, **kwargs):
         raise NotImplementedError()
 
     # ************ Get Methods **********************
@@ -259,7 +259,7 @@ class Task(Load):
         Takes a dictionary of states and dictionary of condition objects and returns the states that have been changed
         """
 
-        self.record(t_now, timeline)
+        self.record(t_now)
 
         # Update the condition if it was effective
         if self.is_effective(t_now, timeline):
@@ -298,12 +298,12 @@ class Task(Load):
     def system_impact(self):
         return self.impacts["system"]
 
-    def record(self, t_start, timeline):
+    def record(self, t_complete):
         """
-        Record the details foth e
+        Record the details when a task is completed
         """
         # Time
-        self.t_completion.append(t_start)
+        self.t_completion.append(t_complete)
 
         # Cost TODO make this variable based on time to failure
         self.cost_completion.append(self.cost)

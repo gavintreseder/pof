@@ -1,3 +1,22 @@
+# Evening Priority
+    # Task -> Expected number of tasks (% scaled to n_sims) -> Age profile
+    # FM -> expected number failures (% scaled to n_sims) -> Age profile
+    # Comp -> % scaled to n_sims
+        # Simple cf ff ratio
+            fm.cf (count)
+            fm.ff (count)
+            ratio
+
+    # Switch to new trigger method
+
+    # Interface
+        # Table of outcomes
+
+    # Population
+
+
+
+
 
 # Change the timeframe for historical data
 

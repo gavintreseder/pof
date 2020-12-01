@@ -550,16 +550,5 @@ class TestLoad(TestPofBase, unittest.TestCase):
                 load.update_from_dict(test_data)
 
 
-class TestNewtest(TestPofBase, unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-
-    def test_passes(self):
-        pass
-
-    def test_fails(self):
-        self.tc.fail()
-
-
 if __name__ == "__main__":
     unittest.main()
