@@ -7,13 +7,16 @@
             fm.ff (count)
             ratio
 
-    # Switch to new trigger method
-
     # Interface
         # Table of outcomes
 
     # Population
 
+
+# Mel
+
+    # Make the progress bars appear on one line
+    # Change the units
 
 
 

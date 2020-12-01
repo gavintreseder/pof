@@ -63,6 +63,18 @@ def layout():
             ),
             html.Div(children="Fig State", id="fig_state"),
             html.P(id="ffcf"),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="pof-fig")),
+                    dbc.Col(dcc.Graph(id="cond-fig")),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="cost-fig")),
+                    dbc.Col(dcc.Graph(id="insp_interval-fig")),
+                ]
+            ),
             html.Div(
                 [
                     dcc.Interval(id="progress-interval", n_intervals=0, interval=100),
@@ -119,15 +131,6 @@ def layout():
                         )
                     ),
                 ]
-            ),
-            dbc.Row(
-                [
-                    dbc.Col(dcc.Graph(id="pof-fig")),
-                    dbc.Col(dcc.Graph(id="insp_interval-fig")),
-                ]
-            ),
-            dbc.Row(
-                [dbc.Col(dcc.Graph(id="cond-fig")), dbc.Col(dcc.Graph(id="cost-fig"))]
             ),
             mcl,
         ]
@@ -189,7 +192,9 @@ def update_parameter(graph_y_limit_active, graph_y_limit, *args):
         value = ctx.triggered[0]["value"]
 
         # Scale the value if req
-        value = value / var_to_scale.get(dash_id.split("-")[-1], 1)
+        var = dash_id.split("-")[-1]
+        if var in var_to_scale:
+            value = value / var_to_scale.get(var, 1)
 
         # update the model
         comp.update(dash_id, value)
