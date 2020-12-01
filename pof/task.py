@@ -440,34 +440,29 @@ class ConditionTask(Task):
         """
 
         t_end = t_end + 1
-        tl_ct = np.full(t_end - t_start, True)
+        s_trigger = np.full(t_end - t_start, True)
+        c_trigger = not self.triggers["condition"]
 
         # Check the state triggers have been met
         for state, trigger in self.triggers["state"].items():
-            try:
-                tl_ct = (tl_ct) & (timeline[state][t_start:t_end] == trigger)
-            except KeyError:
-                logging.warning(f"{state} not found")
+            s_trigger = (s_trigger) & (timeline[state][t_start:t_end] == trigger)
 
         # Check the condition triggers have been met
         for condition, trigger in self.triggers["condition"].items():
-            try:
-                if trigger["lower"] != "min":
-                    tl_ct = (tl_ct) & (
-                        indicators[condition].get_timeline()[t_start:]
-                        >= trigger["lower"]
-                        # timeline[condition][t_start:t_end] > trigger["lower"]
-                    )
-                if trigger["upper"] != "max":
-                    tl_ct = (tl_ct) & (
-                        indicators[condition].get_timeline()[t_start:]
-                        <= trigger["upper"]
-                        # timeline[condition][t_start:t_end] < trigger["upper"]
-                    )
-            except KeyError:
-                logging.warning("%s not found", condition)
 
-        tl_ct = tl_ct.astype(int)
+            tl_condition = indicators[condition].get_timeline()[t_start:]
+            lower = True
+            upper = True
+
+            if trigger["lower"] != "min":
+                lower = tl_condition >= trigger["lower"]
+
+            if trigger["upper"] != "max":
+                upper = tl_condition <= trigger["upper"]
+
+            c_trigger = c_trigger | (lower & upper)
+
+        tl_ct = (s_trigger & c_trigger).astype(int)
 
         if self.task_completion == "next_maintenance":
             # Change to days until format #Adjust
