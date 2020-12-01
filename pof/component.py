@@ -259,7 +259,9 @@ class Component(Load):
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
             if bool(system_impact) and cf.get("allow_system_impact"):
-                logging.debug(f"Component {self._name} reset by FailureMode {fm_name}")
+                logging.debug(
+                    "Component %s reset by FailureMode %s", self._name, fm_name
+                )
                 self.renew(t_renew=t_next + 1)
 
                 break

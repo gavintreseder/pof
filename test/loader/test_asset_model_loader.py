@@ -101,6 +101,24 @@ class TestAssetModelLoader(unittest.TestCase):
 
         fm.sim_timeline(200)
 
+    def test_mc_timeline_active_False(self):
+
+        # Arrange
+        aml = AssetModelLoader()
+        data = aml.load(FILENAME)
+        comp = Component.load(data["pole"])
+
+        for fm in comp.fm.values():
+            for task in fm.tasks.values():
+                task.update_from_dict({"active": False})
+
+                comp.mc_timeline(t_start=0, t_end=50, n_iterations=10)
+
+            fm.update_from_dict({"active": False})
+            comp.mc_timeline(t_start=0, t_end=50, n_iterations=10)
+
+        # Assert
+
 
 if __name__ == "__main__":
     unittest.main()

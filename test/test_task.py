@@ -34,6 +34,30 @@ class TestTaskCommon(TestPofBase):
         self._data_invalid_values = []
         # self._data_complete
 
+    def test_sim_timeline_active_false(self):
+
+        # Arrange
+        t_start = 0
+        t_end = 50
+        t_range = t_end - t_start + 1
+        timeline = {
+            "time": np.linspace(t_start, t_end, t_end + 1, dtype=int),
+            "initiation": np.full(t_range, False),
+            "detection": np.full(t_range, False),
+            "failure": np.full(t_range, False),
+        }
+
+        task = self._class.from_dict(self._data_complete[0])
+        task.active = False
+
+        expected = np.full(t_range, -1)  # 51
+
+        # Act
+        actual = task.sim_timeline(t_start=t_start, t_end=t_end, timeline=timeline)
+
+        # Assert
+        np.testing.assert_array_equal(expected, actual)
+
 
 class TestTask(TestTaskCommon, unittest.TestCase):
     def setUp(self):
@@ -142,6 +166,36 @@ class TestInspection(TestTaskCommon, unittest.TestCase):
             fixtures.complete["inspection_0"],
             fixtures.complete["inspection_1"],
         ]
+
+    def test_effectiveness(self):
+        """ Check the probability of effectiveness is calculated correctly"""
+
+        # p_effective, pf_interval, t_delay, t_interval, expected
+        param_list = [
+            # (0, 0, 0, 0, 0),  # All Zero
+            (0, 4, 0, 5, 0),  # Not effective
+            (1, 4, 0, 5, 0.8),  # Not enough inspections
+            (1, 5, 0, 5, 1),  # Enough inspections
+            (1, 6, 0, 5, 1),  # Too many inspections
+            (0.5, 10, 0, 5, 0.75),  # Prob failure
+            (0.5, 10, 10, 5, 0.675),
+        ]
+
+        failure_dist = Mock()
+        failure_dist.cdf = Mock(return_value=[0.1])
+
+        for p_effective, pf_interval, t_delay, t_interval, expected in param_list:
+
+            # Arrange
+            inspection = Inspection(
+                p_effective=p_effective, t_interval=t_interval, t_delay=t_delay
+            )
+
+            # Act
+            actual = inspection.effectiveness(pf_interval, failure_dist=failure_dist)
+
+            # Assert
+            self.assertEqual(expected, actual)
 
     # **************** test_update ***********************
 

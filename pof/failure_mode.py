@@ -591,11 +591,35 @@ class FailureMode(Load):
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
 
+    # ****************** Realised Methods *************
+
+    def inspection_effectiveness(self):
+        """ Returns the probability of a failure mode being detected given it's inspections"""
+
+        p_all_ie = []
+
+        # Consider the impact of all inspections
+        for task in self.tasks.values():
+            if task.task_type == "inspection":
+
+                # Get the probability of task being effecitve
+                p_ie = task.effectiveness(
+                    pf_interval=self.pf_interval, failure_dist=self.untreated
+                )
+                p_all_ie.append(p_ie)
+
+        p_all_effective = 1 - math.prod(1 - np.array(p_all_ie))
+
+        return p_all_effective
+
     # ****************** Expected Methods  ************
 
     def expected_ff(self):
         """ Returns the expected functional failures"""
         return self._t_failures
+
+    def expected_cf(self):
+        raise NotImplementedError()
 
     def expected_simple(self):
         """Returns all expected outcomes using a simple average formula"""

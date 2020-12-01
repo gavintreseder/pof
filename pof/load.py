@@ -72,10 +72,6 @@ class Load:
     TIME_VARIABLES = []
     POF_VARIABLES = []
 
-    ###Move them back
-
-    # name: str = field_property("load")
-
     def __init__(self, name="load", units="years", *args, **kwargs):
 
         self.name = name
