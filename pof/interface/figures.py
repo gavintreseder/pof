@@ -217,7 +217,7 @@ def update_condition_fig(local, conf=0.95):
 
         fig.update_traces(mode="lines")
         fig.update_xaxes(
-            title_text=col_names["time"] + f"({fm.units})",
+            title_text=col_names["time"],
             row=len(ecl),
             automargin=True,
         )
