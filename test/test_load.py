@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 import fixtures
 import testconfig  # pylint: disable=unused-import
 from pof.load import Load
+from pof.units import valid_units
 
 
 class TestPofBase(object):
@@ -42,6 +43,7 @@ class TestPofBase(object):
         # Class data
         self._class = Mock(spec=object, return_value=None)
         self._class.from_dict = Mock(return_value=None)
+        self._class._scale_units = Mock(return_value=None)  # TODO
 
         # Valid and invalid Data that will cause errors if not overloaded
         self._data_valid = [Mock(return_value=None)]
@@ -224,38 +226,132 @@ class TestPofBase(object):
         instance_0 = self._class.from_dict(data)
         instance_1 = self._class.from_dict(self._data_complete[1])
 
-        for var, val in data.items():
-            d = {}
-            d[var] = val
+        with patch.dict("pof.load.cf", {"handle_update_error": False}):
 
             # Act
-            instance_1.update(d)
+            instance_1.update(data)
 
         msg = []
-        for k, v in instance_0.__dict__.items():
-            if instance_1.__dict__[k] != v:
-                msg.append((k, v))
+        for key, val in instance_0.__dict__.items():
+            if instance_1.__dict__[key] != val:
+                msg.append((key, val))
 
         # Assert
-        # TODO simple fix
-        instance_0.up_to_date = instance_1.up_to_date
-
         self.tc.assertEqual(instance_0, instance_1, msg=msg)
 
-    def test_update_errors_raised(self):
-
+    def test_update_errors_logged(self):
+        """ Checks that an error is raised when invalid input data is provided"""
         # Arrange
+        class_config = "pof.load.cf"
         instance = self._class.demo()
 
         invalid_data = self._data_invalid_types + self._data_invalid_values
 
         for data in invalid_data:
-            with self.tc.assertLogs(level="DEBUG") as log:
-                # Act
-                instance.update(data)
+            with patch.dict(class_config, {"handle_update_error": True}):
+                with self.tc.assertLogs(level="DEBUG") as log:
+                    # Act
+                    instance.update(data)
 
-                # Assert
-                self.tc.assertTrue("Update Failed" in log.output[-1])
+                    # Assert
+                    self.tc.assertTrue("Update Failed" in log.output[-1])
+
+    def test_update_errors_raised(self):
+        """ Checks that an error is raised when invalid input data is provided"""
+        # Arrange
+        class_config = "pof.load.cf"
+        instance = self._class.demo()
+
+        invalid_data = self._data_invalid_types + self._data_invalid_values
+
+        for data in invalid_data:
+            with patch.dict(class_config, {"handle_update_error": False}):
+                with self.tc.assertRaises((ValueError, AttributeError, KeyError)):
+                    # Act
+                    instance.update(data)
+
+    # ************* Test units ******************
+
+    def test_units_undefined(self):
+        """ Case when current_units is not defined, sets to None & self._units = value """
+
+        # Arrange
+        input_data = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"]
+
+        for val in input_data:
+            # Act
+            instance = self._class.from_dict(self._data_complete[0])
+            instance.units = val
+
+            # Assert
+            self.tc.assertEqual(instance.units, val)
+
+    def test_units_invalid(self):
+        """ Case when value not in valid units raises error """
+
+        # Arrange
+        input_data = ["test"]
+
+        for val in input_data:
+            # Act
+            instance = self._class.from_dict(self._data_complete[0])
+
+            # Assert
+            with self.tc.assertRaises(ValueError):
+                instance.units = val
+
+    def test_units_defined(self):
+        """Case when current_units is defined, but equal to value, set self._units = value
+        && Case when current_units is not None & not equal to value, calls self._scale_units then sets self._units = value"""
+
+        # Arrange
+        input_data = ["months", "years"]
+
+        # Act
+        instance = self._class.from_dict(self._data_complete[0])
+        mock = Mock()
+
+        for val in input_data:
+            instance.units = val
+
+            mock._scale_units(val, "years")
+
+            # if getattr(self.tc, instance.units) == val:
+            # mock that the scale units call was triggered
+            # mock._scale_units.assert_called_with(val, getattr(self.tc, instance.units))
+
+            # Assert
+            self.tc.assertEqual(instance.units, val)
+
+    def test_scale_units_integration(self):
+        """ Integration test for scale_units -- Scale down and then back up """
+
+        # Arrange
+        instance = self._class.from_dict(self._data_complete[0])
+        instance.pf_interval = 10
+        instance.pf_std = 0.0001
+        current_value = []
+        months_value = []
+        return_value = []
+
+        # Act
+        current_units = instance.units
+        for var in instance.TIME_VARIABLES:
+            current_value.append(getattr(instance, var))
+
+        instance.units = "months"
+        for var in instance.TIME_VARIABLES:
+            months_value.append(getattr(instance, var))
+
+        instance.units = current_units
+        for var in instance.TIME_VARIABLES:
+            return_value.append(getattr(instance, var))
+
+        # Assert
+        i = 0
+        for var in instance.TIME_VARIABLES:
+            self.tc.assertEqual(return_value[i], current_value[i])
+            i = i + 1
 
 
 class TestLoad(TestPofBase, unittest.TestCase):
@@ -266,7 +362,7 @@ class TestLoad(TestPofBase, unittest.TestCase):
         self._data_valid = [{"name": "name"}]
         self._data_invalid_values = [{"name": 1234}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
-        self._data_complete = [{"name": "name"}]
+        self._data_complete = [{"name": "name_0"}, {"name": "name_1"}]
 
         # Mock the pof object
         self.pof_obj = Mock()
@@ -277,6 +373,67 @@ class TestLoad(TestPofBase, unittest.TestCase):
         self.load = Load(name="before_update")
         self.load.obj = Load(name="before_update")
         self.load.dict_obj = dict(test_key=Load(name="before_update"))
+
+    def test_scale_units(self):
+        """Case when Time_variables has length > 1, updates all variables
+        && when Pof_variables has a dict and a string, updates all correctly"""
+
+        for key in valid_units:
+            # Arrange
+            load = Load()
+            current_unit = "hours"
+
+            load.TIME_VARIABLES = ["test_time_1", "test_time_2"]
+            load.test_time_1 = 1
+            load.test_time_2 = 1
+
+            load.POF_VARIABLES = ["obj", "dict_obj"]
+            load.obj = Load(units=current_unit)
+            load.dict_obj = dict(obj_key=Load(units=current_unit))
+            
+            # Act
+            load._scale_units(key, current_unit)
+
+            # Assert - Time_variables
+            for var in load.TIME_VARIABLES:
+                self.assertAlmostEquals(getattr(load, var), 1 / valid_units[key])
+
+            # Assert - Pof_variables
+            self.assertEqual(load.obj.units, key)
+            self.assertEqual(load.dict_obj["obj_key"].units, key)
+
+    def test_scale_units_zero(self):
+        """ Case when getattr of a time_variable is 0, should return 0"""
+
+        # Arrange
+        load = Load()
+        current_unit = "hours"
+
+        load.TIME_VARIABLES = ["test_time_3"]
+        load.test_time_3 = 0
+        load.POF_VARIABLES = []
+
+        for key in valid_units:
+            # Act
+            load._scale_units(key, current_unit)
+
+            # Assert
+            for var in load.TIME_VARIABLES:
+                self.assertAlmostEquals(getattr(load, var), 0)
+
+    def test_scale_units_error(self):
+        """ Case when var is None raise value error """
+        # Arrange
+        load = Load()
+        current_unit = "hours"
+
+        load.POF_VARIABLES = ["test_pof_3"]
+        load.test_pof_3 = None
+
+        for key in valid_units:
+            # Assert && Act
+            with self.assertRaises(ValueError):
+                load._scale_units(key, current_unit)
 
     # ------------ set_containter_attr with empty container -----------
 

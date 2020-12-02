@@ -1,3 +1,63 @@
+# Evening Priority
+    # Task -> Expected number of tasks (% scaled to n_sims) -> Age profile
+    # FM -> expected number failures (% scaled to n_sims) -> Age profile
+    # Comp -> % scaled to n_sims
+        # Simple cf ff ratio
+            fm.cf (count)
+            fm.ff (count)
+            ratio
+
+    # Interface
+        # Table of outcomes
+
+    # Population
+
+
+# Gav
+    # Change sens to annualised cost 
+
+# Mel
+
+    # Make the progress bars appear on one line
+    # Change the units in the figures
+    # Button to freeze graph axis
+    # Min, max, step_size for sensitivity
+    # Split main into app.py, layouts.py, callbacks.py
+    # Add units to figure axis
+
+
+
+# Questions for Occa
+    # functional v conditional
+    # How far into the future
+
+
+
+
+# Change the timeframe for historical data
+
+    # Histogram of age at failures for each type
+    # Condition v intervention time
+
+    # Turn on timeline progress in terminal 
+    
+    # Definitely need to split out the two types of inspetions (protection v groundline)
+        # Option 1 - check how pf-interval is overriding
+        # Option 2 - Add pf_interval back onto the task display
+
+    # Turn failure numbers on -> interface
+
+    # Strategy effectiveness (percentage -> Sub population of interest)
+        # Effective inspection effectiveness
+        # Functional failures
+        # Conditional Failures 
+
+    # Change to age and add units
+
+
+# Changes
+    # Why does git.ignore not work on GB computer
+
 # Priority
 
     # Annualised cost button

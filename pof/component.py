@@ -9,7 +9,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -78,7 +78,7 @@ class Component(Load):
         # Simulation traking
         self._in_service = True
         self._sim_counter = 0
-        self._t_replacement = []
+        self._t_in_service = []
         self.stop_simulation = False
 
         # Dash Tracking
@@ -88,37 +88,11 @@ class Component(Load):
         self.n_sens = 0
         self.n_sens_iterations = 10
 
-    # ***************** Property methods ************
-
-    @property
-    def units(self):
-        return self._units
-
-    @units.setter
-    def units(self, value):
-        """ Takes a unit and updates any time values to reflect the new units"""
-
-        # TODO add a valid unit to the test data set
-        # TODO add an invalid unit to the test data set
-        # TODO update the complete test data set
-
-        # TODO move this property to load
-
-        # Check that it is a valid value
-        # TODO Create a new file with a dict that has the ratio between units all based in hours and import it at the top
-
-        # Get the ratio between the current units and the new units
-        # TODO Repeat this function across all of the pof objects
-        # Potentially move it to Load and then each file only needs a class variable with a list of attrs that are times
-        # and list of attrs that have a unit method
-
-        # Adjust every time value by this ratio and make sure they ints?
-
-        self._units = value
-
     # ****************** Load data ******************
 
-    def load_asset_data(self, *args, **kwargs):
+    def load_asset_data(
+        self,
+    ):
 
         # TODO Hook up data
         self.info = dict(
@@ -134,7 +108,7 @@ class Component(Load):
             # Set perfect
 
             # Set current
-            NotImplemented
+            raise NotImplementedError
 
     def set_indicator(self, indicator_input):
         """
@@ -206,7 +180,7 @@ class Component(Load):
 
         # while self.n < n_iterations and self.up_to_date:
 
-        for i in range(self.n_iterations):
+        for i in tqdm(range(self.n_iterations)):
             if not self.up_to_date:
                 break
             # Do work
@@ -244,6 +218,9 @@ class Component(Load):
             self.complete_tasks(t_next, next_fm_tasks)
 
             t_now = t_next + 1
+
+        if self._in_service:
+            self._t_in_service.append(t_now)
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline"""
@@ -285,7 +262,9 @@ class Component(Load):
             system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
 
             if bool(system_impact) and cf.get("allow_system_impact"):
-                logging.debug(f"Component {self._name} reset by FailureMode {fm_name}")
+                logging.debug(
+                    "Component %s reset by FailureMode %s", self._name, fm_name
+                )
                 self.renew(t_renew=t_next + 1)
 
                 break
@@ -313,8 +292,6 @@ class Component(Load):
         else:
             for fm in self.fm.values():
                 fm.renew(t_renew)
-
-        self._t_replacement.append(t_renew)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
@@ -344,15 +321,26 @@ class Component(Load):
 
     def expected_cf(self):
         """ Returns the conditional failures for the component """
-        return self._t_replacement
+        t_cf = []
+        for fm in self.fm.values():
+            t_cf.extend(fm.expected_cf())
+
+        return t_cf
 
     def expected_ff(self):
         """Returns the functional failures for the component"""
-        ff = []
+        t_ff = []
         for fm in self.fm.values():
-            ff.extend(fm.expected_ff())
+            t_ff.extend(fm.expected_ff())
 
-        return ff
+        return t_ff
+
+    def expected_life(self):
+        e_l = (
+            sum(self._t_in_service + self.expected_cf() + self.expected_ff())
+            / self._sim_counter
+        )
+        return e_l
 
     def expected_untreated(self, t_start=0, t_end=100):
 
@@ -437,17 +425,32 @@ class Component(Load):
         df = df.reset_index().melt(id_vars="failure_mode", var_name="task")
         df = pd.concat(
             [df.drop(columns=["value"]), df["value"].apply(pd.Series)], axis=1
-        )[["failure_mode", "task", "time", "cost", "fm_active", "task_active"]].dropna()
+        )[
+            [
+                "failure_mode",
+                "task",
+                "time",
+                "count",
+                "cost",
+                "fm_active",
+                "task_active",
+            ]
+        ].dropna()
 
-        df = df.apply(fill_blanks, axis=1, args=(t_start, t_end))
-        df_cost = df.explode("cost")["cost"]
-        df = df.explode("time")
-        df["cost"] = df_cost
+        fill_cols = ["cost", "count"]  # time not needed
+        df_filled = df.apply(fill_blanks, axis=1, args=(t_start, t_end, fill_cols))
+        df = df_filled.explode("time")
+        for col in fill_cols:
+            df[col] = df_filled.explode(col)[col]
 
         # Add a cumulative cost
-        df["cost_cumulative"] = df.groupby(by=["failure_mode", "task"])[
-            "cost"
-        ].transform(pd.Series.cumsum)
+        cum_cols = [col + "_cumulative" for col in fill_cols]
+        df[cum_cols] = df.groupby(by=["failure_mode", "task"])[fill_cols].transform(
+            pd.Series.cumsum
+        )
+
+        # Formatting
+        # df.rename(columns{'task': 'source'})
 
         return df
 
@@ -508,46 +511,7 @@ class Component(Load):
             ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
         }
 
-    # ****************** Optimal? ******************
-
-    def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
-        # TODO add an optimal onto this
-
-        self.n_sens = 1
-        self.n_sens_iterations = int((t_max - t_min) / step + 1)
-
-        rc = dict()
-        self.reset()
-
-        for i in range(t_min, t_max, step):
-
-            # Set t_interval
-            for fm in self.fm.values():
-                if "inspection" in list(fm.tasks):
-                    fm.tasks["inspection"].t_interval = i
-
-            # self.mc_timeline(t_end=100, n_iterations=n_iterations)
-            self.mp_timeline(t_end=100, n_iterations=n_iterations)
-
-            rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-            rc[i]["inspection_interval"] = i
-
-            # Reset component
-            self.reset()
-
-            self.n_sens = self.n_sens + 1
-
-        df = (
-            pd.DataFrame()
-            .from_dict(rc, orient="index")
-            .rename(columns={"risk": "risk_cost"})
-        )
-        df["direct_cost"] = df.drop(["inspection_interval", "risk_cost"], axis=1).sum(
-            axis=1
-        )
-        df["total"] = df["direct_cost"] + df["risk_cost"]
-
-        return df
+    
 
     def progress(self) -> float:
         """ Returns the progress of the primary simulation"""
@@ -560,29 +524,38 @@ class Component(Load):
         )
 
     def expected_sensitivity(
-        self, var_name, t_min, t_max, step_size=1, n_iterations=100
+        self, var_name, lower, upper, step_size=1, n_iterations=100, t_end=100
     ):
         """
-        Returns dataframe of sensitivity data for a given variable name using a given confidence.
+        Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
         """
         rc = dict()
         ta = pd.DataFrame()
         fma = pd.DataFrame()
         self.reset()
 
+        # Progress bars
+        self.n_sens = 0
+        self.n_sens_iterations = int((upper - lower) / step_size + 1)
+
         var = var_name.split("-")[-1]
 
-        for i in np.arange(t_min, t_max, step_size):
+        for i in np.arange(lower, upper, step_size):
             try:
-                self.update(var_name, i)
-                self.mc_timeline(t_end=100, n_iterations=n_iterations)
-                erc = self.expected_risk_cost_df()
-                rc[i] = erc.groupby(by=["task"])["cost"].sum()
-
-                rc[i][var] = i
-
                 # Reset component
                 self.reset()
+
+                self.update(var_name, i)
+                self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
+                erc = self.expected_risk_cost_df()
+
+                df_rc = erc.groupby(by=["task"])[["cost"]].sum()
+                df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
+                df_rc[var] = i
+
+                rc[i] = df_rc
+
+                self.n_sens = self.n_sens + 1
 
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
@@ -592,11 +565,7 @@ class Component(Load):
 
         df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
 
-        df = (
-            pd.DataFrame()
-            .from_dict(rc, orient="index")
-            .rename(columns={"risk": "risk_cost"})
-        )
+        df = pd.concat(rc).reset_index().drop(["level_0"], axis=1)
 
         return df, df_active
 
@@ -622,7 +591,7 @@ class Component(Load):
 
         # Reset counters
         self._sim_counter = 0
-        self._t_replacement = []
+        self._t_in_service = []
         self.stop_simulation = False
 
     # ****************** Interface ******************
@@ -697,7 +666,7 @@ class Component(Load):
 
     def get_timeline(self):
 
-        print(NotImplemented)
+        raise NotImplementedError()
 
     # ****************** Demonstration parameters ******************
 

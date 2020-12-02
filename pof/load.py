@@ -24,6 +24,7 @@ if __package__ is None or __package__ == "":
 
 from pof.helper import str_to_dict
 from config import config
+from pof.units import valid_units
 
 # Use config for load
 cf = config["Load"]
@@ -67,7 +68,9 @@ class Load:
     A class with methods for loading data that
     """
 
-    # name: str = field_property("load")
+    # Class Variables
+    TIME_VARIABLES = []
+    POF_VARIABLES = []
 
     def __init__(self, name="load", units="years", *args, **kwargs):
 
@@ -149,6 +152,51 @@ class Load:
     def demo(cls):
         return cls("Not Implemented")
 
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):  # TODO - Make this dependant on csv
+        """ Takes a unit and updates any time values to reflect the new units"""
+
+        # Check if the uploaded unit is valid
+        if value.lower() in valid_units:  # TODO how to handle if they load None
+
+            # Check if units is defined, if not set it to None
+            current_units = getattr(self, "_units", None)
+
+            # If current_units is not None and does not equal loaded_units call scale_units to scale
+            if current_units is not None and current_units != value:
+                self._scale_units(value, current_units)
+
+            self._units = value
+
+        else:
+            raise ValueError(f"Unit must be in {valid_units.keys()}")
+
+    def _scale_units(self, value, current_units):
+        """ Take current and loaded units and return the ratio between """
+        # Determine the ratio between the current and uploaded unit
+        ratio = (
+            valid_units[current_units] / valid_units[value]
+        )  # Current value over loaded value
+
+        # Update the variables on this instance
+        for var in self.TIME_VARIABLES:
+            setattr(self, var, getattr(self, var) * ratio)
+
+        # Update the variables on the child instance
+        for var_name in self.POF_VARIABLES:
+            var = getattr(self, var_name)
+            if isinstance(var, dict):
+                for val in var.values():
+                    val.units = value
+            elif var is not None:
+                var.units = value
+            else:
+                raise ValueError(f"Something is wrong")
+
     def set_obj(self, attr, d_type, value):
         """
 
@@ -204,7 +252,6 @@ class Load:
     def update(self, id_object, value=None):
         """ An update method with some error handling"""
         try:
-            self.up_to_date = False
 
             if isinstance(id_object, str):
                 self.update_from_str(id_object, value, sep="-")
@@ -218,7 +265,10 @@ class Load:
                     self.__class__.__name__,
                 )
         except (KeyError, AttributeError, ValueError) as error:
-            logging.warning("Update Failed. {error}")
+            if config["Load"]["handle_update_error"]:
+                logging.warning("Update Failed. {error}")
+            else:
+                raise error
 
     def update_from_str(self, id_str, value, sep="-"):
         """
@@ -233,7 +283,6 @@ class Load:
 
     # def update_from_dict(self, *args, **kwargs):
     #     """
-    #     Update_from_dict is overloaded in each of the child classes
     #     """
     #     raise NotImplementedError()
 

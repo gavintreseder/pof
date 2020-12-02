@@ -157,6 +157,10 @@ class Distribution(Load):
     # beta: int = field(default_factory=lambda: cf.get("beta"))
     # gamma: int = field(default_factory=lambda: cf.get("gamma"))
 
+    # Class Variables
+    TIME_VARIABLES = []
+    POF_VARIABLES = []
+    
     def __init__(self, name="dist", alpha=50, beta=1.5, gamma=10, *args, **kwargs):
         super().__init__(name=name, *args, **kwargs)
         self.alpha = alpha
