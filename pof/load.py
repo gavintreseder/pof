@@ -166,8 +166,8 @@ class Load:
             # Check if units is defined, if not set it to None
             current_units = getattr(self, "_units", None)
 
-            # If old_units is not null call scale_units to scale
-            if current_units is not None:
+            # If current_units is not None and does not equal loaded_units call scale_units to scale
+            if current_units is not None and current_units != value:
                 self._scale_units(value, current_units)
 
             self._units = value
@@ -187,9 +187,10 @@ class Load:
             setattr(self, var, getattr(self, var) * ratio)
 
         # Update the variables on the child instance
-        for var in self.POF_VARIABLES:
-            if isinstance(var, Iterable):
-                for val in var.items():
+        for var_name in self.POF_VARIABLES:
+            var = getattr(self, var_name)
+            if isinstance(var, dict):
+                for val in var.values():
                     val.units = value
             elif var is not None:
                 var.units = value

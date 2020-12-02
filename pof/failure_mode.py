@@ -81,7 +81,16 @@ class FailureMode(Load):
     # Class Variables
     PF_CURVES = ["linear", "step"]
     REQUIRED_STATES = ["initiation", "detection", "failure"]
-    TIME_VARIABLES = ["pf_interval"]
+    TIME_VARIABLES = [
+        # "alpha",
+        # "beta",
+        # "gamma",
+        # "pf_curve",
+        "pf_interval",
+        "pf_std",
+        # "time_interval",
+        # "time_delay"
+    ]
     POF_VARIABLES = []
 
     def __init__(
@@ -358,7 +367,6 @@ class FailureMode(Load):
                 )[-1]
                 self._t_func_failure.append(t_failure)
 
-
             for task_name in task_names:
                 logging.debug("Time %s - Tasks %s", t_now, task_names)
 
@@ -379,7 +387,7 @@ class FailureMode(Load):
 
                     if not self.timeline["failure"][t_now]:
                         self._t_cond_failure.append(t_now + 1)
-        
+
                 else:
                     # Update timeline
                     self.set_states(states)
@@ -609,7 +617,9 @@ class FailureMode(Load):
             if task.task_type == "Inspection":
 
                 # Get the probability of task being effecitve
-                pf_interval = min([self.get_pf_interval(cond_name) for cond_name in self.conditions])
+                pf_interval = min(
+                    [self.get_pf_interval(cond_name) for cond_name in self.conditions]
+                )
                 p_ie = task.effectiveness(
                     pf_interval=pf_interval, failure_dist=self.untreated
                 )
