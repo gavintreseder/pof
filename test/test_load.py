@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 import fixtures
 import testconfig  # pylint: disable=unused-import
 from pof.load import Load
+from pof.units import valid_units
 
 
 class TestPofBase(object):
@@ -42,7 +43,7 @@ class TestPofBase(object):
         # Class data
         self._class = Mock(spec=object, return_value=None)
         self._class.from_dict = Mock(return_value=None)
-        # self._class._scale_units = Mock(return_value=None) #TODO
+        self._class._scale_units = Mock(return_value=None)  # TODO
 
         # Valid and invalid Data that will cause errors if not overloaded
         self._data_valid = [Mock(return_value=None)]
@@ -269,6 +270,59 @@ class TestPofBase(object):
                     # Act
                     instance.update(data)
 
+    # ************* Test units ******************
+
+    def test_units_undefined(self):
+        """ Case when current_units is not defined, sets to None & self._units = value """
+
+        # Arrange
+        input_data = ["seconds", "minutes", "hours", "days", "weeks", "months", "years"]
+
+        for val in input_data:
+            # Act
+            instance = self._class.from_dict(self._data_complete[0])
+            instance.units = val
+
+            # Assert
+            self.tc.assertEqual(instance.units, val)
+
+    def test_units_invalid(self):
+        """ Case when value not in valid units raises error """
+
+        # Arrange
+        input_data = ["test"]
+
+        for val in input_data:
+            # Act
+            instance = self._class.from_dict(self._data_complete[0])
+
+            # Assert
+            with self.tc.assertRaises(ValueError):
+                instance.units = val
+
+    def test_units_defined(self):
+        """Case when current_units is defined, but equal to value, set self._units = value
+        && Case when current_units is not None & not equal to value, calls self._scale_units then sets self._units = value"""
+
+        # Arrange
+        input_data = ["months", "years"]
+
+        # Act
+        instance = self._class.from_dict(self._data_complete[0])
+        mock = Mock()
+
+        for val in input_data:
+            instance.units = val
+
+            mock._scale_units(val, "years")
+
+            # if getattr(self.tc, instance.units) == val:
+            # mock that the scale units call was triggered
+            # mock._scale_units.assert_called_with(val, getattr(self.tc, instance.units))
+
+            # Assert
+            self.tc.assertEqual(instance.units, val)
+
 
 class TestLoad(TestPofBase, unittest.TestCase):
     def setUp(self):
@@ -289,6 +343,67 @@ class TestLoad(TestPofBase, unittest.TestCase):
         self.load = Load(name="before_update")
         self.load.obj = Load(name="before_update")
         self.load.dict_obj = dict(test_key=Load(name="before_update"))
+
+    def test_scale_units(self):
+        """Case when Time_variables has length > 1, updates all variables
+        && when Pof_variables has a dict and a string, updates all correctly"""
+
+        # Arrange
+        load = Load()
+        current_unit = "hours"
+
+        load.TIME_VARIABLES = ["test_time_1", "test_time_2"]
+        load.test_time_1 = 1
+        load.test_time_2 = 1
+
+        load.POF_VARIABLES = ["test_pof_1", "test_pof_2"]
+        load.test_pof_1 = Load(unit=current_unit)
+        load.test_pof_2 = dict(load=Load(unit=current_unit))
+
+        for key in valid_units:
+            # Act
+            load._scale_units(key, current_unit)
+
+            # Assert
+            for var in load.TIME_VARIABLES:
+                self.assertAlmostEquals(getattr(load, var), 1 / valid_units[key])
+
+            for var in load.POF_VARIABLES:
+                self.assertEqual(load.test_pof_1.units, key)
+                self.assertEqual(load.test_pof_2.units, key)
+
+    def test_scale_units_zero(self):
+        """ Case when getattr of a time_variable is 0, should return 0"""
+
+        # Arrange
+        load = Load()
+        current_unit = "hours"
+
+        load.TIME_VARIABLES = ["test_time_3"]
+        load.test_time_3 = 0
+        load.POF_VARIABLES = []
+
+        for key in valid_units:
+            # Act
+            load._scale_units(key, current_unit)
+
+            # Assert
+            for var in load.TIME_VARIABLES:
+                self.assertAlmostEquals(getattr(load, var), 0)
+
+    def test_scale_units_error(self):
+        """ Case when var is None raise value error """
+        # Arrange
+        load = Load()
+        current_unit = "hours"
+
+        load.POF_VARIABLES = ["test_pof_3"]
+        load.test_pof_3 = None
+
+        for key in valid_units:
+            # Assert && Act
+            with self.assertRaises(ValueError):
+                load._scale_units(key, current_unit)
 
     # ------------ set_containter_attr with empty container -----------
 
@@ -548,17 +663,6 @@ class TestLoad(TestPofBase, unittest.TestCase):
             # Act / Assert
             with self.assertRaises(error):
                 load.update_from_dict(test_data)
-
-
-class TestNewtest(TestPofBase, unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-
-    def test_passes(self):
-        pass
-
-    def test_fails(self):
-        self.tc.fail()
 
 
 if __name__ == "__main__":
