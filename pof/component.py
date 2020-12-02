@@ -9,7 +9,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -78,8 +78,7 @@ class Component(Load):
         # Simulation traking
         self._in_service = True
         self._sim_counter = 0
-        self._t_replacement = []
-        self._t_in_serivce = []
+        self._t_in_service = []
         self.stop_simulation = False
 
         # Dash Tracking
@@ -181,7 +180,7 @@ class Component(Load):
 
         # while self.n < n_iterations and self.up_to_date:
 
-        for i in range(self.n_iterations):
+        for i in tqdm(range(self.n_iterations)):
             if not self.up_to_date:
                 break
             # Do work
@@ -220,7 +219,7 @@ class Component(Load):
 
             t_now = t_next + 1
 
-        if self.in_service:
+        if self._in_service:
             self._t_in_service.append(t_now)
 
     def init_timeline(self, t_end, t_start=0):
@@ -293,8 +292,6 @@ class Component(Load):
         else:
             for fm in self.fm.values():
                 fm.renew(t_renew)
-
-        self._t_replacement.append(t_renew)
 
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
@@ -570,7 +567,7 @@ class Component(Load):
         self, var_name, lower, upper, step_size=1, n_iterations=100, t_end=100
     ):
         """
-        Returns dataframe of sensitivity data for a given variable name using a given confidence.
+        Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
         """
         rc = dict()
         ta = pd.DataFrame()
@@ -589,12 +586,11 @@ class Component(Load):
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 erc = self.expected_risk_cost_df()
 
-                df_rc = erc.groupby(by=["task"])["cost"].sum()
+                df_rc = erc.groupby(by=["task"])[["cost"]].sum()
                 df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
                 df_rc[var] = i
 
                 rc[i] = df_rc
-                rc[i][var] = i
 
                 # Reset component
                 self.reset()
@@ -609,7 +605,7 @@ class Component(Load):
 
         df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
 
-        df = pd.DataFrame().from_dict(rc, orient="index")
+        df = pd.concat(rc).reset_index().drop(["level_0"], axis=1)
 
         return df, df_active
 
@@ -635,7 +631,6 @@ class Component(Load):
 
         # Reset counters
         self._sim_counter = 0
-        self._t_replacement = []
         self._t_in_service = []
         self.stop_simulation = False
 
@@ -711,7 +706,7 @@ class Component(Load):
 
     def get_timeline(self):
 
-        print(NotImplemented)
+        raise NotImplementedError()
 
     # ****************** Demonstration parameters ******************
 

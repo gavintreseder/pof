@@ -127,9 +127,8 @@ class FailureMode(Load):
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-        self._t_failures = []
-        self._t_renew = []
-        self._risk_failures = []
+        self._t_func_failure = []
+        self._t_cond_failure = []
 
     @property
     def pf_curve(self):
@@ -357,7 +356,7 @@ class FailureMode(Load):
                         np.r_[~self.timeline["failure"][0], self.timeline["failure"]]
                     )
                 )[-1]
-                self._t_failures.append(t_failure)
+                self._t_func_failure.append(t_failure)
 
 
             for task_name in task_names:
@@ -377,9 +376,9 @@ class FailureMode(Load):
                 if bool(system_impact):
                     self.renew(t_now + 1)
                     system_impacts.append(system_impact)
-                    
-                    if self.timeline["failure"][t_now]:
-                        self._t_renew.append(t_now + 1)
+
+                    if not self.timeline["failure"][t_now]:
+                        self._t_cond_failure.append(t_now + 1)
         
                 else:
                     # Update timeline
@@ -616,7 +615,6 @@ class FailureMode(Load):
                 )
                 p_all_ie.append(p_ie)
 
-        print (p_all_ie)
         p_all_effective = 1 - math.prod(1 - np.array(p_all_ie))
 
         return p_all_effective
@@ -625,11 +623,11 @@ class FailureMode(Load):
 
     def expected_ff(self):
         """ Returns the expected functional failures"""
-        return self._t_failures
+        return self._t_func_failure
 
     def expected_cf(self):
         """ Returns the expected functional failures"""
-        return self._t_renew
+        return self._t_cond_failure
 
     def expected_replacements(self):
         """ Returns the expected conditional failures"""
@@ -806,7 +804,7 @@ class FailureMode(Load):
         return {**risk, **task_cost}
 
     def expected_risk(self, scaling=1):
-        time, count = np.unique(self._t_failures, return_counts=True)
+        time, count = np.unique(self._t_func_failure, return_counts=True)
         count = count / scaling
         cost = count * self.consequence.get_cost()
         risk = {
@@ -868,8 +866,8 @@ class FailureMode(Load):
 
         # Reset counters
         self._sim_counter = 0
-        self._t_failures = []
-        self._t_renew = []
+        self._t_func_failure = []
+        self._t_cond_failure = []
 
     # ****************** Optimise routines ***********
 
