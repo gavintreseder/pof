@@ -273,6 +273,10 @@ def make_sensitivity_fig(
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
 
+        if var == "time":
+            col_names = {"time": f"Age ({local.units})"}
+            fig.update_xaxes(title_text=col_names["time"])
+
     except Exception as error:
         raise error
         fig = go.Figure(
