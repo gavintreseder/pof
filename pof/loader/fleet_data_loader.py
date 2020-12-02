@@ -175,7 +175,6 @@ class FleetDataLoader:
             df.date = dd.to_datetime(df.date, format="%Y-%m-%d").dt.date
 
         if "replace_date" in df.columns:
-            df.replace_date = df.replace_date.apply(lambda x: x[:10])
             df.replace_date = dd.to_datetime(df.replace_date, format="%Y-%m-%d").dt.date
 
         return df
