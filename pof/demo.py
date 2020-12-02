@@ -168,8 +168,8 @@ repair_data = dict(
 
         triggers=dict(
             condition=dict(
-                fast_degrading=dict(lower=20, upper=90,),
-                slow_degrading=dict(lower=20, upper=90,)
+                fast_degrading=dict(lower=20, upper='max',),
+                slow_degrading=dict(lower=20, upper='max',)
             ),
             state=dict(detection=True),
         ),
@@ -226,8 +226,8 @@ replacement_data =dict(
 
         triggers=dict(
             condition=dict(
-                fast_degrading=dict(lower=0, upper=20,),
-                slow_degrading=dict(lower=0, upper=20,)
+                fast_degrading=dict(lower='min', upper=20,),
+                slow_degrading=dict(lower='min', upper=20,)
             ),
             state=dict(detection=True),
         ),

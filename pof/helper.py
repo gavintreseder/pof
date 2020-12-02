@@ -16,21 +16,33 @@ def flatten(d, parent_key="", sep="_"):
             items.append((new_key, v))
     return dict(items)
 
+    # n = t_end - t_start + 1
+    # time = np.linspace(t_start, t_end, n, dtype=int)
+    # cost = np.full(n, 0)z
 
-def fill_blanks(row, t_start, t_end):
+    # if row["time"].size:
+    #     row_time = [item for item in row["time"] if item < n]
+    #     row_cost = row["cost"][: len(row_time)]
+    #     cost[row_time] = row_cost
+    #     # cost[row["time"]] = row["cost"]
+
+    # row["time"] = time
+    # row["cost"] = cost
+
+
+def fill_blanks(row, t_start, t_end, cols):
 
     n = t_end - t_start + 1
-    time = np.linspace(t_start, t_end, n, dtype=int)
-    cost = np.full(n, 0)
 
-    if row["time"].size:
-        row_time = [item for item in row["time"] if item < n]
-        row_cost = row["cost"][: len(row_time)]
-        cost[row_time] = row_cost
-        # cost[row["time"]] = row["cost"]
+    row_time = [item for item in row["time"] if item < n]
 
-    row["time"] = time
-    row["cost"] = cost
+    for col in cols:
+        temp_row = np.full(n, 0, dtype=row[col].dtype)
+        temp_row[row_time] = row[col][: len(row_time)]
+        row[col] = temp_row
+
+    row["time"] = np.linspace(t_start, t_end, n, dtype=int)
+
     return row
 
 

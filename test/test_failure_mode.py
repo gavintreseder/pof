@@ -41,6 +41,30 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             fixtures.complete["failure_mode_1"],
         ]
 
+    def test_inspection_effectiveness(self):
+
+        # Arrange
+        task = Mock()
+        task.effectiveness = Mock(return_value=0.9)
+        task.task_type = "inspection"
+
+        param_list = [
+            ({}, 0),
+            ({"insp_1": task}, 0.9),
+            ({"insp_1": task, "insp_2": task}, 0.99),
+        ]
+
+        for tasks, expected in param_list:
+
+            fm = FailureMode.demo()
+            fm.tasks = tasks
+
+            # Act
+            actual = fm.inspection_effectiveness()
+
+            # Assert
+            self.assertEqual(actual, expected)
+
     # ************ Test init_timeline ***********************
 
     def test_init_timeline(self):
@@ -117,7 +141,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
     #     fm.sim_timeline(200)
 
     #     raise NotImplementedError()
-
+    # def test_sim_timeline_on_condition_repair
     def test_sim_timeline_task_on_condition_replacement(self):
         """
         Check an on condition replacement task is triggered when the conditions are met
@@ -130,31 +154,47 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
             (False, 0, 2),
         ]
 
+        param_initial = [
+            {"indicators": {"slow_degrading": {"initial": 10}}},
+            {"indicators": {"fast_degrading": {"initial": 10}}},
+            {
+                "indicators": {
+                    "slow_degrading": {"initial": 10},
+                    "fast_degrading": {"initial": 10},
+                }
+            },
+        ]
+
         for remain_failed, t_task_expected, t_impact_expected in param_list:
-            with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):
-                # Arrange so replacement should occur immediately
-                fm = FailureMode.from_dict(test_data)
-                fm.indicators["slow_degrading"].set_condition(10)
-                fm.indicators["fast_degrading"].set_condition(10)
-                fm.set_states(dict(initiation=True, detection=True))
+            for initial in param_initial:
+                with patch.dict(
+                    "pof.failure_mode.cf", {"remain_failed": remain_failed}
+                ):
+                    # Arrange so replacement should occur immediately
+                    fm = FailureMode.from_dict(test_data)
+                    fm.update_from_dict(initial)
+                    fm.reset_for_next_sim()
+                    fm.set_states(dict(initiation=True, detection=True))
 
-                # Act
-                fm.sim_timeline(200)
+                    # Act
+                    fm.sim_timeline(200)
 
-                # Assert
-                self.assertEqual(
-                    fm.timeline[task_name][t_task_expected],
-                    0,
-                    f"task should be triggered at t={t_task_expected}",
-                )
+                    # Assert
+                    self.assertEqual(
+                        fm.timeline[task_name][t_task_expected],
+                        0,
+                        f"task should be triggered at t={t_task_expected}",
+                    )
 
-                if not remain_failed:
-                    for state, value in fm.tasks[task_name].impacts["state"].items():
-                        self.assertEqual(
-                            fm.timeline[state][t_impact_expected],
-                            value,
-                            "impact not completed",
-                        )
+                    if not remain_failed:
+                        for state, value in (
+                            fm.tasks[task_name].impacts["state"].items()
+                        ):
+                            self.assertEqual(
+                                fm.timeline[state][t_impact_expected],
+                                value,
+                                "impact not completed",
+                            )
 
     def test_sim_timeline_task_on_failure_replacement(self):
         """

@@ -6,10 +6,11 @@ Author: Gavin Treseder
 # ************ Packages ********************
 
 import math
-import numpy as np
 from random import random, seed
 import logging
-from typing import Dict, List
+
+import numpy as np
+import scipy.stats as ss
 
 if __package__ is None or __package__ == "":
     import sys
@@ -193,6 +194,30 @@ class Task(Load):
 
         self.impacts = impacts
 
+    # ************* sim timeline ********************
+
+    def sim_timeline(
+        self, t_end, timeline=None, t_start=0, t_delay=NotImplemented, indicators=None
+    ):
+        """ The common interface for all sim_timeline tasks """
+
+        if self.active:
+            timeline = self._sim_timeline(
+                t_start=t_start,
+                t_end=t_end,
+                timeline=timeline,
+                t_delay=t_delay,  # Not used
+                indicators=indicators,  # Only used for condition
+            )
+
+        else:
+            timeline = np.full(t_end - t_start + 1, -1)
+
+        return timeline
+
+    def _sim_timeline(self, *args, **kwargs):
+        raise NotImplementedError()
+
     # ************ Get Methods **********************
 
     def get_impacts(self):
@@ -212,6 +237,13 @@ class Task(Load):
         return random() <= self.p_effective
 
     # ********************* expected methods ******************
+
+    def expected(self, scaling=1):
+        """ Retuns a dictionary with the count and cost of completing a task over time scaled by a scaling factor"""
+        time, count = np.unique(self.t_completion, return_counts=True)
+        count = count / scaling
+        cost = count * self.cost
+        return dict(time=time, count=count, cost=cost, task_active=self.active)
 
     def expected_costs(self, scaling=1):
         """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""
@@ -234,7 +266,7 @@ class Task(Load):
         Takes a dictionary of states and dictionary of condition objects and returns the states that have been changed
         """
 
-        self.record(t_now, timeline)
+        self.record(t_now)
 
         # Update the condition if it was effective
         if self.is_effective(t_now, timeline):
@@ -273,12 +305,12 @@ class Task(Load):
     def system_impact(self):
         return self.impacts["system"]
 
-    def record(self, t_start, timeline):
+    def record(self, t_complete):
         """
-        Record the details foth e
+        Record the details when a task is completed
         """
         # Time
-        self.t_completion.append(t_start)
+        self.t_completion.append(t_complete)
 
         # Cost TODO make this variable based on time to failure
         self.cost_completion.append(self.cost)
@@ -295,30 +327,6 @@ class Task(Load):
         self.cost_complete = []
 
     # ********************* interface methods ******************
-
-    # def update_from_dict(self, dict_data):
-
-    #     for key, value in dict_data.items():
-
-    #         # Catch some special examples for tasks
-    #         if key in ["trigger", "impact"]:
-
-    #             for key_1, val_1 in dict_data[key].items():
-
-    #                 if key_1 == "condition":
-    #                     for key_2, val_2 in dict_data[key][key_1].items():
-    #                         for key_3, val_3 in dict_data[key][key_1][key_2].items():
-    #                             self.__dict__[key + "s"][key_1][key_2][key_3] = val_3
-
-    #                 elif key_1 == "state":
-    #                     for key_2, val_2 in dict_data[key][key_1].items():
-    #                         self.__dict__[key + "s"][key_1][key_2] = val_2
-
-    #                 elif key_1 == "system":
-    #                     self.__dict__[key][key_1] = val_1
-    #         else:
-    #             # Use the default method
-    #             super().update_from_dict({key: value})
 
     def get_dash_ids(self, prefix="", sep="-"):
 
@@ -392,24 +400,19 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         if math.ceil(value) != value:
             logging.warning("t_interval must be an integer - %s", value)
 
-    def sim_timeline(self, t_end, t_start=0, *args, **kwargs):
+    def _sim_timeline(self, t_end, t_start=0, *args, **kwargs):
 
-        if self.active:
+        schedule = np.tile(
+            np.linspace(self.t_interval, 0, int(self.t_interval) + 1),
+            math.ceil(max((t_end - self.t_delay), 0) / self.t_interval),
+        )
 
-            schedule = np.tile(
-                np.linspace(self.t_interval, 0, int(self.t_interval) + 1),
-                math.ceil(max((t_end - self.t_delay), 0) / self.t_interval),
-            )
+        if self.t_delay > 0:
+            self.t_delay = min(self.t_delay, t_end)
+            sched_start = np.linspace(self.t_delay, 0, self.t_delay + 1)
+            schedule = np.concatenate((sched_start, schedule))
 
-            if self.t_delay > 0:
-                self.t_delay = min(self.t_delay, t_end)
-                sched_start = np.linspace(self.t_delay, 0, self.t_delay + 1)
-                schedule = np.concatenate((sched_start, schedule))
-
-            schedule = schedule[t_start : t_end + 1]
-
-        else:
-            schedule = np.full(t_end - t_start + 1, -1)
+        schedule = schedule[t_start : t_end + 1]
 
         return schedule
 
@@ -436,58 +439,48 @@ class ConditionTask(Task):
         self.trigger = "condition"
         self.task_completion = task_completion
 
-    def sim_timeline(
+    def _sim_timeline(
         self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
     ):
         """
         If state and condition triggers are met return the timeline met then
         """
 
-        if self.active:
+        t_end = t_end + 1
+        s_trigger = np.full(t_end - t_start, True)
+        c_trigger = not self.triggers["condition"]
 
-            t_end = t_end + 1
-            tl_ct = np.full(t_end - t_start, True)
+        # Check the state triggers have been met
+        for state, trigger in self.triggers["state"].items():
+            s_trigger = (s_trigger) & (timeline[state][t_start:t_end] == trigger)
 
-            # Check the state triggers have been met
-            for state, trigger in self.triggers["state"].items():
-                try:
-                    tl_ct = (tl_ct) & (timeline[state][t_start:t_end] == trigger)
-                except KeyError:
-                    logging.warning(f"{state} not found")
+        # Check the condition triggers have been met
+        for condition, trigger in self.triggers["condition"].items():
 
-            # Check the condition triggers have been met
-            for condition, trigger in self.triggers["condition"].items():
-                try:
-                    if trigger["lower"] != "min":
-                        tl_ct = (tl_ct) & (
-                            indicators[condition].get_timeline()[t_start:]
-                            >= trigger["lower"]
-                            # timeline[condition][t_start:t_end] > trigger["lower"]
-                        )
-                    if trigger["upper"] != "max":
-                        tl_ct = (tl_ct) & (
-                            indicators[condition].get_timeline()[t_start:]
-                            <= trigger["upper"]
-                            # timeline[condition][t_start:t_end] < trigger["upper"]
-                        )
-                except KeyError:
-                    logging.warning("%s not found", condition)
+            tl_condition = indicators[condition].get_timeline()[t_start:]
+            lower = True
+            upper = True
 
-            tl_ct = tl_ct.astype(int)
+            if trigger["lower"] != "min":
+                lower = tl_condition >= trigger["lower"]
 
-            if self.task_completion == "next_maintenance":
-                # Change to days until format #Adjust
-                t_lower = np.argmax(tl_ct == 1)
-                t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
+            if trigger["upper"] != "max":
+                upper = tl_condition <= trigger["upper"]
 
-                tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
-                tl_ct[tl_ct == False] = -1
+            c_trigger = c_trigger | (lower & upper)
 
-            elif self.task_completion == "immediate":
-                tl_ct = tl_ct - 1
+        tl_ct = (s_trigger & c_trigger).astype(int)
 
-        else:
-            tl_ct = np.full(t_end - t_start, -1)
+        if self.task_completion == "next_maintenance":
+            # Change to days until format #Adjust
+            t_lower = np.argmax(tl_ct == 1)
+            t_upper = t_lower + np.argmax(tl_ct[t_lower:] == 0)
+
+            tl_ct[t_lower:t_upper] = tl_ct[t_lower:t_upper].cumsum()[::-1] - 1
+            tl_ct[tl_ct == False] = -1
+
+        elif self.task_completion == "immediate":
+            tl_ct = tl_ct - 1
 
         return tl_ct
 
@@ -541,6 +534,29 @@ class Inspection(ScheduledTask):
                                 )
 
         return det
+
+    def effectiveness(self, pf_interval, failure_dist: Distribution = None):
+
+        # Binomial parameters
+        r = 0  # Only one succesful trial is required
+        n = math.floor(pf_interval / self.t_interval)
+        p = self.p_effective
+        p_n = 1 - (pf_interval % self.t_interval) / self.t_interval
+
+        # Calculate the probability of an effective inspection during the t_interval
+        p_ie = p_n * (1 - ss.binom.pmf(r, n, p)) + (1 - p_n) * (
+            1 - ss.binom.pmf(r, n + 1, p)
+        )
+
+        # Adjust the probability to reflect failures that occur during the t_delay
+        if self.t_delay:
+            if failure_dist is not None:
+                p_fd = failure_dist.cdf(t_start=self.t_delay, t_end=self.t_delay)[0]
+                p_ie = (1 - p_fd) * p_ie
+            else:
+                raise ValueError("Failure Distribution requried")
+
+        return p_ie
 
     @classmethod
     def demo(cls):

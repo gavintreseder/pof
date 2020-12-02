@@ -221,14 +221,14 @@ class Indicator(Load):
         return self._initial
 
     @initial.setter
-    def initial(self, initial=None):
+    def initial(self, value=None):
         """ Set the intial """
         # TODO add checks to make sure it is a valid value
 
-        if initial is None:
+        if value is None:
             self._initial = self._perfect
         else:
-            self._initial = initial
+            self._initial = value
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:

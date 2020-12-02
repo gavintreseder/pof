@@ -90,6 +90,7 @@ class PolesFleetDataLoader(FleetDataLoader):
         df_csq=None,
         df_asset_info=None,
         condition_data=None,
+        file_path=None,
     ):
         self.df_csq = df_csq
         self.df_asset_info = df_asset_info
@@ -100,20 +101,23 @@ class PolesFleetDataLoader(FleetDataLoader):
         self.csq_path = None
         self.intervention_path = None
 
-        self.load()
+        self.file_path = file_path
 
-    def get_path(self):
+        # self.load()
+
+    def get_path(self, file_path):
         """
         Requests user to input file path if not specified
         """
 
         logging.debug("Retrieving file path")
 
-        file_path = (
-            askdirectory(initialdir=os.getcwd())
-            if self.file_path is None
-            else self.file_path
-        )
+        if file_path is None:
+            file_path = (
+                askdirectory(initialdir=os.getcwd())
+                if self.file_path is None
+                else self.file_path
+            )
 
         self.asset_path = file_path + "\\" + "ACS - Poles - Asset Details.csv"
         self.condition_path = file_path + "\\" + "ACS - Poles - Condition History.csv"
@@ -124,12 +128,12 @@ class PolesFleetDataLoader(FleetDataLoader):
 
         logging.debug("File path retrieved")
 
-    def load(self):
+    def load(self, file_path=None):
         """
         Loads poles data
         """
 
-        df_dict = self.read_data()
+        df_dict = self.read_data(file_path)
 
         self.merge_data(
             df_csq=df_dict["csq"],
@@ -151,9 +155,9 @@ class PolesFleetDataLoader(FleetDataLoader):
         self.df_asset_info = self.df_asset_info.compute()
         self.condition_data = self.condition_data.compute()
 
-    def read_data(self):
+    def read_data(self, file_path=None):
 
-        self.get_path()
+        self.get_path(file_path)
 
         df_csq = self.from_file(
             path=self.csq_path, dtype=self.dtype["csq"], nrows=self.nrows

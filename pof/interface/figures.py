@@ -33,32 +33,26 @@ def update_cost_fig(local):
     try:
         df = local.expected_risk_cost_df()
 
+        color_map = get_color_map(df=df, column="task", colour_scheme="bold")
+
+        df = df[df["fm_active"] == True]
+        df = df[df["task_active"] == True]
+
         df.columns = df.columns.str.replace("_", " ").str.title()
 
-        color_map = get_color_map(df=df, column="Task", colour_scheme="bold")
-
-        df = df[df["Fm Active"] == True]
-        df = df[df["Task Active"] == True]
+        px_args = dict(
+            data_frame=df,
+            x="Time",
+            y="Cost Cumulative",
+            color="Task",
+            color_discrete_map=color_map,
+            title="Maintenance Strategy Costs",
+        )
 
         if isinstance(local, Component):
-            fig = px.area(
-                df,
-                x="Time",
-                y="Cost Cumulative",
-                color="Task",
-                color_discrete_map=color_map,
-                line_group="Failure Mode",
-                title="Maintenance Strategy Costs",
-            )
+            fig = px.area(**px_args, line_group="Failure Mode")
         elif isinstance(local, FailureMode):
-            fig = px.area(
-                df,
-                x="Time",
-                y="Cost Cumulative",
-                color="Task",
-                color_discrete_map=color_map,
-                title="Maintenance Strategy Costs",
-            )
+            fig = px.area(**px_args)
         else:
             raise TypeError("local must be Component of FailureMode")
         fig.update_yaxes(automargin=True)
@@ -222,37 +216,6 @@ def update_condition_fig(local, conf=0.95):
     return fig
 
 
-def make_inspection_interval_fig(local, t_min=0, t_max=10, step=1, n_iterations=10):
-
-    try:
-        df = local.expected_inspection_interval(
-            t_min=t_min, t_max=t_max, step=step, n_iterations=n_iterations
-        )
-
-        df_plot = df.melt(
-            id_vars="inspection_interval", var_name="source", value_name="cost"
-        )
-
-        fig = px.line(
-            df_plot,
-            x="inspection_interval",
-            y="cost",
-            color="source",
-            title="Risk v Cost at different Inspection Intervals",
-        )
-        fig.update_yaxes(automargin=True)
-        fig.update_xaxes(automargin=True)
-
-    except:
-        fig = go.Figure(
-            layout=go.Layout(
-                title=go.layout.Title(text="Error Producing Inspection Interval")
-            )
-        )
-
-    return fig
-
-
 def make_sensitivity_fig(
     local, var_name="", lower=0, upper=10, step_size=1, n_iterations=10
 ):
@@ -275,8 +238,7 @@ def make_sensitivity_fig(
 
         color_map = get_color_map(df=df_plot, column="source")
 
-        df_plot = df_plot[df_plot["fm_active"] == True]
-        df_plot = df_plot[df_plot["task_active"] == True]
+        df_plot = df_plot[df_plot["fm_active"] & df_plot['task_active']]
 
         fig = px.line(
             df_plot,

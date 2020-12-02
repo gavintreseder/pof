@@ -6,7 +6,7 @@ Author: Gavin Treseder
 # ************ Packages ********************
 
 import copy
-from dataclasses import dataclass, field
+import math
 import logging
 from typing import Dict, Optional
 from random import random, seed
@@ -128,6 +128,7 @@ class FailureMode(Load):
         self._timelines = dict()
         self._sim_counter = 0
         self._t_failures = []
+        self._t_renew = []
         self._risk_failures = []
 
     @property
@@ -359,7 +360,7 @@ class FailureMode(Load):
                 self._t_failures.append(t_failure)
 
             for task_name in task_names:
-                logging.debug(f"Time {t_now} - Tasks {task_names}")
+                logging.debug("Time %s - Tasks %s", t_now, task_names)
 
                 # Complete the tasks
                 states = self.tasks[task_name].sim_completion(
@@ -374,7 +375,9 @@ class FailureMode(Load):
 
                 if bool(system_impact):
                     self.renew(t_now + 1)
+                    self._t_renew.append(t_now + 1)
                     system_impacts.append(system_impact)
+        
                 else:
                     # Update timeline
                     self.set_states(states)
@@ -393,6 +396,7 @@ class FailureMode(Load):
                 detection=self.is_detected(),
                 failure=self.is_failed(),
             )
+
             for task in self.tasks.values():
                 updates[task.name] = None
 
@@ -591,11 +595,47 @@ class FailureMode(Load):
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
 
+    # ****************** Realised Methods *************
+
+    def inspection_effectiveness(self):
+        """ Returns the probability of a failure mode being detected given it's inspections"""
+
+        p_all_ie = []
+
+        # Consider the impact of all inspections
+        for task in self.tasks.values():
+            if task.task_type == "Inspection":
+
+                # Get the probability of task being effecitve
+                pf_interval = min([self.get_pf_interval(cond_name) for cond_name in self.conditions])
+                p_ie = task.effectiveness(
+                    pf_interval=pf_interval, failure_dist=self.untreated
+                )
+                p_all_ie.append(p_ie)
+
+        print (p_all_ie)
+        p_all_effective = 1 - math.prod(1 - np.array(p_all_ie))
+
+        return p_all_effective
+
     # ****************** Expected Methods  ************
 
     def expected_ff(self):
         """ Returns the expected functional failures"""
         return self._t_failures
+
+    def expected_cf(self):
+        """ Returns the expected functional failures"""
+        return self._t_renew
+
+    def expected_replacements(self):
+        """ Returns the expected conditional failures"""
+        replacements = []
+        for task in self.tasks.values():
+            if task.task_type == "replacement":
+                replacements.append(task.t_completion)
+
+        return replacements
 
     def expected_simple(self):
         """Returns all expected outcomes using a simple average formula"""
@@ -729,7 +769,9 @@ class FailureMode(Load):
                 t_end = max(max(task["time"], default=t_start), t_end)
 
         # Fill the blanks
-        df = pd.DataFrame(erc).T.apply(fill_blanks, axis=1, args=(t_start, t_end))
+        df = pd.DataFrame(erc).T.apply(
+            fill_blanks, axis=1, args=(t_start, t_end, ["count", "cost"])
+        )
         df.index.name = "task"
         df_cost = df.explode("cost")["cost"]
         df = df.explode("time")
@@ -749,35 +791,31 @@ class FailureMode(Load):
             scaling = self._sim_counter
 
         # Get the Task Costs
-        task_cost = {
-            task.name: task.expected_costs(scaling) for task in self.tasks.values()
-        }
 
-        for task_name in task_cost:
-            task_cost[task_name]["fm_active"] = self.active
+        task_cost = {}
+        for task in self.tasks.values():
+            task_cost[task.name] = task.expected(scaling)
+            task_cost[task.name]["fm_active"] = self.active
 
         # Get the Risks
-        time, cost = np.unique(self._t_failures, return_counts=True)
-        cost = cost * self.consequence.get_cost() / scaling
-        risk_cost = {
+        risk = self.expected_risk(scaling)
+
+        return {**risk, **task_cost}
+
+    def expected_risk(self, scaling=1):
+        time, count = np.unique(self._t_failures, return_counts=True)
+        count = count / scaling
+        cost = count * self.consequence.get_cost()
+        risk = {
             "risk": {
                 "time": time,
+                "count": count,
                 "cost": cost,
                 "task_active": self.active,
                 "fm_active": self.active,
             }
         }
-
-        return {**risk_cost, **task_cost}
-
-    def _expected_life(self):
-        """ Get the expected life from each timeline"""
-
-        expected_life = []
-        for timeline in self._timelines.items():
-            expected_life.append(timeline["time"][-1])
-
-        return expected_life
+        return risk
 
     def expected_tasks(self):
 
@@ -828,6 +866,7 @@ class FailureMode(Load):
         # Reset counters
         self._sim_counter = 0
         self._t_failures = []
+        self._t_renew = []
 
     # ****************** Optimise routines ***********
 
