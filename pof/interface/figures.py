@@ -14,6 +14,8 @@ from plotly.subplots import make_subplots
 
 from pof import Component, FailureMode
 
+fm = FailureMode()
+
 
 def get_color_map(df, column, colour_scheme=None):
 
@@ -60,6 +62,7 @@ def update_cost_fig(local):
         fig.update_layout(
             legend_traceorder="reversed",
         )
+        fig.update_xaxes(title_text="Time " + f"({fm.units})")
 
     except:
         fig = go.Figure(
@@ -128,6 +131,7 @@ def update_pof_fig(local):
         fig.layout.yaxis.tickformat = ",.0%"
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
+        fig.update_xaxes(title_text="Time " + f"({fm.units})")
     except:
         fig = go.Figure(
             layout=go.Layout(
@@ -202,7 +206,9 @@ def update_condition_fig(local, conf=0.95):
             idx = idx + 1
 
         fig.update_traces(mode="lines")
-        fig.update_xaxes(title_text="Time", row=len(ecl), automargin=True)
+        fig.update_xaxes(
+            title_text="Time " + f"({fm.units})", row=len(ecl), automargin=True
+        )
         fig.update_layout(
             title="Expected Condition (Confidence = " + f"{conf}" + ")",
             legend_traceorder="normal",
@@ -238,7 +244,7 @@ def make_sensitivity_fig(
 
         color_map = get_color_map(df=df_plot, column="source")
 
-        df_plot = df_plot[df_plot["fm_active"] & df_plot['task_active']]
+        df_plot = df_plot[df_plot["fm_active"] & df_plot["task_active"]]
 
         fig = px.line(
             df_plot,
