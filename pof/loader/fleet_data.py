@@ -429,7 +429,7 @@ class FleetData:
         self.csq_summary = self.csq_info
         logging.debug("Consequence model data summarised")
 
-    def get_population_data(self, by, remove, n_bins=10):
+    def get_population_data(self, by, remove, n_bins=None, keep_original=True):
         """
         Returns a summary of asset data defined by user.
         """
@@ -447,8 +447,25 @@ class FleetData:
         df_summary = asset_info_filtered.merge(condition_filtered, on="asset_id")
         # TODO: df_summary = df_summary.merge(self.csq_filtered, on="asset_id")
 
-        logging.debug("Obtaining bins for numerical data, n_bins = %s", n_bins)
-        df_summary = self._get_bins(df_summary, by, n_bins)
+        if n_bins:
+            if keep_original:
+                logging.debug("Obtaining bins for numerical data, n_bins = %s", n_bins)
+                df_summary, bin_list = self._get_bins(
+                    df=df_summary,
+                    by=by,
+                    n_bins=n_bins,
+                    keep_original=keep_original,
+                )
+                for att in bin_list:
+                    by[att] = []
+            else:
+                logging.debug("Obtaining bins for numerical data, n_bins = %s", n_bins)
+                df_summary, bin_list = self._get_bins(
+                    df=df_summary,
+                    by=by,
+                    n_bins=n_bins,
+                    keep_original=keep_original,
+                )
 
         attributes_to_keep = list(by.keys())
         df_summary = df_summary[["asset_id"] + attributes_to_keep]
@@ -457,12 +474,17 @@ class FleetData:
 
         return df_summary
 
-    def get_population_summary(self, by, remove, n_bins=10):
+    def get_population_summary(self, by, remove, n_bins=None, keep_original=True):
         """
         Returns a population summary of asset data defined by user.
         """
 
-        df_summary = self.get_population_data(by=by, remove=remove, n_bins=n_bins)
+        df_summary = self.get_population_data(
+            by=by,
+            remove=remove,
+            n_bins=n_bins,
+            keep_original=keep_original,
+        )
 
         logging.debug("Summarising population data")
         groupby_filter = list(by.keys())
@@ -558,10 +580,11 @@ class FleetData:
 
         return NotImplemented
 
-    def _get_bins(self, df, by, n_bins):
+    def _get_bins(self, df, by, n_bins, keep_original, suffix="_bin"):
         """
         Turns chosen numerical data into binned data.
         """
+        bin_list = []
         for att, trait in by.items():
             if att in self.field_types:
                 if self.field_types[att] == "numerical":
@@ -574,12 +597,19 @@ class FleetData:
                         )
                     )
                     labels = bins[1:]
-                    df[att] = pd.cut(
-                        df[att], bins=bins, labels=labels, duplicates="drop"
-                    )
-                    df[att] = df[att].astype(float)
+                    if keep_original:
+                        bin_list.append(att + suffix)
+                        df[att + suffix] = pd.cut(
+                            df[att], bins=bins, labels=labels, duplicates="drop"
+                        )
+                        df[att + suffix] = df[att + suffix].astype(float)
+                    else:
+                        df[att] = pd.cut(
+                            df[att], bins=bins, labels=labels, duplicates="drop"
+                        )
+                        df[att] = df[att].astype(float)
 
-        return df
+        return df, bin_list
 
     # ************** Generate Data Functions *****************
     @classmethod
