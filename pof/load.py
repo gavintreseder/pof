@@ -187,7 +187,8 @@ class Load:
             setattr(self, var, getattr(self, var) * ratio)
 
         # Update the variables on the child instance
-        for var in self.POF_VARIABLES:
+        for var_name in self.POF_VARIABLES:
+            var = getattr(self, var_name)
             if isinstance(var, dict):
                 for val in var.values():
                     val.units = value

@@ -348,29 +348,29 @@ class TestLoad(TestPofBase, unittest.TestCase):
         """Case when Time_variables has length > 1, updates all variables
         && when Pof_variables has a dict and a string, updates all correctly"""
 
-        # Arrange
-        load = Load()
-        current_unit = "hours"
-
-        load.TIME_VARIABLES = ["test_time_1", "test_time_2"]
-        load.test_time_1 = 1
-        load.test_time_2 = 1
-
-        load.POF_VARIABLES = ["test_pof_1", "test_pof_2"]
-        load.test_pof_1 = Load(unit=current_unit)
-        load.test_pof_2 = dict(load=Load(unit=current_unit))
-
         for key in valid_units:
+            # Arrange
+            load = Load()
+            current_unit = "hours"
+
+            load.TIME_VARIABLES = ["test_time_1", "test_time_2"]
+            load.test_time_1 = 1
+            load.test_time_2 = 1
+
+            load.POF_VARIABLES = ["obj", "dict_obj"]
+            load.obj = Load(units=current_unit)
+            load.dict_obj = dict(obj_key=Load(units=current_unit))
+            
             # Act
             load._scale_units(key, current_unit)
 
-            # Assert
+            # Assert - Time_variables
             for var in load.TIME_VARIABLES:
                 self.assertAlmostEquals(getattr(load, var), 1 / valid_units[key])
 
-            for var in load.POF_VARIABLES:
-                self.assertEqual(load.test_pof_1.units, key)
-                self.assertEqual(load.test_pof_2.units, key)
+            # Assert - Pof_variables
+            self.assertEqual(load.obj.units, key)
+            self.assertEqual(load.dict_obj["obj_key"].units, key)
 
     def test_scale_units_zero(self):
         """ Case when getattr of a time_variable is 0, should return 0"""
