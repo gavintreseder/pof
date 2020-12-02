@@ -14,8 +14,6 @@ from plotly.subplots import make_subplots
 
 from pof import Component, FailureMode
 
-fm = FailureMode()
-
 
 def get_color_map(df, column, colour_scheme=None):
 
@@ -60,12 +58,15 @@ def update_cost_fig(local):
             fig = px.area(**px_args)
         else:
             raise TypeError("local must be Component of FailureMode")
+
+        col_names = {"time": f"Age ({local.units})"}
+
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
         fig.update_layout(
             legend_traceorder="reversed",
         )
-        fig.update_xaxes(title_text="Time " + f"({fm.units})")
+        fig.update_xaxes(title_text=col_names["time"])
 
     except:
         fig = go.Figure(
@@ -136,10 +137,13 @@ def update_pof_fig(local):
             line_group="strategy",
             title="Probability of Failure given Maintenance Strategy",
         )
+
+        col_names = {"time": f"Age ({local.units})"}
+
         fig.layout.yaxis.tickformat = ",.0%"
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
-        fig.update_xaxes(title_text="Time " + f"({fm.units})")
+        fig.update_xaxes(title_text=col_names["time"])
     except:
         fig = go.Figure(
             layout=go.Layout(
