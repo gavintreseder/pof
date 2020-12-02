@@ -323,6 +323,36 @@ class TestPofBase(object):
             # Assert
             self.tc.assertEqual(instance.units, val)
 
+    def test_scale_units_integration(self):
+        """ Integration test for scale_units -- Scale down and then back up """
+
+        # Arrange
+        instance = self._class.from_dict(self._data_complete[0])
+        instance.pf_interval = 10
+        instance.pf_std = 0.0001
+        current_value = []
+        months_value = []
+        return_value = []
+
+        # Act
+        current_units = instance.units
+        for var in instance.TIME_VARIABLES:
+            current_value.append(getattr(instance, var))
+
+        instance.units = "months"
+        for var in instance.TIME_VARIABLES:
+            months_value.append(getattr(instance, var))
+
+        instance.units = current_units
+        for var in instance.TIME_VARIABLES:
+            return_value.append(getattr(instance, var))
+
+        # Assert
+        i = 0
+        for var in instance.TIME_VARIABLES:
+            self.tc.assertEqual(return_value[i], current_value[i])
+            i = i + 1
+
 
 class TestLoad(TestPofBase, unittest.TestCase):
     def setUp(self):
