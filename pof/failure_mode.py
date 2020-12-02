@@ -811,7 +811,7 @@ class FailureMode(Load):
         # Get the Risks
         risk = self.expected_risk(scaling)
 
-        return {**risk, **task_cost}
+        return {**task_cost, **risk}
 
     def expected_risk(self, scaling=1):
         time, count = np.unique(self._t_func_failure, return_counts=True)

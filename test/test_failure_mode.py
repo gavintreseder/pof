@@ -46,7 +46,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         # Arrange
         task = Mock()
         task.effectiveness = Mock(return_value=0.9)
-        task.task_type = "inspection"
+        task.task_type = "Inspection"
 
         param_list = [
             ({}, 0),

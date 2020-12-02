@@ -511,8 +511,6 @@ class Component(Load):
             ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
         }
 
-    
-
     def progress(self) -> float:
         """ Returns the progress of the primary simulation"""
         return self.n / self.n_iterations
@@ -545,11 +543,14 @@ class Component(Load):
                 # Reset component
                 self.reset()
 
+                # Update annd simulate a timeline
                 self.update(var_name, i)
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
-                erc = self.expected_risk_cost_df()
+                df_rc = self.expected_risk_cost_df()
 
-                df_rc = erc.groupby(by=["task"])[["cost"]].sum()
+                # Summarise outputs
+                df_rc['active'] = df_rc['fm_active'] & df_rc['task_active']
+                df_rc = df_rc.groupby(by=["task", "active"])[["cost"]].sum()
                 df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
                 df_rc[var] = i
 
@@ -560,14 +561,14 @@ class Component(Load):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        ta = erc.groupby(by=["task"])["task_active"].all().reset_index()
-        fma = erc.groupby(by=["task", "failure_mode"])["fm_active"].all().reset_index()
+        df = (
+            pd.concat(rc)
+            .reset_index()
+            .drop(["level_0"], axis=1)
+            .rename(columns={"task": "source"})
+        )
 
-        df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
-
-        df = pd.concat(rc).reset_index().drop(["level_0"], axis=1)
-
-        return df, df_active
+        return df
 
     # ****************** Reset ******************
 

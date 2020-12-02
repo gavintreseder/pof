@@ -243,11 +243,12 @@ def make_sensitivity_fig(
 ):
 
     var = var_name.split("-")[-1]
+    y_axis = "annual_cost"
 
     title_var = var.replace("_", " ").title()
 
     try:
-        df, df_active = local.expected_sensitivity(
+        df = local.expected_sensitivity(
             var_name=var_name,
             lower=lower,
             upper=upper,
@@ -255,30 +256,47 @@ def make_sensitivity_fig(
             n_iterations=n_iterations,
         )
 
-        df_plot = df.melt(id_vars=var, var_name="source", value_name="source_cost")
-        df_plot = df_plot.merge(df_active, on=["source"])
+        # Add direct and indirect
+        df_total = df.groupby(by=[var]).sum()
+        df_direct = df_total - df.loc[df["source"] == "risk"].groupby(by=[var]).sum()
+        summary = {
+            "total": df_total,
+            "direct": df_direct,
+            "risk": df.loc[df["source"] == "risk"],
+        }
 
+        df_plot = pd.concat(summary, names=["source"]).reset_index()
+        df_plot["active"] = df_plot["active"].astype(bool)
+        df_plot = df_plot.append(df.loc[df["source"] != "risk"])
+
+        # Add line dashes
+        df_plot["line_dash"] = 1
+        df_plot.loc[
+            df_plot["source"].isin(["risk", "direct", "total"]), "line_dash"
+        ] = 0
+
+        # Add the colours
         color_map = get_color_map(df=df_plot, column="source")
-
-        df_plot = df_plot[df_plot["fm_active"] & df_plot["task_active"]]
+        df_plot = df_plot.loc[df_plot["active"]]
 
         fig = px.line(
             df_plot,
             x=var,
-            y="source_cost",
+            y=y_axis,
             color="source",
             color_discrete_map=color_map,
-            title="Risk v Cost at different " + f"{title_var}" + "s",
+            line_dash="line_dash",
+            title=f"Sensitivity of Risk/Cost to {title_var}",
         )
+
         fig.update_yaxes(automargin=True)
+
         fig.update_xaxes(automargin=True)
 
     except Exception as error:
         raise error
         fig = go.Figure(
-            layout=go.Layout(
-                title=go.layout.Title(text="Error Producing Inspection Interval")
-            )
+            layout=go.Layout(title=go.layout.Title(text=f"Error Producing {title_var}"))
         )
 
     return fig

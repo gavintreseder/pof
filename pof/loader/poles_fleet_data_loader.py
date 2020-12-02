@@ -105,7 +105,7 @@ class PolesFleetDataLoader(FleetDataLoader):
 
         # self.load()
 
-    def get_path(self, file_path):
+    def get_path(self, file_path=None):
         """
         Requests user to input file path if not specified
         """
