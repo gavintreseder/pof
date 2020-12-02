@@ -79,6 +79,7 @@ class Component(Load):
         self._in_service = True
         self._sim_counter = 0
         self._t_replacement = []
+        self._t_in_serivce = []
         self.stop_simulation = False
 
         # Dash Tracking
@@ -219,6 +220,9 @@ class Component(Load):
 
             t_now = t_next + 1
 
+        if self.in_service:
+            self._t_in_service.append(t_now)
+
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline"""
         for fm in self.fm.values():
@@ -320,15 +324,26 @@ class Component(Load):
 
     def expected_cf(self):
         """ Returns the conditional failures for the component """
-        return self._t_replacement - self.expected_ff()
+        t_cf = []
+        for fm in self.fm.values():
+            t_cf.extend(fm.expected_cf())
+
+        return t_cf
 
     def expected_ff(self):
         """Returns the functional failures for the component"""
-        ff = []
+        t_ff = []
         for fm in self.fm.values():
-            ff.extend(fm.expected_ff())
+            t_ff.extend(fm.expected_ff())
 
-        return ff
+        return t_ff
+
+    def expected_life(self):
+        e_l = (
+            sum(self._t_in_service + self.expected_cf() + self.expected_ff())
+            / self._sim_counter
+        )
+        return e_l
 
     def expected_untreated(self, t_start=0, t_end=100):
 
@@ -437,6 +452,9 @@ class Component(Load):
             pd.Series.cumsum
         )
 
+        # Formatting
+        # df.rename(columns{'task': 'source'})
+
         return df
 
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
@@ -500,6 +518,7 @@ class Component(Load):
 
     def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
         # TODO add an optimal onto this
+        # TODO delete
 
         self.n_sens = 1
         self.n_sens_iterations = int((t_max - t_min) / step + 1)
@@ -569,8 +588,12 @@ class Component(Load):
                 self.update(var_name, i)
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 erc = self.expected_risk_cost_df()
-                rc[i] = erc.groupby(by=["task"])["cost"].sum()
 
+                df_rc = erc.groupby(by=["task"])["cost"].sum()
+                df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
+                df_rc[var] = i
+
+                rc[i] = df_rc
                 rc[i][var] = i
 
                 # Reset component
@@ -613,6 +636,7 @@ class Component(Load):
         # Reset counters
         self._sim_counter = 0
         self._t_replacement = []
+        self._t_in_service = []
         self.stop_simulation = False
 
     # ****************** Interface ******************

@@ -359,6 +359,7 @@ class FailureMode(Load):
                 )[-1]
                 self._t_failures.append(t_failure)
 
+
             for task_name in task_names:
                 logging.debug("Time %s - Tasks %s", t_now, task_names)
 
@@ -375,8 +376,10 @@ class FailureMode(Load):
 
                 if bool(system_impact):
                     self.renew(t_now + 1)
-                    self._t_renew.append(t_now + 1)
                     system_impacts.append(system_impact)
+                    
+                    if self.timeline["failure"][t_now]:
+                        self._t_renew.append(t_now + 1)
         
                 else:
                     # Update timeline
