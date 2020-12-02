@@ -9,7 +9,7 @@ import logging
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -78,7 +78,7 @@ class Component(Load):
         # Simulation traking
         self._in_service = True
         self._sim_counter = 0
-        self._t_replacement = []
+        self._t_in_service = []
         self.stop_simulation = False
 
         # Dash Tracking
@@ -180,7 +180,7 @@ class Component(Load):
 
         # while self.n < n_iterations and self.up_to_date:
 
-        for i in range(self.n_iterations):
+        for i in tqdm(range(self.n_iterations)):
             if not self.up_to_date:
                 break
             # Do work
@@ -218,6 +218,9 @@ class Component(Load):
             self.complete_tasks(t_next, next_fm_tasks)
 
             t_now = t_next + 1
+
+        if self._in_service:
+            self._t_in_service.append(t_now)
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline"""
@@ -290,8 +293,6 @@ class Component(Load):
             for fm in self.fm.values():
                 fm.renew(t_renew)
 
-        self._t_replacement.append(t_renew)
-
     def increment_counter(self):
         self._sim_counter = self._sim_counter + 1
 
@@ -320,15 +321,26 @@ class Component(Load):
 
     def expected_cf(self):
         """ Returns the conditional failures for the component """
-        return self._t_replacement - self.expected_ff()
+        t_cf = []
+        for fm in self.fm.values():
+            t_cf.extend(fm.expected_cf())
+
+        return t_cf
 
     def expected_ff(self):
         """Returns the functional failures for the component"""
-        ff = []
+        t_ff = []
         for fm in self.fm.values():
-            ff.extend(fm.expected_ff())
+            t_ff.extend(fm.expected_ff())
 
-        return ff
+        return t_ff
+
+    def expected_life(self):
+        e_l = (
+            sum(self._t_in_service + self.expected_cf() + self.expected_ff())
+            / self._sim_counter
+        )
+        return e_l
 
     def expected_untreated(self, t_start=0, t_end=100):
 
@@ -437,6 +449,9 @@ class Component(Load):
             pd.Series.cumsum
         )
 
+        # Formatting
+        # df.rename(columns{'task': 'source'})
+
         return df
 
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
@@ -496,46 +511,7 @@ class Component(Load):
             ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
         }
 
-    # ****************** Optimal? ******************
-
-    def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
-        # TODO add an optimal onto this
-
-        self.n_sens = 1
-        self.n_sens_iterations = int((t_max - t_min) / step + 1)
-
-        rc = dict()
-        self.reset()
-
-        for i in range(t_min, t_max, step):
-
-            # Set t_interval
-            for fm in self.fm.values():
-                if "inspection" in list(fm.tasks):
-                    fm.tasks["inspection"].t_interval = i
-
-            # self.mc_timeline(t_end=100, n_iterations=n_iterations)
-            self.mp_timeline(t_end=100, n_iterations=n_iterations)
-
-            rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-            rc[i]["inspection_interval"] = i
-
-            # Reset component
-            self.reset()
-
-            self.n_sens = self.n_sens + 1
-
-        df = (
-            pd.DataFrame()
-            .from_dict(rc, orient="index")
-            .rename(columns={"risk": "risk_cost"})
-        )
-        df["direct_cost"] = df.drop(["inspection_interval", "risk_cost"], axis=1).sum(
-            axis=1
-        )
-        df["total"] = df["direct_cost"] + df["risk_cost"]
-
-        return df
+    
 
     def progress(self) -> float:
         """ Returns the progress of the primary simulation"""
@@ -551,7 +527,7 @@ class Component(Load):
         self, var_name, lower, upper, step_size=1, n_iterations=100, t_end=100
     ):
         """
-        Returns dataframe of sensitivity data for a given variable name using a given confidence.
+        Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
         """
         rc = dict()
         ta = pd.DataFrame()
@@ -566,15 +542,18 @@ class Component(Load):
 
         for i in np.arange(lower, upper, step_size):
             try:
+                # Reset component
+                self.reset()
+
                 self.update(var_name, i)
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 erc = self.expected_risk_cost_df()
-                rc[i] = erc.groupby(by=["task"])["cost"].sum()
 
-                rc[i][var] = i
+                df_rc = erc.groupby(by=["task"])[["cost"]].sum()
+                df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
+                df_rc[var] = i
 
-                # Reset component
-                self.reset()
+                rc[i] = df_rc
 
                 self.n_sens = self.n_sens + 1
 
@@ -586,7 +565,7 @@ class Component(Load):
 
         df_active = ta.merge(fma, on="task").rename(columns={"task": "source"})
 
-        df = pd.DataFrame().from_dict(rc, orient="index")
+        df = pd.concat(rc).reset_index().drop(["level_0"], axis=1)
 
         return df, df_active
 
@@ -612,7 +591,7 @@ class Component(Load):
 
         # Reset counters
         self._sim_counter = 0
-        self._t_replacement = []
+        self._t_in_service = []
         self.stop_simulation = False
 
     # ****************** Interface ******************
@@ -687,7 +666,7 @@ class Component(Load):
 
     def get_timeline(self):
 
-        print(NotImplemented)
+        raise NotImplementedError()
 
     # ****************** Demonstration parameters ******************
 

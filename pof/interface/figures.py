@@ -40,11 +40,14 @@ def update_cost_fig(local):
         df = df[df["fm_active"] == True]
         df = df[df["task_active"] == True]
 
+        # Make columns presentable
         df.columns = df.columns.str.replace("_", " ").str.title()
+        col_names = {"Time": f"Age ({local.units})"}
+        df.rename(columns=col_names, inplace=True)
 
         px_args = dict(
             data_frame=df,
-            x="Time",
+            x=col_names["Time"],
             y="Cost Cumulative",
             color="Task",
             color_discrete_map=color_map,
@@ -118,9 +121,14 @@ def update_pof_fig(local):
 
         df = df[df["fm_active"] == True]
 
+        # Make columns presentable
+        # df.columns = df.columns.str.replace("_", " ").str.title()
+        col_names = {"time": f"Age ({local.units})"}
+        df.rename(columns=col_names, inplace=True)
+
         fig = px.line(
             df,
-            x="time",
+            x=col_names["time"],
             y="pof",
             color="source",
             color_discrete_map=color_map,
@@ -205,9 +213,13 @@ def update_condition_fig(local, conf=0.95):
             )
             idx = idx + 1
 
+        col_names = {"time": f"Age ({local.units})"}
+
         fig.update_traces(mode="lines")
         fig.update_xaxes(
-            title_text="Time " + f"({fm.units})", row=len(ecl), automargin=True
+            title_text=col_names["time"] + f"({fm.units})",
+            row=len(ecl),
+            automargin=True,
         )
         fig.update_layout(
             title="Expected Condition (Confidence = " + f"{conf}" + ")",
