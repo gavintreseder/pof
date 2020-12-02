@@ -511,47 +511,7 @@ class Component(Load):
             ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
         }
 
-    # ****************** Optimal? ******************
-
-    def expected_inspection_interval(self, t_max, t_min=0, step=1, n_iterations=100):
-        # TODO add an optimal onto this
-        # TODO delete
-
-        self.n_sens = 1
-        self.n_sens_iterations = int((t_max - t_min) / step + 1)
-
-        rc = dict()
-        self.reset()
-
-        for i in range(t_min, t_max, step):
-
-            # Set t_interval
-            for fm in self.fm.values():
-                if "inspection" in list(fm.tasks):
-                    fm.tasks["inspection"].t_interval = i
-
-            # self.mc_timeline(t_end=100, n_iterations=n_iterations)
-            self.mp_timeline(t_end=100, n_iterations=n_iterations)
-
-            rc[i] = self.expected_risk_cost_df().groupby(by=["task"])["cost"].sum()
-            rc[i]["inspection_interval"] = i
-
-            # Reset component
-            self.reset()
-
-            self.n_sens = self.n_sens + 1
-
-        df = (
-            pd.DataFrame()
-            .from_dict(rc, orient="index")
-            .rename(columns={"risk": "risk_cost"})
-        )
-        df["direct_cost"] = df.drop(["inspection_interval", "risk_cost"], axis=1).sum(
-            axis=1
-        )
-        df["total"] = df["direct_cost"] + df["risk_cost"]
-
-        return df
+    
 
     def progress(self) -> float:
         """ Returns the progress of the primary simulation"""
@@ -582,6 +542,9 @@ class Component(Load):
 
         for i in np.arange(lower, upper, step_size):
             try:
+                # Reset component
+                self.reset()
+
                 self.update(var_name, i)
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 erc = self.expected_risk_cost_df()
@@ -591,9 +554,6 @@ class Component(Load):
                 df_rc[var] = i
 
                 rc[i] = df_rc
-
-                # Reset component
-                self.reset()
 
                 self.n_sens = self.n_sens + 1
 
