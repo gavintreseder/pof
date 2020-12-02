@@ -58,11 +58,15 @@ def update_cost_fig(local):
             fig = px.area(**px_args)
         else:
             raise TypeError("local must be Component of FailureMode")
+
+        col_names = {"time": f"Age ({local.units})"}
+
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
         fig.update_layout(
             legend_traceorder="reversed",
         )
+        fig.update_xaxes(title_text=col_names["time"])
 
     except:
         fig = go.Figure(
@@ -133,9 +137,13 @@ def update_pof_fig(local):
             line_group="strategy",
             title="Probability of Failure given Maintenance Strategy",
         )
+
+        col_names = {"time": f"Age ({local.units})"}
+
         fig.layout.yaxis.tickformat = ",.0%"
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
+        fig.update_xaxes(title_text=col_names["time"])
     except:
         fig = go.Figure(
             layout=go.Layout(
@@ -212,7 +220,11 @@ def update_condition_fig(local, conf=0.95):
         col_names = {"time": f"Age ({local.units})"}
 
         fig.update_traces(mode="lines")
-        fig.update_xaxes(title_text=col_names["time"], row=len(ecl), automargin=True)
+        fig.update_xaxes(
+            title_text=col_names["time"],
+            row=len(ecl),
+            automargin=True,
+        )
         fig.update_layout(
             title="Expected Condition (Confidence = " + f"{conf}" + ")",
             legend_traceorder="normal",
