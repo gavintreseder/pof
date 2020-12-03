@@ -108,7 +108,7 @@ def layout():
                                     dbc.InputGroupAddon(
                                         [
                                             dbc.Checkbox(
-                                                id="sim_n_sens_active", checked=True
+                                                id="sim_sens_active", checked=True
                                             ),
                                             "Iterations",
                                             dcc.Input(
@@ -133,7 +133,7 @@ def layout():
                     dbc.Col(),
                     dbc.Col(
                         dcc.Dropdown(
-                            id="demo-dropdown",
+                            id="sens_var_id-dropdown",
                             options=update_list,
                             value=comp.get_update_ids()[-1],
                         )
@@ -149,10 +149,10 @@ def layout():
                         [
                             dbc.InputGroupAddon(
                                 [
-                                    dbc.Checkbox(id="min_sens_active", checked=False),
+                                    dbc.Checkbox(id="lower_sens_active", checked=False),
                                     "Min",
                                     dcc.Input(
-                                        id="min_sens_active-input",
+                                        id="sens_lower",
                                         value=0,
                                         type="number",
                                         style={"width": 100},
@@ -352,41 +352,21 @@ def update_ffcf(*args):
 
 @app.callback(
     Output("insp_interval-fig", "figure"),
-    [
-        Input("sim_n_sens_active", "checked"),
-        Input("n_sens_iterations-input", "value"),
-        Input("demo-dropdown", "value"),
-        Input("min_sens_active", "checked"),
-        Input("min_sens_active-input", "value"),
-        Input("max_sens_active", "checked"),
-        Input("max_sens_active-input", "value"),
-        Input("step_size_sens_active", "checked"),
-        Input("step_size_sens_active-input", "value"),
-        Input("cost-fig", "figure"),
-    ],
-    [
-        State("sim_n_sens_active", "checked"),
-        State("n_sens_iterations-input", "value"),
-        State("demo-dropdown", "value"),
-        State("min_sens_active", "checked"),
-        State("min_sens_active-input", "value"),
-        State("max_sens_active", "checked"),
-        State("max_sens_active-input", "value"),
-        State("step_size_sens_active", "checked"),
-        State("step_size_sens_active-input", "value"),
-    ],
+    Input("sim_sens_active-check", "checked"),
+    Input("n_sens_iterations-input", "value"),
+    Input("sens_var_id-dropdown", "value"),
+    Input("sens_lower-input", "value"),
+    Input("sens_upper-input", "value"),
+    Input("sens_step_size-input", "value"),
+    Input("cost-fig", "figure"),  # TODO change this trigger
 )
-def update_insp_interval(
-    active_input,
-    n_iterations_input,
-    var_input,
-    min_input,
-    max_input,
-    step_size_input,
-    fig,
+def update_sensitivity(
     active,
     n_iterations,
-    var_name,
+    var_id,
+    lower,
+    upper,
+    step_size,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -399,10 +379,10 @@ def update_insp_interval(
 
         insp_interval_fig = make_sensitivity_fig(
             sens_sim,
-            var_name=var_name,
-            lower=min_input,
-            upper=max_input,
-            step_size=step_size_input,
+            var_name=var_id,
+            lower=lower,
+            upper=upper,
+            step_size=step_size,
             n_iterations=n_iterations,
         )
 

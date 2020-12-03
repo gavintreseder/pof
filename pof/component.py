@@ -528,8 +528,6 @@ class Component(Load):
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
         """
         rc = dict()
-        ta = pd.DataFrame()
-        fma = pd.DataFrame()
         self.reset()
 
         # Progress bars
