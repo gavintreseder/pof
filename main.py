@@ -318,8 +318,8 @@ fig_end = 0
         Output("cond-fig", "figure"),
         Output("fig_state", "children"),
     ],
-    [Input("sim_state", "children")],
-    [State("sim_n_active", "checked")],
+    Input("sim_state", "children"),
+    State("sim_n_active", "checked"),
 )
 def update_figures(state, active, *args):
     if active:
@@ -331,8 +331,10 @@ def update_figures(state, active, *args):
         cost_fig = update_cost_fig(pof_sim)  # legend = dropdown value
         pof_fig = update_pof_fig(pof_sim)
         cond_fig = update_condition_fig(pof_sim)
+
+        fig_state = f"Fig State: {fig_start} - {fig_end}"
         fig_end = fig_end + 1
-        return cost_fig, pof_fig, cond_fig, f"Fig State: {fig_start} - {fig_end}"
+        return cost_fig, pof_fig, cond_fig, fig_state
     else:
         raise PreventUpdate
 
