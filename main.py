@@ -108,7 +108,8 @@ def layout():
                                     dbc.InputGroupAddon(
                                         [
                                             dbc.Checkbox(
-                                                id="sim_sens_active", checked=False
+                                                id="sim_sens_active-check",
+                                                checked=False,
                                             ),
                                             "Iterations",
                                             dcc.Input(
