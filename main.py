@@ -21,6 +21,8 @@ from pof.interface.figures import (
     make_sensitivity_fig,
 )
 
+t_end = 200
+
 # Quick test to make sure everything is works
 file_name = r"Asset Model - Pole - Timber.xlsx"
 filename = os.getcwd() + r"\data\inputs" + os.sep + file_name
@@ -102,7 +104,7 @@ def layout():
                                     dbc.InputGroupAddon(
                                         [
                                             dbc.Checkbox(
-                                                id="sim_n_sens_active", checked=False
+                                                id="sim_n_sens_active", checked=True
                                             ),
                                             dcc.Input(
                                                 id="n_sens_iterations-input",
@@ -223,7 +225,7 @@ def update_simulation(
     if active:
         pof_sim = copy.copy(comp)
 
-        pof_sim.mp_timeline(t_end=200, n_iterations=n_iterations)
+        pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
 
         if not pof_sim.up_to_date:
             sim_err_count = sim_err_count + 1

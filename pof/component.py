@@ -613,7 +613,7 @@ class Component(Load):
         # TODO replace with task group manager
 
         for fm in self.fm.values():
-            self.update_task_group(data)
+            fm.update_task_group(data)
 
     def get_dash_ids(self, prefix="", sep="-"):
         """ Return a list of dash ids for values that can be changed"""

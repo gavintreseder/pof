@@ -1,3 +1,11 @@
+# Piority
+    # Split main into app.py, layouts.py, callbacks.py
+    # Min, max, step_size for sensitivity
+    # Labels 
+        # Iteration Labels
+    # Change figure functions to check if up_to_date, return the self.df_sens, else re-run
+
+
 # Evening Priority
     # Task -> Expected number of tasks (% scaled to n_sims) -> Age profile
     # FM -> expected number failures (% scaled to n_sims) -> Age profile
@@ -18,14 +26,15 @@
 
 # Mel
 
-    # Make the progress bars appear on one line
-    # Change the units in the figures
     # Button to freeze graph axis
-    # Min, max, step_size for sensitivity
-    # Split main into app.py, layouts.py, callbacks.py
+
+
     # Add units to figure axis
 
 
+# complete
+    # Make the progress bars appear on one line
+    # Change the units in the figures
 
 # Questions for Occa
     # functional v conditional

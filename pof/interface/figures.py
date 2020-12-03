@@ -243,7 +243,7 @@ def make_sensitivity_fig(
 ):
 
     var = var_name.split("-")[-1]
-    y_axis = "annual_cost"
+    y_axis = "cost"
 
     title_var = var.replace("_", " ").title()
 
@@ -262,12 +262,13 @@ def make_sensitivity_fig(
         summary = {
             "total": df_total,
             "direct": df_direct,
-            "risk": df.loc[df["source"] == "risk"],
+            #"risk": df.loc[df["source"] == "risk"],
         }
 
         df_plot = pd.concat(summary, names=["source"]).reset_index()
         df_plot["active"] = df_plot["active"].astype(bool)
-        df_plot = df_plot.append(df.loc[df["source"] != "risk"])
+        df_plot = df_plot.append(df)
+        #df_plot = df_plot.append(df.loc[df["source"] != "risk"])
 
         # Add line dashes
         df_plot["line_dash"] = 1
