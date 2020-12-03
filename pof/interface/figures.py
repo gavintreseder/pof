@@ -239,12 +239,21 @@ def update_condition_fig(local, conf=0.95):
 
 
 def make_sensitivity_fig(
-    local, var_name="", lower=0, upper=10, step_size=1, n_iterations=10
+    local,
+    var_name="",
+    y_axis="",
+    lower=0,
+    upper=10,
+    step_size=1,
+    t_end=100,
+    time_unit="",
+    n_iterations=10,
 ):
 
     var = var_name.split("-")[-1]
-    y_axis = "cost"
 
+    # if var == y_axis:
+    #     y_axis = "source_cost"
     title_var = var.replace("_", " ").title()
 
     try:
@@ -252,6 +261,7 @@ def make_sensitivity_fig(
             var_name=var_name,
             lower=lower,
             upper=upper,
+            t_end=t_end,
             step_size=step_size,
             n_iterations=n_iterations,
         )
