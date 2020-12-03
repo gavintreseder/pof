@@ -294,8 +294,8 @@ def make_sensitivity_fig(
 
         fig.update_xaxes(automargin=True)
 
-        if var in Component.TIME_VARIABLES or FailureMode.TIME_VARIABLES:
-            col_names = {"time": f"Age ({local.units})"}
+        if var in ("t_delay", "t_interval"):
+            col_names = {"time": f"{var} ({local.units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
     except Exception as error:
