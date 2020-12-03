@@ -946,11 +946,11 @@ class FailureMode(Load):
     def update_task_group(self, data):
         """ Update all the tasks with that task_group across the objects"""
         # TODO replace with task group manager
-        task_group = list(data)
+        task_group_name = list(data)
 
         for task in self.tasks.values():
-            if task.task_group == task_group:
-                self.update_from_dict(data[task_group])
+            if task.task_group == task_group_name:
+                task.update_from_dict(data[task_group_name])  # {t_interval : 10}
 
     # def update_from_dict(self, dict_data):
 
