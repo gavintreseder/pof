@@ -162,6 +162,7 @@ def make_failure_mode_layout(fm, prefix="", sep="-"):
                 fm.name,
                 color="link",
                 id=prefix + "collapse-button",
+                style={"width": 200},
             ),
             dbc.Col(
                 [
@@ -198,6 +199,7 @@ def make_dist_form_inputs(dist, prefix="", sep="-"):
                         id=prefix + param,
                         value=value,
                         debounce=True,
+                        style={"width": 100},
                     ),
                 ],
                 className="mr-3",
@@ -246,6 +248,7 @@ def make_cond_form_inputs(condition, prefix="", sep="-"):  # Not used
                         value=getattr(condition, param),
                         min=0,
                         debounce=True,
+                        style={"width": 100},
                     ),
                 ],
                 className="mr-3",
