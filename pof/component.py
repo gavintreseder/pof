@@ -549,7 +549,7 @@ class Component(Load):
                 df_rc = self.expected_risk_cost_df()
 
                 # Summarise outputs
-                df_rc['active'] = df_rc['fm_active'] & df_rc['task_active']
+                df_rc["active"] = df_rc["fm_active"] & df_rc["task_active"]
                 df_rc = df_rc.groupby(by=["task", "active"])[["cost"]].sum()
                 df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
                 df_rc[var] = i

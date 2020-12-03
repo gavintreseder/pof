@@ -86,19 +86,23 @@ def layout():
                                     dbc.InputGroupAddon(
                                         [
                                             dbc.Checkbox(
-                                                id="sim_n_active", checked=True
+                                                id="sim_n_active",
+                                                checked=True,
                                             ),
+                                            "Iterations",
                                             dcc.Input(
                                                 id="n_iterations-input",
                                                 value=10,
                                                 type="number",
+                                                style={"width": 100},
                                             ),
                                         ],
                                         addon_type="prepend",
-                                    ),
-                                    dbc.Progress(id="n-progress"),
-                                ]
+                                    )
+                                ],
+                                width="auto",
                             ),
+                            dbc.Col([dbc.Progress(id="n-progress")]),
                             dbc.Col(
                                 [
                                     dbc.InputGroupAddon(
@@ -106,17 +110,20 @@ def layout():
                                             dbc.Checkbox(
                                                 id="sim_n_sens_active", checked=True
                                             ),
+                                            "Iterations",
                                             dcc.Input(
                                                 id="n_sens_iterations-input",
                                                 value=10,
                                                 type="number",
+                                                style={"width": 100},
                                             ),
                                         ],
                                         addon_type="prepend",
                                     ),
-                                    dbc.Progress(id="n_sens-progress"),
-                                ]
+                                ],
+                                width="auto",
                             ),
+                            dbc.Col([dbc.Progress(id="n_sens-progress")]),
                         ]
                     ),
                 ]
@@ -130,6 +137,66 @@ def layout():
                             options=update_list,
                             value=comp.get_update_ids()[-1],
                         )
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    dbc.Checkbox(id="min_sens_active", checked=False),
+                                    "Min",
+                                    dcc.Input(
+                                        id="min_sens_active-input",
+                                        value=0,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    dbc.Checkbox(id="max_sens_active", checked=False),
+                                    "Max",
+                                    dcc.Input(
+                                        id="max_sens_active-input",
+                                        value=10,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    dbc.Checkbox(
+                                        id="step_size_sens_active", checked=False
+                                    ),
+                                    "Step Size",
+                                    dcc.Input(
+                                        id="step_size_sens_active-input",
+                                        value=1,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
                     ),
                 ]
             ),
@@ -210,7 +277,10 @@ def update_parameter(graph_y_limit_active, graph_y_limit, *args):
         Input("n_iterations-input", "value"),
         Input("update_state", "children"),
     ],
-    [State("sim_n_active", "checked"), State("n_iterations-input", "value")],
+    [
+        State("sim_n_active", "checked"),
+        State("n_iterations-input", "value"),
+    ],
 )
 def update_simulation(
     active_input, n_iterations_input, state, active, n_iterations, *args
@@ -286,18 +356,33 @@ def update_ffcf(*args):
         Input("sim_n_sens_active", "checked"),
         Input("n_sens_iterations-input", "value"),
         Input("demo-dropdown", "value"),
+        Input("min_sens_active", "checked"),
+        Input("min_sens_active-input", "value"),
+        Input("max_sens_active", "checked"),
+        Input("max_sens_active-input", "value"),
+        Input("step_size_sens_active", "checked"),
+        Input("step_size_sens_active-input", "value"),
         Input("cost-fig", "figure"),
     ],
     [
         State("sim_n_sens_active", "checked"),
         State("n_sens_iterations-input", "value"),
         State("demo-dropdown", "value"),
+        State("min_sens_active", "checked"),
+        State("min_sens_active-input", "value"),
+        State("max_sens_active", "checked"),
+        State("max_sens_active-input", "value"),
+        State("step_size_sens_active", "checked"),
+        State("step_size_sens_active-input", "value"),
     ],
 )
 def update_insp_interval(
     active_input,
     n_iterations_input,
     var_input,
+    min_input,
+    max_input,
+    step_size_input,
     fig,
     active,
     n_iterations,
@@ -315,9 +400,9 @@ def update_insp_interval(
         insp_interval_fig = make_sensitivity_fig(
             sens_sim,
             var_name=var_name,
-            lower=1,
-            upper=10,
-            step_size=1,
+            lower=min_input,
+            upper=max_input,
+            step_size=step_size_input,
             n_iterations=n_iterations,
         )
 
