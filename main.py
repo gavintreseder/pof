@@ -336,15 +336,15 @@ def update_figures(state, active, *args):
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
 def update_ffcf(*args):
-    cf = len(pof_sim.expected_cf())
-    ff = len(pof_sim.expected_ff())
+    n_cf = len(pof_sim.expected_cf())
+    n_ff = len(pof_sim.expected_ff())
 
     try:
-        ratio = round(ff / (cf + ff), 2)
+        ratio = round(n_ff / (n_cf + n_ff), 2)
     except:
         ratio = "--.--"
 
-    return f"Conditional {cf} : {ff} Functional. {ratio}%"
+    return f"Conditional {n_cf} : {n_ff} Functional. {ratio}%"
 
 
 @app.callback(
