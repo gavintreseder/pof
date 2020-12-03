@@ -108,7 +108,7 @@ def layout():
                                     dbc.InputGroupAddon(
                                         [
                                             dbc.Checkbox(
-                                                id="sim_sens_active", checked=True
+                                                id="sim_sens_active", checked=False
                                             ),
                                             "Iterations",
                                             dcc.Input(
@@ -149,10 +149,9 @@ def layout():
                         [
                             dbc.InputGroupAddon(
                                 [
-                                    dbc.Checkbox(id="lower_sens_active", checked=False),
-                                    "Min",
+                                    "Lower",
                                     dcc.Input(
-                                        id="sens_lower",
+                                        id="sens_lower-input",
                                         value=0,
                                         type="number",
                                         style={"width": 100},
@@ -166,10 +165,9 @@ def layout():
                         [
                             dbc.InputGroupAddon(
                                 [
-                                    dbc.Checkbox(id="max_sens_active", checked=False),
-                                    "Max",
+                                    "Upper",
                                     dcc.Input(
-                                        id="max_sens_active-input",
+                                        id="sens_upper-input",
                                         value=10,
                                         type="number",
                                         style={"width": 100},
@@ -183,12 +181,9 @@ def layout():
                         [
                             dbc.InputGroupAddon(
                                 [
-                                    dbc.Checkbox(
-                                        id="step_size_sens_active", checked=False
-                                    ),
                                     "Step Size",
                                     dcc.Input(
-                                        id="step_size_sens_active-input",
+                                        id="sens_step_size-input",
                                         value=1,
                                         type="number",
                                         style={"width": 100},

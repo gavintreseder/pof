@@ -262,13 +262,13 @@ def make_sensitivity_fig(
         summary = {
             "total": df_total,
             "direct": df_direct,
-            #"risk": df.loc[df["source"] == "risk"],
+            # "risk": df.loc[df["source"] == "risk"],
         }
 
         df_plot = pd.concat(summary, names=["source"]).reset_index()
         df_plot["active"] = df_plot["active"].astype(bool)
         df_plot = df_plot.append(df)
-        #df_plot = df_plot.append(df.loc[df["source"] != "risk"])
+        # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
 
         # Add line dashes
         df_plot["line_dash"] = 1
@@ -294,7 +294,7 @@ def make_sensitivity_fig(
 
         fig.update_xaxes(automargin=True)
 
-        if var == "time":
+        if var in Component.TIME_VARIABLES or FailureMode.TIME_VARIABLES:
             col_names = {"time": f"Age ({local.units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
