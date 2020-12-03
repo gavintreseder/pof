@@ -648,7 +648,7 @@ class Component(Load):
                         task.task_group_name
                     ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
 
-        ids = ids + list(update_ids.values())
+        ids = list(update_ids.values()) + ids
         return ids
 
     def get_objects(self, prefix="", sep="-"):

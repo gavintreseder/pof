@@ -4,6 +4,7 @@
     # Labels 
         # Iteration Labels
     # Change figure functions to check if up_to_date, return the self.df_sens, else re-run
+    # 
 
 
 # Evening Priority
@@ -15,14 +16,10 @@
             fm.ff (count)
             ratio
 
-    # Interface
-        # Table of outcomes
-
-    # Population
-
 
 # Gav
     # Change sens to annualised cost 
+    # Table of outcomes
 
 # Mel
 

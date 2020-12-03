@@ -136,7 +136,7 @@ def layout():
                         dcc.Dropdown(
                             id="sens_var_id-dropdown",
                             options=update_list,
-                            value=comp.get_update_ids()[-1],
+                            value=comp.get_update_ids()[0],
                         )
                     ),
                 ]
