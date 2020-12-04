@@ -52,6 +52,8 @@ class Indicator(Load):
 
     # Class Variables
     PF_CURVES = ["linear", "step"]
+    TIME_VARIABLES = ["pf_interval", "pf_std"]
+    POF_VARIABLES=[]
 
     def __init__(
         self,

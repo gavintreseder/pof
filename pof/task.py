@@ -359,6 +359,9 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
+    TIME_VARIABLES=["t_interval", "t_delay"]
+    POF_VARIABLES=[]
+
     def __init__(
         self,
         name: str = "scheduled_task",

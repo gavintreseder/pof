@@ -41,6 +41,8 @@ class Component(Load):
 
 
     """
+    TIME_VARIABLES = []
+    POF_VARIABLES = ["indicator", "fm"]
 
     def __init__(
         self,
