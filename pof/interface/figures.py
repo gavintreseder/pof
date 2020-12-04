@@ -246,14 +246,11 @@ def make_sensitivity_fig(
     upper=10,
     step_size=1,
     t_end=100,
-    time_unit="",
     n_iterations=10,
 ):
 
     var = var_name.split("-")[-1]
 
-    # if var == y_axis:
-    #     y_axis = "source_cost"
     title_var = var.replace("_", " ").title()
 
     try:
