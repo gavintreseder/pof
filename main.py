@@ -56,10 +56,7 @@ def layout():
     y_values = ["cost", "cumulative_cost - N/A", "annual_cost"]
     update_list_y = [{"label": option, "value": option} for option in y_values]
 
-    unit_values = valid_units
-    update_list_unit = [
-        {"label": option + " - N/A", "value": option} for option in unit_values
-    ]
+    update_list_unit = [{"label": option, "value": option} for option in valid_units]
 
     layout = html.Div(
         [
@@ -81,7 +78,7 @@ def layout():
                             dcc.Dropdown(
                                 id="sens_time_unit-dropdown",
                                 options=update_list_unit,
-                                value=list(valid_units)[-1],
+                                value=comp.units,
                             ),
                         ]
                     ),
@@ -330,20 +327,14 @@ def update_parameter(graph_y_limit_active, graph_y_limit, *args):
 
 
 @app.callback(
-    [Output("sim_state", "children"), Output("sim_state_err", "children")],
-    [
-        Input("sim_n_active", "checked"),
-        Input("n_iterations-input", "value"),
-        Input("update_state", "children"),
-    ],
-    [
-        State("sim_n_active", "checked"),
-        State("n_iterations-input", "value"),
-    ],
+    Output("sim_state", "children"),
+    Output("sim_state_err", "children"),
+    Input("sim_n_active", "checked"),
+    Input("n_iterations-input", "value"),
+    Input("update_state", "children"),
+    Input("sens_time_unit-dropdown", "value"),
 )
-def update_simulation(
-    active_input, n_iterations_input, state, active, n_iterations, *args
-):
+def update_simulation(active, n_iterations, state, time_unit):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
     global sim_err_count
@@ -352,6 +343,7 @@ def update_simulation(
 
     # time.sleep(1)
     if active:
+        comp.units = time_unit
         pof_sim = copy.copy(comp)
 
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
@@ -378,8 +370,6 @@ fig_end = 0
         Output("fig_state", "children"),
     ],
     Input("sim_state", "children"),
-    Input("sens_time_unit-dropdown", "value"),
-    State("sens_time_unit-dropdown", "value"),
     State("sim_n_active", "checked"),
 )
 def update_figures(state, active, *args):
@@ -423,7 +413,6 @@ def update_ffcf(*args):
     Input("sens_upper-input", "value"),
     Input("sens_step_size-input", "value"),
     Input("sens_t_end-input", "value"),
-    Input("sens_time_unit-dropdown", "value"),
     Input("cost-fig", "figure"),  # TODO change this trigger
 )
 def update_sensitivity(
@@ -435,7 +424,6 @@ def update_sensitivity(
     upper,
     step_size,
     t_end,
-    time_unit,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -454,7 +442,6 @@ def update_sensitivity(
             upper=upper,
             step_size=step_size,
             t_end=t_end,
-            time_unit=time_unit,
             n_iterations=n_iterations,
         )
 
