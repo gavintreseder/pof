@@ -279,6 +279,7 @@ def make_task_layout(task, prefix="", sep="-"):
                 task.name,
                 color="link",
                 id=prefix + "collapse-button",
+                style={"width": 200},
             ),
             dbc.Col(
                 [
@@ -305,40 +306,26 @@ def make_task_form(task, prefix="", sep="-"):  # TODO make this better
     """
     Takes a Task and generates the html form inputs
     """
+    var_dict = dict(t_delay="Time Delay", t_interval="Time Interval")
+    time_details = []
 
-    if task.trigger == "time":
-        time_details = [
-            dbc.Col(
-                dbc.FormGroup(
-                    [
-                        dbc.Label("Time Delay"),
-                        dbc.Input(
-                            type="number",
-                            id=prefix + "t_delay",
-                            value=task.t_delay,
-                            min=0,
-                            debounce=True,
-                        ),
-                    ],
-                ),
-            ),
-            dbc.Col(
-                dbc.FormGroup(
-                    [
-                        dbc.Label("Time Interval"),
-                        dbc.Input(
-                            type="number",
-                            id=prefix + "t_interval",
-                            value=task.t_interval,
-                            min=0,
-                            debounce=True,
-                        ),
-                    ],
-                ),
-            ),
-        ]
-    else:
-        time_details = []
+    for key in var_dict:
+        if task.trigger == "time":
+            time_details.append(
+                [
+                    dbc.Label(var_dict[key]),
+                    dbc.Input(
+                        type="number",
+                        id=prefix + key,
+                        value=getattr(task, key),
+                        min=0,
+                        debounce=True,
+                        style={"width": 100},
+                    ),
+                ],
+            )
+        else:
+            time_details.append([])
 
     form = dbc.Form(
         [
@@ -353,6 +340,7 @@ def make_task_form(task, prefix="", sep="-"):  # TODO make this better
                             min=0,
                             max=100,
                             debounce=True,
+                            style={"width": 100},
                         ),
                         dbc.InputGroupAddon("%", addon_type="append"),
                     ],
@@ -368,12 +356,18 @@ def make_task_form(task, prefix="", sep="-"):  # TODO make this better
                             value=task.cost,
                             min=0,
                             debounce=True,
+                            style={"width": 100},
                         ),
                     ],
                 ),
             ),
-        ]
-        + time_details,
+            dbc.Col(
+                dbc.FormGroup(time_details[0]),
+            ),
+            dbc.Col(
+                dbc.FormGroup(time_details[1]),
+            ),
+        ],
         inline=True,
     )
 

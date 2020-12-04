@@ -173,7 +173,7 @@ class Load:
             self._units = value
 
         else:
-            raise ValueError(f"Unit must be in {valid_units.keys()}")
+            raise ValueError(f"Unit must be in {list(valid_units)}")
 
     def _scale_units(self, value, current_units):
         """ Take current and loaded units and return the ratio between """

@@ -11,6 +11,7 @@ from dash.exceptions import PreventUpdate
 
 from config import config
 from pof import Component
+from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import make_component_layout, cf  # TODO fix this
@@ -52,6 +53,14 @@ def layout():
         {"label": option, "value": option} for option in comp.get_update_ids()
     ]
 
+    y_values = ["cost", "cumulative_cost - N/A", "annual_cost"]
+    update_list_y = [{"label": option, "value": option} for option in y_values]
+
+    unit_values = valid_units
+    update_list_unit = [
+        {"label": option + " - N/A", "value": option} for option in unit_values
+    ]
+
     layout = html.Div(
         [
             html.Div(id="log"),
@@ -64,6 +73,25 @@ def layout():
             ),
             html.Div(children="Fig State", id="fig_state"),
             html.P(id="ffcf"),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            "Time Units",
+                            dcc.Dropdown(
+                                id="sens_time_unit-dropdown",
+                                options=update_list_unit,
+                                value=list(valid_units)[-1],
+                            ),
+                        ]
+                    ),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                ]
+            ),
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="pof-fig")),
@@ -133,16 +161,35 @@ def layout():
                 [
                     dbc.Col(),
                     dbc.Col(
-                        dcc.Dropdown(
-                            id="sens_var_id-dropdown",
-                            options=update_list,
-                            value=comp.get_update_ids()[0],
-                        )
+                        [
+                            "y-axis options",
+                            dcc.Dropdown(
+                                id="sens_var_y-dropdown",
+                                options=update_list_y,
+                                value=y_values[0],
+                            ),
+                        ]
                     ),
                 ]
             ),
             dbc.Row(
                 [
+                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            "x-axis options",
+                            dcc.Dropdown(
+                                id="sens_var_id-dropdown",
+                                options=update_list,
+                                value=comp.get_update_ids()[-1],
+                            ),
+                        ]
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(),
                     dbc.Col(),
                     dbc.Col(),
                     dbc.Col(),
@@ -186,6 +233,22 @@ def layout():
                                     dcc.Input(
                                         id="sens_step_size-input",
                                         value=1,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "t_end",
+                                    dcc.Input(
+                                        id="sens_t_end-input",
+                                        value=100,
                                         type="number",
                                         style={"width": 100},
                                     ),
@@ -315,6 +378,8 @@ fig_end = 0
         Output("fig_state", "children"),
     ],
     Input("sim_state", "children"),
+    Input("sens_time_unit-dropdown", "value"),
+    State("sens_time_unit-dropdown", "value"),
     State("sim_n_active", "checked"),
 )
 def update_figures(state, active, *args):
@@ -353,18 +418,24 @@ def update_ffcf(*args):
     Input("sim_sens_active-check", "checked"),
     Input("n_sens_iterations-input", "value"),
     Input("sens_var_id-dropdown", "value"),
+    Input("sens_var_y-dropdown", "value"),
     Input("sens_lower-input", "value"),
     Input("sens_upper-input", "value"),
     Input("sens_step_size-input", "value"),
+    Input("sens_t_end-input", "value"),
+    Input("sens_time_unit-dropdown", "value"),
     Input("cost-fig", "figure"),  # TODO change this trigger
 )
 def update_sensitivity(
     active,
     n_iterations,
     var_id,
+    y_axis,
     lower,
     upper,
     step_size,
+    t_end,
+    time_unit,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -378,9 +449,12 @@ def update_sensitivity(
         insp_interval_fig = make_sensitivity_fig(
             sens_sim,
             var_name=var_id,
+            y_axis=y_axis,
             lower=lower,
             upper=upper,
             step_size=step_size,
+            t_end=t_end,
+            time_unit=time_unit,
             n_iterations=n_iterations,
         )
 
