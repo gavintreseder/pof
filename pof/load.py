@@ -7,9 +7,10 @@
 
 from collections.abc import Iterable
 import logging
-import inspect
-from flatten_dict import flatten, unflatten
+from typing import Dict
 
+
+from flatten_dict import flatten, unflatten
 import numpy as np
 import pandas as pd
 import scipy.stats as ss
@@ -22,6 +23,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from pof.pof_container import PofContainer
 from pof.helper import str_to_dict, valid_signature
 from config import config
 from pof.units import valid_units
@@ -252,69 +254,62 @@ class Load:
 
         self.update_from_dict(dict_data)
 
-    # def update_from_dict(self, *args, **kwargs):
-    #     """
-    #     """
-    #     raise NotImplementedError()
-
-    def update_from_dict(self, data):
+    def update_from_dict(self, data: Dict):
         """Updates an attribute on a pof object using a
 
-        load = Load()
-        load.update({'name':'updated_name'})
-        load.name
+        Inputs:
+            data: A nested dictionary of data to update
+
+        Usage:
+        >>> load = Load()
+        >>> load.update({'name':'updated_name'})
+        >>> load.name
+
+        'updated_name'
         """
         # Loop through all the varaibles to update
         for attr, detail in data.items():
 
-            # Check it is an attribute
-            if hasattr(self, attr):
-                attr_to_update = getattr(self, attr)
+            attr_to_update = getattr(self, attr)
 
-                # Check if the object has a load method
-                if isinstance(attr_to_update, Load):
-                    attr_to_update.update_from_dict(detail)
+            # Check if has an update method
+            if isinstance(attr_to_update, (Load, PofContainer)):
+                attr_to_update.update_from_dict(detail)
 
-                # Check if it is a dictionary
-                elif isinstance(attr_to_update, dict):
+            # Check if it is a dictionary
+            elif isinstance(attr_to_update, dict):
 
-                    for key, val in detail.items():
+                for key, val in detail.items():
 
-                        var_to_update = getattr(self, attr).get(key, None)
+                    var_to_update = getattr(self, attr).get(key, None)
 
-                        # Check if it is a pof object with an update method
-                        if isinstance(var_to_update, Load):
-                            var_to_update.update_from_dict(val)
+                    # Check if is has an update method
+                    if isinstance(var_to_update, (Load, PofContainer)):
+                        var_to_update.update_from_dict(val)
 
-                        elif var_to_update is not None:
-                            getattr(self, attr)[key] = val
+                    elif var_to_update is not None:
+                        getattr(self, attr)[key] = val
 
-                        # Check if it is dictionaries
-                        elif isinstance(val, dict):
-                            flat_detail = flatten(detail)
-                            flat_attr = flatten(attr_to_update)
+                    # Check if it is dictionaries
+                    elif isinstance(val, dict):
+                        flat_detail = flatten(detail)
+                        flat_attr = flatten(attr_to_update)
 
-                            missing = set(flat_detail).difference(set(flat_attr))
-                            if not missing:
-                                flat_attr.update(flat_detail)
-                                attr_to_update = unflatten(flat_attr)
-                            else:
-                                raise KeyError(
-                                    f"{self.__class__.__name__} - {self.name} - {attr} does not have {missing}"
-                                )
-
+                        missing = set(flat_detail).difference(set(flat_attr))
+                        if not missing:
+                            flat_attr.update(flat_detail)
+                            attr_to_update = unflatten(flat_attr)
                         else:
                             raise KeyError(
-                                f"{self.__class__.__name__} - {self.name} - {attr} cannot be updated with the value {key} {val}"
+                                f"{self.__class__.__name__} - {self.name} - {attr} does not have {missing}"
                             )
-                else:
-                    setattr(self, attr, detail)
 
+                    else:
+                        raise KeyError(
+                            f"{self.__class__.__name__} - {self.name} - {attr} cannot be updated with the value {key} {val}"
+                        )
             else:
-                raise AttributeError(
-                    "%s - %s - does not have the attribute - %s"
-                    % (self.__class__.__name__, self.name, attr),
-                )
+                setattr(self, attr, detail)
 
     def sensitivity(
         self,
@@ -502,5 +497,7 @@ class Load:
 
 
 if __name__ == "__main__":
-    load = Load()
+    import doctest
+
+    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"load": Load()})
     print("Load - Ok")

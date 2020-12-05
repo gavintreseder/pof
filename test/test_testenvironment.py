@@ -14,3 +14,7 @@ class TestTestEnvironment(unittest.TestCase):
         import testconfig
 
         self.assertIsNotNone(testconfig)
+
+
+if __name__ == "__main__":
+    unittest.main()

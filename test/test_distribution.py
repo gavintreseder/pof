@@ -1,3 +1,12 @@
+"""
+    Filename: test_distribution.py
+    Description: Contains the code for testing the Distribution class
+    Author:
+        Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
+        Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
+"""
+
+import copy
 import unittest
 
 import scipy.stats as ss
@@ -35,10 +44,7 @@ class TestDistribution(TestPofBase, unittest.TestCase):
             {"alpha": "this is an invalid type"},
         ]
 
-        self._data_complete = [
-            fixtures.complete["distribution_0"],
-            fixtures.complete["distribution_1"],
-        ]
+        self._data_complete = copy.deepcopy(fixtures.complete["distribution"])
 
         self.alpha = 50.0
         self.beta = 1.5

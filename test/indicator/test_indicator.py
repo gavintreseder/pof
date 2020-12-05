@@ -1,3 +1,11 @@
+"""
+    Filename: test_indicator.py
+    Description: Contains the code for testing the ConditionIndicator class
+    Author:
+        Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
+        Illyse Schram  | ischram@kpmg.com.au | illyse.schram@essentialenergy.com.au
+"""
+
 import unittest
 from unittest.mock import Mock
 import copy
@@ -40,10 +48,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         self._data_invalid_types = [
             {"invalid_type": "invalid_type", "indicator_type": "ConditionIndicator"}
         ]
-        self._data_complete = [
-            fixtures.complete["condition_indicator_0"],
-            fixtures.complete["condition_indicator_1"],
-        ]
+        self._data_complete = copy.deepcopy(fixtures.complete["condition_indicator"])
 
         cond_data = demo.condition_data["instant"]
         self.cond = ConditionIndicator.load(cond_data)
@@ -885,11 +890,6 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
 
                     # Assert
                     np.testing.assert_array_equal(ft, expected)
-
-
-class TestPoleSafetyFactor(unittest.TestCase):
-    def test_sim_timeline(self):
-        NotImplemented
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import collections
+import inspect
 
 import numpy as np
 
@@ -44,3 +45,31 @@ def str_to_dict(id_str, value, sep="-"):
         else:
             dict_data = {key: dict_data}
     return dict_data
+
+
+def get_signature(obj):
+    """ Get the constructor signature"""
+    signature = inspect.signature(obj).parameters
+
+    if bool(obj.__bases__):
+        for parent in obj.__bases__:
+            parent_signature = get_signature(parent)
+            signature = {**signature, **parent_signature}
+            # TODO consider making the order consistent
+            # for key, value in parent_signature.items():
+            #    signature.setdefault({key: value})
+
+    return signature
+
+
+def valid_signature(obj, inputs):
+    """ Returns whether an object can be created with the inputs provided based on the signature"""
+
+    factory = getattr(obj, "factory", None)
+    if callable(factory):
+        obj = obj.factory(**inputs)
+
+    signature = get_signature(obj)
+    valid = [attr in signature for attr in inputs]
+
+    return all(valid)

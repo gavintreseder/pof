@@ -1,45 +1,83 @@
 """
 Usage
 
-from distribution import Demo as demo
+>>> import fixtures
 
-demo.slow_aging
-demo.distribution.slow_aging
+fixtures.complete contains a complete data set for each object
+
+>>> fixtures.complete['distribution][0]
+{name=...}
+
+fixtures.update contains a data set for testing the update methods 
+>>> fixtures.complete['failure_mode']['update']
 
 
 Notes:
-Use dict() to wrap data when reusing it so that data is copied. This prevents errors where raw data sets are modified
+Use copy.deepcopy to ensure tests do not change the same underlying data
 """
+
+import copy
 
 import testconfig  # pylint: disable=unused-import
 import pof.demo as demo
 
 
+#class Fixtures():
+
 # fmt: off
-complete = {}
+complete = {
+    'load':{},
+    'distribution':{},
+    'condition_indicator':{},
+    'task':{},
+    'condition_task':{},
+    'scheduled_task':{},
+    'inspection':{},
+    'failure_mode':{},
+    'component':{},
+}
+
+update = copy.deepcopy(complete)
+
+# *********************** load data *****************************************
+
+complete['load'][0] = dict(
+    name='load_0',
+    units='years',
+)
+
+complete['load'][1] = dict(
+    name='load_1',
+    units='months',
+)
+
+complete['load']['update'] = copy.deepcopy(complete['load'][1])
+
 # *********************** distribution data **********************************
 
-distribution_data = dict(demo.distribution_data)
+distribution_data = copy.deepcopy(demo.distribution_data)
 
-complete['distribution_0'] =  dict(
+complete['distribution'][0] =  dict(
     name='dist_0',
     alpha = 0,
     beta = 0,
     gamma = 0
 )
 
-complete['distribution_1'] = dict(
+complete['distribution'][1] = dict(
     name='dist_1',
     alpha = 1,
     beta = 1,
     gamma = 1
 )
 
+complete['distribution']['update'] = dict(**copy.deepcopy(complete['distribution'][1]))
+
 # *********************** indicator data **********************************
 
-condition_data = dict(demo.condition_data)
+condition_data = copy.deepcopy(demo.condition_data)
 
-complete['condition_indicator_0'] = dict(
+complete['condition_indicator'][0] = dict(
     name='condition_indicator_0',
     perfect=0,
     failed=1,
@@ -51,7 +89,7 @@ complete['condition_indicator_0'] = dict(
     threshold_detection=0,
 )
 
-complete['condition_indicator_1'] = dict(
+complete['condition_indicator'][1] = dict(
     name='condition_indicator_1',
     perfect=1,
     failed=0,
@@ -63,20 +101,22 @@ complete['condition_indicator_1'] = dict(
     threshold_detection=1,
 )
 
+complete['condition_indicator']['update'] = dict(**copy.deepcopy(complete['condition_indicator'][1]))
+
 # *********************** trigger_data *******************************
 
 
 
 # *********************** task data **********************************
-inspection_data = dict(demo.inspection_data)
+inspection_data = copy.deepcopy(demo.inspection_data)
 
-repair_data = dict(demo.repair_data)
+repair_data = copy.deepcopy(demo.repair_data)
 
-replacement_data = dict(demo.replacement_data)
+replacement_data = copy.deepcopy(demo.replacement_data)
 
 # --------------- Task --------------------
 
-complete['task_0'] = dict(
+complete['task'][0] = dict(
     task_type='Task',
     name='task_0',
     p_effective=0,
@@ -112,7 +152,7 @@ complete['task_0'] = dict(
     ),
 )
 
-complete['task_1'] = dict(
+complete['task'][1] = dict(
     task_type='Task',
     name='task_1',
     p_effective=1,
@@ -149,63 +189,70 @@ complete['task_1'] = dict(
     ),
 )
 
+complete['task']['update'] = dict(**copy.deepcopy(complete['task'][1]))
+
 # -------------- Scheduled Task ------------
 
-complete['scheduled_task_0'] = dict(complete['task_0'])
-complete['scheduled_task_0'].update(dict(
+complete['scheduled_task'][0] = dict(
+    complete['task'][0],
     task_type='ScheduledTask',
     name='scheduled_task_0',
     t_interval=1,
     t_delay=0,
-))
+)
 
 
-complete['scheduled_task_1'] = dict(complete['task_1'])
-complete['scheduled_task_1'].update(dict(
+complete['scheduled_task'][1] = dict(
+    complete['task'][1],
     task_type='ScheduledTask',
     name='scheduled_task_1',
     t_interval=10,
     t_delay=1,
-))
+)
+
+complete['scheduled_task']['update'] = dict(**complete['scheduled_task'][1])
 
 # -------------- Condition Task ------------
 
-complete['condition_task_0'] = dict(complete['task_0'])
-complete['condition_task_0'].update(dict(
+complete['condition_task'][0] = dict(
+    complete['task'][0],
     task_type='ConditionTask',
     name='condition_task_0',
     task_completion = 'immediate',
-))
+)
 
-complete['condition_task_1'] = dict(complete['task_1'])
-complete['condition_task_1'].update(dict(
+complete['condition_task'][1] = dict(
+    complete['task'][1],
     task_type='ConditionTask',
     name='condition_task_1',
     task_completion = 'immediate',
-))
+)
+
+complete['condition_task']['update'] = dict(**complete['condition_task'][1])
 
 # ------------- Inspection -----------------
 
-complete['inspection_0'] = dict(complete['scheduled_task_0'])
-complete['inspection_0'].update(dict(
+complete['inspection'][0] = dict(
+    complete['scheduled_task'][0],
     task_type='Inspection',
     name='inspection_0',
-))
+)
 
-complete['inspection_1'] = dict(complete['scheduled_task_1'])
-complete['inspection_1'].update(dict(
+complete['inspection'][1] = dict(
+    complete['scheduled_task'][1],
     task_type='Inspection',
     name='inspection_1',
-))
+)
 
+complete['inspection']['update'] = dict(**complete['inspection'][1])
 
 # *********************** state data **********************************
 
-state_data = dict(demo.state_data)
+state_data = copy.deepcopy(demo.state_data)
 
 # *********************** failure mode data **********************************
 
-failure_mode_data = dict(demo.failure_mode_data)
+failure_mode_data = copy.deepcopy(demo.failure_mode_data)
 
 failure_mode_data['predictable'] = dict(
     name='predictable',
@@ -216,39 +263,59 @@ failure_mode_data['predictable'] = dict(
 
 #TODO this hsould work with unique condtion names, but currenlty has an issue
 
-complete['failure_mode_0']=dict(
+complete['failure_mode'][0]=dict(
     name='fm_0',
     pf_curve = 'linear',
     pf_interval=0,
-    untreated=dict(complete['distribution_0']),
-    conditions={'condition_indicator':dict(complete['condition_indicator_0'])},
-    tasks={'task':dict(complete['inspection_0'])},
+    untreated=complete['distribution'][0],
+    conditions=complete['condition_indicator'][0],
+    indicators=complete['condition_indicator'][0],
+    tasks=complete['inspection'][0],
 )
 
-complete['failure_mode_1']=dict(
+complete['failure_mode'][1]=dict(
     name='fm_1',
     pf_curve = 'step',
     pf_interval=1,
-    untreated=dict(complete['distribution_1']),
-    conditions={'condition_indicator':dict(complete['condition_indicator_1'])},
-    tasks={'task':dict(complete['inspection_1'])},
+    untreated=complete['distribution'][1],
+    conditions=complete['condition_indicator'][1],
+    indicators=complete['condition_indicator'][1],
+    tasks=complete['inspection'][1],
 )
+
+complete['failure_mode']['update'] = dict(
+    complete['failure_mode'][1],
+    untreated=complete['distribution'][1],
+    conditions=complete['condition_indicator'][1],
+    indicators=complete['condition_indicator'][1],
+    tasks=complete['inspection'][1]
+
+)
+#complete['failure_mode']['update'].update('name')
 
 # *********************** component data **********************************
 
-component_data = dict(demo.component_data)
+component_data = copy.deepcopy(demo.component_data)
 
-complete['component_0'] = dict(
+complete['component'][0] = dict(
     name='component_0',
-    fm=dict(complete['failure_mode_0']),
-    indicator=dict(complete['condition_indicator_0']),
+    fm=complete['failure_mode'][0],
+    indicator=complete['condition_indicator'][0],
 )
 
-complete['component_1'] = dict(
+complete['component'][1] = dict(
     name='component_1',
-    fm=dict(complete['failure_mode_1']),
-    indicator=dict(complete['condition_indicator_1'])
+    fm=complete['failure_mode'][1],
+    indicator=complete['condition_indicator'][1],
 )
+
+
+complete = copy.deepcopy(complete)
+
+# @classmethod
+# def deepcopy(cls, string):
+
+#     return copy.deepcopy cls.
 
 if __name__ == "__main__":
     print("Fixtures - Ok")

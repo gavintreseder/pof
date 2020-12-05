@@ -30,7 +30,8 @@ if __package__ is None or __package__ == "":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from config import config
-from pof.helper import fill_blanks, id_update, str_to_dict
+from pof.pof_container import PofContainer
+from pof.helper import fill_blanks, str_to_dict
 from pof.indicator import Indicator, ConditionIndicator
 from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
@@ -102,11 +103,11 @@ class FailureMode(Load):
 
         super().__init__(name=name, **kwargs)
 
-        self.dists = dict()
-        self.indicators = dict()
+        self.dists = PofContainer()
+        self.indicators = PofContainer()
         self.conditions = dict()
         self.consequences = dict()
-        self.tasks = dict()
+        self.tasks = PofContainer()
         self.init_states = dict()
         self.states = dict()
 
