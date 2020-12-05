@@ -12,58 +12,12 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from pof.load import Load
 from config import config
 from pof.decorators import check_arg_positive, coerce_arg_type, check_arg_type
+from pof.pof_base import PofBase
+from pof.pof_container import PofContainer
 
 cf = config["Distribution"]
-
-# TODO Extend so that it works for all the common distributions
-
-# class Manager(object):
-
-#     """
-
-#     #TODO Maybe move the set and update methods on the manager objects?
-
-#     """
-#     def set_obj(self, attr, d_type, value):
-#         """
-
-#         value = {'tasks':{'inspection':{'t_interval':10}}}
-#         """
-
-#         try:
-#             if value is None:
-#                 setattr(self, attr, dict())
-
-#             # Add the value to the dictionary if it is an object of that type
-#             elif isinstance(value, d_type):
-#                 getattr(self, attr)[value.name] = value
-
-#             # Check if the input is an iterable
-#             elif isinstance(value, Iterable):
-
-#                 # Create an object from the dict
-#                 if all([hasattr(d_type, attr) for attr in value]):
-#                     new_object = d_type.from_dict(value)
-#                     getattr(self, attr)[new_object.name] = new_object
-
-#                 # Create an object from the dict of dict/objects
-#                 else:
-#                     for key, val in value.items():
-
-#                         if isinstance(val, d_type):
-#                             getattr(self, attr)[val.name] = val
-
-#                         else:
-#                             new_object = d_type.from_dict(val)
-#                             getattr(self, attr)[new_object.name] = new_object
-
-#             else:
-#                 raise ValueError
-
-from .pof_container import PofContainer
 
 
 class DistributionManager(PofContainer):
@@ -85,7 +39,7 @@ class DistributionManager(PofContainer):
             self["init"] = init
 
 
-class Distribution(Load):
+class Distribution(PofBase):
 
     """
     Usage:

@@ -19,7 +19,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from pof.decorators import check_arg_positive, coerce_arg_type
-from pof.load import Load
+from pof.pof_base import PofBase
 from pof.helper import str_to_dict
 from config import config
 import pof.demo as demo
@@ -34,7 +34,7 @@ cf = config["Indicator"]
 # TODO move threshold down into condition indciator so indicator is purely bool
 
 
-class Indicator(Load):
+class Indicator(PofBase):
 
     """
 
@@ -53,7 +53,7 @@ class Indicator(Load):
     # Class Variables
     PF_CURVES = ["linear", "step"]
     TIME_VARIABLES = ["pf_interval", "pf_std"]
-    POF_VARIABLES=[]
+    POF_VARIABLES = []
 
     def __init__(
         self,

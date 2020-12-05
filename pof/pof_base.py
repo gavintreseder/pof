@@ -1,6 +1,6 @@
 """
-    Filename: indicator.py
-    Description: Contains the code for implementing a load class
+    Filename: Base.py
+    Description: Contains the code for implementing the base pof class from which other pof classes inherit
     Authors: Gavin Treseder
         gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
@@ -28,24 +28,20 @@ from pof.helper import str_to_dict, valid_signature
 from config import config
 from pof.units import valid_units
 
-# Use config for load
-cf = config["Load"]
 
-"""
-The load module is used to overload other pof classes so that they can use a common load methods
-"""
+cf = config["PofBase"]
 
 
-class Load:
+class PofBase:
     """
-    A class with methods for loading data that
+    A class with methods for that are common to all pof classes.
     """
 
     # Class Variables
     TIME_VARIABLES = []
     POF_VARIABLES = []
 
-    def __init__(self, name="load", units="years", *args, **kwargs):
+    def __init__(self, name="pofbase", units="years", *args, **kwargs):
 
         self.name = name
         self.units = units
@@ -210,7 +206,7 @@ class Load:
             else:
                 raise ValueError
 
-        except ValueError:  # TODO maybe cahnge this back?
+        except ValueError as error:  # TODO maybe cahnge this back?
             msg = "%s (%s) - %s cannot be set from %s" % (
                 self.__class__.__name__,
                 self.name,
@@ -220,7 +216,7 @@ class Load:
             if value is None and cf.get("on_error_use_default") is True:
                 logging.info(msg.join(" - Default used"))
             else:
-                raise ValueError(msg)
+                raise ValueError(msg) from error
 
     def update(self, id_object, value=None):
         """ An update method with some error handling"""
@@ -238,7 +234,7 @@ class Load:
                     self.__class__.__name__,
                 )
         except (KeyError, AttributeError, ValueError) as error:
-            if config["Load"]["handle_update_error"]:
+            if config["PofBase"]["handle_update_error"]:
                 logging.warning("Update Failed. {error}")
             else:
                 raise error
@@ -261,9 +257,9 @@ class Load:
             data: A nested dictionary of data to update
 
         Usage:
-        >>> load = Load()
-        >>> load.update({'name':'updated_name'})
-        >>> load.name
+        >>> pof_base = PofBase()
+        >>> pof_base.update({'name':'updated_name'})
+        >>> pof_base.name
 
         'updated_name'
         """
@@ -273,7 +269,7 @@ class Load:
             attr_to_update = getattr(self, attr)
 
             # Check if has an update method
-            if isinstance(attr_to_update, (Load, PofContainer)):
+            if isinstance(attr_to_update, (PofBase, PofContainer)):
                 attr_to_update.update_from_dict(detail)
 
             # Check if it is a dictionary
@@ -284,7 +280,7 @@ class Load:
                     var_to_update = getattr(self, attr).get(key, None)
 
                     # Check if is has an update method
-                    if isinstance(var_to_update, (Load, PofContainer)):
+                    if isinstance(var_to_update, (PofBase, PofContainer)):
                         var_to_update.update_from_dict(val)
 
                     elif var_to_update is not None:
@@ -499,5 +495,5 @@ class Load:
 if __name__ == "__main__":
     import doctest
 
-    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"load": Load()})
-    print("Load - Ok")
+    doctest.testmod(optionflags=doctest.ELLIPSIS, extraglobs={"pof_base": PofBase()})
+    print("PofBase - Ok")

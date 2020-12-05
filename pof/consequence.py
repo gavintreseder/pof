@@ -1,7 +1,7 @@
-from pof.load import Load
+from pof.pof_base import PofBase
 
 
-class Consequence(Load):
+class Consequence(PofBase):
     def __init__(self, risk_cost_total=50000):
 
         self.risk_cost_total = risk_cost_total

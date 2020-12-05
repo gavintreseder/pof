@@ -24,7 +24,7 @@ from pof.consequence import Consequence
 import pof.demo as demo
 from pof.distribution import Distribution
 from pof.helper import flatten, str_to_dict
-from pof.load import Load
+from pof.pof_base import PofBase
 
 # TODO move t somewhere else
 # TODO create better constructors https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
@@ -36,7 +36,7 @@ seed(1)
 # from dataclasses import dataclass
 
 
-class Task(Load):
+class Task(PofBase):
     """"""
 
     # Class Variables
@@ -329,7 +329,9 @@ class Task(Load):
 
     # ********************* interface methods ******************
 
-    def get_dash_ids(self, prefix:str="", sep:str="-", active:bool=None) -> List:
+    def get_dash_ids(
+        self, prefix: str = "", sep: str = "-", active: bool = None
+    ) -> List:
 
         if active is None or (self.active == active):
             prefix = prefix + self.name + sep
@@ -363,8 +365,8 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     Parent class for creating scheduled tasks
     """
 
-    TIME_VARIABLES=["t_interval", "t_delay"]
-    POF_VARIABLES=[]
+    TIME_VARIABLES = ["t_interval", "t_delay"]
+    POF_VARIABLES = []
 
     def __init__(
         self,

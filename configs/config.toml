@@ -3,7 +3,7 @@ illyes_var = 10
 sep = "-"
 replace_sep_with = "."
 
-[Load]
+[PofBase]
 on_error_use_default = true
 handle_invalid_data = true
 handle_update_error = true

@@ -22,7 +22,7 @@ from config import config
 from pof.failure_mode import FailureMode
 from pof.helper import fill_blanks
 from pof.indicator import Indicator
-from pof.load import Load
+from pof.pof_base import PofBase
 import pof.demo as demo
 
 DEFAULT_ITERATIONS = 100
@@ -30,7 +30,7 @@ DEFAULT_ITERATIONS = 100
 cf = config.get("Component")
 
 
-class Component(Load):
+class Component(PofBase):
     """
     Parameters:
 
@@ -677,6 +677,7 @@ class Component(Load):
 
         raise NotImplementedError()
 
+
     # ****************** Demonstration parameters ******************
 
     @classmethod
@@ -684,7 +685,6 @@ class Component(Load):
         """ Loads a demonstration data set if no parameters have been set already"""
 
         return cls.load(demo.component_data["comp"])
-
 
 if __name__ == "__main__":
     component = Component()

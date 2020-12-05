@@ -37,7 +37,7 @@ from pof.distribution import Distribution, DistributionManager
 from pof.consequence import Consequence
 from pof.task import Task
 import pof.demo as demo
-from pof.load import Load
+from pof.pof_base import PofBase
 from pof.decorators import check_arg_positive
 
 
@@ -50,7 +50,7 @@ from pof.decorators import check_arg_positive
 cf = config["FailureMode"]
 
 
-class FailureMode(Load):
+class FailureMode(PofBase):
 
     """
     A class that contains the methods for FailureMode object
