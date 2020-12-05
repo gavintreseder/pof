@@ -4,11 +4,13 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
+import copy
 import unittest
 from unittest.mock import Mock, patch
 
-from test_load import TestPofBase
+
 import fixtures
+from test_pof_base import TestPofBaseCommon
 import testconfig  # pylint: disable=unused-import
 from pof.component import Component
 from config import config
@@ -16,7 +18,7 @@ from config import config
 cf = config["Component"]
 
 
-class TestComponent(TestPofBase, unittest.TestCase):
+class TestComponent(TestPofBaseCommon, unittest.TestCase):
     """
     Unit tests for the Component class incldding common tests from TestPoFBase
     """
@@ -29,10 +31,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
         self._data_valid = [dict(name="TestComponent")]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
         self._data_invalid_values = []
-        self._data_complete = [
-            fixtures.complete["component_0"],
-            fixtures.complete["component_0"],
-        ]
+        self._data_complete = copy.deepcopy(fixtures.complete['component'])
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
@@ -259,7 +258,7 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
         comp = Component(fm={"fm_1": fm_1, "fm_2": fm_2})
 
-        #update = {"comp": {"task_group_name": {to_change: {attr: {after}}}}}
+        # update = {"comp": {"task_group_name": {to_change: {attr: {after}}}}}
         update_str = f"comp-task_group_name-{to_change}-{attr}"
 
         # Act

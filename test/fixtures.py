@@ -22,11 +22,11 @@ import testconfig  # pylint: disable=unused-import
 import pof.demo as demo
 
 
-#class Fixtures():
+# class Fixtures():
 
 # fmt: off
 complete = {
-    'load':{},
+    'pof_base':{},
     'distribution':{},
     'condition_indicator':{},
     'task':{},
@@ -41,17 +41,17 @@ update = copy.deepcopy(complete)
 
 # *********************** load data *****************************************
 
-complete['load'][0] = dict(
-    name='load_0',
+complete['pof_base'][0] = dict(
+    name='pof_base_0',
     units='years',
 )
 
-complete['load'][1] = dict(
-    name='load_1',
+complete['pof_base'][1] = dict(
+    name='pof_base_1',
     units='months',
 )
 
-complete['load']['update'] = copy.deepcopy(complete['load'][1])
+complete['pof_base']['update'] = copy.deepcopy(complete['pof_base'][1])
 
 # *********************** distribution data **********************************
 
@@ -71,7 +71,7 @@ complete['distribution'][1] = dict(
     gamma = 1
 )
 
-complete['distribution']['update'] = dict(**copy.deepcopy(complete['distribution'][1]))
+complete['distribution']['update'] = copy.deepcopy(complete['distribution'][1])
 
 # *********************** indicator data **********************************
 
@@ -101,7 +101,7 @@ complete['condition_indicator'][1] = dict(
     threshold_detection=1,
 )
 
-complete['condition_indicator']['update'] = dict(**copy.deepcopy(complete['condition_indicator'][1]))
+complete['condition_indicator']['update'] = copy.deepcopy(complete['condition_indicator'][1])
 
 # *********************** trigger_data *******************************
 
@@ -189,7 +189,7 @@ complete['task'][1] = dict(
     ),
 )
 
-complete['task']['update'] = dict(**copy.deepcopy(complete['task'][1]))
+complete['task']['update'] = copy.deepcopy(complete['task'][1])
 
 # -------------- Scheduled Task ------------
 
@@ -210,7 +210,7 @@ complete['scheduled_task'][1] = dict(
     t_delay=1,
 )
 
-complete['scheduled_task']['update'] = dict(**complete['scheduled_task'][1])
+complete['scheduled_task']['update'] = copy.deepcopy(complete['scheduled_task'][1])
 
 # -------------- Condition Task ------------
 
@@ -228,7 +228,7 @@ complete['condition_task'][1] = dict(
     task_completion = 'immediate',
 )
 
-complete['condition_task']['update'] = dict(**complete['condition_task'][1])
+complete['condition_task']['update'] = copy.deepcopy(complete['condition_task'][1])
 
 # ------------- Inspection -----------------
 
@@ -244,7 +244,7 @@ complete['inspection'][1] = dict(
     name='inspection_1',
 )
 
-complete['inspection']['update'] = dict(**complete['inspection'][1])
+complete['inspection']['update'] = copy.deepcopy(complete['inspection'][1])
 
 # *********************** state data **********************************
 
@@ -258,10 +258,8 @@ failure_mode_data['predictable'] = dict(
     name='predictable',
     pf_curve='linear',
     pf_interval=0,
-    untreated = dict(distribution_data['predictable']),
+    untreated = distribution_data['predictable'],
 )
-
-#TODO this hsould work with unique condtion names, but currenlty has an issue
 
 complete['failure_mode'][0]=dict(
     name='fm_0',
@@ -285,11 +283,10 @@ complete['failure_mode'][1]=dict(
 
 complete['failure_mode']['update'] = dict(
     complete['failure_mode'][1],
-    untreated=complete['distribution'][1],
+    untreated={'distribution_0':complete['distribution'][1]},
     conditions=complete['condition_indicator'][1],
-    indicators=complete['condition_indicator'][1],
-    tasks=complete['inspection'][1]
-
+    indicators={'indicator_0':complete['condition_indicator'][1]},
+    tasks={'inspection_0':complete['inspection'][1]},
 )
 #complete['failure_mode']['update'].update('name')
 
@@ -307,6 +304,12 @@ complete['component'][1] = dict(
     name='component_1',
     fm=complete['failure_mode'][1],
     indicator=complete['condition_indicator'][1],
+)
+
+complete['component']['update'] = dict(
+    complete['component'][0],
+    fm= {'failure_mode_0':complete['failure_mode']['update']},
+    indicator={'condition_indicator_0':complete['condition_indicator']['update']},
 )
 
 

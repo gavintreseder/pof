@@ -11,7 +11,7 @@ import numpy as np
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from test_load import TestPofBase
+from test_pof_base import TestPofBaseCommon
 from pof.failure_mode import FailureMode
 from pof.task import Task
 import pof.demo as demo
@@ -24,7 +24,7 @@ def side_effect_trigger_task(**kwargs):
     return np.full(t_end - t_start + 1, 0)
 
 
-class TestFailureMode(TestPofBase, unittest.TestCase):
+class TestFailureMode(TestPofBaseCommon, unittest.TestCase):
     def setUp(self):
 
         super().setUp()
@@ -36,10 +36,7 @@ class TestFailureMode(TestPofBase, unittest.TestCase):
         self._data_valid = [{"name": "TestFailureMode"}]
         self._data_invalid_values = [{"pf_curve": "invalid_value"}]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
-        self._data_complete = [
-            fixtures.complete["failure_mode_0"],
-            fixtures.complete["failure_mode_1"],
-        ]
+        self._data_complete = copy.deepcopy(fixtures.complete["failure_mode"])
 
     def test_inspection_effectiveness(self):
 

@@ -8,10 +8,9 @@
 
 import copy
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import fixtures
-from test_pofbase_common import TestPofBaseCommon
 import testconfig  # pylint: disable=unused-import
 from pof.pof_base import PofBase
 from pof.units import valid_units
@@ -139,18 +138,19 @@ class TestPofBaseCommon(object):
 
         with patch.dict(class_config, {"handle_invalid_data": False}):
             with patch.dict(class_config, {"on_error_use_default": False}):
-                for data in self._data_complete.values():
-                    # Act
-                    instance = self._class.from_dict(data)
+                for scenario, data in self._data_complete.items():
+                    if scenario != "update":
+                        # Act
+                        instance = self._class.from_dict(data)
 
-                    # Assert
-                    self.tc.assertIsNotNone(instance)
-                    self.tc.assertTrue(isinstance(instance, self._class))
+                        # Assert
+                        self.tc.assertIsNotNone(instance)
+                        self.tc.assertTrue(isinstance(instance, self._class))
 
     # ************ Test pof_base ***********************
 
     def test_load_with_empty(self):
-        instance = self._class.pof_base()
+        instance = self._class.load()
         self.tc.assertIsNotNone(instance)
         self.tc.assertTrue(isinstance(instance, self._class))
 
@@ -160,7 +160,7 @@ class TestPofBaseCommon(object):
             instance_from_dict = self._class.from_dict(data)
 
             # Act
-            instance = self._class.pof_base(data)
+            instance = self._class.load(data)
 
             # Assert
             self.tc.assertTrue(isinstance(instance, self._class))
@@ -189,7 +189,7 @@ class TestPofBaseCommon(object):
                 for data in invalid_data:
 
                     # Act  / Assert
-                    instance = self._class.pof_base(data)
+                    instance = self._class.load(data)
 
                     # Assert
                     self.tc.assertIsNotNone(instance)
@@ -224,7 +224,7 @@ class TestPofBaseCommon(object):
     def test_update(self):
 
         # Arrange
-        data = self._data_complete[0]
+        data = self._data_complete["update"]
         instance_0 = self._class.from_dict(data)
         instance_1 = self._class.from_dict(self._data_complete[1])
 

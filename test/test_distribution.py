@@ -13,23 +13,11 @@ import scipy.stats as ss
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from test_load import TestPofBase
-from pof.distribution import Distribution, DistributionManager
+from test_pof_base import TestPofBaseCommon
+from pof.distribution import Distribution
 
 
-# class TestDistributionManager(unittest.TestCase):
-#     def test_set(self):
-
-#         dist = Distribution.demo()
-#         dists = DistributionManager()
-
-#         dists["untreated"] = dist
-
-#     def test_update(self):
-#         NotImplemented
-
-
-class TestDistribution(TestPofBase, unittest.TestCase):
+class TestDistribution(TestPofBaseCommon, unittest.TestCase):
     def setUp(self):
         super().setUp()
 

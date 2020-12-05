@@ -15,7 +15,7 @@ import numpy as np
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from test_load import TestPofBase
+from test_pof_base import TestPofBaseCommon
 from pof.indicator import ConditionIndicator
 import pof.demo as demo
 
@@ -35,7 +35,7 @@ params_perfect_failed_int = [(0, 100), (100, 0), (50, 100)]
 params_perfect_failed_bool = [(True, False), (False, True)]
 
 
-class TestConditionIndicator(TestPofBase, unittest.TestCase):
+class TestConditionIndicator(TestPofBaseCommon, unittest.TestCase):
     def setUp(self):
         super().setUp()
 
@@ -371,7 +371,7 @@ class TestConditionIndicator(TestPofBase, unittest.TestCase):
         cp = cond.sim_timeline(t_start=-100)
         np.testing.assert_array_equal(cp, expected)
 
-    def test_sim_timeline_v_early_start_v_early_stop(self):
+    def test_sim_timeline_vv_early_start_vv_early_stop(self):
         expected = np.full(91, 100)
         cond = ConditionIndicator(
             perfect=100, failed=50, pf_interval=50, pf_curve="linear"
