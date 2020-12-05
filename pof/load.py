@@ -22,7 +22,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from pof.helper import str_to_dict
+from pof.helper import str_to_dict, valid_signature
 from config import config
 from pof.units import valid_units
 
@@ -34,35 +34,6 @@ The load module is used to overload other pof classes so that they can use a com
 """
 
 
-def get_signature(obj):
-    """ Get the constructor signature"""
-    signature = inspect.signature(obj).parameters
-
-    if bool(obj.__bases__):
-        for parent in obj.__bases__:
-            parent_signature = get_signature(parent)
-            signature = {**signature, **parent_signature}
-            # TODO consider making the order consistent
-            # for key, value in parent_signature.items():
-            #    signature.setdefault({key: value})
-
-    return signature
-
-
-def valid_signature(obj, inputs):
-    """ Returns whether an object can be created with the inputs provided based on the signature"""
-
-    factory = getattr(obj, "factory", None)
-    if callable(factory):
-        obj = obj.factory(**inputs)
-
-    signature = get_signature(obj)
-    valid = [attr in signature for attr in inputs]
-
-    return all(valid)
-
-
-# @dataclass
 class Load:
     """
     A class with methods for loading data that

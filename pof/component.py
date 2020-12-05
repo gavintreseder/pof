@@ -147,6 +147,8 @@ class Component(Load):
 
     def cancel_sim(self):
         self.up_to_date = False
+        self.n = 0
+        self.n_sens_sim = 0
 
     def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
 

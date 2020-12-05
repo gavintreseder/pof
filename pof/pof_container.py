@@ -15,6 +15,7 @@ class PofContainer(UserDict):
         return f"{type(self).__name__}({self.data})"
 
     def update_from_dict(self, data):
+        """Updates the pof objects in the container based on a dictionary input"""
 
         for key, details in data.items():
 
