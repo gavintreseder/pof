@@ -935,13 +935,13 @@ class FailureMode(Load):
             self._set_init()
 
     def update_task_group(self, data):
-        """ Update all the tasks with that task_group across the objects"""
+        """ Update the details of any task that is part of the task group"""
         # TODO replace with task group manager
-        task_group_name = list(data)
 
-        for task in self.tasks.values():
-            if task.task_group == task_group_name:
-                task.update_from_dict(data[task_group_name])  # {t_interval : 10}
+        for task_group_name, details in data.items():
+            for task in self.tasks.values():
+                if task.task_group_name == task_group_name:
+                    task.update_from_dict(details)
 
     # def update_from_dict(self, dict_data):
 
@@ -1041,25 +1041,31 @@ class FailureMode(Load):
 
         return value
 
-    def get_dash_ids(self, prefix="", sep="-"):
+    def get_dash_ids(self, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
 
-        prefix = prefix + self.name + sep
+        if active is None or (self.active == active):
+            prefix = prefix + self.name + sep
 
-        # Failure modes
-        fm_ids = [
-            prefix + param for param in ["active", "pf_curve", "pf_interval", "pf_std"]
-        ]
+            # Failure modes
+            fm_ids = [
+                prefix + param
+                for param in ["active", "pf_curve", "pf_interval", "pf_std"]
+            ]
 
-        # Failure Dist
-        fd_ids = self.untreated.get_dash_ids(prefix=prefix + "dists" + sep)
+            # Failure Dist
+            fd_ids = self.untreated.get_dash_ids(prefix=prefix + "dists" + sep, sep=sep)
 
-        # Tasks
-        task_ids = []
-        for task in self.tasks.values():
-            task_ids = task_ids + task.get_dash_ids(prefix=prefix + "tasks" + sep)
+            # Tasks
+            task_ids = []
+            for task in self.tasks.values():
+                task_ids = task_ids + task.get_dash_ids(
+                    prefix=prefix + "tasks" + sep, sep=sep, active=active
+                )
 
-        dash_ids = fm_ids + fd_ids + task_ids
+            dash_ids = fm_ids + fd_ids + task_ids
+        else:
+            dash_ids = []
 
         return dash_ids
 

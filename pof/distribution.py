@@ -63,58 +63,7 @@ cf = config["Distribution"]
 #             else:
 #                 raise ValueError
 
-
-from collections.abc import MutableMapping
-
-
-class PofContainer(MutableMapping):
-    """A dictionary that changes the key if the name of the pof object it is storing changes"""
-
-    def __init__(self, *args, **kwargs):
-        self.store = dict()
-        self.update(dict(*args, **kwargs))  # use the free update to set keys
-
-    def __getitem__(self, key):
-        return self.store[key]
-
-    def __setitem__(self, key, value):
-        self.store[key] = value
-
-    def __delitem__(self, key):
-        del self.store[key]
-
-    def __iter__(self):
-        return iter(self.store)
-
-    def __len__(self):
-        return len(self.store)
-
-    def update_from_dict(self, data):
-
-        for key, val in data.items():
-
-            # Update with the
-            self.store[key].update_from_dict(val)
-
-            # Check if the name has been updated
-            if key != self.store[key].name:
-
-                logging.debug("Updating key to match name change")
-                new_key = self.store[key].name
-
-                # Change the key if it is already in the dict
-                if new_key in self.store:
-                    new_key = str(new_key).join(".1")
-                    self.store[key].name = new_key
-                    logging.debug(
-                        "Key %s is already in use. Name and key changed to %s",
-                        key,
-                        new_key,
-                    )
-
-                # Update the key
-                self.store[new_key] = self.store[key]
-                del self.store[key]
+from .pof_container import PofContainer
 
 
 class DistributionManager(PofContainer):
@@ -248,9 +197,10 @@ class Distribution(Load):
             return 0
 
     def get_dash_ids(self, prefix="", sep="-"):
-
+        """ Returns a list of strings to create valid dashIds"""
         prefix = prefix + self.name + sep
-        return [prefix + param for param in ["alpha", "beta", "gamma"]]
+        dash_ids = [prefix + param for param in ["alpha", "beta", "gamma"]]
+        return dash_ids
 
     @classmethod
     def demo(cls, scenario=None):

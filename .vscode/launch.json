@@ -10,6 +10,17 @@
             "request": "launch",
             "program": "${file}",
             "console": "internalConsole"
+        },
+        {
+            "name": "Python: Root Debug Console",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "internalConsole",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}"
+            }
         }
     ]
 }

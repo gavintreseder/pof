@@ -233,6 +233,50 @@ class TestComponent(TestPofBase, unittest.TestCase):
 
         NotImplemented
 
+    # ************ Test Update for Task Group *********
+
+    def test_update_with_task_group(self):
+        """
+        Check that update_task_group
+        """
+
+        attr = "trigger"
+        before = "before_update"
+        after = "after_update"
+
+        to_change = "group_1"
+        not_to_change = "group_2"
+
+        # Arrange
+        task_1 = {"name": "task_1", "task_group_name": to_change, attr: before}
+        task_2 = {"name": "task_2", "task_group_name": to_change, attr: before}
+        task_3 = {"name": "task_3", "task_group_name": not_to_change, attr: before}
+
+        tasks = {"task_1": task_1, "task_2": task_2, "task_3": task_3}
+
+        fm_1 = {"name": "fm_1", "tasks": tasks}
+        fm_2 = {"name": "fm_2", "tasks": tasks}
+
+        comp = Component(fm={"fm_1": fm_1, "fm_2": fm_2})
+
+        #update = {"comp": {"task_group_name": {to_change: {attr: {after}}}}}
+        update_str = f"comp-task_group_name-{to_change}-{attr}"
+
+        # Act
+        comp.update(update_str, after)
+
+        # Assert
+        for fm in comp.fm.values():
+            for task in fm.tasks.values():
+
+                actual = getattr(task, attr)
+                if task.task_group_name == to_change:
+                    expected = after
+                else:
+                    expected = before
+
+                self.assertEquals(actual, expected)
+
     # ************ Test reset methods *****************
 
     def test_reset(self):

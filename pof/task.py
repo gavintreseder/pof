@@ -5,9 +5,10 @@ Author: Gavin Treseder
 
 # ************ Packages ********************
 
+import logging
 import math
 from random import random, seed
-import logging
+from typing import List
 
 import numpy as np
 import scipy.stats as ss
@@ -18,11 +19,11 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from pof.helper import flatten, str_to_dict
-from pof.consequence import Consequence
-from pof.distribution import Distribution
-import pof.demo as demo
 from config import config as cf
+from pof.consequence import Consequence
+import pof.demo as demo
+from pof.distribution import Distribution
+from pof.helper import flatten, str_to_dict
 from pof.load import Load
 
 # TODO move t somewhere else
@@ -328,26 +329,29 @@ class Task(Load):
 
     # ********************* interface methods ******************
 
-    def get_dash_ids(self, prefix="", sep="-"):
+    def get_dash_ids(self, prefix:str="", sep:str="-", active:bool=None) -> List:
 
-        prefix = prefix + self.name + sep
+        if active is None or (self.active == active):
+            prefix = prefix + self.name + sep
 
-        # task parameters
-        param_list = ["active", "p_effective", "cost"]
-        if self.trigger == "time":
-            param_list = param_list + ["t_interval", "t_delay"]
+            # task parameters
+            param_list = ["active", "p_effective", "cost"]
+            if self.trigger == "time":
+                param_list = param_list + ["t_interval", "t_delay"]
 
-        dash_ids = [prefix + param for param in param_list]
+            dash_ids = [prefix + param for param in param_list]
 
-        # Triggers
-        dash_ids = dash_ids + list(
-            flatten(self.triggers, parent_key=prefix + "trigger", sep=sep)
-        )
+            # Triggers
+            dash_ids = dash_ids + list(
+                flatten(self.triggers, parent_key=prefix + "trigger", sep=sep)
+            )
 
-        # Impacts
-        dash_ids = dash_ids + list(
-            flatten(self.impacts, parent_key=prefix + "impact", sep=sep)
-        )
+            # Impacts
+            dash_ids = dash_ids + list(
+                flatten(self.impacts, parent_key=prefix + "impact", sep=sep)
+            )
+        else:
+            dash_ids = []
 
         return dash_ids
 

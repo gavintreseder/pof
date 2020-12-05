@@ -1,3 +1,33 @@
+# Gav 05 Dec 20
+    # Task group update
+    # Forecast graph (source, fm)
+    # Axis (average/total quantity/cost instant/cumulative/annual )
+    # Update ids
+    # Tasks reportinga t t = t_end
+    # Condition task overcounting risk
+    # inspection time offset for different tasks (unit test)
+
+
+# Correct callback logic
+
+# Update params (dash_id, t_end)
+    # Cancel sims
+
+    # Trigger single sim
+        # If active
+            # single_sim
+            # update_graphs
+        
+        # Trigger sens (How to trigger this?)
+            # if active
+                # sens_sim
+                # update_graphs
+
+# Single sim trigger?
+
+
+# Sens sim trigger?
+
 # Piority
     # Split main into app.py, layouts.py, callbacks.py
     # Min, max, step_size for sensitivity

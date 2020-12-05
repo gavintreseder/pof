@@ -17,9 +17,14 @@ class TaskGroup():
     
     def __init__(self):
 
-        self.tasks = None
+        self.tasks = dict()
         self.triggered = None
 
+        raise NotImplementedError()
+
+
+
+    # Has all the properties of a task group
 
 if __name__ == "__main__":
     TaskGroup = TaskGroup()

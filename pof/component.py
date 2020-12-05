@@ -41,6 +41,7 @@ class Component(Load):
 
 
     """
+
     TIME_VARIABLES = []
     POF_VARIABLES = ["indicator", "fm"]
 
@@ -602,8 +603,8 @@ class Component(Load):
 
         # Loop through all the varaibles to update
         for attr, detail in data.items():
-            if attr == "task_group":
-                self.update_task_group({attr: detail})
+            if attr == "task_group_name":
+                self.update_task_group(detail)
 
             else:
                 super().update_from_dict({attr: detail})
@@ -615,19 +616,24 @@ class Component(Load):
         for fm in self.fm.values():
             fm.update_task_group(data)
 
-    def get_dash_ids(self, prefix="", sep="-"):
+    def get_dash_ids(self, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
 
-        # Component
-        prefix = prefix + self.name + sep
-        comp_ids = [prefix + param for param in ["active"]]
+        if active is None or (self.active == active):
+            # Component
+            prefix = prefix + self.name + sep
+            comp_ids = [prefix + param for param in ["active"]]
 
-        # Tasks
-        fm_ids = []
-        for fm in self.fm.values():
-            fm_ids = fm_ids + fm.get_dash_ids(prefix=prefix + "fm" + sep)
+            # Tasks
+            fm_ids = []
+            for fm in self.fm.values():
+                fm_ids = fm_ids + fm.get_dash_ids(
+                    prefix=prefix + "fm" + sep, sep=sep, active=active
+                )
 
-        dash_ids = comp_ids + fm_ids
+            dash_ids = comp_ids + fm_ids
+        else:
+            dash_ids = []
 
         return dash_ids
 
@@ -636,7 +642,7 @@ class Component(Load):
         # TODO remove this once task groups added to the interface
         # TODO fix encapsulation
 
-        ids = self.get_dash_ids()
+        ids = self.get_dash_ids(active=True)
 
         update_ids = dict()
         for fm in self.fm.values():
