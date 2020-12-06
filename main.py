@@ -17,7 +17,6 @@ from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import make_component_layout, cf  # TODO fix this
 from pof.interface.figures import (
     update_condition_fig,
-    update_cost_fig,
     update_pof_fig,
     make_sensitivity_fig,
 )
@@ -348,6 +347,8 @@ def update_simulation(active, n_iterations, state, time_unit):
 
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
 
+        pof_sim.expected_risk_cost_df()
+
         if not pof_sim.up_to_date:
             sim_err_count = sim_err_count + 1
             return dash.no_update, f"Errors: {sim_err_count}"
@@ -378,8 +379,10 @@ def update_figures(state, active, *args):
         global fig_start
         global fig_end
 
+        # TODO change to include plotting parameters
+
         fig_start = fig_start + 1
-        cost_fig = update_cost_fig(pof_sim)  # legend = dropdown value
+        cost_fig = pof_sim.plot_erc()  # legend = dropdown value
         pof_fig = update_pof_fig(pof_sim)
         cond_fig = update_condition_fig(pof_sim)
 

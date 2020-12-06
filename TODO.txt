@@ -5,10 +5,13 @@
     # Condition task overcounting risk
     # inspection time offset for different tasks (unit test)
 
-
-
-
-# Piority
+Mel - 07 Dec 20
+    # Button to freeze graph axis
+    # Add units to figure axis
+    # Callback trigger sequences (see below)
+        # Update ids -> Update this list when params are changed
+        # sim -> Graph
+        # Sens_sim -> graph
     # Split main into app.py, layouts.py, callbacks.py
     # Labels 
         # Iteration Labels
@@ -20,9 +23,7 @@
     # Table of outcomes
 
 # Mel
-    # Button to freeze graph axis
-    # Add units to figure axis
-    # Update ids -> Update this list when params are changed
+
 
 
 # complete
@@ -36,27 +37,29 @@
 
 # Update params (dash_id, t_end)
     # Cancel sims
+    # Update Parms
 
     # Trigger single sim
         # If active
             # single_sim
             # update_graphs
         
-        # Trigger sens (How to trigger this?)
-            # if active
-                # sens_sim
-                # update_graphs
+    # Trigger sens (How to trigger this?)
+        # if active
+            # sens_sim
+            # update_graphs
+
 
 # Single sim trigger?
-
-
 # Sens sim trigger?
+
+
+
+
 
 # Questions for Occa
     # functional v conditional
     # How far into the future
-
-
 
 
 # Change the timeframe for historical data
@@ -83,33 +86,18 @@
 # Changes
     # Why does git.ignore not work on GB computer
 
-# Priority
+# Complete
 
     # Annualised cost button
     # Change sensitivity graph to work for any variable and range Input
         # Task groups
     # Expected failures
-
-
     # Talk to Occa about representing probability of repeatable events
-
-
     # Task group active on interface
-
-
     # Current failure rates
-    
-
     # Replacement costs
         # Average replacement cost (using cost model)
-
     # Scale costs for task group
-
-
-# Illyse Tasks:
-    # Time units on graphs based on units from object
-    # Chang logging level for werkzeg
-
 
 # Greg Changes
     # Set up one failure mode for hte most complex scenarios

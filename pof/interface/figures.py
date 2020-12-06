@@ -12,7 +12,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from pof import Component, FailureMode
+# from pof import Component, FailureMode
 
 
 def get_color_map(df, column, colour_scheme=None):
@@ -29,10 +29,8 @@ def get_color_map(df, column, colour_scheme=None):
     return color_map
 
 
-def update_cost_fig(local):
+def make_cost_fig(df, units="unknown", y_axis="Cost Cumulative"):
     try:
-        df = local.expected_risk_cost_df()
-
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
 
         df = df[df["fm_active"] == True]
@@ -40,26 +38,27 @@ def update_cost_fig(local):
 
         # Make columns presentable
         df.columns = df.columns.str.replace("_", " ").str.title()
-        col_names = {"Time": f"Age ({local.units})"}
+        col_names = {"Time": f"Age ({units})"}
         df.rename(columns=col_names, inplace=True)
 
         px_args = dict(
             data_frame=df,
             x=col_names["Time"],
-            y="Cost Cumulative",
+            y=y_axis,
             color="Task",
             color_discrete_map=color_map,
             title="Maintenance Strategy Costs",
         )
 
-        if isinstance(local, Component):
-            fig = px.area(**px_args, line_group="Failure Mode")
-        elif isinstance(local, FailureMode):
-            fig = px.area(**px_args)
-        else:
-            raise TypeError("local must be Component of FailureMode")
+        fig = px.area(**px_args, line_group="Failure Mode")
+        # if isinstance(local, Component):
+        #     fig = px.area(**px_args, line_group="Failure Mode")
+        # elif isinstance(local, FailureMode):
+        #     fig = px.area(**px_args)
+        # else:
+        #     raise TypeError("local must be Component of FailureMode")
 
-        col_names = {"time": f"Age ({local.units})"}
+        col_names = {"time": f"Age ({units})"}
 
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
@@ -68,7 +67,8 @@ def update_cost_fig(local):
         )
         fig.update_xaxes(title_text=col_names["time"])
 
-    except:
+    except Exception as error:
+        raise (error)
         fig = go.Figure(
             layout=go.Layout(
                 title=go.layout.Title(text="Error Producing Maintenance Strategy Costs")
@@ -147,7 +147,7 @@ def update_pof_fig(local):
     except:
         fig = go.Figure(
             layout=go.Layout(
-                title=go.layout.Title(text="Error Producing Probability of Failure")
+                title=go.layout.Title(text="Producing Probability of Failure - Error")
             )
         )
 
