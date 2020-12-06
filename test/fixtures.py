@@ -307,8 +307,8 @@ complete['component'][1] = dict(
 )
 
 complete['component']['update'] = dict(
-    complete['component'][0],
-    fm= {'failure_mode_0':complete['failure_mode']['update']},
+    complete['component'][1],
+    fm= {'fm_0':complete['failure_mode']['update']},
     indicator={'condition_indicator_0':complete['condition_indicator']['update']},
 )
 

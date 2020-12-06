@@ -23,6 +23,7 @@ from pof.failure_mode import FailureMode
 from pof.helper import fill_blanks
 from pof.indicator import Indicator
 from pof.pof_base import PofBase
+from pof.pof_container import PofContainer
 import pof.demo as demo
 
 DEFAULT_ITERATIONS = 100
@@ -58,8 +59,8 @@ class Component(PofBase):
         super().__init__(name=name, *args, **kwargs)
 
         self.active = active
-        self.indicator = dict()
-        self.fm = dict()
+        self.indicator = PofContainer()
+        self.fm = PofContainer()
 
         self.set_indicator(indicator)
         self.set_failure_mode(fm)

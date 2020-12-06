@@ -267,49 +267,32 @@ class PofBase:
         'updated_name'
         """
         # Loop through all the varaibles to update
-        for attr, detail in data.items():
+        for attr, value in data.items():
 
             attr_to_update = getattr(self, attr)
 
             # Check if has an update method
             if isinstance(attr_to_update, (PofBase, PofContainer)):
-                attr_to_update.update_from_dict(detail)
+                attr_to_update.update_from_dict(value)
 
             # Check if it is a dictionary
             elif isinstance(attr_to_update, dict):
 
-                for key, val in detail.items():
+                still_to_update = {}
+                for key, val in value.items():
 
                     var_to_update = getattr(self, attr).get(key, None)
 
                     # Check if is has an update method
                     if isinstance(var_to_update, (PofBase, PofContainer)):
                         var_to_update.update_from_dict(val)
-
-                    # elif var_to_update is not None:
-                    #     getattr(self, attr)[key] = val
-
-                    # Check if it is dictionaries
-                    elif isinstance(val, dict):
-
-                        flat_detail = flatten(detail)
-                        flat_attr = flatten(attr_to_update)
-
-                        missing = set(flat_detail).difference(set(flat_attr))
-                        if not missing:
-                            flat_attr.update(flat_detail)
-                            attr_to_update = unflatten(flat_attr)
-                        else:
-                            raise KeyError(
-                                f"{self.__class__.__name__} - {self.name} - {attr} does not have {missing}"
-                            )
-
                     else:
-                        raise KeyError(
-                            f"{self.__class__.__name__} - {self.name} - {attr} cannot be updated with the value {key} {val}"
-                        )
+                        still_to_update[key] = val
+
+                update_dict(data=attr_to_update, update=still_to_update)
+
             else:
-                setattr(self, attr, detail)
+                setattr(self, attr, value)
 
     def sensitivity(
         self,
@@ -494,6 +477,53 @@ class PofBase:
 
     def mc_timeline(self, t_start=None, t_end=None, n_iterations=None):
         raise NotImplementedError()
+
+
+def update_dict(data: Dict, update: Dict):
+    """ Update the inner value of the dictionary"""
+
+    flat_data = flatten(data)
+    flat_update = flatten(update)
+
+    missing = set(flat_update).difference(set(flat_data))
+    if not missing:
+
+        # Update the data
+        flat_data.update(flat_update)
+        keys_changed = key_id_changed(flat_data, "name")
+        updated = unflatten(flat_data)
+        for key, val in updated.items():
+            data[key] = val
+
+        for path, new_key in keys_changed.items():
+            replace(data=data, path=path, new_key=new_key)
+    else:
+        raise KeyError("Data %s cannot be updated with %s", data, update)
+
+    return data
+
+
+def key_id_changed(data: Dict, id: str = "name"):
+    """ Get the keys of variables where the id has been changed"""
+    id_keys = [key for key in list(data) if "name" in key]
+
+    changed = {}
+    for id_key in id_keys:
+        idx = id_key.index("name")
+
+        if id_key[idx - 1] != data[id_key]:
+            changed[id_key[:idx]] = data[id_key]
+
+    return changed
+
+
+def replace(data: Dict, path, new_key):
+    """ Change the key located at the end of path to the new_key"""
+    cur = data
+    for k in path[:-1]:
+        cur = cur[k]
+
+    cur[new_key] = cur.pop(path[-1])
 
 
 if __name__ == "__main__":

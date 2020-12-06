@@ -42,7 +42,7 @@ class TestPofBaseCommon(object):
         self.blank_config.get.return_value = None
 
         # Class data
-        self._class = Mock(spec=Mock, return_value=Mock)
+        self._class = Mock
         self._class.from_dict = Mock(return_value=None)
         self._class._scale_units = Mock(return_value=None)  # TODO
 
@@ -138,14 +138,13 @@ class TestPofBaseCommon(object):
 
         with patch.dict(class_config, {"handle_invalid_data": False}):
             with patch.dict(class_config, {"on_error_use_default": False}):
-                for scenario, data in self._data_complete.items():
-                    if scenario != "update":
-                        # Act
-                        instance = self._class.from_dict(data)
+                for data in self._data_complete.values():
+                    # Act
+                    instance = self._class.from_dict(data)
 
-                        # Assert
-                        self.tc.assertIsNotNone(instance)
-                        self.tc.assertTrue(isinstance(instance, self._class))
+                    # Assert
+                    self.tc.assertIsNotNone(instance)
+                    self.tc.assertTrue(isinstance(instance, self._class))
 
     # ************ Test pof_base ***********************
 
@@ -224,12 +223,11 @@ class TestPofBaseCommon(object):
     def test_update(self):
 
         # Arrange
+        data = self._data_complete["update"]
         instance_0 = self._class.from_dict(self._data_complete[0])
         instance_1 = self._class.from_dict(self._data_complete[1])
 
         with patch.dict("pof.pof_base.cf", {"handle_update_error": False}):
-
-            data = self._data_complete['update']
 
             # Act
             instance_0.update(data)

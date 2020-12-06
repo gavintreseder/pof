@@ -1,5 +1,4 @@
 # Gav 05 Dec 20
-    # Task group update
     # Forecast graph (source, fm)
     # Axis (average/total quantity/cost instant/cumulative/annual )
     # Update ids
@@ -62,6 +61,7 @@
 # complete
     # Make the progress bars appear on one line
     # Change the units in the figures
+    # Task group update
 
 # Questions for Occa
     # functional v conditional

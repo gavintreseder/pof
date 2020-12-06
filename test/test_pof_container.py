@@ -6,11 +6,9 @@
 """
 
 import unittest
-from unittest.mock import Mock
 
 import testconfig  # pylint: disable=unused-import
 from pof.pof_container import PofContainer
-from pof.load import Load
 
 
 class TestPofContainer(unittest.TestCase):
