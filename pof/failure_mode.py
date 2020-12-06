@@ -170,7 +170,7 @@ class FailureMode(PofBase):
             else:
                 dist["name"] = "untreated"
 
-            self.set_dists({"untreated": dist})
+            self.set_dists(dist)
             self._set_init()
 
     def _set_init(self):
@@ -943,104 +943,6 @@ class FailureMode(PofBase):
             for task in self.tasks.values():
                 if task.task_group_name == task_group_name:
                     task.update_from_dict(details)
-
-    # def update_from_dict(self, dict_data):
-
-    #     for key, value in dict_data.items():
-
-    #         if key in [
-    #             "name",
-    #             "active",
-    #             "pf_curve",
-    #             "pf_interval",
-    #             "pf_std",
-    #         ]:
-    #             setattr(self, key, value)
-
-    #         elif key in ["untreated", "dists"]:
-    #             self.set_dists(dict_data[key])
-
-    #         elif key == "conditions":
-    #             self.set_conditions(dict_data[key])
-
-    #         elif key == "consequence":
-    #             self.set_consequence(dict_data[key])
-
-    #         elif key == "states":
-    #             self.set_states(dict_data[key])
-
-    #         elif key == "tasks":
-    #             self.set_tasks(dict_data[key])
-
-    #         else:
-    #             print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
-
-    def get_value(self, key):
-        """
-        Takes a key as either a dictionary or a variable name and returns the value stored at that location.
-
-        Usage:
-            fm = FailureMode(name = "early_life",(alpha=10, beta = 3, gamma=1))
-
-            #>>> dist.get_value(key="name")
-            "early_life"
-
-            #>>> dist.get_value(key={"untreated":"alpha"})
-            "10
-
-            #>>> dist.get_value(key={"untreated":("alpha", "beta")})
-            (10, 3)
-
-        """
-
-        """
-        if keys[0] in ["name", "active", "pf_curve", "pf_interval", "pf_std"]:
-            self.__dict__[keys[0]] = value
-
-        At the outside it'll have be dicts to give you the option to call multiple values long term
-        At the inside its probably going to be a list
-
-        ['untreated']['alpha']
-        ['untreated']['beta']
-
-        ['untreated']['alpha', 'beta]
-
-        """
-
-        """
-        key_1 = #get first leve key
-        key_2 =
-        key_3 =
-        """
-
-        """
-        for keys_1 in level_1_keys:
-            # Check if it is a value
-            
-            # Check if it is is an object with its own get_value method
-
-        """
-
-        # Component
-        key = {"failure_mode": {"early_life": {"tasks": {"repair": "t_interval"}}}}
-
-        # failure mode
-        key = {"untreated": "gamma"}
-
-        if isinstance(key, str):
-            value = self.__dict__[key]
-
-        elif isinstance(key, list):
-            if len(key) == 1:
-                value = self.__dict__[key[0]]
-            else:
-                value = ()
-                for k in key:
-                    value = value + (self.__dict__[k],)
-        else:
-            print('ERROR: Cannot update "%s" from dict' % (self.__class__.__name__))
-
-        return value
 
     def get_dash_ids(self, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""

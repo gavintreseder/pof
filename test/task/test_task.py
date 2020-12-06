@@ -13,11 +13,11 @@ from numpy import np
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from test_pof_base import testPofBaseCommon
+from test_pof_base import TestPofBaseCommon
 from pof.task import Task
 
 
-class TestTaskCommon(testPofBaseCommon):
+class TestTaskCommon(TestPofBaseCommon):
     """
     A base class for tests that are expected to work with all Task objects
     """

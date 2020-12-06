@@ -224,14 +224,15 @@ class TestPofBaseCommon(object):
     def test_update(self):
 
         # Arrange
-        data = self._data_complete["update"]
-        instance_0 = self._class.from_dict(data)
+        instance_0 = self._class.from_dict(self._data_complete[0])
         instance_1 = self._class.from_dict(self._data_complete[1])
 
         with patch.dict("pof.pof_base.cf", {"handle_update_error": False}):
 
+            data = self._data_complete['update']
+
             # Act
-            instance_1.update(data)
+            instance_0.update(data)
 
         msg = []
         for key, val in instance_0.__dict__.items():

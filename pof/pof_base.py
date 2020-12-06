@@ -218,6 +218,9 @@ class PofBase:
             else:
                 raise ValueError(msg) from error
 
+    def get(self, string):
+        return self.__dict__[string]
+
     def update(self, id_object, value=None):
         """ An update method with some error handling"""
         try:
@@ -283,11 +286,12 @@ class PofBase:
                     if isinstance(var_to_update, (PofBase, PofContainer)):
                         var_to_update.update_from_dict(val)
 
-                    elif var_to_update is not None:
-                        getattr(self, attr)[key] = val
+                    # elif var_to_update is not None:
+                    #     getattr(self, attr)[key] = val
 
                     # Check if it is dictionaries
                     elif isinstance(val, dict):
+
                         flat_detail = flatten(detail)
                         flat_attr = flatten(attr_to_update)
 
