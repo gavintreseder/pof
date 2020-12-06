@@ -151,33 +151,8 @@ class Component(PofBase):
         self.n = 0
         self.n_sens = 0
 
-    def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
 
-        if n_iterations is not None:
-            self.n_iterations = n_iterations
-
-        while self.n < self.n_iterations:
-            # Concept for continuin loop
-            # if self.n == self.n_iterations:
-            #    self.n_iterations = min(self.n * trigger_mutliple, n_iterations)
-
-            if not self.up_to_date:
-                self.reset()
-                self.n = 1
-                self.n_iterations = min(self.n * multiple, n_iterations)
-                self.up_to_date = True
-
-            # Simulate
-            self.sim_timeline(t_end=t_end, t_start=t_start)
-            self.save_timeline(self.n)
-            self.increment_counter()
-            self.reset_for_next_sim()
-
-            self.n = self.n + 1
-
-        self.up_to_date = True
-
-    def mp_timeline(self, t_end, t_start=0, n_iterations=10):
+    def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times and exit immediately if updated"""
         self.reset()
         self.up_to_date = True
@@ -186,17 +161,16 @@ class Component(PofBase):
 
         # while self.n < n_iterations and self.up_to_date:
 
-        for i in tqdm(range(self.n_iterations)):
-            if self.up_to_date:
-                # Complete a simulation
-                self.sim_timeline(t_end=t_end, t_start=t_start)
-                self.save_timeline(self.n)
-                self.increment_counter()
-                self.reset_for_next_sim()
-            else:
+        for __ in tqdm(range(self.n_iterations)):
+            # Complete a simulation
+            self.sim_timeline(t_end=t_end, t_start=t_start)
+            self.save_timeline(self.n)
+            self.increment_counter()
+            self.reset_for_next_sim()
+            if not self.up_to_date:
                 break
 
-            self.n = i
+            self.n += 1
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times"""
