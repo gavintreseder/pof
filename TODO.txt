@@ -1,10 +1,35 @@
 # Gav 05 Dec 20
     # Forecast graph (source, fm)
     # Axis (average/total quantity/cost instant/cumulative/annual )
-    # Update ids
     # Tasks reportinga t t = t_end
     # Condition task overcounting risk
     # inspection time offset for different tasks (unit test)
+
+
+
+
+# Piority
+    # Split main into app.py, layouts.py, callbacks.py
+    # Labels 
+        # Iteration Labels
+    # Change figure functions to check if up_to_date, return the self.df_sens, else re-run
+
+
+# Gav
+    # Change sens to annualised cost 
+    # Table of outcomes
+
+# Mel
+    # Button to freeze graph axis
+    # Add units to figure axis
+    # Update ids -> Update this list when params are changed
+
+
+# complete
+    # Min, max, step_size for sensitivity
+    # Make the progress bars appear on one line
+    # Change the units in the figures
+    # Task group update
 
 
 # Correct callback logic
@@ -26,42 +51,6 @@
 
 
 # Sens sim trigger?
-
-# Piority
-    # Split main into app.py, layouts.py, callbacks.py
-    # Min, max, step_size for sensitivity
-    # Labels 
-        # Iteration Labels
-    # Change figure functions to check if up_to_date, return the self.df_sens, else re-run
-    # 
-
-
-# Evening Priority
-    # Task -> Expected number of tasks (% scaled to n_sims) -> Age profile
-    # FM -> expected number failures (% scaled to n_sims) -> Age profile
-    # Comp -> % scaled to n_sims
-        # Simple cf ff ratio
-            fm.cf (count)
-            fm.ff (count)
-            ratio
-
-
-# Gav
-    # Change sens to annualised cost 
-    # Table of outcomes
-
-# Mel
-
-    # Button to freeze graph axis
-
-
-    # Add units to figure axis
-
-
-# complete
-    # Make the progress bars appear on one line
-    # Change the units in the figures
-    # Task group update
 
 # Questions for Occa
     # functional v conditional

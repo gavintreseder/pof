@@ -149,7 +149,7 @@ class Component(PofBase):
     def cancel_sim(self):
         self.up_to_date = False
         self.n = 0
-        self.n_sens_sim = 0
+        self.n_sens = 0
 
     def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
 
@@ -187,15 +187,16 @@ class Component(PofBase):
         # while self.n < n_iterations and self.up_to_date:
 
         for i in tqdm(range(self.n_iterations)):
-            if not self.up_to_date:
+            if self.up_to_date:
+                # Complete a simulation
+                self.sim_timeline(t_end=t_end, t_start=t_start)
+                self.save_timeline(self.n)
+                self.increment_counter()
+                self.reset_for_next_sim()
+            else:
                 break
-            # Do work
-            self.sim_timeline(t_end=t_end, t_start=t_start)
-            self.save_timeline(self.n)
-            self.increment_counter()
-            self.reset_for_next_sim()
 
-            self.n = self.n + 1
+            self.n = i
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times"""
@@ -457,8 +458,9 @@ class Component(PofBase):
 
         # Formatting
         # df.rename(columns{'task': 'source'})
+        self.df_erc = df
 
-        return df
+        return self.df_erc
 
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
@@ -565,14 +567,14 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        df = (
+        self.df_sensitivity = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
 
-        return df
+        return self.df_sensitivity
 
     # ****************** Reset ******************
 
@@ -598,6 +600,10 @@ class Component(PofBase):
         self._sim_counter = 0
         self._t_in_service = []
         self.stop_simulation = False
+
+        # Reset stored reports
+        self.df_erc = None
+        self.df_sensitivity = None
 
     # ****************** Interface ******************
 
@@ -678,7 +684,6 @@ class Component(PofBase):
 
         raise NotImplementedError()
 
-
     # ****************** Demonstration parameters ******************
 
     @classmethod
@@ -686,6 +691,7 @@ class Component(PofBase):
         """ Loads a demonstration data set if no parameters have been set already"""
 
         return cls.load(demo.component_data["comp"])
+
 
 if __name__ == "__main__":
     component = Component()
