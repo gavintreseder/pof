@@ -565,8 +565,9 @@ class Component(PofBase):
 
     # TODO change default to first value from const
 
-    def plot_erc(self, t_end=100, units=None, y_axis="cost", y_max=600):
-        return make_cost_fig(df=self.df_erc, t_end=t_end, y_max=y_max, units=self.units)
+    def plot_erc(self, y_axis=None, y_max=None, t_end=None, units=None):
+        # TODO Add conversion for units when plotting if units != self.units
+        return make_cost_fig(df=self.df_erc, y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units)
 
     # TODO switch other plots
 

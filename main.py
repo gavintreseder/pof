@@ -14,7 +14,7 @@ from pof import Component
 from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
-from pof.interface.layouts import layout, make_component_layout, cf  # TODO fix this
+from pof.interface.layouts import make_layout, cf  # TODO fix the need to import cf
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
@@ -45,7 +45,7 @@ sens_sim = copy.copy(comp)
 
 # Layout
 var_to_scale = cf.scaling
-app.layout = layout(comp)
+app.layout = make_layout(comp)
 
 collapse_ids = comp.get_objects()
 
@@ -82,7 +82,7 @@ param_inputs = [
 
 
 @app.callback(Output("update_state", "children"), param_inputs)
-def update_parameter(graph_y_limit_active, graph_y_limit, *args):
+def update_parameter(*args):
     """Update a the pof object whenever an input is changes"""
 
     # Check the parameters that changed
@@ -118,87 +118,109 @@ def update_parameter(graph_y_limit_active, graph_y_limit, *args):
 def update_simulation(active, t_end, n_iterations, state, time_unit):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
-    global sim_err_count
 
     pof_sim.cancel_sim()
 
     # time.sleep(1)
     if active:
-        comp.units = time_unit
+        comp.units = time_unit  # TODO Mel move this to a param update
         pof_sim = copy.copy(comp)
 
+        # Complete the simulations
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
 
+        # Generate the dataframe for reporting
         pof_sim.expected_risk_cost_df()
 
         if not pof_sim.up_to_date:
-            sim_err_count = sim_err_count + 1
-            return dash.no_update, f"Errors: {sim_err_count}"
-        return f"Sim State: {pof_sim.n_iterations} - {n_iterations}", ""
+            return dash.no_update, f"Update cancelled"
+
     else:
-        return f"Sim State: not updating", ""
+        return dash.no_update, "Not active"
+
+    return f"Sim State: {pof_sim.n_iterations} - {n_iterations}", ""
 
 
 fig_start = 0
 fig_end = 0
 
+# ========================================================
 # After a simulation the following callbacks are triggered
+# ========================================================
+
+# TODO Mel Repeat this for each of the y_var. It will need a different method for y_max = if the costs don't stack
 
 
 @app.callback(
-    Output("cost-fig", "figure"),
-    Output("pof-fig", "figure"),
-    Output("cond-fig", "figure"),
-    Output("fig_state", "children"),
+    Output("cost_var_y-input", "value"),  # Output('fig_limit_maint_strat', 'children')
     Input("sim_state", "children"),
-    Input("t_end-input", "value"),
+    Input("sens_var_y-dropdown", "value"),  # TODO change name of this
+    Input("axis_lock-checkbox", "checked"),  # TODO should this be a state?
+)
+def save_figure_limits(__, y_axis, axis_lock):
+    """ Save the figure limits so they can be used for the axis lock"""
+    try:
+        if not axis_lock:
+            y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+        else:
+            ctx = dash.callback_context
+            dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
+            if dash_id == "sens_var_y-dropdown":
+                y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+            else:
+                return dash.no_update
+    except:
+        y_max = None
+    return y_max
+
+
+@app.callback(
+    Output("cond-fig", "figure"),
+    Output("ms-fig", "figure"),
+    Output("pof-fig", "figure"),
+    Input("sim_state", "children"),
+    # Input("cond_var_y-input", "value"),
     Input("cost_var_y-input", "value"),
-    Input("cond_SF_var_y-input", "value"),
-    Input("cond_ED_var_y-input", "value"),
-    Input("cond_WT_var_y-input", "value"),
     Input("pof_var_y-input", "value"),
+    Input("sens_var_y-dropdown", "value"),  # TODO change to an appropriate name
+    State("t_end-input", "value"),
     State("sim_n_active", "checked"),
+    State("axis_lock-checkbox", "checked"),
 )
 def update_figures(
     state,
-    t_end,
-    cost_var_y,
-    cond_SF_var_y,
-    cond_ED_var_y,
-    cond_WT_var_y,
+    # cond_var_y,
+    ms_var_y,
     pof_var_y,
+    y_axis,
+    t_end,
     active,
+    axis_lock,
     *args,
 ):
     if active:
+        cond_var_y = None  # Temp fix
+        if not axis_lock:
+            ms_var_y = None
+            cond_var_y = None
+            pof_var_y = None
 
-        global fig_start
-        global fig_end
-
-        # TODO change to include plotting parameters
-
-        fig_start = fig_start + 1
-        cost_fig = pof_sim.plot_erc(
-            t_end=t_end, y_max=cost_var_y
-        )  # legend = dropdown value
+        ms_fig = pof_sim.plot_erc(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
         pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
         cond_fig = update_condition_fig(
             pof_sim,
             t_end=t_end,
-            y_max_SF=cond_SF_var_y,
-            y_max_ED=cond_ED_var_y,
-            y_max_WT=cond_WT_var_y,
+            y_max=cond_var_y,
         )
-
-        fig_state = f"Fig State: {fig_start} - {fig_end}"
-        fig_end = fig_end + 1
-        return cost_fig, pof_fig, cond_fig, fig_state
     else:
         raise PreventUpdate
+
+    return cond_fig, ms_fig, pof_fig
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
 def update_ffcf(*args):
+    """ Returns the ratio between conditional failures, functional failures and in service assets"""
     n_cf = len(pof_sim.expected_cf())
     n_ff = len(pof_sim.expected_ff())
 
@@ -210,8 +232,26 @@ def update_ffcf(*args):
     return f"Conditional {n_cf} : {n_ff} Functional. {ratio}%"
 
 
+# Calcaulate sensitivity
+
+# Plot Sensitivity
+
+# @app.callback(
+#     Output("insp_interval-fig", "figure"),
+#     Input("sim_sens_active-check", "checked"),
+#     Input("n_sens_iterations-input", "value"),
+#     Input("sens_var_id-dropdown", "value"),
+#     Input("sens_var_y-dropdown", "value"),
+#     State("t_end-input", "value"),
+#     State("sens_var_y-input", "value"),
+# )
+
+# def update_sensitivity_figure()
+#     """ Updates the sensitivity figure whenever a new sensitivity simulation is completed"""
+
+
 @app.callback(
-    Output("insp_interval-fig", "figure"),
+    Output("sensitivity-fig", "figure"),
     Input("sim_sens_active-check", "checked"),
     Input("n_sens_iterations-input", "value"),
     Input("sens_var_id-dropdown", "value"),
@@ -221,7 +261,7 @@ def update_ffcf(*args):
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
     Input("sens_var_y-input", "value"),
-    Input("cost-fig", "figure"),  # TODO change this trigger
+    Input("ms-fig", "figure"),  # TODO change this trigger
 )
 def update_sensitivity(
     active,
@@ -243,7 +283,7 @@ def update_sensitivity(
     if active:
         sens_sim = copy.deepcopy(comp)
 
-        insp_interval_fig = make_sensitivity_fig(
+        sens_fig = make_sensitivity_fig(
             sens_sim,
             var_name=var_id,
             y_axis=y_axis,
@@ -255,7 +295,7 @@ def update_sensitivity(
             n_iterations=n_iterations,
         )
 
-        return insp_interval_fig
+        return sens_fig
     else:
         raise PreventUpdate
 

@@ -1,8 +1,8 @@
+
 # Gav 05 Dec 20
     # Add with replacement version
     # Table of outcomes
     # Forecast graph (source, fm)
-    # Axis (average/total quantity/cost instant/cumulative/annual)
     # Bugs
         # Tasks reportinga t t = t_end
         # Condition task overcounting risk
@@ -27,6 +27,7 @@ Mel - 07 Dec 20
     # Make the progress bars appear on one line
     # Change the units in the figures
     # Task group update
+    # Axis (average/total quantity/cost instant/cumulative/annual)
 
 
 # Correct callback logic

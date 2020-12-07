@@ -2,6 +2,8 @@
 
 """
 
+from typing import List
+
 import pandas as pd
 import numpy as np
 
@@ -30,45 +32,41 @@ def get_color_map(df, column, colour_scheme=None):
 
 
 def make_cost_fig(
-    df, t_end=100, y_max=600000, units="unknown", y_axis="Cost Cumulative"
+    df,
+    y_axis="Cost Cumulative",
+    y_max=None,
+    t_end=None,
+    units="unknown",
 ):
     try:
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
 
         df = df[df["active"]]
 
-        # Make columns presentable
-        df.columns = df.columns.str.replace("_", " ").str.title()
-        col_names = {"Time": f"Age ({units})"}
-        df.rename(columns=col_names, inplace=True)
+        # Format the labels
+        labels = {label: label.replace("_", " ").title() for label in list(df)}
+        labels["Time"] = f"Age ({units})"
 
         px_args = dict(
             data_frame=df,
-            x=col_names["Time"],
+            x="time",
             y=y_axis,
-            color="Task",
+            color="task",
             color_discrete_map=color_map,
+            labels=labels,
             title="Maintenance Strategy Costs",
         )
 
-        fig = px.area(**px_args, line_group="Failure Mode")
-        # if isinstance(local, Component):
-        #     fig = px.area(**px_args, line_group="Failure Mode")
-        # elif isinstance(local, FailureMode):
-        #     fig = px.area(**px_args)
-        # else:
-        #     raise TypeError("local must be Component of FailureMode")
+        fig = px.area(**px_args, line_group="failure_mode")
 
-        col_names = {"time": f"Age ({units})"}
+        if y_max is not None:
+            fig.update_yaxes(range=[0, y_max])
+
+        if t_end is not None:
+            fig.update_xaxes(range=[0, t_end])
 
         fig.update_yaxes(automargin=True)
-        fig.update_yaxes(range=[0, y_max])
         fig.update_xaxes(automargin=True)
-        fig.update_xaxes(range=[0, t_end])
-        fig.update_layout(
-            legend_traceorder="reversed",
-        )
-        fig.update_xaxes(title_text=col_names["time"])
 
     except Exception as error:
         raise (error)
@@ -161,9 +159,7 @@ def update_pof_fig(local, t_end=100, y_max=1):
     return fig
 
 
-def update_condition_fig(
-    local, conf=0.95, t_end=100, y_max_WT=150, y_max_ED=250, y_max_SF=5
-):
+def update_condition_fig(local, conf=0.95, t_end=100, y_max: List = None):
     """ Updates the condition figure"""
 
     try:
