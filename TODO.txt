@@ -1,9 +1,11 @@
 # Gav 05 Dec 20
+    # Table of outcomes
     # Forecast graph (source, fm)
-    # Axis (average/total quantity/cost instant/cumulative/annual )
-    # Tasks reportinga t t = t_end
-    # Condition task overcounting risk
-    # inspection time offset for different tasks (unit test)
+    # Axis (average/total quantity/cost instant/cumulative/annual)
+    # Bugs
+        # Tasks reportinga t t = t_end
+        # Condition task overcounting risk
+        # inspection time offset for different tasks (unit test) (symptom: look at df_erc)
 
 Mel - 07 Dec 20
     # Button to freeze graph axis
@@ -16,14 +18,7 @@ Mel - 07 Dec 20
     # Labels 
         # Iteration Labels
     # Change figure functions to check if up_to_date, return the self.df_sens, else re-run
-
-
-# Gav
-    # Change sens to annualised cost 
-    # Table of outcomes
-
-# Mel
-
+    # Progress bar to include colours (yellow while sim, blue while calc, green when plotted)
 
 
 # complete
@@ -35,7 +30,7 @@ Mel - 07 Dec 20
 
 # Correct callback logic
 
-# Update params (dash_id, t_end)
+# Update params (things that impact the sim -> dash_id, t_end)
     # Cancel sims
     # Update Parms
 
@@ -52,8 +47,13 @@ Mel - 07 Dec 20
 
 # Single sim trigger?
 # Sens sim trigger?
+    # parameters have been updated
+    # It's triggered after single sim
+    # graph params have been updated
 
 
+# params are up_to_date -> hidden_div sim state
+# df are up_to_date -> hidden_div
 
 
 

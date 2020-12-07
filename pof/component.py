@@ -29,6 +29,7 @@ from pof.interface.figures import make_cost_fig
 
 DEFAULT_ITERATIONS = 10
 
+
 cf = config.get("Component")
 
 
