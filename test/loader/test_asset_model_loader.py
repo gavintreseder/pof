@@ -6,6 +6,7 @@
 
 import unittest
 
+
 import testconfig  # pylint: disable=unused-import
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.component import Component
