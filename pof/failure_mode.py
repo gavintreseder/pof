@@ -787,7 +787,7 @@ class FailureMode(PofBase):
 
         return df.reset_index()
 
-    def expected_risk_cost(self, scaling=1):
+    def expected_risk_cost(self, scaling=None):
 
         if scaling is None:
             scaling = self._sim_counter

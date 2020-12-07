@@ -567,7 +567,9 @@ class Component(PofBase):
 
     def plot_erc(self, y_axis=None, y_max=None, t_end=None, units=None):
         # TODO Add conversion for units when plotting if units != self.units
-        return make_cost_fig(df=self.df_erc, y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units)
+        return make_cost_fig(
+            df=self.df_erc, y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units
+        )
 
     # TODO switch other plots
 
