@@ -18,7 +18,7 @@ import numpy as np
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from task.test_task_common import TestTaskCommon
+from .test_task_common import TestTaskCommon
 from pof.task import ScheduledTask
 
 

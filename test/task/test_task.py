@@ -9,7 +9,7 @@
 import copy
 import unittest
 
-from numpy import np
+import numpy as np
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
