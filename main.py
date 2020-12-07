@@ -21,8 +21,6 @@ from pof.interface.figures import (
     make_sensitivity_fig,
 )
 
-t_end = 200
-
 # Quick test to make sure everything is works
 file_name = r"Asset Model - Pole - Timber.xlsx"
 filename = os.getcwd() + r"\data\inputs" + os.sep + file_name
@@ -112,11 +110,12 @@ def update_parameter(graph_y_limit_active, graph_y_limit, *args):
     Output("sim_state", "children"),
     Output("sim_state_err", "children"),
     Input("sim_n_active", "checked"),
+    Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
     Input("update_state", "children"),
     Input("sens_time_unit-dropdown", "value"),
 )
-def update_simulation(active, n_iterations, state, time_unit):
+def update_simulation(active, t_end, n_iterations, state, time_unit):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
     global sim_err_count
@@ -147,16 +146,30 @@ fig_end = 0
 
 
 @app.callback(
-    [
-        Output("cost-fig", "figure"),
-        Output("pof-fig", "figure"),
-        Output("cond-fig", "figure"),
-        Output("fig_state", "children"),
-    ],
+    Output("cost-fig", "figure"),
+    Output("pof-fig", "figure"),
+    Output("cond-fig", "figure"),
+    Output("fig_state", "children"),
     Input("sim_state", "children"),
+    Input("t_end-input", "value"),
+    Input("cost_var_y-input", "value"),
+    Input("cond_SF_var_y-input", "value"),
+    Input("cond_ED_var_y-input", "value"),
+    Input("cond_WT_var_y-input", "value"),
+    Input("pof_var_y-input", "value"),
     State("sim_n_active", "checked"),
 )
-def update_figures(state, active, *args):
+def update_figures(
+    state,
+    t_end,
+    cost_var_y,
+    cond_SF_var_y,
+    cond_ED_var_y,
+    cond_WT_var_y,
+    pof_var_y,
+    active,
+    *args,
+):
     if active:
 
         global fig_start
@@ -165,9 +178,17 @@ def update_figures(state, active, *args):
         # TODO change to include plotting parameters
 
         fig_start = fig_start + 1
-        cost_fig = pof_sim.plot_erc()  # legend = dropdown value
-        pof_fig = update_pof_fig(pof_sim)
-        cond_fig = update_condition_fig(pof_sim)
+        cost_fig = pof_sim.plot_erc(
+            t_end=t_end, y_max=cost_var_y
+        )  # legend = dropdown value
+        pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
+        cond_fig = update_condition_fig(
+            pof_sim,
+            t_end=t_end,
+            y_max_SF=cond_SF_var_y,
+            y_max_ED=cond_ED_var_y,
+            y_max_WT=cond_WT_var_y,
+        )
 
         fig_state = f"Fig State: {fig_start} - {fig_end}"
         fig_end = fig_end + 1
@@ -198,7 +219,8 @@ def update_ffcf(*args):
     Input("sens_lower-input", "value"),
     Input("sens_upper-input", "value"),
     Input("sens_step_size-input", "value"),
-    Input("sens_t_end-input", "value"),
+    Input("t_end-input", "value"),
+    Input("sens_var_y-input", "value"),
     Input("cost-fig", "figure"),  # TODO change this trigger
 )
 def update_sensitivity(
@@ -210,6 +232,7 @@ def update_sensitivity(
     upper,
     step_size,
     t_end,
+    y_max,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -228,6 +251,7 @@ def update_sensitivity(
             upper=upper,
             step_size=step_size,
             t_end=t_end,
+            y_max=y_max,
             n_iterations=n_iterations,
         )
 

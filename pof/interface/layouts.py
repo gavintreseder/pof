@@ -71,6 +71,15 @@ def layout(comp):
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
 
+    y_axis_max = dict(
+        pof_fig=1,
+        cond_fig_WT=150,
+        cond_fig_ED=250,
+        cond_fig_SF=5,
+        cost_fig=600000,
+        insp_interval_fig=600000,
+    )
+
     layouts = html.Div(
         [
             html.Div(id="log"),
@@ -104,14 +113,145 @@ def layout(comp):
             ),
             dbc.Row(
                 [
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "t_end",
+                                    dcc.Input(
+                                        id="t_end-input",
+                                        value=200,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                ]
+            ),
+            dbc.Row(
+                [
                     dbc.Col(dcc.Graph(id="pof-fig")),
                     dbc.Col(dcc.Graph(id="cond-fig")),
                 ]
             ),
             dbc.Row(
                 [
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis max pof",
+                                    dcc.Input(
+                                        id="pof_var_y-input",
+                                        value=y_axis_max["pof_fig"],
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ]
+                    ),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis max WT (N/A)",
+                                    dcc.Input(
+                                        id="cond_WT_var_y-input",
+                                        value=y_axis_max["cond_fig_WT"],
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis max ED (N/A)",
+                                    dcc.Input(
+                                        id="cond_ED_var_y-input",
+                                        value=y_axis_max["cond_fig_ED"],
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis max SF (N/A)",
+                                    dcc.Input(
+                                        id="cond_SF_var_y-input",
+                                        value=y_axis_max["cond_fig_SF"],
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
                     dbc.Col(dcc.Graph(id="cost-fig")),
                     dbc.Col(dcc.Graph(id="insp_interval-fig")),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis max maintenance",
+                                    dcc.Input(
+                                        id="cost_var_y-input",
+                                        value=y_axis_max["cost_fig"],
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ]
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis max sensitivity",
+                                    dcc.Input(
+                                        id="sens_var_y-input",
+                                        value=y_axis_max["insp_interval_fig"],
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
                 ]
             ),
             html.Div(
@@ -202,7 +342,6 @@ def layout(comp):
                     dbc.Col(),
                     dbc.Col(),
                     dbc.Col(),
-                    dbc.Col(),
                     dbc.Col(
                         [
                             dbc.InputGroupAddon(
@@ -243,22 +382,6 @@ def layout(comp):
                                     dcc.Input(
                                         id="sens_step_size-input",
                                         value=1,
-                                        type="number",
-                                        style={"width": 100},
-                                    ),
-                                ],
-                                addon_type="prepend",
-                            ),
-                        ],
-                    ),
-                    dbc.Col(
-                        [
-                            dbc.InputGroupAddon(
-                                [
-                                    "t_end",
-                                    dcc.Input(
-                                        id="sens_t_end-input",
-                                        value=100,
                                         type="number",
                                         style={"width": 100},
                                     ),
