@@ -784,7 +784,6 @@ class FailureMode(PofBase):
         df["cost_cumulative"] = df.groupby(by=["task"])["cost"].transform(
             pd.Series.cumsum
         )
-        df["fm_active"] = self.active
 
         return df.reset_index()
 
@@ -798,7 +797,9 @@ class FailureMode(PofBase):
         task_cost = {}
         for task in self.tasks.values():
             task_cost[task.name] = task.expected(scaling)
-            task_cost[task.name]["fm_active"] = self.active
+            task_cost[task.name]["active"] = (
+                task_cost[task.name]["active"] & self.active
+            )
 
         # Get the Risks
         risk = self.expected_risk(scaling)
@@ -811,11 +812,10 @@ class FailureMode(PofBase):
         cost = quantity * self.consequence.get_cost()
         risk = {
             "risk": {
+                "active": self.active,
                 "time": time,
                 "quantity": quantity,
                 "cost": cost,
-                "task_active": self.active,
-                "fm_active": self.active,
             }
         }
         return risk

@@ -330,11 +330,11 @@ class Component(PofBase):
         for fm in self.fm.values():
             sf[fm.name] = dict()
             sf[fm.name]["pof"] = fm.untreated.sf(t_start=t_start, t_end=t_end)
-            sf[fm.name]["fm_active"] = fm.active
+            sf[fm.name]["active"] = fm.active
 
             if fm.active:
                 sf["all"]["pof"] = sf["all"]["pof"] * sf[fm.name]["pof"]
-                sf["all"]["fm_active"] = True
+                sf["all"]["active"] = True
 
         # Treat the failure modes as a series and combine together
         # cdf = {fm: 1 - sf for fm, sf in sf.items()}
@@ -343,7 +343,7 @@ class Component(PofBase):
         for fm in sf:
             cdf[fm] = dict()
             cdf[fm]["pof"] = 1 - sf[fm]["pof"]
-            cdf[fm]["fm_active"] = sf[fm]["fm_active"]
+            cdf[fm]["active"] = sf[fm]["active"]
             cdf[fm]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
@@ -359,7 +359,7 @@ class Component(PofBase):
         for fm in sf:
             cdf[fm] = dict()
             cdf[fm]["pof"] = 1 - sf[fm]["pof"]
-            cdf[fm]["fm_active"] = sf[fm]["fm_active"]
+            cdf[fm]["active"] = sf[fm]["active"]
             cdf[fm]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
@@ -370,17 +370,17 @@ class Component(PofBase):
 
         # Calcuate the failure rates for each failure mode
         sf = dict(all=dict(pof=np.full((t_end - t_start + 1), 1)))
-        sf["all"]["fm_active"] = False
+        sf["all"]["active"] = False
 
         for fm_name, fm in self.fm.items():
             pof = fm.expected_pof()
             sf[fm_name] = dict()
             sf[fm_name]["pof"] = pof.sf(t_start, t_end)
-            sf[fm_name]["fm_active"] = fm.active
+            sf[fm_name]["active"] = fm.active
 
             if fm.active:
                 sf["all"]["pof"] = sf["all"]["pof"] * sf[fm_name]["pof"]
-                sf["all"]["fm_active"] = True
+                sf["all"]["active"] = True
 
         # Treat the failure modes as a series and combine together
         # sf['all'] = np.array([fm.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
@@ -411,11 +411,10 @@ class Component(PofBase):
             [
                 "failure_mode",
                 "task",
+                "active",
                 "time",
                 "quantity",
                 "cost",
-                "fm_active",
-                "task_active",
             ]
         ].dropna()
 
@@ -531,7 +530,6 @@ class Component(PofBase):
                 df_rc = self.expected_risk_cost_df()
 
                 # Summarise outputs
-                df_rc["active"] = df_rc["fm_active"] & df_rc["task_active"]
                 df_rc = df_rc.groupby(by=["task", "active"])[["cost"]].sum()
                 df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
                 df_rc[var] = i

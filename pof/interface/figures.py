@@ -35,8 +35,7 @@ def make_cost_fig(
     try:
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
 
-        df = df[df["fm_active"] == True]
-        df = df[df["task_active"] == True]
+        df = df[df["active"]]
 
         # Make columns presentable
         df.columns = df.columns.str.replace("_", " ").str.title()
@@ -84,6 +83,8 @@ def make_cost_fig(
 def update_pof_fig(local, t_end=100, y_max=1):
 
     try:
+
+        # TODO this could be way more efficient
         pof = dict(
             maint=pd.DataFrame(local.expected_pof(t_end=200)),
             no_maint=pd.DataFrame(local.expected_untreated(t_end=200)),
@@ -108,10 +109,10 @@ def update_pof_fig(local, t_end=100, y_max=1):
         ).rename(columns={"variable": "source", "value": "pof"})
         df_pof = df_pof.explode("pof", ignore_index=True)
 
-        df_active = df[df["key"] == "fm_active"]
+        df_active = df[df["key"] == "active"]
         df_active = pd.melt(
             df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
-        ).rename(columns={"variable": "source", "value": "fm_active"})
+        ).rename(columns={"variable": "source", "value": "active"})
 
         df_time = df[df["key"] == "time"]
         df_time = pd.melt(
@@ -124,7 +125,7 @@ def update_pof_fig(local, t_end=100, y_max=1):
 
         color_map = get_color_map(df=df, column="source", colour_scheme="plotly")
 
-        df = df[df["fm_active"] == True]
+        df = df[df["active"] == True]
 
         # Make columns presentable
         # df.columns = df.columns.str.replace("_", " ").str.title()
@@ -226,7 +227,7 @@ def update_condition_fig(
                 automargin=True,
                 range=[
                     0,
-                    f"y_max_{y_title}", # TODO fix this
+                    f"y_max_{y_title}",  # TODO fix this
                 ],
             )
             fig.update_xaxes(range=[0, t_end])
@@ -340,6 +341,6 @@ def humanise(data):
     # Not used
     if isinstance(pd.DataFrame):
         data.columns = data.columns.str.replace("_", " ").str.title()
-        data
+
     elif isinstance(str):
         data = data.replace("_", " ").title()

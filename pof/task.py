@@ -244,13 +244,13 @@ class Task(PofBase):
         time, count = np.unique(self.t_completion, return_counts=True)
         quantity = count / scaling
         cost = quantity * self.cost
-        return dict(time=time, quantity=quantity, cost=cost, task_active=self.active)
+        return dict(active=self.active, time=time, quantity=quantity, cost=cost)
 
     def expected_costs(self, scaling=1):
         """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""
         time, cost = np.unique(self.t_completion, return_counts=True)
         cost = cost / scaling * self.cost
-        return dict(time=time, cost=cost, task_active=self.active)
+        return dict(active=self.active, time=time, cost=cost)
 
     def expected_quantity(self, scaling=1):
         """ Retuns a dictionary with the number of times a task was completed scaled by a scaling factor"""

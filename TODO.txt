@@ -1,4 +1,5 @@
 # Gav 05 Dec 20
+    # Add with replacement version
     # Table of outcomes
     # Forecast graph (source, fm)
     # Axis (average/total quantity/cost instant/cumulative/annual)
