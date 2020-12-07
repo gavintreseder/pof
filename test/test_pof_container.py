@@ -8,7 +8,10 @@
 import unittest
 
 import testconfig  # pylint: disable=unused-import
+from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
+
+# TODO remove dependence on pofbase by using Mock
 
 
 class TestPofContainer(unittest.TestCase):
@@ -28,13 +31,13 @@ class TestPofContainer(unittest.TestCase):
         # pof_obj_2.name = "pof_obj_2"
 
         # Using a pof object
-        pof_obj_1 = Load(name="pof_obj_1")
+        pof_obj_1 = PofBase(name="pof_obj_1")
         pof_obj_1.pof_data = "no_change"
 
-        pof_obj_2 = Load(name="pof_obj_2")
+        pof_obj_2 = PofBase(name="pof_obj_2")
         pof_obj_2.pof_data = "no_change"
 
-        pof_obj_3 = Load(name="pof_obj_3")
+        pof_obj_3 = PofBase(name="pof_obj_3")
         pof_obj_3.pof_data = "no_change"
 
         self.pof_con = PofContainer(

@@ -48,7 +48,9 @@ class PofContainer(UserDict):
                 logging.debug("Updating key to match name change")
 
                 # Change the key if it is already in the dict
-                rename_duplicate_key(new_key=new_key, existing_keys=self.data.keys())
+                new_key = rename_duplicate_key(
+                    new_key=new_key, existing_keys=self.data.keys()
+                )
 
                 # Update the key
                 self.data[key].name = new_key
