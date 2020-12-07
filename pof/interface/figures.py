@@ -29,7 +29,9 @@ def get_color_map(df, column, colour_scheme=None):
     return color_map
 
 
-def make_cost_fig(df, units="unknown", y_axis="Cost Cumulative"):
+def make_cost_fig(
+    df, t_end=100, y_max=600000, units="unknown", y_axis="Cost Cumulative"
+):
     try:
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
 
@@ -61,7 +63,9 @@ def make_cost_fig(df, units="unknown", y_axis="Cost Cumulative"):
         col_names = {"time": f"Age ({units})"}
 
         fig.update_yaxes(automargin=True)
+        fig.update_yaxes(range=[0, y_max])
         fig.update_xaxes(automargin=True)
+        fig.update_xaxes(range=[0, t_end])
         fig.update_layout(
             legend_traceorder="reversed",
         )
@@ -77,7 +81,7 @@ def make_cost_fig(df, units="unknown", y_axis="Cost Cumulative"):
     return fig
 
 
-def update_pof_fig(local):
+def update_pof_fig(local, t_end=100, y_max=1):
 
     try:
         pof = dict(
@@ -142,7 +146,9 @@ def update_pof_fig(local):
 
         fig.layout.yaxis.tickformat = ",.0%"
         fig.update_yaxes(automargin=True)
+        fig.update_yaxes(range=[0, y_max])
         fig.update_xaxes(automargin=True)
+        fig.update_xaxes(range=[0, t_end])
         fig.update_xaxes(title_text=col_names["time"])
     except:
         fig = go.Figure(
@@ -154,7 +160,9 @@ def update_pof_fig(local):
     return fig
 
 
-def update_condition_fig(local, conf=0.95):
+def update_condition_fig(
+    local, conf=0.95, t_end=100, y_max_WT=150, y_max_ED=250, y_max_SF=5
+):
     """ Updates the condition figure"""
 
     try:
@@ -174,6 +182,11 @@ def update_condition_fig(local, conf=0.95):
         idx = 1
 
         for cond_name, cond in ecl.items():
+            # Format the y_axis titles
+            y_title = "".join(
+                [x[0] for x in cond_name.replace("_", " ").title().split(" ")]
+            )
+
             # Format the data for plotting
             length = len(cond["mean"])
             time = np.linspace(
@@ -208,13 +221,15 @@ def update_condition_fig(local, conf=0.95):
                 col=1,
             )
             fig.update_yaxes(
-                title_text="".join(
-                    [x[0] for x in cond_name.replace("_", " ").title().split(" ")]
-                )
-                + " Measure",
+                title_text=y_title + " Measure",
                 row=idx,
                 automargin=True,
+                range=[
+                    0,
+                    f"y_max_{y_title}", # TODO fix this
+                ],
             )
+            fig.update_xaxes(range=[0, t_end])
             idx = idx + 1
 
         col_names = {"time": f"Age ({local.units})"}
@@ -246,6 +261,7 @@ def make_sensitivity_fig(
     upper=10,
     step_size=1,
     t_end=100,
+    y_max=600000,
     n_iterations=10,
 ):
 
@@ -295,9 +311,15 @@ def make_sensitivity_fig(
             color_discrete_map=color_map,
             line_dash="line_dash",
             title=f"Sensitivity of Risk/Cost to {title_var}",
+            # labels={"source": "source"},
         )
 
+        # for trace in fig["data"]:
+        #     if trace["name"] == "line_dash":
+        #         trace["showlegend"] = False
+
         fig.update_yaxes(automargin=True)
+        fig.update_yaxes(range=[0, y_max])
 
         fig.update_xaxes(automargin=True)
 
