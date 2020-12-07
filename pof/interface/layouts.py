@@ -76,8 +76,8 @@ def make_layout(comp):
         cond_fig_WT=150,
         cond_fig_ED=250,
         cond_fig_SF=5,
-        cost_fig=600000,
-        insp_interval_fig=600000,
+        cost_fig=None,
+        insp_interval_fig=None,
     )
 
     layouts = html.Div(
@@ -223,6 +223,13 @@ def make_layout(comp):
                     dbc.Col(dcc.Graph(id="sensitivity-fig")),
                 ]
             ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="task_forecast-fig")),
+                    dbc.Col(),
+                ]
+            ),
+
             dbc.Row(
                 [
                     dbc.Col(

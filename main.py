@@ -8,6 +8,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+import pandas as pd
 
 from config import config
 from pof import Component
@@ -18,16 +19,26 @@ from pof.interface.layouts import make_layout, cf  # TODO fix the need to import
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
-    make_sensitivity_fig,
+    make_task_forecast_fig,
 )
+from pof.data.asset_data import SimpleFleet
 
-# Quick test to make sure everything is works
+# Asset Model Data
+file_path = os.getcwd() + r"\data\inputs" + os.sep
 file_name = r"Asset Model - Pole - Timber.xlsx"
-filename = os.getcwd() + r"\data\inputs" + os.sep + file_name
 
-aml = AssetModelLoader(filename)
+aml = AssetModelLoader(file_path + file_name)
 comp_data = aml.load()
 comp = Component.from_dict(comp_data["pole"])
+
+# Population Data
+file_path = os.path.dirname(os.path.dirname(__file__)) + r"\inputs" + os.sep
+file_name = r"population_summary.csv"
+
+sfd = SimpleFleet(file_path + file_name)
+sfd.load()
+sfd.calc_forecast_age(2015, 2019, 2020)  # TODO make these inputs
+
 
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.CRITICAL)
@@ -141,14 +152,12 @@ def update_simulation(active, t_end, n_iterations, state, time_unit):
     return f"Sim State: {pof_sim.n_iterations} - {n_iterations}", ""
 
 
-fig_start = 0
-fig_end = 0
-
 # ========================================================
-# After a simulation the following callbacks are triggered
+# After a simulation the following callbacks are triggered: (save_figure_limits, update_figs)
 # ========================================================
 
-# TODO Mel Repeat this for each of the y_var. It will need a different method for y_max = if the costs don't stack
+# TODO Mel Repeat this for each of the y_var.
+# It will need a different method for y_max = if the costs don't stack
 
 
 @app.callback(
@@ -201,6 +210,7 @@ def save_figure_limits(__, y_axis, axis_lock):
     Output("cond-fig", "figure"),
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
+    Output("task_forecast-fig", "figure"),
     Input("sim_state", "children"),
     # Input("cond_var_y-input", "value"),
     Input("cost_var_y-input", "value"),
@@ -221,6 +231,9 @@ def update_figures(
     axis_lock,
     *args,
 ):
+    global sfd
+    global pof_fig
+
     if active:
         cond_var_y = None  # Temp fix
         if not axis_lock:
@@ -235,10 +248,15 @@ def update_figures(
             t_end=t_end,
             y_max=cond_var_y,
         )
+
+        df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
+
+        task_forecast_fig = make_task_forecast_fig(df_task_forecast)
+
     else:
         raise PreventUpdate
 
-    return cond_fig, ms_fig, pof_fig
+    return cond_fig, ms_fig, pof_fig, task_forecast_fig
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
@@ -327,7 +345,9 @@ def update_sensitivity(
         raise PreventUpdate
 
 
+# ==============================================
 # The following progress bars are always running
+# ==============================================
 
 
 @app.callback(

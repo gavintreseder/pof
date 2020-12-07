@@ -1,4 +1,8 @@
 
+
+# Chnage to emergency replacement
+# Change limits for CAT1/2
+
 # Gav 05 Dec 20
     # Add with replacement version
     # Table of outcomes
@@ -9,6 +13,8 @@
         # inspection time offset for different tasks (unit test) (symptom: look at df_erc)
 
 Mel - 07 Dec 20
+    # Add an upload box
+    # Write a save func
     # Button to freeze graph axis
     # Add units to figure axis
     # Callback trigger sequences (see below)

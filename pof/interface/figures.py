@@ -327,6 +327,44 @@ def make_sensitivity_fig(
     return fig
 
 
+def make_task_forecast_fig(df, y_axis="pop_quantity"):
+
+    title = "Quantity of tasks for Population"
+
+    try:
+        fig = px.line(
+            df,
+            x="year",
+            y=y_axis,
+            color="task",
+            title=title,
+        )
+
+    except Exception as error:
+        raise error
+        fig = go.Figure(
+            layout=go.Layout(title=go.layout.Title(text=f"Error Producing {title}"))
+        )
+
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
+
+    return fig
+
+
+def make_table_fig(df):
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=list(df.columns), align="left"),
+                cells=dict(values=[df[col] for col in list(df)], align="left"),
+            )
+        ]
+    )
+
+    return fig
+
+
 def humanise(data):
     # Not used
     if isinstance(pd.DataFrame):

@@ -470,10 +470,10 @@ class ConditionTask(Task):
             lower = True
             upper = True
 
-            if trigger["lower"] != "min":
+            if (trigger["lower"] != "min") and (trigger["lower"] is not None):
                 lower = tl_condition >= trigger["lower"]
 
-            if trigger["upper"] != "max":
+            if (trigger["upper"] != "max") and (trigger["lower"] is not None):
                 upper = tl_condition <= trigger["upper"]
 
             c_trigger = c_trigger | (lower & upper)
