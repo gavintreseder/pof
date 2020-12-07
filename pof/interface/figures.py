@@ -31,9 +31,9 @@ def get_color_map(df, column, colour_scheme=None):
     return color_map
 
 
-def make_cost_fig(
+def make_ms_fig(
     df,
-    y_axis="Cost Cumulative",
+    y_axis="cost_cumulative",
     y_max=None,
     t_end=None,
     units="unknown",

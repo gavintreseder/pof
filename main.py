@@ -174,6 +174,29 @@ def save_figure_limits(__, y_axis, axis_lock):
     return y_max
 
 
+# @app.callback(
+#     Output("sens_var_y-input", "value"),
+#     Input("sim_state", "children"),
+#     Input("sens_var_y-dropdown", "value"),  # TODO change name of this
+#     Input("axis_lock-checkbox", "checked"),  # TODO should this be a state?
+# )
+# def save_figure_limits(__, y_axis, axis_lock):
+#     """ Save the figure limits so they can be used for the axis lock"""
+#     try:
+#         if not axis_lock:
+#             y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+#         else:
+#             ctx = dash.callback_context
+#             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
+#             if dash_id == "sens_var_y-dropdown":
+#                 y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+#             else:
+#                 return dash.no_update
+#     except:
+#         y_max = None
+#     return y_max
+
+
 @app.callback(
     Output("cond-fig", "figure"),
     Output("ms-fig", "figure"),
@@ -205,7 +228,7 @@ def update_figures(
             cond_var_y = None
             pof_var_y = None
 
-        ms_fig = pof_sim.plot_erc(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
+        ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
         pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
         cond_fig = update_condition_fig(
             pof_sim,

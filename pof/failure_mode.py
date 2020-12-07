@@ -128,8 +128,8 @@ class FailureMode(PofBase):
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-        self._t_func_failure = []
-        self._t_cond_failure = []
+        self._t_func_failure = [] # Failure event
+        self._t_cond_failure = [] # System impact without a failure event
 
     @property
     def pf_curve(self):
@@ -628,7 +628,7 @@ class FailureMode(PofBase):
         return self._t_func_failure
 
     def expected_cf(self):
-        """ Returns the expected functional failures"""
+        """ Returns the expected conditional failures"""
         return self._t_cond_failure
 
     def expected_replacements(self):

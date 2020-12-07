@@ -25,7 +25,7 @@ from pof.indicator import Indicator
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
-from pof.interface.figures import make_cost_fig
+from pof.interface.figures import make_ms_fig
 
 DEFAULT_ITERATIONS = 10
 
@@ -519,6 +519,10 @@ class Component(PofBase):
 
         var = var_name.split("-")[-1]
 
+        prefix = ["quantity", "cost"]
+        suffix = ["", "_annual", "_cumulative"]
+        cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
+
         for i in np.arange(lower, upper, step_size):
             try:
                 # Reset component
@@ -530,8 +534,7 @@ class Component(PofBase):
                 df_rc = self.expected_risk_cost_df()
 
                 # Summarise outputs
-                df_rc = df_rc.groupby(by=["task", "active"])[["cost"]].sum()
-                df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
+                df_rc = df_rc.groupby(by=["task", "active"])[cols].sum()
                 df_rc[var] = i
 
                 rc[i] = df_rc
@@ -565,10 +568,25 @@ class Component(PofBase):
 
     # TODO change default to first value from const
 
-    def plot_erc(self, y_axis=None, y_max=None, t_end=None, units=None):
+    def plot_ms(self, y_axis="cost_cumulative", y_max=None, t_end=None, units=None):
         # TODO Add conversion for units when plotting if units != self.units
-        return make_cost_fig(
+        return make_ms_fig(
             df=self.df_erc, y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units
+        )
+
+
+    def plot_sens(self, y_axis="cost_cumulative", y_max=None, t_end=None, units=None)
+
+    make_sensitivity_fig(
+            sens_sim,
+            var_name=var_id,
+            y_axis=y_axis,
+            lower=lower,
+            upper=upper,
+            step_size=step_size,
+            t_end=t_end,
+            y_max=y_max,
+            n_iterations=n_iterations,
         )
 
     # TODO switch other plots
