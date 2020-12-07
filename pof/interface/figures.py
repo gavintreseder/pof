@@ -295,7 +295,12 @@ def make_sensitivity_fig(
             color_discrete_map=color_map,
             line_dash="line_dash",
             title=f"Sensitivity of Risk/Cost to {title_var}",
+            # labels={"source": "source"},
         )
+
+        # for trace in fig["data"]:
+        #     if trace["name"] == "line_dash":
+        #         trace["showlegend"] = False
 
         fig.update_yaxes(automargin=True)
 

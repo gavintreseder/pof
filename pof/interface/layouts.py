@@ -1,17 +1,19 @@
 import logging
+import os
 
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-from pof.interface.config import Config as cf
+from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
+from pof.units import valid_units
+from pof.loader.asset_model_loader import AssetModelLoader
 
 IS_OPEN = cf.is_open
 SCALING = cf.scaling
 
 # Asset
-
 
 # Components
 
@@ -54,6 +56,225 @@ SCALING = cf.scaling
 # reduction_factor / target
 
 #
+
+# *************** Main ******************************
+
+
+def layout(comp):
+    mcl = make_component_layout(comp)
+    update_list = [
+        {"label": option, "value": option} for option in comp.get_update_ids()
+    ]
+
+    y_values = ["cost", "cumulative_cost - N/A", "annual_cost"]
+    update_list_y = [{"label": option, "value": option} for option in y_values]
+
+    update_list_unit = [{"label": option, "value": option} for option in valid_units]
+
+    layouts = html.Div(
+        [
+            html.Div(id="log"),
+            html.Div(children="Update State:", id="update_state"),
+            html.Div(
+                [
+                    html.P(children="Sim State", id="sim_state"),
+                    html.P(id="sim_state_err", style={"color": "red"}),
+                ]
+            ),
+            html.Div(children="Fig State", id="fig_state"),
+            html.P(id="ffcf"),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            "Time Units",
+                            dcc.Dropdown(
+                                id="sens_time_unit-dropdown",
+                                options=update_list_unit,
+                                value=comp.units,
+                            ),
+                        ]
+                    ),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="pof-fig")),
+                    dbc.Col(dcc.Graph(id="cond-fig")),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="cost-fig")),
+                    dbc.Col(dcc.Graph(id="insp_interval-fig")),
+                ]
+            ),
+            html.Div(
+                [
+                    dcc.Interval(id="progress-interval", n_intervals=0, interval=100),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    dbc.InputGroupAddon(
+                                        [
+                                            dbc.Checkbox(
+                                                id="sim_n_active",
+                                                checked=True,
+                                            ),
+                                            "Iterations",
+                                            dcc.Input(
+                                                id="n_iterations-input",
+                                                value=10,
+                                                type="number",
+                                                style={"width": 100},
+                                            ),
+                                        ],
+                                        addon_type="prepend",
+                                    )
+                                ],
+                                width="auto",
+                            ),
+                            dbc.Col([dbc.Progress(id="n-progress")]),
+                            dbc.Col(
+                                [
+                                    dbc.InputGroupAddon(
+                                        [
+                                            dbc.Checkbox(
+                                                id="sim_sens_active-check",
+                                                checked=False,
+                                            ),
+                                            "Iterations",
+                                            dcc.Input(
+                                                id="n_sens_iterations-input",
+                                                value=10,
+                                                type="number",
+                                                style={"width": 100},
+                                            ),
+                                        ],
+                                        addon_type="prepend",
+                                    ),
+                                ],
+                                width="auto",
+                            ),
+                            dbc.Col([dbc.Progress(id="n_sens-progress")]),
+                        ]
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            "y-axis options",
+                            dcc.Dropdown(
+                                id="sens_var_y-dropdown",
+                                options=update_list_y,
+                                value=y_values[0],
+                            ),
+                        ]
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            "x-axis options",
+                            dcc.Dropdown(
+                                id="sens_var_id-dropdown",
+                                options=update_list,
+                                value=comp.get_update_ids()[-1],
+                            ),
+                        ]
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "Lower",
+                                    dcc.Input(
+                                        id="sens_lower-input",
+                                        value=0,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "Upper",
+                                    dcc.Input(
+                                        id="sens_upper-input",
+                                        value=10,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "Step Size",
+                                    dcc.Input(
+                                        id="sens_step_size-input",
+                                        value=1,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "t_end",
+                                    dcc.Input(
+                                        id="sens_t_end-input",
+                                        value=100,
+                                        type="number",
+                                        style={"width": 100},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ],
+                    ),
+                ]
+            ),
+            mcl,
+        ]
+    )
+
+    return layouts
+
 
 # ******************* Validation ******************
 
