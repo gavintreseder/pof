@@ -773,7 +773,7 @@ class FailureMode(PofBase):
 
         # Fill the blanks
         df = pd.DataFrame(erc).T.apply(
-            fill_blanks, axis=1, args=(t_start, t_end, ["count", "cost"])
+            fill_blanks, axis=1, args=(t_start, t_end, ["quantity", "cost"])
         )
         df.index.name = "task"
         df_cost = df.explode("cost")["cost"]
@@ -788,7 +788,7 @@ class FailureMode(PofBase):
 
         return df.reset_index()
 
-    def expected_risk_cost(self, scaling=None):
+    def expected_risk_cost(self, scaling=1):
 
         if scaling is None:
             scaling = self._sim_counter
@@ -807,12 +807,12 @@ class FailureMode(PofBase):
 
     def expected_risk(self, scaling=1):
         time, count = np.unique(self._t_func_failure, return_counts=True)
-        count = count / scaling
-        cost = count * self.consequence.get_cost()
+        quantity = count / scaling
+        cost = quantity * self.consequence.get_cost()
         risk = {
             "risk": {
                 "time": time,
-                "count": count,
+                "quantity": quantity,
                 "cost": cost,
                 "task_active": self.active,
                 "fm_active": self.active,
@@ -822,13 +822,13 @@ class FailureMode(PofBase):
 
     def expected_tasks(self):
 
-        task_count = dict()
+        quantity = dict()
 
         for task_name, task in self.tasks.items():
             if task.active:
-                task_count[task_name] = task.expected_counts(self._sim_counter)
+                quantity[task_name] = task.expected_quantity(self._sim_counter)
 
-        return task_count
+        return quantity
 
     # ****************** Reset Routines **************
 

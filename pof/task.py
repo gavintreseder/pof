@@ -240,11 +240,11 @@ class Task(PofBase):
     # ********************* expected methods ******************
 
     def expected(self, scaling=1):
-        """ Retuns a dictionary with the count and cost of completing a task over time scaled by a scaling factor"""
+        """ Retuns a dictionary with the quantity and cost of completing a task over time scaled by a scaling factor"""
         time, count = np.unique(self.t_completion, return_counts=True)
-        count = count / scaling
-        cost = count * self.cost
-        return dict(time=time, count=count, cost=cost, task_active=self.active)
+        quantity = count / scaling
+        cost = quantity * self.cost
+        return dict(time=time, quantity=quantity, cost=cost, task_active=self.active)
 
     def expected_costs(self, scaling=1):
         """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""
@@ -252,11 +252,11 @@ class Task(PofBase):
         cost = cost / scaling * self.cost
         return dict(time=time, cost=cost, task_active=self.active)
 
-    def expected_counts(self, scaling=1):
+    def expected_quantity(self, scaling=1):
         """ Retuns a dictionary with the number of times a task was completed scaled by a scaling factor"""
         time, count = np.unique(self.t_completion, return_counts=True)
-        count = count / scaling
-        return dict(time=time, cost=count)
+        quantity = count / scaling
+        return dict(time=time, quantity=quantity)
 
     # ********************* timeline methods ******************
 

@@ -25,8 +25,9 @@ from pof.indicator import Indicator
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
+from pof.interface.figures import make_cost_fig
 
-DEFAULT_ITERATIONS = 100
+DEFAULT_ITERATIONS = 10
 
 cf = config.get("Component")
 
@@ -68,17 +69,6 @@ class Component(PofBase):
         # Link failure mode indicators to the component indicators
         self.link_indicators()
 
-        # Trial for indicator
-        """self.indicator["safety_factor"] = PoleSafetyFactor(component=self)
-        self.indicator["slow_degrading"] = Condition.load(
-            demo.condition_data["slow_degrading"]
-        )  # TODO fix this call
-        self.indicator["fast_degrading"] = Condition.load(
-            demo.condition_data["fast_degrading"]
-        )  # TODO fix this call"""
-
-        # TODO link failure_modes to indicators
-
         # Simulation traking
         self._in_service = True
         self._sim_counter = 0
@@ -91,6 +81,10 @@ class Component(PofBase):
         self.n_iterations = 10
         self.n_sens = 0
         self.n_sens_iterations = 10
+
+        # Reporting
+        self.df_erc = None
+        self.df_sensitivity = None
 
     # ****************** Load data ******************
 
@@ -115,16 +109,13 @@ class Component(PofBase):
             raise NotImplementedError
 
     def set_indicator(self, indicator_input):
-        """
-        Takes a dictionary of Indicator objects or indicator data and sets the component indicators
-        """
+        """Takes a dictionary of Indicator objects or indicator data and sets the component indicators"""
         self.set_obj("indicator", Indicator, indicator_input)
 
     def set_failure_mode(self, fm_input):
         """
         Takes a dictionary of FailureMode objects or FailureMode data and sets the component failure modes
         """
-
         self.set_obj("fm", FailureMode, fm_input)
 
     def link_indicators(self):
@@ -142,6 +133,11 @@ class Component(PofBase):
     def mc(self, t_end, t_start, n_iterations):
         """ Complete MC simulation and calculate all the metrics for the component"""
 
+        # Simulate a timeline
+        self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
+
+        # Produce reports
+
         return NotImplemented
 
     # ****************** Timeline ******************
@@ -149,53 +145,32 @@ class Component(PofBase):
     def cancel_sim(self):
         self.up_to_date = False
         self.n = 0
-        self.n_sens_sim = 0
+        self.n_sens = 0
 
-    def next_sim(self, t_end, t_start=0, n_iterations=None, multiple=5):
-
-        if n_iterations is not None:
-            self.n_iterations = n_iterations
-
-        while self.n < self.n_iterations:
-            # Concept for continuin loop
-            # if self.n == self.n_iterations:
-            #    self.n_iterations = min(self.n * trigger_mutliple, n_iterations)
-
-            if not self.up_to_date:
-                self.reset()
-                self.n = 1
-                self.n_iterations = min(self.n * multiple, n_iterations)
-                self.up_to_date = True
-
-            # Simulate
-            self.sim_timeline(t_end=t_end, t_start=t_start)
-            self.save_timeline(self.n)
-            self.increment_counter()
-            self.reset_for_next_sim()
-
-            self.n = self.n + 1
-
-        self.up_to_date = True
-
-    def mp_timeline(self, t_end, t_start=0, n_iterations=10):
+    def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times and exit immediately if updated"""
         self.reset()
         self.up_to_date = True
         self.n = 0
         self.n_iterations = n_iterations
 
-        # while self.n < n_iterations and self.up_to_date:
+        try:
+            for __ in tqdm(range(self.n_iterations)):
+                if not self.up_to_date:
+                    break
 
-        for i in tqdm(range(self.n_iterations)):
-            if not self.up_to_date:
-                break
-            # Do work
-            self.sim_timeline(t_end=t_end, t_start=t_start)
-            self.save_timeline(self.n)
-            self.increment_counter()
-            self.reset_for_next_sim()
+                # Complete a simulation
+                self.sim_timeline(t_end=t_end, t_start=t_start)
+                self.save_timeline(self.n)
+                self.increment_counter()
+                self.reset_for_next_sim()
 
-            self.n = self.n + 1
+                self.n += 1
+        except Exception as error:
+            if self.up_to_date:
+                raise error
+            else:
+                logging.warning("Error caught during cancel_sim")
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times"""
@@ -436,29 +411,29 @@ class Component(PofBase):
                 "failure_mode",
                 "task",
                 "time",
-                "count",
+                "quantity",
                 "cost",
                 "fm_active",
                 "task_active",
             ]
         ].dropna()
 
-        fill_cols = ["cost", "count"]  # time not needed
+        fill_cols = ["cost", "quantity"]  # time not needed
         df_filled = df.apply(fill_blanks, axis=1, args=(t_start, t_end, fill_cols))
         df = df_filled.explode("time")
+
         for col in fill_cols:
             df[col] = df_filled.explode(col)[col]
-
-        # Add a cumulative cost
-        cum_cols = [col + "_cumulative" for col in fill_cols]
-        df[cum_cols] = df.groupby(by=["failure_mode", "task"])[fill_cols].transform(
-            pd.Series.cumsum
-        )
+            df[col + "_cumulative"] = df.groupby(by=["failure_mode", "task"])[
+                col
+            ].transform(pd.Series.cumsum)
+            df[col + "_annual"] = df[col] / self.expected_life()
 
         # Formatting
         # df.rename(columns{'task': 'source'})
+        self.df_erc = df
 
-        return df
+        return df  # self.df_erc
 
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
@@ -517,6 +492,8 @@ class Component(PofBase):
             ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
         }
 
+    # **************** Interface ********************
+
     def progress(self) -> float:
         """ Returns the progress of the primary simulation"""
         return self.n / self.n_iterations
@@ -565,14 +542,34 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        df = (
+        self.df_sensitivity = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
 
-        return df
+        return self.df_sensitivity
+
+    # ****************** Reports ****************
+
+    def get_df_erc(self):
+        if self.up_to_date:
+            if self.df_erc is not None:
+                df_erc = self.df_erc
+            else:
+                self.df_erc = self.expected_risk_cost_df()
+
+        raise NotImplementedError()
+
+    # ***************** Figures *****************
+
+    # TODO change default to first value from const
+
+    def plot_erc(self, units=None, y_axis="cost"):
+        return make_cost_fig(df=self.df_erc, units=self.units)
+
+    # TODO switch other plots
 
     # ****************** Reset ******************
 
@@ -598,6 +595,10 @@ class Component(PofBase):
         self._sim_counter = 0
         self._t_in_service = []
         self.stop_simulation = False
+
+        # Reset stored reports
+        self.df_erc = None
+        self.df_sensitivity = None
 
     # ****************** Interface ******************
 
@@ -678,7 +679,6 @@ class Component(PofBase):
 
         raise NotImplementedError()
 
-
     # ****************** Demonstration parameters ******************
 
     @classmethod
@@ -686,6 +686,7 @@ class Component(PofBase):
         """ Loads a demonstration data set if no parameters have been set already"""
 
         return cls.load(demo.component_data["comp"])
+
 
 if __name__ == "__main__":
     component = Component()
