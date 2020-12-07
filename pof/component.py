@@ -433,7 +433,7 @@ class Component(PofBase):
         # df.rename(columns{'task': 'source'})
         self.df_erc = df
 
-        return df  # self.df_erc
+        return self.df_erc
 
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
@@ -534,7 +534,7 @@ class Component(PofBase):
                 df_rc = self.expected_risk_cost_df()
 
                 # Summarise outputs
-                df_rc = df_rc.groupby(by=["task", "active"])[cols].sum()
+                df_rc = df_rc.groupby(by=["task", "active"])[cols].max()
                 df_rc[var] = i
 
                 rc[i] = df_rc
