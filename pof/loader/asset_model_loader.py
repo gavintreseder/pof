@@ -4,6 +4,8 @@
     Author: Gavin Treseder | gct999@gmail.com | gtreseder@kpmg.com.au | gavin.treseder@essentialenergy.com.au
 """
 
+import logging
+
 import pandas as pd
 import numpy as np
 
@@ -44,6 +46,7 @@ class AssetModelLoader:
         # if self.filename.endswith()
         data = self.load_xlsx()
 
+        logging.info("Asset Model Loaded")
         return data
 
     def set_filename(self, filename):

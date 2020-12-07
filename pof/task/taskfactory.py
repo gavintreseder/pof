@@ -1,26 +1,27 @@
-
 from .task import Task, ConditionTask, ScheduledTask, Inspection
 
 
 class TaskFactory:
-
     @classmethod
     def create_task(self, *args, **kwargs):
 
-            if task_type == 'Task':
+        if task_type == "Task":
 
-                task = Task(*args, **kwargs)
+            task = Task(*args, **kwargs)
 
-            elif task_type == 'ConditionTask':
+        elif task_type == "ConditionTask":
 
-                task = ConditionTask(*args, **kwargs)
+            task = ConditionTask(*args, **kwargs)
 
-            elif task_type == 'ScheduledTask':
+        elif task_type == "ScheduledTask":
 
-                task = ScheduledTask(*args, **kwargs)
+            task = ScheduledTask(*args, **kwargs)
 
-            elif task_type == 'Inspection':
+        elif task_type == "Inspection":
 
-                task = Inspection(*args, **kwargs)
+            task = Inspection(*args, **kwargs)
+
+        else:
+            task = None
 
         return task

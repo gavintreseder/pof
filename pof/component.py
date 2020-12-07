@@ -25,9 +25,10 @@ from pof.indicator import Indicator
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
-from pof.interface.figures import make_cost_fig
+from pof.interface.figures import make_ms_fig, make_sensitivity_fig
 
 DEFAULT_ITERATIONS = 10
+
 
 cf = config.get("Component")
 
@@ -84,7 +85,7 @@ class Component(PofBase):
 
         # Reporting
         self.df_erc = None
-        self.df_sensitivity = None
+        self.df_sens = None
 
     # ****************** Load data ******************
 
@@ -329,11 +330,11 @@ class Component(PofBase):
         for fm in self.fm.values():
             sf[fm.name] = dict()
             sf[fm.name]["pof"] = fm.untreated.sf(t_start=t_start, t_end=t_end)
-            sf[fm.name]["fm_active"] = fm.active
+            sf[fm.name]["active"] = fm.active
 
             if fm.active:
                 sf["all"]["pof"] = sf["all"]["pof"] * sf[fm.name]["pof"]
-                sf["all"]["fm_active"] = True
+                sf["all"]["active"] = True
 
         # Treat the failure modes as a series and combine together
         # cdf = {fm: 1 - sf for fm, sf in sf.items()}
@@ -342,7 +343,7 @@ class Component(PofBase):
         for fm in sf:
             cdf[fm] = dict()
             cdf[fm]["pof"] = 1 - sf[fm]["pof"]
-            cdf[fm]["fm_active"] = sf[fm]["fm_active"]
+            cdf[fm]["active"] = sf[fm]["active"]
             cdf[fm]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
@@ -358,7 +359,7 @@ class Component(PofBase):
         for fm in sf:
             cdf[fm] = dict()
             cdf[fm]["pof"] = 1 - sf[fm]["pof"]
-            cdf[fm]["fm_active"] = sf[fm]["fm_active"]
+            cdf[fm]["active"] = sf[fm]["active"]
             cdf[fm]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
@@ -369,17 +370,17 @@ class Component(PofBase):
 
         # Calcuate the failure rates for each failure mode
         sf = dict(all=dict(pof=np.full((t_end - t_start + 1), 1)))
-        sf["all"]["fm_active"] = False
+        sf["all"]["active"] = False
 
         for fm_name, fm in self.fm.items():
             pof = fm.expected_pof()
             sf[fm_name] = dict()
             sf[fm_name]["pof"] = pof.sf(t_start, t_end)
-            sf[fm_name]["fm_active"] = fm.active
+            sf[fm_name]["active"] = fm.active
 
             if fm.active:
                 sf["all"]["pof"] = sf["all"]["pof"] * sf[fm_name]["pof"]
-                sf["all"]["fm_active"] = True
+                sf["all"]["active"] = True
 
         # Treat the failure modes as a series and combine together
         # sf['all'] = np.array([fm.sf(t_start, t_end) for fm in self.fm.values()]).prod(axis=0)
@@ -410,11 +411,10 @@ class Component(PofBase):
             [
                 "failure_mode",
                 "task",
+                "active",
                 "time",
                 "quantity",
                 "cost",
-                "fm_active",
-                "task_active",
             ]
         ].dropna()
 
@@ -505,7 +505,7 @@ class Component(PofBase):
         )
 
     def expected_sensitivity(
-        self, var_name, lower, upper, step_size=1, n_iterations=100, t_end=100
+        self, var_id, lower, upper, step_size=1, n_iterations=100, t_end=100
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
@@ -517,7 +517,11 @@ class Component(PofBase):
         self.n_sens = 0
         self.n_sens_iterations = int((upper - lower) / step_size + 1)
 
-        var = var_name.split("-")[-1]
+        var = var_id.split("-")[-1]
+
+        prefix = ["quantity", "cost"]
+        suffix = ["", "_annual", "_cumulative"]
+        cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
         for i in np.arange(lower, upper, step_size):
             try:
@@ -525,14 +529,12 @@ class Component(PofBase):
                 self.reset()
 
                 # Update annd simulate a timeline
-                self.update(var_name, i)
+                self.update(var_id, i)
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 df_rc = self.expected_risk_cost_df()
 
                 # Summarise outputs
-                df_rc["active"] = df_rc["fm_active"] & df_rc["task_active"]
-                df_rc = df_rc.groupby(by=["task", "active"])[["cost"]].sum()
-                df_rc["annual_cost"] = df_rc["cost"] / self.expected_life()
+                df_rc = df_rc.groupby(by=["task", "active"])[cols].sum()
                 df_rc[var] = i
 
                 rc[i] = df_rc
@@ -542,14 +544,14 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        self.df_sensitivity = (
+        self.df_sens = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
 
-        return self.df_sensitivity
+        return self.df_sens
 
     # ****************** Reports ****************
 
@@ -566,8 +568,32 @@ class Component(PofBase):
 
     # TODO change default to first value from const
 
-    def plot_erc(self, t_end=100, units=None, y_axis="cost", y_max=600):
-        return make_cost_fig(df=self.df_erc, t_end=t_end, y_max=y_max, units=self.units)
+    def plot_ms(
+        self, y_axis="cost_cumulative", y_max=None, t_end=None, units=NotImplemented
+    ):
+        # TODO Add conversion for units when plotting if units != self.units
+        return make_ms_fig(
+            df=self.df_erc, y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units
+        )
+
+    def plot_sens(
+        self,
+        y_axis="cost_cumulative",
+        y_max=None,
+        t_end=None,
+        units=NotImplemented,
+        var_id="",
+    ):
+        """ Returns a sensitivity figure if df_sens has aleady been calculated"""
+        var_name = var_id.split("-")[-1]
+        return make_sensitivity_fig(
+            df=self.df_sens,
+            var_name=var_name,
+            y_axis=y_axis,
+            t_end=t_end,
+            y_max=y_max,
+            units=self.units,
+        )
 
     # TODO switch other plots
 
@@ -598,7 +624,7 @@ class Component(PofBase):
 
         # Reset stored reports
         self.df_erc = None
-        self.df_sensitivity = None
+        self.df_sens = None
 
     # ****************** Interface ******************
 

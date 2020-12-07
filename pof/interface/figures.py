@@ -2,6 +2,8 @@
 
 """
 
+from typing import List
+
 import pandas as pd
 import numpy as np
 
@@ -29,47 +31,42 @@ def get_color_map(df, column, colour_scheme=None):
     return color_map
 
 
-def make_cost_fig(
-    df, t_end=100, y_max=600000, units="unknown", y_axis="Cost Cumulative"
+def make_ms_fig(
+    df,
+    y_axis="cost_cumulative",
+    y_max=None,
+    t_end=None,
+    units="unknown",
 ):
     try:
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
 
-        df = df[df["fm_active"] == True]
-        df = df[df["task_active"] == True]
+        df = df[df["active"]]
 
-        # Make columns presentable
-        df.columns = df.columns.str.replace("_", " ").str.title()
-        col_names = {"Time": f"Age ({units})"}
-        df.rename(columns=col_names, inplace=True)
+        # Format the labels
+        labels = {label: label.replace("_", " ").title() for label in list(df)}
+        labels["Time"] = f"Age ({units})"
 
         px_args = dict(
             data_frame=df,
-            x=col_names["Time"],
+            x="time",
             y=y_axis,
-            color="Task",
+            color="task",
             color_discrete_map=color_map,
+            labels=labels,
             title="Maintenance Strategy Costs",
         )
 
-        fig = px.area(**px_args, line_group="Failure Mode")
-        # if isinstance(local, Component):
-        #     fig = px.area(**px_args, line_group="Failure Mode")
-        # elif isinstance(local, FailureMode):
-        #     fig = px.area(**px_args)
-        # else:
-        #     raise TypeError("local must be Component of FailureMode")
+        fig = px.area(**px_args, line_group="failure_mode")
 
-        col_names = {"time": f"Age ({units})"}
+        if y_max is not None:
+            fig.update_yaxes(range=[0, y_max])
+
+        if t_end is not None:
+            fig.update_xaxes(range=[0, t_end])
 
         fig.update_yaxes(automargin=True)
-        fig.update_yaxes(range=[0, y_max])
         fig.update_xaxes(automargin=True)
-        fig.update_xaxes(range=[0, t_end])
-        fig.update_layout(
-            legend_traceorder="reversed",
-        )
-        fig.update_xaxes(title_text=col_names["time"])
 
     except Exception as error:
         raise (error)
@@ -84,6 +81,8 @@ def make_cost_fig(
 def update_pof_fig(local, t_end=100, y_max=1):
 
     try:
+
+        # TODO this could be way more efficient
         pof = dict(
             maint=pd.DataFrame(local.expected_pof(t_end=200)),
             no_maint=pd.DataFrame(local.expected_untreated(t_end=200)),
@@ -108,10 +107,10 @@ def update_pof_fig(local, t_end=100, y_max=1):
         ).rename(columns={"variable": "source", "value": "pof"})
         df_pof = df_pof.explode("pof", ignore_index=True)
 
-        df_active = df[df["key"] == "fm_active"]
+        df_active = df[df["key"] == "active"]
         df_active = pd.melt(
             df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
-        ).rename(columns={"variable": "source", "value": "fm_active"})
+        ).rename(columns={"variable": "source", "value": "active"})
 
         df_time = df[df["key"] == "time"]
         df_time = pd.melt(
@@ -124,7 +123,7 @@ def update_pof_fig(local, t_end=100, y_max=1):
 
         color_map = get_color_map(df=df, column="source", colour_scheme="plotly")
 
-        df = df[df["fm_active"] == True]
+        df = df[df["active"] == True]
 
         # Make columns presentable
         # df.columns = df.columns.str.replace("_", " ").str.title()
@@ -160,9 +159,7 @@ def update_pof_fig(local, t_end=100, y_max=1):
     return fig
 
 
-def update_condition_fig(
-    local, conf=0.95, t_end=100, y_max_WT=150, y_max_ED=250, y_max_SF=5
-):
+def update_condition_fig(local, conf=0.95, t_end=100, y_max: List = None):
     """ Updates the condition figure"""
 
     try:
@@ -226,7 +223,7 @@ def update_condition_fig(
                 automargin=True,
                 range=[
                     0,
-                    f"y_max_{y_title}", # TODO fix this
+                    f"y_max_{y_title}",  # TODO fix this
                 ],
             )
             fig.update_xaxes(range=[0, t_end])
@@ -254,15 +251,13 @@ def update_condition_fig(
 
 
 def make_sensitivity_fig(
-    local,
+    df,
     var_name="",
     y_axis="",
-    lower=0,
-    upper=10,
-    step_size=1,
-    t_end=100,
-    y_max=600000,
-    n_iterations=10,
+    t_end=None,
+    y_max=None,
+    units="unknown",
+    summarise=True,
 ):
 
     var = var_name.split("-")[-1]
@@ -270,14 +265,8 @@ def make_sensitivity_fig(
     title_var = var.replace("_", " ").title()
 
     try:
-        df = local.expected_sensitivity(
-            var_name=var_name,
-            lower=lower,
-            upper=upper,
-            t_end=t_end,
-            step_size=step_size,
-            n_iterations=n_iterations,
-        )
+
+        # if summarise: #TODO
 
         # Add direct and indirect
         df_total = df.groupby(by=[var]).sum()
@@ -303,6 +292,8 @@ def make_sensitivity_fig(
         color_map = get_color_map(df=df_plot, column="source")
         df_plot = df_plot.loc[df_plot["active"]]
 
+        # Adjust the labels
+
         fig = px.line(
             df_plot,
             x=var,
@@ -319,12 +310,12 @@ def make_sensitivity_fig(
         #         trace["showlegend"] = False
 
         fig.update_yaxes(automargin=True)
-        fig.update_yaxes(range=[0, y_max])
-
         fig.update_xaxes(automargin=True)
 
+        fig.update_yaxes(range=[0, y_max])
+
         if var in ("t_delay", "t_interval"):
-            col_names = {"time": f"{var} ({local.units})"}
+            col_names = {"time": f"{var} ({units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
     except Exception as error:
@@ -340,6 +331,6 @@ def humanise(data):
     # Not used
     if isinstance(pd.DataFrame):
         data.columns = data.columns.str.replace("_", " ").str.title()
-        data
+
     elif isinstance(str):
         data = data.replace("_", " ").title()

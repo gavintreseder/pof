@@ -8,7 +8,6 @@ import dash_bootstrap_components as dbc
 from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
 from pof.units import valid_units
-from pof.loader.asset_model_loader import AssetModelLoader
 
 IS_OPEN = cf.is_open
 SCALING = cf.scaling
@@ -60,17 +59,18 @@ SCALING = cf.scaling
 # *************** Main ******************************
 
 
-def layout(comp):
+def make_layout(comp):
     mcl = make_component_layout(comp)
     update_list = [
         {"label": option, "value": option} for option in comp.get_update_ids()
     ]
 
-    y_values = ["cost", "cumulative_cost - N/A", "annual_cost"]
+    y_values = ["cost", "cost_cumulative", "cost_annual"]
     update_list_y = [{"label": option, "value": option} for option in y_values]
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
 
+    # TODO replace these with None. They will be updated when the sim is completed
     y_axis_max = dict(
         pof_fig=1,
         cond_fig_WT=150,
@@ -83,6 +83,11 @@ def layout(comp):
     layouts = html.Div(
         [
             html.Div(id="log"),
+            dbc.Checkbox(
+                id="axis_lock-checkbox",
+                checked=False,
+            ),
+            html.Div(children=None, id="graph_limits"),
             html.Div(children="Update State:", id="update_state"),
             html.Div(
                 [
@@ -214,8 +219,8 @@ def layout(comp):
             ),
             dbc.Row(
                 [
-                    dbc.Col(dcc.Graph(id="cost-fig")),
-                    dbc.Col(dcc.Graph(id="insp_interval-fig")),
+                    dbc.Col(dcc.Graph(id="ms-fig")),
+                    dbc.Col(dcc.Graph(id="sensitivity-fig")),
                 ]
             ),
             dbc.Row(
@@ -331,7 +336,7 @@ def layout(comp):
                             dcc.Dropdown(
                                 id="sens_var_id-dropdown",
                                 options=update_list,
-                                value=comp.get_update_ids()[-1],
+                                value=comp.get_update_ids()[0],
                             ),
                         ]
                     ),
@@ -402,6 +407,20 @@ def layout(comp):
 # ******************* Validation ******************
 
 
+def make_pof_obf_layout(pof_obj, prefix="", sep="-"):
+    if isinstance(pof_obj, Component):
+        layout = make_component_layout(pof_obj, prefix, sep)
+    elif isinstance(pof_obj, FailureMode):
+        layout = make_failure_mode_layout
+
+    validate_layout(pof_obj, layout)
+
+    return layout
+
+
+# ******************* Validation ******************
+
+
 def validate_layout(pof_obj, layout):
 
     objs = pof_obj.get_objects()
@@ -424,17 +443,6 @@ def validate_layout(pof_obj, layout):
 
 
 # ******************* Component ******************
-
-
-def make_layout(pof_obj, prefix="", sep="-"):
-    if isinstance(pof_obj, Component):
-        layout = make_component_layout(pof_obj, prefix, sep)
-    elif isinstance(pof_obj, FailureMode):
-        layout = make_failure_mode_layout
-
-    validate_layout(pof_obj, layout)
-
-    return layout
 
 
 def make_component_layout(component, prefix="", sep="-"):

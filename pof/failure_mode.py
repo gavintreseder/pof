@@ -128,8 +128,8 @@ class FailureMode(PofBase):
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-        self._t_func_failure = []
-        self._t_cond_failure = []
+        self._t_func_failure = [] # Failure event
+        self._t_cond_failure = [] # System impact without a failure event
 
     @property
     def pf_curve(self):
@@ -628,7 +628,7 @@ class FailureMode(PofBase):
         return self._t_func_failure
 
     def expected_cf(self):
-        """ Returns the expected functional failures"""
+        """ Returns the expected conditional failures"""
         return self._t_cond_failure
 
     def expected_replacements(self):
@@ -784,11 +784,10 @@ class FailureMode(PofBase):
         df["cost_cumulative"] = df.groupby(by=["task"])["cost"].transform(
             pd.Series.cumsum
         )
-        df["fm_active"] = self.active
 
         return df.reset_index()
 
-    def expected_risk_cost(self, scaling=1):
+    def expected_risk_cost(self, scaling=None):
 
         if scaling is None:
             scaling = self._sim_counter
@@ -798,7 +797,9 @@ class FailureMode(PofBase):
         task_cost = {}
         for task in self.tasks.values():
             task_cost[task.name] = task.expected(scaling)
-            task_cost[task.name]["fm_active"] = self.active
+            task_cost[task.name]["active"] = (
+                task_cost[task.name]["active"] & self.active
+            )
 
         # Get the Risks
         risk = self.expected_risk(scaling)
@@ -811,11 +812,10 @@ class FailureMode(PofBase):
         cost = quantity * self.consequence.get_cost()
         risk = {
             "risk": {
+                "active": self.active,
                 "time": time,
                 "quantity": quantity,
                 "cost": cost,
-                "task_active": self.active,
-                "fm_active": self.active,
             }
         }
         return risk
