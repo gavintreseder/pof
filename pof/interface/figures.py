@@ -251,15 +251,13 @@ def update_condition_fig(local, conf=0.95, t_end=100, y_max: List = None):
 
 
 def make_sensitivity_fig(
-    local,
+    df,
     var_name="",
     y_axis="",
-    lower=0,
-    upper=10,
-    step_size=1,
-    t_end=100,
-    y_max=600000,
-    n_iterations=10,
+    t_end=None,
+    y_max=None,
+    units="unknown",
+    summarise=True,
 ):
 
     var = var_name.split("-")[-1]
@@ -267,14 +265,8 @@ def make_sensitivity_fig(
     title_var = var.replace("_", " ").title()
 
     try:
-        df = local.expected_sensitivity(
-            var_name=var_name,
-            lower=lower,
-            upper=upper,
-            t_end=t_end,
-            step_size=step_size,
-            n_iterations=n_iterations,
-        )
+
+        # if summarise: #TODO
 
         # Add direct and indirect
         df_total = df.groupby(by=[var]).sum()
@@ -300,6 +292,8 @@ def make_sensitivity_fig(
         color_map = get_color_map(df=df_plot, column="source")
         df_plot = df_plot.loc[df_plot["active"]]
 
+        # Adjust the labels
+
         fig = px.line(
             df_plot,
             x=var,
@@ -316,12 +310,12 @@ def make_sensitivity_fig(
         #         trace["showlegend"] = False
 
         fig.update_yaxes(automargin=True)
-        fig.update_yaxes(range=[0, y_max])
-
         fig.update_xaxes(automargin=True)
 
+        fig.update_yaxes(range=[0, y_max])
+
         if var in ("t_delay", "t_interval"):
-            col_names = {"time": f"{var} ({local.units})"}
+            col_names = {"time": f"{var} ({units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
     except Exception as error:

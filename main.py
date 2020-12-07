@@ -306,16 +306,20 @@ def update_sensitivity(
     if active:
         sens_sim = copy.deepcopy(comp)
 
-        sens_fig = make_sensitivity_fig(
-            sens_sim,
-            var_name=var_id,
-            y_axis=y_axis,
+        sens_sim.expected_sensitivity(
+            var_id=var_id,
             lower=lower,
             upper=upper,
+            t_end=t_end,
             step_size=step_size,
+            n_iterations=n_iterations,
+        )
+
+        sens_fig = sens_sim.plot_sens(
+            var_id=var_id,
+            y_axis=y_axis,
             t_end=t_end,
             y_max=y_max,
-            n_iterations=n_iterations,
         )
 
         return sens_fig

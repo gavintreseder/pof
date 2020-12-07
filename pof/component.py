@@ -25,7 +25,7 @@ from pof.indicator import Indicator
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
-from pof.interface.figures import make_ms_fig
+from pof.interface.figures import make_ms_fig, make_sensitivity_fig
 
 DEFAULT_ITERATIONS = 10
 
@@ -85,7 +85,7 @@ class Component(PofBase):
 
         # Reporting
         self.df_erc = None
-        self.df_sensitivity = None
+        self.df_sens = None
 
     # ****************** Load data ******************
 
@@ -505,7 +505,7 @@ class Component(PofBase):
         )
 
     def expected_sensitivity(
-        self, var_name, lower, upper, step_size=1, n_iterations=100, t_end=100
+        self, var_id, lower, upper, step_size=1, n_iterations=100, t_end=100
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
@@ -517,7 +517,7 @@ class Component(PofBase):
         self.n_sens = 0
         self.n_sens_iterations = int((upper - lower) / step_size + 1)
 
-        var = var_name.split("-")[-1]
+        var = var_id.split("-")[-1]
 
         prefix = ["quantity", "cost"]
         suffix = ["", "_annual", "_cumulative"]
@@ -529,7 +529,7 @@ class Component(PofBase):
                 self.reset()
 
                 # Update annd simulate a timeline
-                self.update(var_name, i)
+                self.update(var_id, i)
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 df_rc = self.expected_risk_cost_df()
 
@@ -544,14 +544,14 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        self.df_sensitivity = (
+        self.df_sens = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
 
-        return self.df_sensitivity
+        return self.df_sens
 
     # ****************** Reports ****************
 
@@ -568,25 +568,31 @@ class Component(PofBase):
 
     # TODO change default to first value from const
 
-    def plot_ms(self, y_axis="cost_cumulative", y_max=None, t_end=None, units=None):
+    def plot_ms(
+        self, y_axis="cost_cumulative", y_max=None, t_end=None, units=NotImplemented
+    ):
         # TODO Add conversion for units when plotting if units != self.units
         return make_ms_fig(
             df=self.df_erc, y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units
         )
 
-
-    def plot_sens(self, y_axis="cost_cumulative", y_max=None, t_end=None, units=None)
-
-    make_sensitivity_fig(
-            sens_sim,
-            var_name=var_id,
+    def plot_sens(
+        self,
+        y_axis="cost_cumulative",
+        y_max=None,
+        t_end=None,
+        units=NotImplemented,
+        var_id="",
+    ):
+        """ Returns a sensitivity figure if df_sens has aleady been calculated"""
+        var_name = var_id.split("-")[-1]
+        return make_sensitivity_fig(
+            df=self.df_sens,
+            var_name=var_name,
             y_axis=y_axis,
-            lower=lower,
-            upper=upper,
-            step_size=step_size,
             t_end=t_end,
             y_max=y_max,
-            n_iterations=n_iterations,
+            units=self.units,
         )
 
     # TODO switch other plots
@@ -618,7 +624,7 @@ class Component(PofBase):
 
         # Reset stored reports
         self.df_erc = None
-        self.df_sensitivity = None
+        self.df_sens = None
 
     # ****************** Interface ******************
 
