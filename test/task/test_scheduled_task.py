@@ -12,13 +12,13 @@ from unittest.mock import Mock
 import sys
 import os
 
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import numpy as np
 
-import fixtures
-import testconfig  # pylint: disable=unused-import
-from .test_task_common import TestTaskCommon
+import test.fixtures
+import test.testconfig  # pylint: disable=unused-import
+from test.task.test_task_common import TestTaskCommon
 from pof.task import ScheduledTask
 
 
