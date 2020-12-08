@@ -85,7 +85,7 @@ class SimpleFleet:
 
         # Get Task forecast
         self.df_forecast_task = (
-            df.groupby(by=["year", "task"])[["pop_quantity"]].sum().reset_index()
+            df.groupby(by=["year", "task", "active"])[["pop_quantity"]].sum().reset_index()
         )
 
         df_task_table = self.df_forecast_task.pivot(index="task", columns="year")

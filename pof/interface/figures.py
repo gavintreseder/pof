@@ -75,7 +75,7 @@ def make_ms_fig(
                 title=go.layout.Title(text="Error Producing Maintenance Strategy Costs")
             )
         )
-    return fig
+    return fig, color_map
 
 
 def update_pof_fig(local, t_end=100, y_max=1):
@@ -322,16 +322,12 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=1000):
+def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=1000):
 
     title = "Quantity of tasks for Population"
 
     try:
-
-        # df = df[df["active"]]
-
-        # Add the colours
-        color_map = get_color_map(df=df, column="task")
+        df = df[df["active"]]
 
         fig = px.line(
             df,

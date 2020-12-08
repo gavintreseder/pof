@@ -266,12 +266,16 @@ def update_figures(
 
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
 
-        task_forecast_fig = make_task_forecast_fig(df_task_forecast, y_max=task_var_y)
+        task_forecast_fig = make_task_forecast_fig(
+            df_task_forecast.sort_values(by=["year", "task"]),
+            color_map=ms_fig[1],
+            y_max=task_var_y,
+        )
 
     else:
         raise PreventUpdate
 
-    return cond_fig, ms_fig, pof_fig, task_forecast_fig
+    return cond_fig, ms_fig[0], pof_fig, task_forecast_fig
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
