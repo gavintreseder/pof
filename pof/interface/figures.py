@@ -75,7 +75,7 @@ def make_ms_fig(
                 title=go.layout.Title(text="Error Producing Maintenance Strategy Costs")
             )
         )
-    return fig
+    return fig, color_map
 
 
 def update_pof_fig(local, t_end=100, y_max=1):
@@ -84,8 +84,8 @@ def update_pof_fig(local, t_end=100, y_max=1):
 
         # TODO this could be way more efficient
         pof = dict(
-            maint=pd.DataFrame(local.expected_pof(t_end=200)),
-            no_maint=pd.DataFrame(local.expected_untreated(t_end=200)),
+            maint=pd.DataFrame(local.expected_pof(t_end=t_end)),
+            no_maint=pd.DataFrame(local.expected_untreated(t_end=t_end)),
         )
 
         # OLD CODE
@@ -283,10 +283,10 @@ def make_sensitivity_fig(
         # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
 
         # Add line dashes
-        df_plot["line_dash"] = 1
+        df_plot["line_dash"] = " "
         df_plot.loc[
             df_plot["source"].isin(["risk", "direct", "total"]), "line_dash"
-        ] = 0
+        ] = "  "
 
         # Add the colours
         color_map = get_color_map(df=df_plot, column="source")
@@ -302,12 +302,7 @@ def make_sensitivity_fig(
             color_discrete_map=color_map,
             line_dash="line_dash",
             title=f"Sensitivity of Risk/Cost to {title_var}",
-            # labels={"source": "source"},
         )
-
-        # for trace in fig["data"]:
-        #     if trace["name"] == "line_dash":
-        #         trace["showlegend"] = False
 
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
@@ -327,18 +322,22 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(df, y_axis="pop_quantity"):
+def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=1000):
 
     title = "Quantity of tasks for Population"
 
     try:
+        df = df[df["active"]]
+
         fig = px.line(
             df,
             x="year",
             y=y_axis,
             color="task",
+            color_discrete_map=color_map,
             title=title,
         )
+        fig.update_yaxes(range=[0, y_max])
 
     except Exception as error:
         raise error

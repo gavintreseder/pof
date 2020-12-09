@@ -89,6 +89,18 @@ param_inputs = [
     for dash_id in ms_fig_update
 ]
 
+##Collapsable edit functions
+@app.callback(
+    Output("collapse_y_limits", "is_open"),
+    [Input("collapse_y_limits-button", "n_clicks")],
+    [State("collapse_y_limits", "is_open")],
+)
+def collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
+
+
 # Update --> Simulate --> Figures
 
 
@@ -215,6 +227,7 @@ def save_figure_limits(__, y_axis, axis_lock):
     # Input("cond_var_y-input", "value"),
     Input("cost_var_y-input", "value"),
     Input("pof_var_y-input", "value"),
+    Input("task_var_y-input", "value"),
     Input("sens_var_y-dropdown", "value"),  # TODO change to an appropriate name
     State("t_end-input", "value"),
     State("sim_n_active", "checked"),
@@ -225,6 +238,7 @@ def update_figures(
     # cond_var_y,
     ms_var_y,
     pof_var_y,
+    task_var_y,
     y_axis,
     t_end,
     active,
@@ -240,6 +254,7 @@ def update_figures(
             ms_var_y = None
             cond_var_y = None
             pof_var_y = None
+            task_var_y = None
 
         ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
         pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
@@ -251,12 +266,16 @@ def update_figures(
 
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
 
-        task_forecast_fig = make_task_forecast_fig(df_task_forecast)
+        task_forecast_fig = make_task_forecast_fig(
+            df_task_forecast.sort_values(by=["year", "task"]),
+            color_map=ms_fig[1],
+            y_max=task_var_y,
+        )
 
     else:
         raise PreventUpdate
 
-    return cond_fig, ms_fig, pof_fig, task_forecast_fig
+    return cond_fig, ms_fig[0], pof_fig, task_forecast_fig
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
