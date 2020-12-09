@@ -42,7 +42,7 @@ FILE_NAME = r"population_summary.csv"
 
 sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
-sfd.calc_forecast_age(START_YEAR, END_YEAR, cURRENT_YEAR)
+sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 
 # Turn off logging level to speed up implementation

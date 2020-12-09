@@ -343,9 +343,7 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_forecast_fig(
-    df, y_axis="pop_quantity", color_map="", y_max=None, prev=None
-):
+def make_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=None, prev=None):
 
     title = "Quantity of tasks for Population"
 
@@ -366,7 +364,6 @@ def make_forecast_fig(
         fig = update_visibility(fig, prev)
 
     except Exception as error:
-        raise error
         fig = go.Figure(
             layout=go.Layout(title=go.layout.Title(text=f"Error Producing {title}"))
         )
@@ -399,13 +396,18 @@ def humanise(data):
         data = data.replace("_", " ").title()
 
 
-def update_visibility(curr, prev = None):
+def update_visibility(curr, prev=None):
     """Updates the visibility based on the visibility previously selected"""
-    if prev is not None:
-        visibilities = {d.get("name"): d.get("visible") for d in prev["data"] if d in curr['data']}
+    # if prev is not None:
+    #     visibilities = {
+    #         d.get("name"): d.get("visible")
+    #         for d in prev["data"]
+    #         if d.get("name") in curr["data"]
+    #     }
+    #     # This is updating both tasks
 
-        curr.for_each_trace(
-            lambda trace: trace.update(visible=visibilities[trace.name])
-        )
+    #     curr.for_each_trace(
+    #         lambda trace: trace.update(visible=visibilities[trace.name])
+    #     )
 
     return curr
