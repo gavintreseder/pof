@@ -17,11 +17,11 @@ from plotly.subplots import make_subplots
 # from pof import Component, FailureMode
 
 
-def get_color_map(df, column, colour_scheme=None):
+def get_color_map(df, column):
 
-    if colour_scheme == "plotly":
+    if column == "source":
         colors = px.colors.qualitative.Plotly
-    elif colour_scheme == "bold":
+    elif column == "task":
         colors = px.colors.qualitative.Bold
     else:
         colors = px.colors.qualitative.Safe
@@ -35,8 +35,7 @@ def make_ms_fig(
     df, y_axis="cost_cumulative", y_max=None, t_end=None, units="unknown", prev=None
 ):
     try:
-        color_map = get_color_map(df=df, column="task", colour_scheme="bold")
-
+        color_map = get_color_map(df=df, column="task")
         df = df[df["active"]]
 
         # Format the labels
@@ -77,7 +76,7 @@ def make_ms_fig(
                 title=go.layout.Title(text="Error Producing Maintenance Strategy Costs")
             )
         )
-    return fig, color_map
+    return fig
 
 
 def update_pof_fig(local, t_end=None, y_max=None, prev=None):
@@ -123,7 +122,7 @@ def update_pof_fig(local, t_end=None, y_max=None, prev=None):
         df = df_pof.merge(df_active, on=["strategy", "source"])
         df["time"] = df_time
 
-        color_map = get_color_map(df=df, column="source", colour_scheme="plotly")
+        color_map = get_color_map(df=df, column="source")
 
         df = df[df["active"] == True]
 
@@ -333,7 +332,9 @@ def make_sensitivity_fig(
 
         if prev is not None:
             visibilities = visible_trace(prev)
-            fig.for_each_trace(lambda trace: trace.update(visible=visibilities[trace.name]))
+            fig.for_each_trace(
+                lambda trace: trace.update(visible=visibilities[trace.name])
+            )
 
     except Exception as error:
         raise error
@@ -344,13 +345,13 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(
-    df, y_axis="pop_quantity", color_map="", y_max=None, prev=None
-):
+def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
 
     title = "Quantity of tasks for Population"
 
     try:
+        color_map = get_color_map(df=df, column="task")
+
         df = df[df["active"]]
 
         fig = px.line(

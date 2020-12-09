@@ -431,7 +431,7 @@ class Component(PofBase):
 
         # Formatting
         # df.rename(columns{'task': 'source'})
-        self.df_erc = df
+        self.df_erc = self.df_order(df=df, column="task")
 
         return self.df_erc
 
@@ -544,12 +544,14 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        self.df_sens = (
+        df = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
+
+        self.df_sens = self.df_order(df=df, column="source")
 
         return self.df_sens
 
@@ -578,12 +580,12 @@ class Component(PofBase):
     ):
         # TODO Add conversion for units when plotting if units != self.units
         return make_ms_fig(
-            df=self.df_erc.sort_values(by=["time", "task"]),
+            df=self.df_erc,
             y_axis=y_axis,
             y_max=y_max,
             t_end=t_end,
             units=self.units,
-            prev=prev
+            prev=prev,
         )
 
     def plot_sens(
@@ -593,7 +595,7 @@ class Component(PofBase):
         t_end=None,
         units=NotImplemented,
         var_id="",
-        prev=None
+        prev=None,
     ):
         """ Returns a sensitivity figure if df_sens has aleady been calculated"""
         var_name = var_id.split("-")[-1]
@@ -604,10 +606,46 @@ class Component(PofBase):
             t_end=t_end,
             y_max=y_max,
             units=self.units,
-            prev=prev
+            prev=prev,
         )
 
     # TODO switch other plots
+
+    def df_order(self, df, column):
+        """
+        sorts the dataframes for the graphs with total, risk and direct first
+        """
+        return df
+        # if column is None:
+        #     raise ValueError("Column must be defined")
+
+        # if column == "task":
+        #     values = df["task"].unique().tolist()
+        #     values.sort()
+        # elif column == "source":
+        #     values = df["source"].unique().tolist()
+        #     values.sort()
+
+        # start_order = ["total", "risk", "direct"]
+        # set_order = []
+
+        # for var in start_order:
+        #     if var in values:
+        #         set_order.append(var)
+
+        # for var in values:
+        #     if var not in set_order:
+        #         set_order.append(var)
+
+        # return_order = {}
+        # i = 1
+        # for var in set_order:
+        #     return_order[var] = i
+        #     i = i + 1
+
+        # df_ordered = df.sort_values(by=[column], key=lambda x: x.map(return_order))
+
+        # return df_ordered
 
     # ****************** Reset ******************
 
