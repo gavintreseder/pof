@@ -8,17 +8,13 @@
 
 import copy
 import unittest
-from unittest.mock import Mock
-import sys
-import os
-
-sys.path.append(os.path.dirname(__file__))
 
 import numpy as np
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from .test_task_common import TestTaskCommon
+
+from .test_task import TestTaskCommon
 from pof.task import ScheduledTask
 
 

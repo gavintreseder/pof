@@ -50,10 +50,10 @@ class SimpleFleet:
 
         for year in range(start_year, end_year + 1):
 
-            # Copy the df
+            # Copy the df and adjust the age
             df_year = self.df_age.copy()
 
-            # Adjust the age
+            #
             age_shift = year - current_year
             df_year.index = df_year.index + age_shift
             forecast_age[year] = df_year
@@ -85,13 +85,17 @@ class SimpleFleet:
 
         # Get Task forecast
         self.df_forecast_task = (
-            df.groupby(by=["year", "task", "active"])[["pop_quantity"]].sum().reset_index()
+            df.groupby(by=["year", "task", "active"])[["pop_quantity"]]
+            .sum()
+            .reset_index()
         )
 
-        df_task_table = self.df_forecast_task.pivot(index="task", columns="year")
-        df_task_table.columns = df_task_table.columns.droplevel()
+        # df_task_table = self.df_forecast_task.pivot(
+        #     index="task", columns="year", values="pop_quantity"
+        # )
+        # df_task_table.columns = df_task_table.columns.droplevel()
 
-        self.df_task_table = df_task_table
+        # self.df_task_table = df_task_table
 
         return self.df_forecast_task
 

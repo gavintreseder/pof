@@ -452,7 +452,7 @@ class ConditionTask(Task):
         self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
     ):
         """
-        If state and condition triggers are met return the timeline met then
+        If state and any condition triggers are met return the timeline met
         """
 
         t_end = t_end + 1
@@ -473,7 +473,7 @@ class ConditionTask(Task):
             if (trigger["lower"] != "min") and (trigger["lower"] is not None):
                 lower = tl_condition >= trigger["lower"]
 
-            if (trigger["upper"] != "max") and (trigger["lower"] is not None):
+            if (trigger["upper"] != "max") and (trigger["upper"] is not None):
                 upper = tl_condition <= trigger["upper"]
 
             c_trigger = c_trigger | (lower & upper)

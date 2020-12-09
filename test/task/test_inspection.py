@@ -12,7 +12,7 @@ from unittest.mock import Mock
 
 import fixtures
 import testconfig  # pylint: disable=unused-import
-from task.test_task_common import TestTaskCommon
+from task.test_task import TestTaskCommon
 from pof.task import Inspection
 
 
