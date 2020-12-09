@@ -78,7 +78,7 @@ def make_ms_fig(
     return fig, color_map
 
 
-def update_pof_fig(local, t_end=100, y_max=1):
+def update_pof_fig(local, t_end=None, y_max=None):
 
     try:
 
@@ -145,10 +145,15 @@ def update_pof_fig(local, t_end=100, y_max=1):
 
         fig.layout.yaxis.tickformat = ",.0%"
         fig.update_yaxes(automargin=True)
-        fig.update_yaxes(range=[0, y_max])
         fig.update_xaxes(automargin=True)
-        fig.update_xaxes(range=[0, t_end])
         fig.update_xaxes(title_text=col_names["time"])
+
+        if y_max is not None:
+            fig.update_yaxes(range=[0, y_max])
+
+        if t_end is not None:
+            fig.update_xaxes(range=[0, t_end])
+
     except:
         fig = go.Figure(
             layout=go.Layout(
@@ -159,7 +164,7 @@ def update_pof_fig(local, t_end=100, y_max=1):
     return fig
 
 
-def update_condition_fig(local, conf=0.95, t_end=100, y_max: List = None):
+def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None):
     """ Updates the condition figure"""
 
     try:
@@ -217,16 +222,14 @@ def update_condition_fig(local, conf=0.95, t_end=100, y_max: List = None):
                 row=idx,
                 col=1,
             )
-            fig.update_yaxes(
-                title_text=y_title + " Measure",
-                row=idx,
-                automargin=True,
-                range=[
-                    0,
-                    f"y_max_{y_title}",  # TODO fix this
-                ],
-            )
-            fig.update_xaxes(range=[0, t_end])
+            fig.update_yaxes(title_text=y_title + " Measure", row=idx, automargin=True)
+
+            if y_max is not None:
+                fig.update_yaxes(range=[0, y_max[idx - 1]])  # TODO - fix this
+
+            if t_end is not None:
+                fig.update_xaxes(range=[0, t_end])
+
             idx = idx + 1
 
         col_names = {"time": f"Age ({local.units})"}
@@ -283,10 +286,8 @@ def make_sensitivity_fig(
         # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
 
         # Add line dashes
-        df_plot["line_dash"] = " "
-        df_plot.loc[
-            df_plot["source"].isin(["risk", "direct", "total"]), "line_dash"
-        ] = "  "
+        df_plot[" "] = "  "
+        df_plot.loc[df_plot["source"].isin(["risk", "direct", "total"]), " "] = "   "
 
         # Add the colours
         color_map = get_color_map(df=df_plot, column="source")
@@ -300,14 +301,18 @@ def make_sensitivity_fig(
             y=y_axis,
             color="source",
             color_discrete_map=color_map,
-            line_dash="line_dash",
+            line_dash=" ",
             title=f"Sensitivity of Risk/Cost to {title_var}",
         )
 
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
 
-        fig.update_yaxes(range=[0, y_max])
+        if y_max is not None:
+            fig.update_yaxes(range=[0, y_max])
+
+        if t_end is not None:
+            fig.update_xaxes(range=[0, t_end])
 
         if var in ("t_delay", "t_interval"):
             col_names = {"time": f"{var} ({units})"}
@@ -322,7 +327,7 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=1000):
+def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=None):
 
     title = "Quantity of tasks for Population"
 
@@ -337,7 +342,8 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=1000):
             color_discrete_map=color_map,
             title=title,
         )
-        fig.update_yaxes(range=[0, y_max])
+        if y_max is not None:
+            fig.update_yaxes(range=[0, y_max])
 
     except Exception as error:
         raise error

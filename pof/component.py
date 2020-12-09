@@ -461,7 +461,7 @@ class Component(PofBase):
 
         # Get the desired time steps
         t_start = 0  # int(df_comp['time'].min()) if t_start is None
-        t_end = 200  # int(df_comp['time'].max()) if t_end is None
+        t_end = t_end  # int(df_comp['time'].max()) if t_end is None
         time = np.linspace(t_start, t_end, t_end - t_start + 1).astype(int)
 
         df = df_comp[["failure_mode", "source", "active"]].drop_duplicates()

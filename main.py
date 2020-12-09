@@ -182,17 +182,17 @@ def save_figure_limits(__, y_axis, axis_lock):
     """ Save the figure limits so they can be used for the axis lock"""
     try:
         if not axis_lock:
-            y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+            y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
         else:
             ctx = dash.callback_context
             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
             if dash_id == "sens_var_y-dropdown":
-                y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+                y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
             else:
                 return dash.no_update
     except:
-        y_max = None
-    return y_max
+        y_max_cost = None
+    return y_max_cost
 
 
 # @app.callback(
@@ -224,7 +224,9 @@ def save_figure_limits(__, y_axis, axis_lock):
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
     Input("sim_state", "children"),
-    # Input("cond_var_y-input", "value"),
+    Input("cond_1_var_y-input", "value"),
+    Input("cond_2_var_y-input", "value"),
+    Input("cond_3_var_y-input", "value"),
     Input("cost_var_y-input", "value"),
     Input("pof_var_y-input", "value"),
     Input("task_var_y-input", "value"),
@@ -235,7 +237,9 @@ def save_figure_limits(__, y_axis, axis_lock):
 )
 def update_figures(
     state,
-    # cond_var_y,
+    cond_1_var_y,
+    cond_2_var_y,
+    cond_3_var_y,
     ms_var_y,
     pof_var_y,
     task_var_y,
@@ -249,12 +253,18 @@ def update_figures(
     global pof_fig
 
     if active:
-        cond_var_y = None  # Temp fix
-        if not axis_lock:
+        if axis_lock:
             ms_var_y = None
-            cond_var_y = None
+            cond_1_var_y = None
+            cond_2_var_y = None
+            cond_3_var_y = None
             pof_var_y = None
             task_var_y = None
+
+        cond_var_y = []
+        for n in range(3):
+            var = "cond_" + str(n) + "_var_y"
+            cond_var_y.append(var)
 
         ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
         pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
@@ -370,8 +380,9 @@ def update_sensitivity(
 
 
 @app.callback(
-    [Output("n-progress", "value"), Output("n-progress", "children")],
-    [Input("progress-interval", "n_intervals")],
+    Output("n-progress", "value"),
+    Output("n-progress", "children"),
+    Input("progress-interval", "n_intervals"),
 )
 def update_progress(n):
     if pof_sim.n is None:

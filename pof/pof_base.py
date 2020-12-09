@@ -389,7 +389,9 @@ class PofBase:
         for i in np.linspace(lower, upper, n_increments):
             try:
                 self.update(var_name, i)
-                self.mc_timeline(t_end=100, n_iterations=n_iterations)
+                self.mc_timeline(
+                    t_end=100, n_iterations=n_iterations
+                )  # TODO Remove t_end hardcode
                 agg = self.expected_risk_cost_df()
                 agg["failure_mode"] = "agg"
                 agg = agg.groupby(by=["failure_mode", "task"])["cost"].sum()

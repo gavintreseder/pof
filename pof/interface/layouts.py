@@ -73,12 +73,12 @@ def make_layout(comp):
     # TODO replace these with None. They will be updated when the sim is completed
     y_axis_max = dict(
         pof_fig=1,
-        cond_fig_WT=150,
-        cond_fig_ED=250,
-        cond_fig_SF=5,
+        cond_fig_1=150,
+        cond_fig_2=250,
+        cond_fig_3=5,
         cost_fig=None,
         insp_interval_fig=None,
-        task_fig=1000,
+        task_fig=1500000,
     )
 
     layouts = html.Div(
@@ -183,7 +183,7 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max pof",
+                                                            "pof",
                                                             dcc.Input(
                                                                 id="pof_var_y-input",
                                                                 value=y_axis_max[
@@ -203,11 +203,11 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max WT (N/A)",
+                                                            "condition 1",
                                                             dcc.Input(
-                                                                id="cond_WT_var_y-input",
+                                                                id="cond_1_var_y-input",
                                                                 value=y_axis_max[
-                                                                    "cond_fig_WT"
+                                                                    "cond_fig_1"
                                                                 ],
                                                                 type="number",
                                                                 style={"width": 100},
@@ -221,11 +221,11 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max ED (N/A)",
+                                                            "condition 2",
                                                             dcc.Input(
-                                                                id="cond_ED_var_y-input",
+                                                                id="cond_2_var_y-input",
                                                                 value=y_axis_max[
-                                                                    "cond_fig_ED"
+                                                                    "cond_fig_2"
                                                                 ],
                                                                 type="number",
                                                                 style={"width": 100},
@@ -239,11 +239,11 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max SF (N/A)",
+                                                            "condition 3",
                                                             dcc.Input(
-                                                                id="cond_SF_var_y-input",
+                                                                id="cond_3_var_y-input",
                                                                 value=y_axis_max[
-                                                                    "cond_fig_SF"
+                                                                    "cond_fig_3"
                                                                 ],
                                                                 type="number",
                                                                 style={"width": 100},
@@ -261,7 +261,7 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max maintenance",
+                                                            "maintenance",
                                                             dcc.Input(
                                                                 id="cost_var_y-input",
                                                                 value=y_axis_max[
@@ -279,7 +279,7 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max sensitivity",
+                                                            "sensitivity",
                                                             dcc.Input(
                                                                 id="sens_var_y-input",
                                                                 value=y_axis_max[
@@ -301,7 +301,7 @@ def make_layout(comp):
                                                 [
                                                     dbc.InputGroupAddon(
                                                         [
-                                                            "y-axis max task",
+                                                            "task",
                                                             dcc.Input(
                                                                 id="task_var_y-input",
                                                                 value=y_axis_max[
