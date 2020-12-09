@@ -234,6 +234,10 @@ def save_figure_limits(__, y_axis, axis_lock):
     State("t_end-input", "value"),
     State("sim_n_active", "checked"),
     State("axis_lock-checkbox", "checked"),
+    State("cond-fig", "figure"),
+    State("ms-fig", "figure"),
+    State("pof-fig", "figure"),
+    State("task_forecast-fig", "figure"),
 )
 def update_figures(
     state,
@@ -247,6 +251,10 @@ def update_figures(
     t_end,
     active,
     axis_lock,
+    prev_cond_fig,
+    prev_ms_fig,
+    prev_pof_fig,
+    prev_task_fig,
     *args,
 ):
     global sfd
@@ -266,12 +274,14 @@ def update_figures(
             var = "cond_" + str(n) + "_var_y"
             cond_var_y.append(var)
 
-        ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
-        pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
+        ms_fig = pof_sim.plot_ms(
+            y_axis=y_axis, y_max=ms_var_y, t_end=t_end, prev=prev_ms_fig
+        )
+        pof_fig = update_pof_fig(
+            pof_sim, t_end=t_end, y_max=pof_var_y, prev=prev_pof_fig
+        )
         cond_fig = update_condition_fig(
-            pof_sim,
-            t_end=t_end,
-            y_max=cond_var_y,
+            pof_sim, t_end=t_end, y_max=cond_var_y, prev=prev_cond_fig
         )
 
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
@@ -280,6 +290,7 @@ def update_figures(
             df_task_forecast.sort_values(by=["year", "task"]),
             color_map=ms_fig[1],
             y_max=task_var_y,
+            prev=prev_task_fig,
         )
 
     else:
@@ -331,7 +342,8 @@ def update_ffcf(*args):
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
     Input("sens_var_y-input", "value"),
-    Input("ms-fig", "figure"),  # TODO change this trigger
+    # Input("ms-fig", "figure"),  # TODO change this trigger
+    State("sensitivity-fig", "figure"),
 )
 def update_sensitivity(
     active,
@@ -343,6 +355,7 @@ def update_sensitivity(
     step_size,
     t_end,
     y_max,
+    prev_sens,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -363,10 +376,7 @@ def update_sensitivity(
         )
 
         sens_fig = sens_sim.plot_sens(
-            var_id=var_id,
-            y_axis=y_axis,
-            t_end=t_end,
-            y_max=y_max,
+            var_id=var_id, y_axis=y_axis, t_end=t_end, y_max=y_max, prev=prev_sens
         )
 
         return sens_fig

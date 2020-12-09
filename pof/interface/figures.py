@@ -32,11 +32,7 @@ def get_color_map(df, column, colour_scheme=None):
 
 
 def make_ms_fig(
-    df,
-    y_axis="cost_cumulative",
-    y_max=None,
-    t_end=None,
-    units="unknown",
+    df, y_axis="cost_cumulative", y_max=None, t_end=None, units="unknown", prev=None
 ):
     try:
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
@@ -68,6 +64,12 @@ def make_ms_fig(
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
 
+        if prev is not None:
+            visibilities = visible_trace(prev)
+            fig.for_each_trace(
+                lambda trace: trace.update(visible=visibilities[trace.name])
+            )
+
     except Exception as error:
         raise (error)
         fig = go.Figure(
@@ -78,7 +80,7 @@ def make_ms_fig(
     return fig, color_map
 
 
-def update_pof_fig(local, t_end=None, y_max=None):
+def update_pof_fig(local, t_end=None, y_max=None, prev=None):
 
     try:
 
@@ -154,6 +156,12 @@ def update_pof_fig(local, t_end=None, y_max=None):
         if t_end is not None:
             fig.update_xaxes(range=[0, t_end])
 
+        if prev is not None:
+            visibilities = visible_trace(prev)
+            fig.for_each_trace(
+                lambda trace: trace.update(visible=visibilities[trace.name])
+            )
+
     except:
         fig = go.Figure(
             layout=go.Layout(
@@ -164,7 +172,7 @@ def update_pof_fig(local, t_end=None, y_max=None):
     return fig
 
 
-def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None):
+def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None, prev=None):
     """ Updates the condition figure"""
 
     try:
@@ -182,6 +190,8 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None):
 
         cmap = px.colors.qualitative.Safe
         idx = 1
+
+        visible = visible_trace(prev)
 
         for cond_name, cond in ecl.items():
             # Format the y_axis titles
@@ -207,6 +217,7 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None):
                     line_color="rgba(255,255,255,0)",
                     showlegend=False,
                     name=cond_name,
+                    visible=visible.get(cond_name),
                 ),
                 row=idx,
                 col=1,
@@ -218,6 +229,7 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None):
                     line_color=cmap[idx],
                     name=cond_name,
                     showlegend=False,
+                    visible=visible.get(cond_name),
                 ),
                 row=idx,
                 col=1,
@@ -261,6 +273,7 @@ def make_sensitivity_fig(
     y_max=None,
     units="unknown",
     summarise=True,
+    prev=None,
 ):
 
     var = var_name.split("-")[-1]
@@ -311,12 +324,16 @@ def make_sensitivity_fig(
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
-        if t_end is not None:
-            fig.update_xaxes(range=[0, t_end])
+        # if t_end is not None:
+        #     fig.update_xaxes(range=[0, t_end])
 
         if var in ("t_delay", "t_interval"):
             col_names = {"time": f"{var} ({units})"}
             fig.update_xaxes(title_text=col_names["time"])
+
+        if prev is not None:
+            visibilities = visible_trace(prev)
+            fig.for_each_trace(lambda trace: trace.update(visible=visibilities[trace.name]))
 
     except Exception as error:
         raise error
@@ -327,7 +344,9 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=None):
+def make_task_forecast_fig(
+    df, y_axis="pop_quantity", color_map="", y_max=None, prev=None
+):
 
     title = "Quantity of tasks for Population"
 
@@ -344,6 +363,12 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", color_map="", y_max=None):
         )
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
+
+        if prev is not None:
+            visibilities = visible_trace(prev)
+            fig.for_each_trace(
+                lambda trace: trace.update(visible=visibilities[trace.name])
+            )
 
     except Exception as error:
         raise error
@@ -377,3 +402,9 @@ def humanise(data):
 
     elif isinstance(str):
         data = data.replace("_", " ").title()
+
+
+def visible_trace(prev):
+    visibilities = {d.get("name"): d.get("visible") for d in prev["data"]}
+
+    return visibilities

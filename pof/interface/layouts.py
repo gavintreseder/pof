@@ -142,29 +142,10 @@ def make_layout(comp):
                     dbc.Col(),
                 ]
             ),
-            dbc.Row(
-                [
-                    dbc.Col(dcc.Graph(id="pof-fig")),
-                    dbc.Col(dcc.Graph(id="cond-fig")),
-                ]
-            ),
-            dbc.Row(
-                [
-                    dbc.Col(dcc.Graph(id="ms-fig")),
-                    dbc.Col(dcc.Graph(id="sensitivity-fig")),
-                ]
-            ),
-            dbc.Row(
-                [
-                    dbc.Col(dcc.Graph(id="task_forecast-fig")),
-                    dbc.Col(),
-                ]
-            ),
             html.Div(
                 [
                     dbc.InputGroupAddon(
                         [
-                            dbc.Checkbox(id="collapse_y_limits-active", checked=True),
                             dbc.Button(
                                 "Edit y_axes limits",
                                 color="link",
@@ -322,6 +303,24 @@ def make_layout(comp):
                         ),
                         id="collapse_y_limits",
                     ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="pof-fig")),
+                    dbc.Col(dcc.Graph(id="cond-fig")),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="ms-fig")),
+                    dbc.Col(dcc.Graph(id="sensitivity-fig")),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="task_forecast-fig")),
+                    dbc.Col(),
                 ]
             ),
             html.Div(
@@ -526,7 +525,9 @@ def make_component_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=component.active),
+                dbc.Checkbox(
+                    id=prefix + "active", checked=component.active, disabled=True
+                ),
                 addon_type="prepend",
             ),
             dbc.Button(

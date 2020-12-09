@@ -569,11 +569,21 @@ class Component(PofBase):
     # TODO change default to first value from const
 
     def plot_ms(
-        self, y_axis="cost_cumulative", y_max=None, t_end=None, units=NotImplemented
+        self,
+        y_axis="cost_cumulative",
+        y_max=None,
+        t_end=None,
+        units=NotImplemented,
+        prev=None,
     ):
         # TODO Add conversion for units when plotting if units != self.units
         return make_ms_fig(
-            df=self.df_erc.sort_values(by=["time", "task"]), y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units
+            df=self.df_erc.sort_values(by=["time", "task"]),
+            y_axis=y_axis,
+            y_max=y_max,
+            t_end=t_end,
+            units=self.units,
+            prev=prev
         )
 
     def plot_sens(
@@ -583,6 +593,7 @@ class Component(PofBase):
         t_end=None,
         units=NotImplemented,
         var_id="",
+        prev=None
     ):
         """ Returns a sensitivity figure if df_sens has aleady been calculated"""
         var_name = var_id.split("-")[-1]
@@ -593,6 +604,7 @@ class Component(PofBase):
             t_end=t_end,
             y_max=y_max,
             units=self.units,
+            prev=prev
         )
 
     # TODO switch other plots
