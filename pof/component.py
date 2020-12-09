@@ -461,7 +461,7 @@ class Component(PofBase):
 
         # Get the desired time steps
         t_start = 0  # int(df_comp['time'].min()) if t_start is None
-        t_end = 200  # int(df_comp['time'].max()) if t_end is None
+        t_end = t_end  # int(df_comp['time'].max()) if t_end is None
         time = np.linspace(t_start, t_end, t_end - t_start + 1).astype(int)
 
         df = df_comp[["failure_mode", "source", "active"]].drop_duplicates()
@@ -569,7 +569,12 @@ class Component(PofBase):
     # TODO change default to first value from const
 
     def plot_ms(
-        self, y_axis="cost_cumulative", y_max=None, t_end=None, units=NotImplemented
+        self,
+        y_axis="cost_cumulative",
+        y_max=None,
+        t_end=None,
+        units=NotImplemented,
+        prev=None,
     ):
         # TODO Add conversion for units when plotting if units != self.units
         return make_ms_fig(
@@ -578,6 +583,7 @@ class Component(PofBase):
             y_max=y_max,
             t_end=t_end,
             units=self.units,
+            prev=prev,
         )
 
     def plot_sens(
@@ -587,6 +593,7 @@ class Component(PofBase):
         t_end=None,
         units=NotImplemented,  # TODO add a plot here to make sure it
         var_id="",
+        prev=None,
     ):
         """ Returns a sensitivity figure if df_sens has aleady been calculated"""
         var_name = var_id.split("-")[-1]
@@ -597,6 +604,7 @@ class Component(PofBase):
             t_end=t_end,
             y_max=y_max,
             units=self.units,
+            prev=prev,
         )
 
     # TODO switch other plots

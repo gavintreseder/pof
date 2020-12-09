@@ -183,19 +183,20 @@ def save_figure_limits(__, y_axis, axis_lock):
     try:
 
         if not axis_lock:
-            y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+            y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
         else:
             ctx = dash.callback_context
             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
             if dash_id == "sens_var_y-dropdown":
-                y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
-
+                y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
             else:
                 return dash.no_update
     except:
-        y_max = None
-    
-    return y_max
+        y_max_cost = None
+    return y_max_cost
+
+
+# TODO Check with Mel why this is y_max_cost now (it could be quantity)
 
 # y_maxes = []
 # for y_max in (1, 2, 3, 4):
@@ -204,7 +205,7 @@ def save_figure_limits(__, y_axis, axis_lock):
 
 # def get_y_max(y_axis, axis_lock)
 
-    # Get a y_max
+# Get a y_max
 
 # @app.callback(
 #     Output("sens_var_y-input", "value"),
@@ -235,7 +236,9 @@ def save_figure_limits(__, y_axis, axis_lock):
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
     Input("sim_state", "children"),
-    # Input("cond_var_y-input", "value"),
+    Input("cond_1_var_y-input", "value"),
+    Input("cond_2_var_y-input", "value"),
+    Input("cond_3_var_y-input", "value"),
     Input("cost_var_y-input", "value"),
     Input("pof_var_y-input", "value"),
     Input("task_var_y-input", "value"),
@@ -243,10 +246,16 @@ def save_figure_limits(__, y_axis, axis_lock):
     State("t_end-input", "value"),
     State("sim_n_active", "checked"),
     State("axis_lock-checkbox", "checked"),
+    State("cond-fig", "figure"),
+    State("ms-fig", "figure"),
+    State("pof-fig", "figure"),
+    State("task_forecast-fig", "figure"),
 )
 def update_figures(
     state,
-    # cond_var_y,
+    cond_1_var_y,
+    cond_2_var_y,
+    cond_3_var_y,
     ms_var_y,
     pof_var_y,
     task_var_y,
@@ -254,33 +263,48 @@ def update_figures(
     t_end,
     active,
     axis_lock,
+    prev_cond_fig,
+    prev_ms_fig,
+    prev_pof_fig,
+    prev_task_fig,
     *args,
 ):
     global sfd
     global pof_fig
 
     if active:
-        cond_var_y = None  # Temp fix
-        if not axis_lock:
+        if axis_lock:
             ms_var_y = None
-            cond_var_y = None
+            cond_1_var_y = None
+            cond_2_var_y = None
+            cond_3_var_y = None
             pof_var_y = None
             task_var_y = None
 
-        ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, t_end=t_end)
-        pof_fig = update_pof_fig(pof_sim, t_end=t_end, y_max=pof_var_y)
+        cond_var_y = []
+        for n in range(3):
+            var = "cond_" + str(n) + "_var_y"
+            cond_var_y.append(var)
+
+        ms_fig = pof_sim.plot_ms(
+            y_axis=y_axis, y_max=ms_var_y, t_end=t_end, prev=prev_ms_fig
+        )
+        pof_fig = update_pof_fig(
+            pof_sim, t_end=t_end, y_max=pof_var_y, prev=prev_pof_fig
+        )
         cond_fig = update_condition_fig(
-            pof_sim,
-            t_end=t_end,
-            y_max=cond_var_y,
+            pof_sim, t_end=t_end, y_max=cond_var_y, prev=prev_cond_fig
         )
 
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
 
         task_forecast_fig = make_task_forecast_fig(
-            df_task_forecast.sort_values(by=["year", "task"]), # TODO move this filter early in the code
+            df_task_forecast.sort_values(
+                by=["year", "task"]
+            ),  # TODO move this filter early in the code
             color_map=ms_fig[1],
             y_max=task_var_y,
+            prev=prev_task_fig,
         )
 
     else:
@@ -332,7 +356,8 @@ def update_ffcf(*args):
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
     Input("sens_var_y-input", "value"),
-    Input("ms-fig", "figure"),  # TODO change this trigger
+    # Input("ms-fig", "figure"),  # TODO change this trigger
+    State("sensitivity-fig", "figure"),
 )
 def update_sensitivity(
     active,
@@ -344,6 +369,7 @@ def update_sensitivity(
     step_size,
     t_end,
     y_max,
+    prev_sens,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -364,10 +390,7 @@ def update_sensitivity(
         )
 
         sens_fig = sens_sim.plot_sens(
-            var_id=var_id,
-            y_axis=y_axis,
-            t_end=t_end,
-            y_max=y_max,
+            var_id=var_id, y_axis=y_axis, t_end=t_end, y_max=y_max, prev=prev_sens
         )
 
         return sens_fig
@@ -381,8 +404,9 @@ def update_sensitivity(
 
 
 @app.callback(
-    [Output("n-progress", "value"), Output("n-progress", "children")],
-    [Input("progress-interval", "n_intervals")],
+    Output("n-progress", "value"),
+    Output("n-progress", "children"),
+    Input("progress-interval", "n_intervals"),
 )
 def update_progress(n):
     if pof_sim.n is None:
