@@ -73,11 +73,7 @@ def make_ms_fig(
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
 
-        if prev is not None:
-            visibilities = visible_trace(prev)
-            fig.for_each_trace(
-                lambda trace: trace.update(visible=visibilities[trace.name])
-            )
+        fig = update_visibility(fig, prev)
 
     except Exception as error:
         raise (error)
@@ -165,11 +161,7 @@ def update_pof_fig(local, t_end=None, y_max=None, prev=None):
         if t_end is not None:
             fig.update_xaxes(range=[0, t_end])
 
-        if prev is not None:
-            visibilities = visible_trace(prev)
-            fig.for_each_trace(
-                lambda trace: trace.update(visible=visibilities[trace.name])
-            )
+        fig = update_visibility(fig, prev)
 
     except:
         fig = go.Figure(
@@ -340,9 +332,7 @@ def make_sensitivity_fig(
             col_names = {"time": f"{var} ({units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
-        if prev is not None:
-            visibilities = visible_trace(prev)
-            fig.for_each_trace(lambda trace: trace.update(visible=visibilities[trace.name]))
+        fig = update_visibility(fig, prev)
 
     except Exception as error:
         raise error
@@ -353,7 +343,7 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(
+def make_forecast_fig(
     df, y_axis="pop_quantity", color_map="", y_max=None, prev=None
 ):
 
@@ -373,11 +363,7 @@ def make_task_forecast_fig(
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
-        if prev is not None:
-            visibilities = visible_trace(prev)
-            fig.for_each_trace(
-                lambda trace: trace.update(visible=visibilities[trace.name])
-            )
+        fig = update_visibility(fig, prev)
 
     except Exception as error:
         raise error
@@ -413,7 +399,13 @@ def humanise(data):
         data = data.replace("_", " ").title()
 
 
-def visible_trace(prev):
-    visibilities = {d.get("name"): d.get("visible") for d in prev["data"]}
+def update_visibility(curr, prev = None):
+    """Updates the visibility based on the visibility previously selected"""
+    if prev is not None:
+        visibilities = {d.get("name"): d.get("visible") for d in prev["data"] if d in curr['data']}
 
-    return visibilities
+        curr.for_each_trace(
+            lambda trace: trace.update(visible=visibilities[trace.name])
+        )
+
+    return curr

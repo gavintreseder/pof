@@ -19,25 +19,30 @@ from pof.interface.layouts import make_layout, cf  # TODO fix the need to import
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
-    make_task_forecast_fig,
+    make_forecast_fig,
 )
 from pof.data.asset_data import SimpleFleet
 
+# Forecast years
+START_YEAR = 2015
+END_YEAR = 2024
+CURRENT_YEAR = 2020
+
 # Asset Model Data
 file_path = os.getcwd() + r"\data\inputs" + os.sep
-file_name = r"Asset Model - Pole - Timber.xlsx"
+FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
 
-aml = AssetModelLoader(file_path + file_name)
+aml = AssetModelLoader(file_path + FILE_NAME)
 comp_data = aml.load()
 comp = Component.from_dict(comp_data["pole"])
 
 # Population Data
 file_path = os.path.dirname(os.path.dirname(__file__)) + r"\inputs" + os.sep
-file_name = r"population_summary.csv"
+FILE_NAME = r"population_summary.csv"
 
-sfd = SimpleFleet(file_path + file_name)
+sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
-sfd.calc_forecast_age(2015, 2020, 2020)  # TODO make these inputs
+sfd.calc_forecast_age(START_YEAR, END_YEAR, cURRENT_YEAR)
 
 
 # Turn off logging level to speed up implementation
@@ -273,7 +278,7 @@ def update_figures(
     global pof_fig
 
     if active:
-        if axis_lock:
+        if not axis_lock:
             ms_var_y = None
             cond_1_var_y = None
             cond_2_var_y = None
@@ -298,7 +303,7 @@ def update_figures(
 
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
 
-        task_forecast_fig = make_task_forecast_fig(
+        task_forecast_fig = make_forecast_fig(
             df_task_forecast.sort_values(
                 by=["year", "task"]
             ),  # TODO move this filter early in the code

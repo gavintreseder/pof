@@ -524,6 +524,8 @@ class Component(PofBase):
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
         for i in np.arange(lower, upper, step_size):
+            if not self.up_to_date:
+                break
             try:
                 # Reset component
                 self.reset()
