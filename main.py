@@ -37,7 +37,7 @@ file_name = r"population_summary.csv"
 
 sfd = SimpleFleet(file_path + file_name)
 sfd.load()
-sfd.calc_forecast_age(2015, 2019, 2020)  # TODO make these inputs
+sfd.calc_forecast_age(2015, 2020, 2020)  # TODO make these inputs
 
 
 # Turn off logging level to speed up implementation
@@ -181,6 +181,7 @@ def update_simulation(active, t_end, n_iterations, state, time_unit):
 def save_figure_limits(__, y_axis, axis_lock):
     """ Save the figure limits so they can be used for the axis lock"""
     try:
+
         if not axis_lock:
             y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
         else:
@@ -188,12 +189,22 @@ def save_figure_limits(__, y_axis, axis_lock):
             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
             if dash_id == "sens_var_y-dropdown":
                 y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+
             else:
                 return dash.no_update
     except:
         y_max = None
+    
     return y_max
 
+# y_maxes = []
+# for y_max in (1, 2, 3, 4):
+#     y_maxes.append(get_y_max(y_max, value)
+
+
+# def get_y_max(y_axis, axis_lock)
+
+    # Get a y_max
 
 # @app.callback(
 #     Output("sens_var_y-input", "value"),
@@ -267,7 +278,7 @@ def update_figures(
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
 
         task_forecast_fig = make_task_forecast_fig(
-            df_task_forecast.sort_values(by=["year", "task"]),
+            df_task_forecast.sort_values(by=["year", "task"]), # TODO move this filter early in the code
             color_map=ms_fig[1],
             y_max=task_var_y,
         )

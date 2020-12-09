@@ -325,7 +325,7 @@ class Task(PofBase):
         Resets the logs for a task
         """
         self.t_completion = []
-        self.cost_complete = []
+        self.cost_completion = []
 
     # ********************* interface methods ******************
 

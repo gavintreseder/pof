@@ -19,12 +19,18 @@ from plotly.subplots import make_subplots
 
 def get_color_map(df, column, colour_scheme=None):
 
+    # if column == 'failure_mode -> sort and use plolty
+
+    # if column == 'task' -> sort and use bold
+
     if colour_scheme == "plotly":
         colors = px.colors.qualitative.Plotly
     elif colour_scheme == "bold":
         colors = px.colors.qualitative.Bold
     else:
         colors = px.colors.qualitative.Safe
+
+    # Sort this so it goes Total, Risk, Direct, everything else alphabetical
 
     color_map = dict(zip(df[column].unique(), colors))
 
@@ -39,8 +45,11 @@ def make_ms_fig(
     units="unknown",
 ):
     try:
+
+        # Colour step
         color_map = get_color_map(df=df, column="task", colour_scheme="bold")
 
+        # Filter step
         df = df[df["active"]]
 
         # Format the labels

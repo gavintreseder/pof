@@ -1,7 +1,26 @@
 
 
+# Interface changes
+    # Filter for different failure modes
+    # Split Graphs into different outputs to speed up Changes
+    # Single card for graph parameters
+    # Condition parameters under condition
+    # Table for failures
+    # Upload box for model if not in paths
+    # Talk through colour map
+    # Error checking for prohibbited tasks from input sheet to objects
+
+# Grad task
+    # Sphinx documentation
+    # Add test for resets
+    # Add an upload box
+
+
+# Termite treatment
+
 # Chnage to emergency replacement
 # Change limits for CAT1/2
+# Add indicator model calc for WT, ED to the model
 
 # Gav 05 Dec 20
     # Add with replacement version
@@ -13,7 +32,6 @@
         # inspection time offset for different tasks (unit test) (symptom: look at df_erc)
 
 Mel - 07 Dec 20
-    # Add an upload box
     # Write a save func
     # Button to freeze graph axis
     # Add units to figure axis

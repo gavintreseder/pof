@@ -573,7 +573,11 @@ class Component(PofBase):
     ):
         # TODO Add conversion for units when plotting if units != self.units
         return make_ms_fig(
-            df=self.df_erc.sort_values(by=["time", "task"]), y_axis=y_axis, y_max=y_max, t_end=t_end, units=self.units
+            df=self.df_erc.sort_values(by=["time", "task"]),
+            y_axis=y_axis,
+            y_max=y_max,
+            t_end=t_end,
+            units=self.units,
         )
 
     def plot_sens(
