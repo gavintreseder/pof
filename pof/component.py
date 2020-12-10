@@ -307,15 +307,15 @@ class Component(PofBase):
                 cf = len(fm.expected_cf())
                 n = self._sim_counter
                 ff_cf[fm.name] = {
-                    "fm": fm.name,
                     "ie": insp_effective,
                     "ff": ff,
                     "cf": cf,
                 }
 
         df_summary = pd.DataFrame.from_dict(ff_cf).T
-        failures = df_summary[['ff','cf']].sum(axis=1)
-        df_summary.loc[failures != 0, ["ff %", "cf %"]] = df_summary.loc[failures != 0, ["ff", "cf"]].div(
+        df_summary.index.name = "fm"
+        failures = df_summary[["ff", "cf"]].sum(axis=1)
+        df_summary[["ff %", "cf %"]] = df_summary.loc[failures != 0, ["ff", "cf"]].div(
             failures, axis=0
         )
 
