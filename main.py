@@ -240,6 +240,7 @@ def save_figure_limits(__, y_axis, axis_lock):
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
+    Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
     Input("cond_1_var_y-input", "value"),
     Input("cond_2_var_y-input", "value"),
@@ -299,7 +300,8 @@ def update_figures(
 
         cond_fig = pof_sim.plot_cond(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
-        from component import dforder
+        # TODO these will need to be updated so that asset data is within the component/asset class rather tahn an input
+        # TODO maybe make the asset class that has components
 
         df_task_forecast = comp.df_order(
             df=sfd.get_population_tasks(df_erc=pof_sim.df_erc), column="task"
@@ -311,10 +313,12 @@ def update_figures(
             prev=prev_task_fig,
         )
 
+        forecast_table_fig = pof_sim.plot_forecast_table(sfd.df_age)
+
     else:
         raise PreventUpdate
 
-    return cond_fig, ms_fig, pof_fig, task_forecast_fig
+    return cond_fig, ms_fig, pof_fig, task_forecast_fig, forecast_table_fig
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])

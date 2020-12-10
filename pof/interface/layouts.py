@@ -154,6 +154,7 @@ def make_layout(comp):
                         ],
                         addon_type="prepend",
                     ),
+                    #TODO Mel - The layout needs to be generated algorithmically based on they number of indiciators present in that model
                     dbc.Collapse(
                         dbc.Card(
                             dbc.CardBody(
@@ -320,7 +321,7 @@ def make_layout(comp):
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="task_forecast-fig")),
-                    dbc.Col(),
+                    dbc.Col(dcc.Graph(id='forecast_table-fig')),
                 ]
             ),
             html.Div(
@@ -466,6 +467,8 @@ def make_layout(comp):
     )
 
     return layouts
+
+
 
 
 # ******************* Validation ******************

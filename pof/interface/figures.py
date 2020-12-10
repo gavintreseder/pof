@@ -374,10 +374,7 @@ def humanise(data):
 def update_visibility(curr, prev=None):
     """Updates the visibility based on the visibility previously selected"""
     if prev is not None:
-        visibilities = {
-            d.get("name"): d.get("visible")
-            for d in prev["data"]
-        }
+        visibilities = {d.get("name"): d.get("visible") for d in prev["data"]}
         # This is updating both tasks
 
         for trace in curr["data"]:
