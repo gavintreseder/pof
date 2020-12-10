@@ -89,7 +89,7 @@ Upgrade pip to the latest version to make sure packages install correctly
 
 You may see a yellow warning after this command. This will change as 
 ### To execute the project
-Install the dependencies that are for this module to run
+Install the dependencies that are for this module to run. (Note: This connection will not work when connected to the EE network on on F5 VPN)
 
 >>> pip install -r requirements.txt
 
