@@ -25,7 +25,13 @@ from pof.indicator import Indicator
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
-from pof.interface.figures import make_ms_fig, make_sensitivity_fig
+from pof.interface.figures import (
+    make_ms_fig,
+    make_sensitivity_fig,
+    update_pof_fig,
+    update_condition_fig,
+    make_task_forecast_fig,
+)
 
 DEFAULT_ITERATIONS = 10
 
@@ -546,14 +552,12 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        df = (
+        self.df_sens = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
-
-        self.df_sens = self.df_order(df=df, column="source")
 
         return self.df_sens
 
@@ -588,6 +592,27 @@ class Component(PofBase):
             prev=prev,
         )
 
+    def plot_pof(self, local, t_end=None, y_max=None, prev=None):
+        """ Returns a pof figure if df_sens has aleady been calculated"""
+        return update_pof_fig(local, t_end=t_end, y_max=y_max, prev=prev)
+
+    def plot_cond(self, local, y_max=None, prev=None):
+        """ Returns a condition figure if df_sens has aleady been calculated"""
+        return update_condition_fig(local, y_max=y_max, prev=prev)
+
+    def plot_task(
+        self,
+        df=None,
+        y_max=None,
+        prev=None,
+    ):
+        """ Returns a task figure if df_sens has aleady been calculated"""
+        return make_task_forecast_fig(
+            df=df,
+            y_max=y_max,
+            prev=prev,
+        )
+
     def plot_sens(
         self,
         y_axis="cost_cumulative",
@@ -598,8 +623,10 @@ class Component(PofBase):
     ):
         """ Returns a sensitivity figure if df_sens has aleady been calculated"""
         var_name = var_id.split("-")[-1]
+        df = self.df_order(df=self.df_sens, column="source", var=var_name) #Sens ordered here as x var is needed
+
         return make_sensitivity_fig(
-            df=self.df_sens,
+            df=df,
             var_name=var_name,
             y_axis=y_axis,
             y_max=y_max,
@@ -607,43 +634,57 @@ class Component(PofBase):
             prev=prev,
         )
 
-    # TODO switch other plots
-
-    def df_order(self, df, column):
+    def df_order(self, df=None, column=None, var=None):
         """
         sorts the dataframes for the graphs with total, risk and direct first
         """
-        return df
-        # if column is None:
-        #     raise ValueError("Column must be defined")
+        if column is None:
+            raise ValueError("Column must be defined")
 
-        # if column == "task":
-        #     values = df["task"].unique().tolist()
-        #     values.sort()
-        # elif column == "source":
-        #     values = df["source"].unique().tolist()
-        #     values.sort()
+        # List distinct values in input column
+        if column == "task":
+            values = df["task"].unique().tolist()
+            values.sort()
+        elif column == "source":
+            values = df["source"].unique().tolist()
+            values.sort()
 
-        # start_order = ["total", "risk", "direct"]
-        # set_order = []
+        # Create a list of columns to sort by
+        if var is not None:
+            columns = [var, column]
+        elif "year" in df.columns.tolist():
+            columns = ["year", column]
+        elif "time" in df.columns.tolist():
+            columns = ["time", column]
+        else:
+            columns = [column]
 
-        # for var in start_order:
-        #     if var in values:
-        #         set_order.append(var)
+        # Define custom order required
+        start_order = ["total", "risk", "direct"]
+        set_order = []
 
-        # for var in values:
-        #     if var not in set_order:
-        #         set_order.append(var)
+        # Add custom columns to the set order
+        for var in start_order:
+            if var in values:
+                set_order.append(var)
 
-        # return_order = {}
-        # i = 1
-        # for var in set_order:
-        #     return_order[var] = i
-        #     i = i + 1
+        # Add all other columns to set order alphabetically
+        for var in values:
+            if var not in set_order:
+                set_order.append(var)
 
-        # df_ordered = df.sort_values(by=[column], key=lambda x: x.map(return_order))
+        # Create a dictionary of return order
+        return_order = {}
+        i = 1
+        for var in set_order:
+            return_order[var] = i
+            i = i + 1
 
-        # return df_ordered
+        # Sort by sort column list
+        df[column] = pd.Categorical(df[column], return_order)
+        df_ordered = df.sort_values(by=columns)
+
+        return df_ordered
 
     # ****************** Reset ******************
 

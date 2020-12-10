@@ -292,15 +292,19 @@ def update_figures(
             cond_var_y.append(var)
 
         ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, prev=prev_ms_fig)
-        pof_fig = update_pof_fig(
+
+        pof_fig = pof_sim.plot_pof(
             pof_sim, t_end=t_end, y_max=pof_var_y, prev=prev_pof_fig
         )
-        cond_fig = update_condition_fig(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
-        df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
+        cond_fig = pof_sim.plot_cond(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
-        task_forecast_fig = make_task_forecast_fig(
-            df_task_forecast,
+        df_task_forecast = comp.df_order(
+            df=sfd.get_population_tasks(df_erc=pof_sim.df_erc), column="task"
+        )
+
+        task_forecast_fig = pof_sim.plot_task(
+            df=df_task_forecast,
             y_max=task_var_y,
             prev=prev_task_fig,
         )
