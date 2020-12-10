@@ -15,13 +15,16 @@ from pof import Component
 from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
-from pof.interface.layouts import make_layout, cf  # TODO fix the need to import cf
+from pof.interface.layouts import (
+    # get_chart_list,
+    make_layout,
+    cf,
+)  # TODO fix the need to import cf
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
     make_task_forecast_fig,
 )
-from pof.data.asset_data import SimpleFleet
 
 # Forecast years
 START_YEAR = 2015
@@ -43,7 +46,6 @@ FILE_NAME = r"population_summary.csv"
 sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
 sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
-
 
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.CRITICAL)
@@ -179,38 +181,59 @@ def update_simulation(active, t_end, n_iterations, state, time_unit):
 
 @app.callback(
     Output("cost_var_y-input", "value"),  # Output('fig_limit_maint_strat', 'children')
+    # Output("cond_1_var_y-input", "value"),
+    # Output("cond_2_var_y-input", "value"),
+    # Output("cond_3_var_y-input", "value"),
+    # Output("pof_var_y-input", "value"),
+    # Output("task_var_y-input", "value"),
+    # Output("sens_var_y-input", "value"),
     Input("sim_state", "children"),
     Input("sens_var_y-dropdown", "value"),  # TODO change name of this
     Input("axis_lock-checkbox", "checked"),  # TODO should this be a state?
 )
 def save_figure_limits(__, y_axis, axis_lock):
-    """ Save the figure limits so they can be used for the axis lock"""
+    """ Save the figure limits so they can be used for the axis lock """
+
+    #     y_max_values = []
+    #     chart_list = get_chart_list()
+
+    #     for chart in chart_list:
+    #         y_max_values.append(get_y_max(chart, y_axis, axis_lock))
+
+    #     return y_max_values
+
+    # def get_y_max(chart, y_axis, axis_lock):
+    #     """ Determine the maximum y value for a given axis """
+    # try:
+    #     if chart.includes("pof"):
+    #         df =
+    #     elif chart.includes("cond"):
+    #         df = ecl
+    #         y_axi = "upper"
+    #     elif chart.includes("ms"):
+    #         df = df_erc
+    #         column = ""
+    #     elif chart.includes("sens"):
+    #         df = df_sens
+    #     elif chart.includes("task"):
+    #         df = get_df_task_forecast(df=pof_sim.df_erc, column="task")
+
     try:
 
         if not axis_lock:
-            y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+            y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+            # .max not .sum as they are not summing
         else:
             ctx = dash.callback_context
             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
             if dash_id == "sens_var_y-dropdown":
-                y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+                y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
             else:
                 return dash.no_update
     except:
-        y_max_cost = None
-    return y_max_cost
+        y_max = None
+    return y_max
 
-
-# TODO Check with Mel why this is y_max_cost now (it could be quantity)
-
-# y_maxes = []
-# for y_max in (1, 2, 3, 4):
-#     y_maxes.append(get_y_max(y_max, value)
-
-
-# def get_y_max(y_axis, axis_lock)
-
-# Get a y_max
 
 # @app.callback(
 #     Output("sens_var_y-input", "value"),
@@ -275,7 +298,6 @@ def update_figures(
     prev_task_fig,
     *args,
 ):
-    global sfd
     global pof_fig
 
     if active:
@@ -300,18 +322,7 @@ def update_figures(
 
         cond_fig = pof_sim.plot_cond(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
-        # TODO these will need to be updated so that asset data is within the component/asset class rather tahn an input
-        # TODO maybe make the asset class that has components
-
-        df_task_forecast = comp.df_order(
-            df=sfd.get_population_tasks(df_erc=pof_sim.df_erc), column="task"
-        )
-
-        task_forecast_fig = pof_sim.plot_task(
-            df=df_task_forecast,
-            y_max=task_var_y,
-            prev=prev_task_fig,
-        )
+        task_forecast_fig = pof_sim.plot_task(y_max=task_var_y, prev=prev_task_fig)
 
         forecast_table_fig = pof_sim.plot_forecast_table(sfd.df_age)
 
