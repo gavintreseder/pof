@@ -373,12 +373,12 @@ class Component(PofBase):
         sf["all"]["active"] = False
 
         for fm_name, fm in self.fm.items():
-            pof = fm.expected_pof()
-            sf[fm_name] = dict()
-            sf[fm_name]["pof"] = pof.sf(t_start, t_end)
-            sf[fm_name]["active"] = fm.active
-
             if fm.active:
+                pof = fm.expected_pof()
+                sf[fm_name] = dict()
+                sf[fm_name]["pof"] = pof.sf(t_start, t_end)
+                sf[fm_name]["active"] = fm.active
+
                 sf["all"]["pof"] = sf["all"]["pof"] * sf[fm_name]["pof"]
                 sf["all"]["active"] = True
 
@@ -524,6 +524,8 @@ class Component(PofBase):
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
         for i in np.arange(lower, upper, step_size):
+            if not self.up_to_date:
+                break
             try:
                 # Reset component
                 self.reset()
@@ -593,7 +595,7 @@ class Component(PofBase):
         y_axis="cost_cumulative",
         y_max=None,
         t_end=None,
-        units=NotImplemented,
+        units=NotImplemented,  # TODO add a plot here to make sure it
         var_id="",
         prev=None,
     ):

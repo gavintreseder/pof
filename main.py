@@ -19,25 +19,30 @@ from pof.interface.layouts import make_layout, cf  # TODO fix the need to import
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
-    make_task_forecast_fig,
+    make_forecast_fig,
 )
 from pof.data.asset_data import SimpleFleet
 
+# Forecast years
+START_YEAR = 2015
+END_YEAR = 2024
+CURRENT_YEAR = 2020
+
 # Asset Model Data
 file_path = os.getcwd() + r"\data\inputs" + os.sep
-file_name = r"Asset Model - Pole - Timber.xlsx"
+FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
 
-aml = AssetModelLoader(file_path + file_name)
+aml = AssetModelLoader(file_path + FILE_NAME)
 comp_data = aml.load()
 comp = Component.from_dict(comp_data["pole"])
 
 # Population Data
 file_path = os.path.dirname(os.path.dirname(__file__)) + r"\inputs" + os.sep
-file_name = r"population_summary.csv"
+FILE_NAME = r"population_summary.csv"
 
-sfd = SimpleFleet(file_path + file_name)
+sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
-sfd.calc_forecast_age(2015, 2019, 2020)  # TODO make these inputs
+sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 
 # Turn off logging level to speed up implementation
@@ -181,6 +186,7 @@ def update_simulation(active, t_end, n_iterations, state, time_unit):
 def save_figure_limits(__, y_axis, axis_lock):
     """ Save the figure limits so they can be used for the axis lock"""
     try:
+
         if not axis_lock:
             y_max_cost = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
         else:
@@ -194,6 +200,17 @@ def save_figure_limits(__, y_axis, axis_lock):
         y_max_cost = None
     return y_max_cost
 
+
+# TODO Check with Mel why this is y_max_cost now (it could be quantity)
+
+# y_maxes = []
+# for y_max in (1, 2, 3, 4):
+#     y_maxes.append(get_y_max(y_max, value)
+
+
+# def get_y_max(y_axis, axis_lock)
+
+# Get a y_max
 
 # @app.callback(
 #     Output("sens_var_y-input", "value"),
@@ -261,7 +278,7 @@ def update_figures(
     global pof_fig
 
     if active:
-        if axis_lock:
+        if not axis_lock:
             ms_var_y = None
             cond_1_var_y = None
             cond_2_var_y = None

@@ -132,6 +132,24 @@ class FailureMode(PofBase):
         self._t_cond_failure = [] # System impact without a failure event
 
     @property
+    def active(self):
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        """ Set the pf_curve to a valid str"""
+
+        if isinstance(value, str):
+            if value.to_lower() in ['ok', 'true', 'yes']:
+                self._active = True
+            elif value.to_lower() in ['false', 'no']:
+                self._active = False
+            else:
+                raise ValueError("invalid acitve value")
+        else:
+            self._active = bool(value)
+
+    @property
     def pf_curve(self):
         return self._pf_curve
 
