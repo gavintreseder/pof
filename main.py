@@ -299,6 +299,8 @@ def update_figures(
 
         cond_fig = pof_sim.plot_cond(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
+        from component import dforder
+
         df_task_forecast = comp.df_order(
             df=sfd.get_population_tasks(df_erc=pof_sim.df_erc), column="task"
         )

@@ -17,7 +17,10 @@ import pandas as pd
 import scipy.stats as ss
 from collections.abc import Iterable
 from scipy.linalg import circulant
-from matplotlib import pyplot as plt
+import matplotlib
+
+matplotlib.use("TkAgg")  # Temporary fix due to matplotlib 3.3.3 issue
+import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from lifelines import WeibullFitter
 from reliability.Fitters import Fit_Weibull_2P, Fit_Weibull_3P
@@ -128,8 +131,8 @@ class FailureMode(PofBase):
         self.timeline = dict()
         self._timelines = dict()
         self._sim_counter = 0
-        self._t_func_failure = [] # Failure event
-        self._t_cond_failure = [] # System impact without a failure event
+        self._t_func_failure = []  # Failure event
+        self._t_cond_failure = []  # System impact without a failure event
 
     @property
     def active(self):
@@ -140,9 +143,9 @@ class FailureMode(PofBase):
         """ Set the pf_curve to a valid str"""
 
         if isinstance(value, str):
-            if value.to_lower() in ['ok', 'true', 'yes']:
+            if value.to_lower() in ["ok", "true", "yes"]:
                 self._active = True
-            elif value.to_lower() in ['false', 'no']:
+            elif value.to_lower() in ["false", "no"]:
                 self._active = False
             else:
                 raise ValueError("invalid acitve value")
