@@ -697,10 +697,18 @@ class Component(PofBase):
             prev=prev,
         )
 
-<<<<<<< HEAD
+
     def plot_forecast_table(self, cohort=None):
 
         df = self.expected_forecast_table(cohort=cohort)
+        fig = make_table_fig(df)
+
+        return fig
+
+    # ****************** Reset ******************
+
+    def reset_condition(self):
+
         for fm in self.fm.values():
             fm.reset_condition()
 

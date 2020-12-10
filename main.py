@@ -25,6 +25,7 @@ from pof.interface.figures import (
     update_pof_fig,
     make_task_forecast_fig,
 )
+from pof.data.asset_data import SimpleFleet
 
 # Forecast years
 START_YEAR = 2015
