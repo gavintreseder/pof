@@ -6,14 +6,15 @@
     # Single card for graph parameters
     # Condition parameters under condition
     # Table for failures
-    # Upload box for model if not in paths
     # Talk through colour map
     # Error checking for prohibbited tasks from input sheet to objects
+    # Sens not triggering after param update
 
 # Grad task
     # Sphinx documentation
     # Add test for resets
     # Add an upload box
+    # paths for 
 
 
 # Termite treatment
