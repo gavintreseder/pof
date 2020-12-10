@@ -19,7 +19,7 @@ from pof.interface.layouts import make_layout, cf  # TODO fix the need to import
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
-    make_forecast_fig,
+    make_task_forecast_fig,
 )
 from pof.data.asset_data import SimpleFleet
 
