@@ -158,7 +158,7 @@ def update_simulation(active, t_end, n_iterations, state, time_unit):
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
 
         # Generate the dataframe for reporting
-        pof_sim.expected_risk_cost_df()
+        pof_sim.expected_risk_cost_df(t_end=t_end)
 
         if not pof_sim.up_to_date:
             return dash.no_update, f"Update cancelled"
@@ -248,7 +248,7 @@ def save_figure_limits(__, y_axis, axis_lock):
     Input("pof_var_y-input", "value"),
     Input("task_var_y-input", "value"),
     Input("sens_var_y-dropdown", "value"),  # TODO change to an appropriate name
-    State("t_end-input", "value"),
+    Input("t_end-input", "value"),
     State("sim_n_active", "checked"),
     State("axis_lock-checkbox", "checked"),
     State("cond-fig", "figure"),
@@ -291,15 +291,11 @@ def update_figures(
             var = "cond_" + str(n) + "_var_y"
             cond_var_y.append(var)
 
-        ms_fig = pof_sim.plot_ms(
-            y_axis=y_axis, y_max=ms_var_y, t_end=t_end, prev=prev_ms_fig
-        )
+        ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, prev=prev_ms_fig)
         pof_fig = update_pof_fig(
             pof_sim, t_end=t_end, y_max=pof_var_y, prev=prev_pof_fig
         )
-        cond_fig = update_condition_fig(
-            pof_sim, t_end=t_end, y_max=cond_var_y, prev=prev_cond_fig
-        )
+        cond_fig = update_condition_fig(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
         df_task_forecast = sfd.get_population_tasks(df_erc=pof_sim.df_erc)
 
@@ -392,7 +388,7 @@ def update_sensitivity(
         )
 
         sens_fig = sens_sim.plot_sens(
-            var_id=var_id, y_axis=y_axis, t_end=t_end, y_max=y_max, prev=prev_sens
+            var_id=var_id, y_axis=y_axis, y_max=y_max, prev=prev_sens
         )
 
         return sens_fig

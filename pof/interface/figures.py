@@ -33,9 +33,7 @@ def get_color_map(df, column):
     return color_map
 
 
-def make_ms_fig(
-    df, y_axis="cost_cumulative", y_max=None, t_end=None, units="unknown", prev=None
-):
+def make_ms_fig(df, y_axis="cost_cumulative", y_max=None, units="unknown", prev=None):
     try:
         color_map = get_color_map(df=df, column="task")
         df = df[df["active"]]
@@ -58,9 +56,6 @@ def make_ms_fig(
 
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
-
-        if t_end is not None:
-            fig.update_xaxes(range=[0, t_end])
 
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
@@ -150,9 +145,6 @@ def update_pof_fig(local, t_end=None, y_max=None, prev=None):
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
-        if t_end is not None:
-            fig.update_xaxes(range=[0, t_end])
-
         fig = update_visibility(fig, prev)
 
     except:
@@ -165,7 +157,7 @@ def update_pof_fig(local, t_end=None, y_max=None, prev=None):
     return fig
 
 
-def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None, prev=None):
+def update_condition_fig(local, conf=0.95, y_max: List = None, prev=None):
     """ Updates the condition figure"""
 
     try:
@@ -183,8 +175,6 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None, prev=
 
         cmap = px.colors.qualitative.Safe
         idx = 1
-
-        visible = visible_trace(prev)
 
         for cond_name, cond in ecl.items():
             # Format the y_axis titles
@@ -210,7 +200,6 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None, prev=
                     line_color="rgba(255,255,255,0)",
                     showlegend=False,
                     name=cond_name,
-                    visible=visible.get(cond_name),
                 ),
                 row=idx,
                 col=1,
@@ -222,7 +211,6 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None, prev=
                     line_color=cmap[idx],
                     name=cond_name,
                     showlegend=False,
-                    visible=visible.get(cond_name),
                 ),
                 row=idx,
                 col=1,
@@ -231,9 +219,6 @@ def update_condition_fig(local, conf=0.95, t_end=None, y_max: List = None, prev=
 
             if y_max is not None:
                 fig.update_yaxes(range=[0, y_max[idx - 1]])  # TODO - fix this
-
-            if t_end is not None:
-                fig.update_xaxes(range=[0, t_end])
 
             idx = idx + 1
 
@@ -262,7 +247,6 @@ def make_sensitivity_fig(
     df,
     var_name="",
     y_axis="",
-    t_end=None,
     y_max=None,
     units="unknown",
     summarise=True,
@@ -316,9 +300,6 @@ def make_sensitivity_fig(
 
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
-
-        # if t_end is not None:
-        #     fig.update_xaxes(range=[0, t_end])
 
         if var in ("t_delay", "t_interval"):
             col_names = {"time": f"{var} ({units})"}
@@ -392,16 +373,17 @@ def humanise(data):
 
 def update_visibility(curr, prev=None):
     """Updates the visibility based on the visibility previously selected"""
-    # if prev is not None:
-    #     visibilities = {
-    #         d.get("name"): d.get("visible")
-    #         for d in prev["data"]
-    #         if d.get("name") in curr["data"]
-    #     }
-    #     # This is updating both tasks
+    if prev is not None:
+        visibilities = {
+            d.get("name"): d.get("visible")
+            for d in prev["data"]
+        }
+        # This is updating both tasks
 
-    #     curr.for_each_trace(
-    #         lambda trace: trace.update(visible=visibilities[trace.name])
-    #     )
+        for trace in curr["data"]:
+            if trace.name in list(visibilities.keys()):
+                trace.update(visible=visibilities[trace.name])
+            else:
+                trace.update(visible="legendonly")
 
     return curr

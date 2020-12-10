@@ -576,7 +576,6 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         y_max=None,
-        t_end=None,
         units=NotImplemented,
         prev=None,
     ):
@@ -585,7 +584,6 @@ class Component(PofBase):
             df=self.df_erc,
             y_axis=y_axis,
             y_max=y_max,
-            t_end=t_end,
             units=self.units,
             prev=prev,
         )
@@ -594,7 +592,6 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         y_max=None,
-        t_end=None,
         units=NotImplemented,  # TODO add a plot here to make sure it
         var_id="",
         prev=None,
@@ -605,7 +602,6 @@ class Component(PofBase):
             df=self.df_sens,
             var_name=var_name,
             y_axis=y_axis,
-            t_end=t_end,
             y_max=y_max,
             units=self.units,
             prev=prev,
