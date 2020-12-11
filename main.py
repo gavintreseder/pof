@@ -25,6 +25,12 @@ from pof.interface.figures import (
     update_pof_fig,
     make_task_forecast_fig,
 )
+from pof.data.asset_data import SimpleFleet
+
+# Forecast years
+START_YEAR = 2015
+END_YEAR = 2024
+CURRENT_YEAR = 2020
 
 # Asset Model Data
 file_path = os.getcwd() + r"\data\inputs" + os.sep
@@ -33,6 +39,15 @@ FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
 aml = AssetModelLoader(file_path + FILE_NAME)
 comp_data = aml.load()
 comp = Component.from_dict(comp_data["pole"])
+
+# Population Data
+file_path = os.path.dirname(os.path.dirname(__file__)) + r"\inputs" + os.sep
+FILE_NAME = r"population_summary.csv"
+
+sfd = SimpleFleet(file_path + FILE_NAME)
+sfd.load()
+sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
+
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.CRITICAL)
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
@@ -260,6 +275,7 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
+    Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
     Input("cond_1_var_y-input", "value"),
     Input("cond_2_var_y-input", "value"),
@@ -318,10 +334,12 @@ def update_figures(
 
         task_forecast_fig = pof_sim.plot_task(y_max=task_var_y, prev=prev_task_fig)
 
+        forecast_table_fig = pof_sim.plot_forecast_table(sfd.df_age)
+
     else:
         raise PreventUpdate
 
-    return cond_fig, ms_fig, pof_fig, task_forecast_fig
+    return cond_fig, ms_fig, pof_fig, task_forecast_fig, forecast_table_fig
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])

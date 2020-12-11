@@ -32,6 +32,7 @@ from pof.interface.figures import (
     update_pof_fig,
     update_condition_fig,
     make_task_forecast_fig,
+    make_table_fig,
 )
 from pof.data.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
@@ -298,6 +299,34 @@ class Component(PofBase):
             ind.save_timeline(idx)
 
     # ****************** Expected ******************
+
+    def expected_forecast_table(self, cohort=None):
+        """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
+        ff_cf = {}
+        for fm in self.fm.values():
+            if fm.active:
+                insp_effective = fm.inspection_effectiveness()
+                ff = len(fm.expected_ff())
+                cf = len(fm.expected_cf())
+                n = self._sim_counter
+                ff_cf[fm.name] = {
+                    "ie": insp_effective,
+                    "ff": ff,
+                    "cf": cf,
+                }
+
+        df_summary = pd.DataFrame.from_dict(ff_cf).T
+        df_summary.index.name = "fm"
+        failures = df_summary[["ff", "cf"]].sum(axis=1)
+        df_summary[["ff %", "cf %"]] = df_summary.loc[failures != 0, ["ff", "cf"]].div(
+            failures, axis=0
+        )
+
+        if cohort is not None:
+            sample_size = self._sim_counter / cohort["assets"].sum()
+            df_summary[["ff_pop", "cf_pop"]] = df_summary[["ff", "cf"]] / sample_size
+
+        return df_summary
 
     # TODO RUL
 
@@ -714,6 +743,14 @@ class Component(PofBase):
             units=self.units,
             prev=prev,
         )
+
+
+    def plot_forecast_table(self, cohort=None):
+
+        df = self.expected_forecast_table(cohort=cohort)
+        fig = make_table_fig(df)
+
+        return fig
 
     # ****************** Reset ******************
 
