@@ -59,6 +59,20 @@ SCALING = cf.scaling
 # *************** Main ******************************
 
 
+def get_chart_list():
+    """ Return a master list of charts """
+    chart_list = [
+        "ms_fig",
+        "cond_fig_1",
+        "cond_fig_2",
+        "cond_fig_3",
+        "pof_fig",
+        "sens_fig",
+        "task_fig",
+    ]
+    return chart_list
+
+
 def make_layout(comp):
     mcl = make_component_layout(comp)
     update_list = [
@@ -69,17 +83,6 @@ def make_layout(comp):
     update_list_y = [{"label": option, "value": option} for option in y_values]
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
-
-    # TODO replace these with None. They will be updated when the sim is completed
-    y_axis_max = dict(
-        pof_fig=1,
-        cond_fig_1=150,
-        cond_fig_2=250,
-        cond_fig_3=5,
-        cost_fig=None,
-        insp_interval_fig=None,
-        task_fig=1500000,
-    )
 
     layouts = html.Div(
         [
@@ -167,9 +170,7 @@ def make_layout(comp):
                                                             "pof",
                                                             dcc.Input(
                                                                 id="pof_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "pof_fig"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -187,9 +188,7 @@ def make_layout(comp):
                                                             "condition 1",
                                                             dcc.Input(
                                                                 id="cond_1_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "cond_fig_1"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -205,9 +204,7 @@ def make_layout(comp):
                                                             "condition 2",
                                                             dcc.Input(
                                                                 id="cond_2_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "cond_fig_2"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -223,9 +220,7 @@ def make_layout(comp):
                                                             "condition 3",
                                                             dcc.Input(
                                                                 id="cond_3_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "cond_fig_3"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -245,9 +240,7 @@ def make_layout(comp):
                                                             "maintenance",
                                                             dcc.Input(
                                                                 id="cost_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "cost_fig"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -263,9 +256,7 @@ def make_layout(comp):
                                                             "sensitivity",
                                                             dcc.Input(
                                                                 id="sens_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "insp_interval_fig"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -285,9 +276,7 @@ def make_layout(comp):
                                                             "task",
                                                             dcc.Input(
                                                                 id="task_var_y-input",
-                                                                value=y_axis_max[
-                                                                    "task_fig"
-                                                                ],
+                                                                value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),

@@ -72,48 +72,9 @@ def make_ms_fig(df, y_axis="cost_cumulative", y_max=None, units="unknown", prev=
     return fig
 
 
-def update_pof_fig(local, t_end=None, y_max=None, prev=None):
+def update_pof_fig(local, df, y_max=None, prev=None):
 
     try:
-
-        # TODO this could be way more efficient
-        pof = dict(
-            maint=pd.DataFrame(local.expected_pof(t_end=t_end)),
-            no_maint=pd.DataFrame(local.expected_untreated(t_end=t_end)),
-        )
-
-        # OLD CODE
-        # df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
-        # df.index.names = ["strategy", "key"]
-        # df = df.rename(columns={"variable": "source"})
-
-        # df = df.melt(
-        #     id_vars=["time", "strategy", "fm_active"],
-        #     var_name="source",
-        #     value_name="pof",
-        # )
-
-        df = pd.concat(pof).rename_axis(["strategy", "key"]).reset_index()
-
-        df_pof = df[df["key"] == "pof"]
-        df_pof = pd.melt(
-            df_pof, id_vars=["strategy"], value_vars=df_pof.columns[2:]
-        ).rename(columns={"variable": "source", "value": "pof"})
-        df_pof = df_pof.explode("pof", ignore_index=True)
-
-        df_active = df[df["key"] == "active"]
-        df_active = pd.melt(
-            df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
-        ).rename(columns={"variable": "source", "value": "active"})
-
-        df_time = df[df["key"] == "time"]
-        df_time = pd.melt(
-            df_time, id_vars=["strategy"], value_vars=df_time.columns[2:]
-        ).rename(columns={"variable": "source", "value": "time"})
-        df_time = df_time.explode("time", ignore_index=True)["time"]
-
-        df = df_pof.merge(df_active, on=["strategy", "source"])
-        df["time"] = df_time
 
         color_map = get_color_map(df=df, column="source")
 
@@ -374,10 +335,7 @@ def humanise(data):
 def update_visibility(curr, prev=None):
     """Updates the visibility based on the visibility previously selected"""
     if prev is not None:
-        visibilities = {
-            d.get("name"): d.get("visible")
-            for d in prev["data"]
-        }
+        visibilities = {d.get("name"): d.get("visible") for d in prev["data"]}
         # This is updating both tasks
 
         for trace in curr["data"]:

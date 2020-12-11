@@ -470,7 +470,7 @@ class Component(PofBase):
 
         # Get the desired time steps
         t_start = 0  # int(df_comp['time'].min()) if t_start is None
-        t_end = t_end  # int(df_comp['time'].max()) if t_end is None
+        # t_end = t_end  # int(df_comp['time'].max()) if t_end is None
         time = np.linspace(t_start, t_end, t_end - t_start + 1).astype(int)
 
         df = df_comp[["failure_mode", "source", "active"]].drop_duplicates()
@@ -491,6 +491,7 @@ class Component(PofBase):
         df["cost_cumulative"] = df.groupby(by=["failure_mode", "source"])[
             "cost"
         ].transform(pd.Series.cumsum)
+
         return df
 
     def expected_risk_cost(self):
@@ -577,6 +578,49 @@ class Component(PofBase):
 
     # ***************** Figures *****************
 
+    def get_pof_df(self, t_end=None):
+
+        # TODO this could be way more efficient
+        pof = dict(
+            maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
+            no_maint=pd.DataFrame(self.expected_untreated(t_end=t_end)),
+        )
+
+        # OLD CODE
+        # df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
+        # df.index.names = ["strategy", "key"]
+        # df = df.rename(columns={"variable": "source"})
+
+        # df = df.melt(
+        #     id_vars=["time", "strategy", "fm_active"],
+        #     var_name="source",
+        #     value_name="pof",
+        # )
+
+        df = pd.concat(pof).rename_axis(["strategy", "key"]).reset_index()
+
+        df_pof = df[df["key"] == "pof"]
+        df_pof = pd.melt(
+            df_pof, id_vars=["strategy"], value_vars=df_pof.columns[2:]
+        ).rename(columns={"variable": "source", "value": "pof"})
+        df_pof = df_pof.explode("pof", ignore_index=True)
+
+        df_active = df[df["key"] == "active"]
+        df_active = pd.melt(
+            df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
+        ).rename(columns={"variable": "source", "value": "active"})
+
+        df_time = df[df["key"] == "time"]
+        df_time = pd.melt(
+            df_time, id_vars=["strategy"], value_vars=df_time.columns[2:]
+        ).rename(columns={"variable": "source", "value": "time"})
+        df_time = df_time.explode("time", ignore_index=True)["time"]
+
+        df = df_pof.merge(df_active, on=["strategy", "source"])
+        df["time"] = df_time
+
+        return df
+
     def get_df_task_forecast(self, column):
         """ Create the task plot dataframe """
 
@@ -622,9 +666,12 @@ class Component(PofBase):
             prev=prev,
         )
 
-    def plot_pof(self, local, t_end=None, y_max=None, prev=None):
+    def plot_pof(self, t_end=None, y_max=None, prev=None):
         """ Returns a pof figure if df has aleady been calculated"""
-        return update_pof_fig(local, t_end=t_end, y_max=y_max, prev=prev)
+
+        df = self.get_pof_df(t_end=t_end)
+
+        return update_pof_fig(self, df=df, y_max=y_max, prev=prev)
 
     def plot_cond(self, local, y_max=None, prev=None):
         """ Returns a condition figure if df has aleady been calculated"""

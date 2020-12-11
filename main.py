@@ -16,7 +16,7 @@ from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import (
-    # get_chart_list,
+    get_chart_list,
     make_layout,
     cf,
 )  # TODO fix the need to import cf
@@ -167,53 +167,64 @@ def update_simulation(active, t_end, n_iterations, state, time_unit):
 
 @app.callback(
     Output("cost_var_y-input", "value"),  # Output('fig_limit_maint_strat', 'children')
-    # Output("cond_1_var_y-input", "value"),
-    # Output("cond_2_var_y-input", "value"),
-    # Output("cond_3_var_y-input", "value"),
-    # Output("pof_var_y-input", "value"),
-    # Output("task_var_y-input", "value"),
-    # Output("sens_var_y-input", "value"),
+    Output("cond_1_var_y-input", "value"),
+    Output("cond_2_var_y-input", "value"),
+    Output("cond_3_var_y-input", "value"),
+    Output("pof_var_y-input", "value"),
+    Output("task_var_y-input", "value"),
+    Output("sens_var_y-input", "value"),
     Input("sim_state", "children"),
+    Input("t_end-input", "value"),
+    Input("sens_var_id-dropdown", "value"),
     Input("sens_var_y-dropdown", "value"),  # TODO change name of this
     Input("axis_lock-checkbox", "checked"),  # TODO should this be a state?
 )
-def save_figure_limits(__, y_axis, axis_lock):
+def save_figure_limits(__, t_end, x_axis, y_axis, axis_lock):
     """ Save the figure limits so they can be used for the axis lock """
 
-    #     y_max_values = []
-    #     chart_list = get_chart_list()
+    y_max_values = []
+    chart_list = get_chart_list()
 
-    #     for chart in chart_list:
-    #         y_max_values.append(get_y_max(chart, y_axis, axis_lock))
+    for chart in chart_list:
+        y_max_values.append(get_y_max(chart, t_end, x_axis, y_axis, axis_lock))
 
-    #     return y_max_values
+    return y_max_values
 
-    # def get_y_max(chart, y_axis, axis_lock):
-    #     """ Determine the maximum y value for a given axis """
-    # try:
-    #     if chart.includes("pof"):
-    #         df =
-    #     elif chart.includes("cond"):
-    #         df = ecl
-    #         y_axi = "upper"
-    #     elif chart.includes("ms"):
-    #         df = df_erc
-    #         column = ""
-    #     elif chart.includes("sens"):
-    #         df = df_sens
-    #     elif chart.includes("task"):
-    #         df = get_df_task_forecast(df=pof_sim.df_erc, column="task")
+
+def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
+    """ Determine the maximum y value for a given axis """
+    if "pof" in chart:
+        df = pof_sim.get_pof_df(t_end=t_end)
+        x_col = None
+        y_col = "pof"
+    elif "cond" in chart:
+        df = pof_sim.expected_condition()
+        x_col = None
+        y_col = "upper"
+    elif "ms" in chart:
+        df = pof_sim.df_erc
+        x_col = "time"
+        y_col = y_axis
+    elif "sens" in chart:
+        df = pof_sim.df_sens
+        x_col = x_axis.split("-")[-1]
+        y_col = y_axis
+    elif "task" in chart:
+        df = pof_sim.get_df_task_forecast(column="task")
+        x_col = None
+        y_col = "pop_quantity"
 
     try:
-
-        if not axis_lock:
-            y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
-            # .max not .sum as they are not summing
+        if axis_lock is None:
+            if x_col is not None:
+                y_max = df.groupby(x_col)[y_col].sum().max() * 1.05
+            else:
+                y_max = df[y_col].max
         else:
             ctx = dash.callback_context
             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
-            if dash_id == "sens_var_y-dropdown":
-                y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
+            if dash_id == "sens_var_y-dropdown" and x_col is not None:
+                y_max = df.groupby(x_col)[y_col].sum().max() * 1.05
             else:
                 return dash.no_update
     except:
@@ -301,9 +312,7 @@ def update_figures(
 
         ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, prev=prev_ms_fig)
 
-        pof_fig = pof_sim.plot_pof(
-            pof_sim, t_end=t_end, y_max=pof_var_y, prev=prev_pof_fig
-        )
+        pof_fig = pof_sim.plot_pof(t_end=t_end, y_max=pof_var_y, prev=prev_pof_fig)
 
         cond_fig = pof_sim.plot_cond(pof_sim, y_max=cond_var_y, prev=prev_cond_fig)
 
