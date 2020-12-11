@@ -638,7 +638,7 @@ class FailureMode(PofBase):
                 )
                 p_all_ie.append(p_ie)
 
-        p_all_effective = 1 - math.prod(1 - np.array(p_all_ie))
+        p_all_effective = np.prod(1 - np.array(p_all_ie))
 
         return p_all_effective
 
