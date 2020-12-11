@@ -72,7 +72,7 @@ def make_ms_fig(df, y_axis="cost_cumulative", y_max=None, units="unknown", prev=
     return fig
 
 
-def update_pof_fig(local, df, y_max=None, prev=None):
+def update_pof_fig(df, y_max=None, units="unknown", prev=None):
 
     try:
 
@@ -82,7 +82,7 @@ def update_pof_fig(local, df, y_max=None, prev=None):
 
         # Make columns presentable
         # df.columns = df.columns.str.replace("_", " ").str.title()
-        col_names = {"time": f"Age ({local.units})"}
+        col_names = {"time": f"Age ({units})"}
         df.rename(columns=col_names, inplace=True)
 
         fig = px.line(
@@ -96,7 +96,7 @@ def update_pof_fig(local, df, y_max=None, prev=None):
             title="Probability of Failure given Maintenance Strategy",
         )
 
-        col_names = {"time": f"Age ({local.units})"}
+        col_names = {"time": f"Age ({units})"}
 
         fig.layout.yaxis.tickformat = ",.0%"
         fig.update_yaxes(automargin=True)
@@ -118,13 +118,12 @@ def update_pof_fig(local, df, y_max=None, prev=None):
     return fig
 
 
-def update_condition_fig(local, conf=0.95, y_max: List = None, prev=None):
+def update_condition_fig(
+    df, ecl, conf=0.95, y_max: List = None, units="unknown", prev=None
+):
     """ Updates the condition figure"""
 
     try:
-
-        ecl = local.expected_condition()
-
         subplot_titles = [x.replace("_", " ").title() for x in list(ecl.keys())]
 
         fig = make_subplots(
@@ -149,7 +148,7 @@ def update_condition_fig(local, conf=0.95, y_max: List = None, prev=None):
                 0, length - 1, length, dtype=int
             )  # TODO take time as a variable
             x = np.append(time, time[::-1])
-            y = np.append(cond["upper"], cond["lower"][::-1])
+            y = df["y" + str(idx)]
 
             # Add the boundary
             fig.add_trace(
@@ -178,12 +177,12 @@ def update_condition_fig(local, conf=0.95, y_max: List = None, prev=None):
             )
             fig.update_yaxes(title_text=y_title + " Measure", row=idx, automargin=True)
 
-            if y_max is not None:
-                fig.update_yaxes(range=[0, y_max[idx - 1]])  # TODO - fix this
+            # if y_max is not None:
+            #     fig.update_yaxes(range=[0, y_max[idx - 1]])  # TODO - fix this (applying to all charts)
 
             idx = idx + 1
 
-        col_names = {"time": f"Age ({local.units})"}
+        col_names = {"time": f"Age ({units})"}
 
         fig.update_traces(mode="lines")
         fig.update_xaxes(

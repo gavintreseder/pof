@@ -94,8 +94,11 @@ class Component(PofBase):
         self.n_sens_iterations = 10
 
         # Reporting
+        self.df_pof = None
+        self.df_cond = None
         self.df_erc = None
         self.df_sens = None
+        self.df_task = None
 
     # ****************** Load data ******************
 
@@ -605,10 +608,7 @@ class Component(PofBase):
 
         raise NotImplementedError()
 
-    # ***************** Figures *****************
-
     def get_pof_df(self, t_end=None):
-
         # TODO this could be way more efficient
         pof = dict(
             maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
@@ -648,9 +648,11 @@ class Component(PofBase):
         df = df_pof.merge(df_active, on=["strategy", "source"])
         df["time"] = df_time
 
-        return df
+        self.df_pof = df
 
-    def get_df_task_forecast(self, column):
+        return self.df_pof
+
+    def get_df_task_forecast(self):
         """ Create the task plot dataframe """
 
         # Population Data
@@ -672,9 +674,27 @@ class Component(PofBase):
 
         df = sfd.get_population_tasks(df_erc=self.df_erc)
 
-        df_ordered = df_order(df=df, column=column)
+        df_ordered = df_order(df=df, column="task")
 
-        return df_ordered
+        self.df_task = df_ordered
+
+        return self.df_task
+
+    def get_df_cond(self):
+        ecl = self.expected_condition()
+
+        df = pd.DataFrame()
+        i = 1
+        for cond_name, cond in ecl.items():
+            data = np.append(cond["upper"], cond["lower"][::-1])
+            df["y" + str(i)] = data
+            i = i + 1
+
+        self.df_cond = df
+
+        return self.df_cond
+
+    # ***************** Figures *****************
 
     # TODO change default to first value from const
 
@@ -682,7 +702,6 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         y_max=None,
-        units=NotImplemented,
         prev=None,
     ):
         """ Returns a cost figure if df has aleady been calculated"""
@@ -695,16 +714,14 @@ class Component(PofBase):
             prev=prev,
         )
 
-    def plot_pof(self, t_end=None, y_max=None, prev=None):
+    def plot_pof(self, y_max=None, prev=None):
         """ Returns a pof figure if df has aleady been calculated"""
 
-        df = self.get_pof_df(t_end=t_end)
+        return update_pof_fig(df=self.df_pof, y_max=y_max, units=self.units, prev=prev)
 
-        return update_pof_fig(self, df=df, y_max=y_max, prev=prev)
-
-    def plot_cond(self, local, y_max=None, prev=None):
+    def plot_cond(self, y_max=None, prev=None):
         """ Returns a condition figure if df has aleady been calculated"""
-        return update_condition_fig(local, y_max=y_max, prev=prev)
+        return update_condition_fig(df=self.df_cond, ecl=self.expected_condition(), y_max=y_max, units=self.units, prev=prev)
 
     def plot_task(
         self,
@@ -713,10 +730,8 @@ class Component(PofBase):
     ):
         """ Return a task figure if df has aleady been calculated """
 
-        df = self.get_df_task_forecast(column="task")
-
         return make_task_forecast_fig(
-            df=df,
+            df=self.df_task,
             y_max=y_max,
             prev=prev,
         )
@@ -743,7 +758,6 @@ class Component(PofBase):
             units=self.units,
             prev=prev,
         )
-
 
     def plot_forecast_table(self, cohort=None):
 

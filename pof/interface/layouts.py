@@ -62,11 +62,11 @@ SCALING = cf.scaling
 def get_chart_list():
     """ Return a master list of charts """
     chart_list = [
-        "ms_fig",
+        "pof_fig",
         "cond_fig_1",
         "cond_fig_2",
         "cond_fig_3",
-        "pof_fig",
+        "ms_fig",
         "sens_fig",
         "task_fig",
     ]
@@ -157,7 +157,7 @@ def make_layout(comp):
                         ],
                         addon_type="prepend",
                     ),
-                    #TODO Mel - The layout needs to be generated algorithmically based on they number of indiciators present in that model
+                    # TODO Mel - The layout needs to be generated algorithmically based on they number of indiciators present in that model
                     dbc.Collapse(
                         dbc.Card(
                             dbc.CardBody(
@@ -171,7 +171,7 @@ def make_layout(comp):
                                                             "pof",
                                                             dcc.Input(
                                                                 id="pof_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -189,7 +189,7 @@ def make_layout(comp):
                                                             "condition 1",
                                                             dcc.Input(
                                                                 id="cond_1_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -205,7 +205,7 @@ def make_layout(comp):
                                                             "condition 2",
                                                             dcc.Input(
                                                                 id="cond_2_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -221,7 +221,7 @@ def make_layout(comp):
                                                             "condition 3",
                                                             dcc.Input(
                                                                 id="cond_3_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -241,7 +241,7 @@ def make_layout(comp):
                                                             "maintenance",
                                                             dcc.Input(
                                                                 id="cost_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -257,7 +257,7 @@ def make_layout(comp):
                                                             "sensitivity",
                                                             dcc.Input(
                                                                 id="sens_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -277,7 +277,7 @@ def make_layout(comp):
                                                             "task",
                                                             dcc.Input(
                                                                 id="task_var_y-input",
-                                                                value=None,
+                                                                # value=None,
                                                                 type="number",
                                                                 style={"width": 100},
                                                             ),
@@ -310,7 +310,7 @@ def make_layout(comp):
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="task_forecast-fig")),
-                    dbc.Col(dcc.Graph(id='forecast_table-fig')),
+                    dbc.Col(dcc.Graph(id="forecast_table-fig")),
                 ]
             ),
             html.Div(
@@ -456,8 +456,6 @@ def make_layout(comp):
     )
 
     return layouts
-
-
 
 
 # ******************* Validation ******************
