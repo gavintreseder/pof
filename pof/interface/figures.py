@@ -26,8 +26,6 @@ def get_color_map(df, column):
     else:
         colors = px.colors.qualitative.Safe
 
-    # Sort this so it goes Total, Risk, Direct, everything else alphabetical
-
     color_map = dict(zip(df[column].unique(), colors))
 
     return color_map
@@ -266,6 +264,7 @@ def make_sensitivity_fig(
             fig.update_xaxes(title_text=col_names["time"])
 
         fig = update_visibility(fig, prev)
+        fig.update_layout(xaxis=dict(tickvals=df_plot[var].tolist()))
 
     except Exception as error:
         raise error
@@ -305,6 +304,7 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
 
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
+        fig.update_layout(xaxis=dict(tickvals=df["year"].tolist()))
 
     return fig
 

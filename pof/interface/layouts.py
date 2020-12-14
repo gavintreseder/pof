@@ -560,29 +560,35 @@ def make_failure_mode_layout(fm, prefix="", sep="-"):
         )
 
     # Make the layout
-    layout = dbc.InputGroup(
-        [
-            dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=fm.active),
-                addon_type="prepend",
-            ),
-            dbc.Button(
-                fm.name,
-                color="link",
-                id=prefix + "collapse-button",
-                style={"width": 200},
-            ),
-            dbc.Col(
-                [
-                    fm_form,
-                    dbc.Collapse(
-                        dbc.Card(dbc.CardBody(tasks_layout)),
-                        id=prefix + "collapse",
-                        is_open=IS_OPEN,
-                    ),
-                ]
-            ),
-        ]
+    layout = dbc.Card(
+        dbc.CardBody(
+            [
+                dbc.Row(
+                    [
+                        dbc.InputGroupAddon(
+                            dbc.Checkbox(id=prefix + "active", checked=fm.active),
+                            addon_type="prepend",
+                        ),
+                        dbc.Button(
+                            fm.name,
+                            color="link",
+                            id=prefix + "collapse-button",
+                            style={"width": 200},
+                        ),
+                        dbc.Col(
+                            [
+                                fm_form,
+                                dbc.Collapse(
+                                    dbc.Card(dbc.CardBody(tasks_layout)),
+                                    id=prefix + "collapse",
+                                    is_open=IS_OPEN,
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ]
+        )
     )
 
     return layout
@@ -677,34 +683,40 @@ def make_task_layout(task, prefix="", sep="-"):
     trigger_layout = make_task_trigger_layout(task.triggers, prefix=prefix)
     impact_layout = make_task_impact_layout(task.impacts, prefix=prefix)
 
-    task_layout = dbc.InputGroup(
-        [
-            dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=task.active),
-                addon_type="prepend",
-            ),
-            dbc.Button(
-                task.name,
-                color="link",
-                id=prefix + "collapse-button",
-                style={"width": 200},
-            ),
-            dbc.Col(
-                [
-                    task_form,
-                    dbc.Collapse(
-                        dbc.CardDeck(
+    task_layout = dbc.Card(
+        dbc.CardBody(
+            [
+                dbc.Row(
+                    [
+                        dbc.InputGroupAddon(
+                            dbc.Checkbox(id=prefix + "active", checked=task.active),
+                            addon_type="prepend",
+                        ),
+                        dbc.Button(
+                            task.name,
+                            color="link",
+                            id=prefix + "collapse-button",
+                            style={"width": 200},
+                        ),
+                        dbc.Col(
                             [
-                                trigger_layout,
-                                impact_layout,
+                                task_form,
+                                dbc.Collapse(
+                                    dbc.CardDeck(
+                                        [
+                                            trigger_layout,
+                                            impact_layout,
+                                        ]
+                                    ),
+                                    id=prefix + "collapse",
+                                    is_open=IS_OPEN,
+                                ),
                             ]
                         ),
-                        id=prefix + "collapse",
-                        is_open=IS_OPEN,
-                    ),
-                ]
-            ),
-        ]
+                    ]
+                )
+            ]
+        )
     )
 
     return task_layout
@@ -891,6 +903,11 @@ def make_state_impact_layout(state_impacts, prefix="", sep="-"):
     state_inputs = []
     prefix = prefix + "state" + sep
     for state, value in state_impacts.items():
+        if state == "failure":
+            state_updated = "Functional Failure"
+        else:
+            state_updated = state
+
         state_input = dbc.Col(
             dbc.InputGroup(
                 [
@@ -899,7 +916,7 @@ def make_state_impact_layout(state_impacts, prefix="", sep="-"):
                             dbc.Checkbox(
                                 id=prefix + state + sep + "active", checked=True
                             ),
-                            dbc.Label(state.capitalize(), className="mr-2"),
+                            dbc.Label(state_updated.capitalize(), className="mr-2"),
                         ],
                         addon_type="prepend",
                     ),
