@@ -313,7 +313,7 @@ class Component(PofBase):
                 cf = len(fm.expected_cf())
                 n = self._sim_counter
                 ff_cf[fm.name] = {
-                    "ie": insp_effective,
+                    "ie %": round((1 - insp_effective) * 100, 2),
                     "ff": ff,
                     "cf": cf,
                 }
@@ -321,15 +321,29 @@ class Component(PofBase):
         df_summary = pd.DataFrame.from_dict(ff_cf).T
         df_summary.index.name = "fm"
         failures = df_summary[["ff", "cf"]].sum(axis=1)
-        df_summary[["ff %", "cf %"]] = df_summary.loc[failures != 0, ["ff", "cf"]].div(
-            failures, axis=0
+        df_summary[["ff %", "cf %"]] = round(
+            df_summary.loc[failures != 0, ["ff", "cf"]].div(failures, axis=0) * 100, 2
         )
 
         if cohort is not None:
             sample_size = self._sim_counter / cohort["assets"].sum()
             df_summary[["ff_pop", "cf_pop"]] = df_summary[["ff", "cf"]] / sample_size
 
-        return df_summary
+        df_summary["fm"] = df_summary.index
+
+        col_order = [
+            "fm",
+            "ie %",
+            "ff",
+            "cf",
+            "ff %",
+            "cf %",
+            "ff_pop",
+            "cf_pop",
+        ]
+        df = df_summary.reindex(columns=col_order)
+
+        return df
 
     # TODO RUL
 
@@ -721,7 +735,13 @@ class Component(PofBase):
 
     def plot_cond(self, y_max=None, prev=None):
         """ Returns a condition figure if df has aleady been calculated"""
-        return update_condition_fig(df=self.df_cond, ecl=self.expected_condition(), y_max=y_max, units=self.units, prev=prev)
+        return update_condition_fig(
+            df=self.df_cond,
+            ecl=self.expected_condition(),
+            y_max=y_max,
+            units=self.units,
+            prev=prev,
+        )
 
     def plot_task(
         self,
