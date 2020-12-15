@@ -8,9 +8,11 @@ import dash_bootstrap_components as dbc
 from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
 from pof.units import valid_units
+from config import config
 
 IS_OPEN = cf.is_open
 SCALING = cf.scaling
+defaults = config["Layouts"]
 
 # Asset
 
@@ -80,6 +82,7 @@ def make_layout(comp):
     ]
 
     y_values = ["cost", "cost_cumulative", "cost_annual"]
+    y_value_default = defaults.get("y_value_default")
     update_list_y = [{"label": option, "value": option} for option in y_values]
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
@@ -95,7 +98,7 @@ def make_layout(comp):
                             "Axis Lock",
                             dbc.Checkbox(
                                 id="axis_lock-checkbox",
-                                checked=False,
+                                checked=defaults.get("config.axis_lock"),
                             ),
                         ]
                     )
@@ -380,7 +383,7 @@ def make_layout(comp):
                             dcc.Dropdown(
                                 id="sens_var_y-dropdown",
                                 options=update_list_y,
-                                value=y_values[0],
+                                value=y_value_default,
                             ),
                         ]
                     ),
