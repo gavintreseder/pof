@@ -19,7 +19,9 @@ from pof.interface.layouts import (
     get_chart_list,
     make_layout,
     cf,
-)  # TODO fix the need to import cf
+)
+
+# TODO fix the need to import cf
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,

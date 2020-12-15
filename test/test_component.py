@@ -31,7 +31,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         self._data_valid = [dict(name="TestComponent")]
         self._data_invalid_types = [{"invalid_type": "invalid_type"}]
         self._data_invalid_values = []
-        self._data_complete = copy.deepcopy(fixtures.complete['component'])
+        self._data_complete = copy.deepcopy(fixtures.complete["component"])
 
     def test_class_imports_correctly(self):
         self.assertIsNotNone(Component)
@@ -220,6 +220,19 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
             self.assertLessEqual(risk, max_risk)
 
     # ************ Test expected methods *****************
+
+    def test_expected_risk_cost_df(self):  # integration test
+
+        # Arrange
+        t_end = 50
+        n_iterations = 10
+        comp = Component.demo()
+
+        # Act
+        comp.mc_timeline(t_end=t_end, n_iterations=n_iterations)
+        actual = comp.expected_risk_cost_df()
+
+        # Assert
 
     def test_expected_condition_with_timelines(self):
         # TODO make it work when mc_timeline hs nto been called

@@ -426,6 +426,22 @@ class Component(PofBase):
             sum(self._t_in_service + self.expected_cf() + self.expected_ff())
             / self._sim_counter
         )
+
+        if False:
+            # Get the asset age at the end of simulation
+            ages = self._t_in_service + self.expected_cf() + self.expected_ff()
+            age, count = np.unique(ages, return_counts=True)
+
+            # Create a time array
+            n = t_end - t_start + 1
+            time =  np.linspace(t_start, t_end, n, dtype=int)
+
+            row_time = [item for item in row["time"] if item < n]
+
+            temp_row = np.full(n, 0, dtype=row[col].dtype)
+            temp_row[row_time] = row[col][: len(row_time)]
+            row[col] = temp_row
+
         return e_l
 
     def expected_untreated(self, t_start=0, t_end=100):
