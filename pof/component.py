@@ -907,7 +907,7 @@ class Component(PofBase):
         for fm in self.fm.values():
             fm.update_task_group(data)
 
-    def get_dash_ids(self, integer: bool, prefix="", sep="-", active=None):
+    def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
 
         if active is None or (self.active == active):
@@ -919,7 +919,7 @@ class Component(PofBase):
             fm_ids = []
             for fm in self.fm.values():
                 fm_ids = fm_ids + fm.get_dash_ids(
-                    integer=integer, prefix=prefix + "fm" + sep, sep=sep, active=active
+                    numericalOnly=numericalOnly, prefix=prefix + "fm" + sep, sep=sep, active=active
                 )
 
             dash_ids = comp_ids + fm_ids
@@ -928,12 +928,12 @@ class Component(PofBase):
 
         return dash_ids
 
-    def get_update_ids(self, integer=bool, prefix="", sep="-"):
+    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
         """ Get the ids for all objects that should be updated"""
         # TODO remove this once task groups added to the interface
         # TODO fix encapsulation
 
-        ids = self.get_dash_ids(integer=integer, active=True)
+        ids = self.get_dash_ids(numericalOnly=numericalOnly, active=True)
 
         update_ids = dict()
         for fm in self.fm.values():

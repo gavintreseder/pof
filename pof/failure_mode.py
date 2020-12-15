@@ -965,13 +965,13 @@ class FailureMode(PofBase):
                 if task.task_group_name == task_group_name:
                     task.update_from_dict(details)
 
-    def get_dash_ids(self, integer: bool, prefix="", sep="-", active=None):
+    def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
 
         if active is None or (self.active == active):
             prefix = prefix + self.name + sep
 
-            if integer:
+            if numericalOnly:
                 param_list = ["pf_interval", "pf_std"]
             else:
                 param_list = ["active", "pf_curve", "pf_interval", "pf_std"]
@@ -986,7 +986,7 @@ class FailureMode(PofBase):
             task_ids = []
             for task in self.tasks.values():
                 task_ids = task_ids + task.get_dash_ids(
-                    integer=integer,
+                    numericalOnly=numericalOnly,
                     prefix=prefix + "tasks" + sep,
                     sep=sep,
                     active=active,
