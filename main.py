@@ -153,13 +153,13 @@ def update_parameter(*args):
 @app.callback(
     Output("sim_state", "children"),
     Output("sim_state_err", "children"),
+    Input("update_state", "children"),
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
-    Input("update_state", "children"),
     Input("sens_time_unit-dropdown", "value"),
 )
-def update_simulation(active, t_end, n_iterations, state, time_unit):
+def update_simulation(__, active, t_end, n_iterations, time_unit):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
 
@@ -328,7 +328,7 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
 )
 def update_figures(
     state,
-    cond_1_var_y,
+    cond_1_var_y, #TODO this will need be a list because you can have n conditions
     cond_2_var_y,
     cond_3_var_y,
     ms_var_y,

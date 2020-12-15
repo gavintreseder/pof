@@ -221,6 +221,18 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
     # ************ Test expected methods *****************
 
+    def test_expected_sensitivity(self):
+
+        # Arrange
+        t_end = 50
+        n_iterations = 2
+        sens_var = ""
+        comp = Component.demo()
+
+        # Act
+        actual = comp.expected_sensitivity()
+        # Assert
+
     def test_expected_risk_cost_df(self):  # integration test
 
         # Arrange
@@ -233,6 +245,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         actual = comp.expected_risk_cost_df()
 
         # Assert
+        # TODO make asserts
 
     def test_expected_condition_with_timelines(self):
         # TODO make it work when mc_timeline hs nto been called
