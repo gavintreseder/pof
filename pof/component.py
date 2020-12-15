@@ -145,7 +145,7 @@ class Component(PofBase):
 
     # ****************** Set data ******************
 
-    def mc(self, t_end, t_start, n_iterations):
+    def mc(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Complete MC simulation and calculate all the metrics for the component"""
 
         # Simulate a timeline
@@ -901,7 +901,10 @@ class Component(PofBase):
             fm_ids = []
             for fm in self.fm.values():
                 fm_ids = fm_ids + fm.get_dash_ids(
-                    numericalOnly=numericalOnly, prefix=prefix + "fm" + sep, sep=sep, active=active
+                    numericalOnly=numericalOnly,
+                    prefix=prefix + "fm" + sep,
+                    sep=sep,
+                    active=active,
                 )
 
             dash_ids = comp_ids + fm_ids

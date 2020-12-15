@@ -171,7 +171,7 @@ def update_simulation(__, active, t_end, n_iterations, time_unit):
         pof_sim = copy.copy(comp)
 
         # Complete the simulations
-        pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
+        pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
 
         if not pof_sim.up_to_date:
             return dash.no_update, f"Update cancelled"
@@ -322,7 +322,7 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
 )
 def update_figures(
     state,
-    cond_1_var_y, #TODO this will need be a list because you can have n conditions
+    cond_1_var_y,  # TODO this will need be a list because you can have n conditions
     cond_2_var_y,
     cond_3_var_y,
     ms_var_y,
@@ -338,7 +338,7 @@ def update_figures(
     prev_task_fig,
     *args,
 ):
-    global pof_fig
+    global pof_sim
 
     if active:
         ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, prev=prev_ms_fig)
