@@ -152,6 +152,10 @@ class Component(PofBase):
         self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
 
         # Produce reports
+        self.expected_risk_cost_df(t_end=t_end)
+        self.calc_pof_df(t_end=t_end)
+        self.calc_df_task_forecast()
+        self.calc_df_cond()
 
         return NotImplemented
 
@@ -330,14 +334,14 @@ class Component(PofBase):
         for fm in self.fm.values():
             if fm.active:
                 insp_effective = fm.inspection_effectiveness()
-                ff = len(fm.expected_ff())
-                cf = len(fm.expected_cf())
+                _ff = len(fm.expected_ff())
+                _cf = len(fm.expected_cf())
                 n = self._sim_counter
                 ff_cf[fm.name] = {
                     "ie %": round((1 - insp_effective) * 100, 2),
-                    "ff": ff,
-                    "cf": cf,
-                    "is": n,
+                    "is": n - _cf - _ff,
+                    "ff": _ff,
+                    "cf": _ff,
                 }
 
         df_summary = pd.DataFrame.from_dict(ff_cf).T
@@ -364,11 +368,11 @@ class Component(PofBase):
         col_order = [
             "fm",
             "ie %",
+            "is",
             "ff",
             "cf",
             "ff %",
             "cf %",
-            "is",
             "ff_pop",
             "cf_pop",
         ]
@@ -383,7 +387,7 @@ class Component(PofBase):
                     df["cf"].sum(),
                     None,
                     None,
-                    df["is"].mean(),
+                    df["ff"].sum() - df["cf"].sum(),
                     None,
                     None,
                 ]
@@ -392,18 +396,9 @@ class Component(PofBase):
         )
         df.append(df_total_row)
 
+        # df.loc['Total', ["fm"]]
+
         return df
-
-    # TODO RUL
-
-    def expected(self):
-
-        # Run expected method on all failure modes
-
-        # Run
-        NotImplemented
-
-    # PoF
 
     def expected_cf(self):
         """ Returns the conditional failures for the component """
@@ -426,21 +421,6 @@ class Component(PofBase):
             sum(self._t_in_service + self.expected_cf() + self.expected_ff())
             / self._sim_counter
         )
-
-        if False:
-            # Get the asset age at the end of simulation
-            ages = self._t_in_service + self.expected_cf() + self.expected_ff()
-            age, count = np.unique(ages, return_counts=True)
-
-            # Create a time array
-            n = t_end - t_start + 1
-            time =  np.linspace(t_start, t_end, n, dtype=int)
-
-            row_time = [item for item in row["time"] if item < n]
-
-            temp_row = np.full(n, 0, dtype=row[col].dtype)
-            temp_row[row_time] = row[col][: len(row_time)]
-            row[col] = temp_row
 
         return e_l
 
@@ -549,9 +529,11 @@ class Component(PofBase):
             ].transform(pd.Series.cumsum)
             df[col + "_annual"] = df[col] / self.expected_life()
 
+            # df[col + "_lifecycle"] = df[col] / df['_annual'] self.expected_life()
+
         # Formatting
-        # df.rename(columns{'task': 'source'})
         self.df_erc = df_order(df=df, column="task")
+        # TODO Mel change the function name to be order_df df_order makes it look like a variable not a function
 
         return self.df_erc
 
@@ -678,7 +660,7 @@ class Component(PofBase):
 
     # ****************** Reports ****************
 
-    def get_df_erc(self):
+    def calc_df_erc(self):
         if self.up_to_date:
             if self.df_erc is not None:
                 df_erc = self.df_erc
@@ -687,7 +669,7 @@ class Component(PofBase):
 
         raise NotImplementedError()
 
-    def get_pof_df(self, t_end=None):
+    def calc_pof_df(self, t_end=None):
         # TODO this could be way more efficient
         pof = dict(
             maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
@@ -731,7 +713,7 @@ class Component(PofBase):
 
         return self.df_pof
 
-    def get_df_task_forecast(self):
+    def calc_df_task_forecast(self):
         """ Create the task plot dataframe """
 
         # Population Data
@@ -759,7 +741,7 @@ class Component(PofBase):
 
         return self.df_task
 
-    def get_df_cond(self):
+    def calc_df_cond(self):
         ecl = self.expected_condition()
 
         df = pd.DataFrame()
