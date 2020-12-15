@@ -3,6 +3,10 @@ illyes_var = 10
 sep = "-"
 replace_sep_with = "."
 
+[Layouts]
+y_value_default = "cost_cumulative"
+axis_lock = false
+
 [PofBase]
 on_error_use_default = true
 handle_invalid_data = true

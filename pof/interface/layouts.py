@@ -8,9 +8,11 @@ import dash_bootstrap_components as dbc
 from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
 from pof.units import valid_units
+from config import config
 
 IS_OPEN = cf.is_open
 SCALING = cf.scaling
+defaults = config["Layouts"]
 
 # Asset
 
@@ -80,6 +82,7 @@ def make_layout(comp):
     ]
 
     y_values = ["cost", "cost_cumulative", "cost_annual"]
+    y_value_default = defaults.get("y_value_default")
     update_list_y = [{"label": option, "value": option} for option in y_values]
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
@@ -87,20 +90,20 @@ def make_layout(comp):
     layouts = html.Div(
         [
             html.Div(id="log"),
-            dbc.Checkbox(
-                id="axis_lock-checkbox",
-                checked=False,
-            ),
             html.Div(children=None, id="graph_limits"),
-            html.Div(children="Update State:", id="update_state"),
-            html.Div(
+            dbc.Row(
                 [
-                    html.P(children="Sim State", id="sim_state"),
-                    html.P(id="sim_state_err", style={"color": "red"}),
+                    dbc.Col(
+                        [
+                            "Axis Lock",
+                            dbc.Checkbox(
+                                id="axis_lock-checkbox",
+                                checked=defaults.get("config.axis_lock"),
+                            ),
+                        ]
+                    )
                 ]
             ),
-            html.Div(children="Fig State", id="fig_state"),
-            html.P(id="ffcf"),
             dbc.Row(
                 [
                     dbc.Col(
@@ -310,7 +313,12 @@ def make_layout(comp):
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="task_forecast-fig")),
-                    dbc.Col(dcc.Graph(id="forecast_table-fig")),
+                    dbc.Col(
+                        [
+                            dbc.Row([dcc.Graph(id="pop_table-fig")]),
+                            dbc.Row([dcc.Graph(id="forecast_table-fig")]),
+                        ]
+                    ),
                 ]
             ),
             html.Div(
@@ -375,7 +383,7 @@ def make_layout(comp):
                             dcc.Dropdown(
                                 id="sens_var_y-dropdown",
                                 options=update_list_y,
-                                value=y_values[0],
+                                value=y_value_default,
                             ),
                         ]
                     ),
@@ -452,6 +460,47 @@ def make_layout(comp):
                 ]
             ),
             mcl,
+            dbc.InputGroup(
+                [
+                    dbc.Button(
+                        "Sim metadata",
+                        color="link",
+                        id="sim_metadata-button",
+                    ),
+                    dbc.Collapse(
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.Div(
+                                            children="Update State:",
+                                            id="update_state",
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    children="Sim State",
+                                                    id="sim_state",
+                                                ),
+                                                html.P(
+                                                    id="sim_state_err",
+                                                    style={"color": "red"},
+                                                ),
+                                            ]
+                                        ),
+                                        html.Div(
+                                            children="Fig State",
+                                            id="fig_state",
+                                        ),
+                                        html.P(id="ffcf"),
+                                    ]
+                                )
+                            ]
+                        ),
+                        id="collapse_sim_params",
+                    ),
+                ]
+            ),
         ]
     )
 

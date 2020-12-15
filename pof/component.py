@@ -32,6 +32,7 @@ from pof.interface.figures import (
     update_pof_fig,
     update_condition_fig,
     make_task_forecast_fig,
+    make_pop_table_fig,
     make_table_fig,
 )
 from pof.data.asset_data import SimpleFleet
@@ -303,6 +304,26 @@ class Component(PofBase):
 
     # ****************** Expected ******************
 
+    def population_table(self):
+        """ Reports a summary of the in service, FF and CF outcomes over the MC simulation """
+        pop_table = {}
+        ff = 0
+        cf = 0
+        for fm in self.fm.values():
+            ff = ff + len(fm.expected_ff())
+            cf = cf + len(fm.expected_cf())
+        pop_table["summary"] = {
+            "is": self._sim_counter - ff - cf,
+            "cf": cf,
+            "ff": ff,
+        }
+
+        df_pop_summary = pd.DataFrame.from_dict(pop_table).T
+        col_order = ["is", "cf", "ff"]
+        df = df_pop_summary.reindex(columns=col_order)
+
+        return df
+
     def expected_forecast_table(self, cohort=None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         ff_cf = {}
@@ -328,6 +349,14 @@ class Component(PofBase):
         if cohort is not None:
             sample_size = self._sim_counter / cohort["assets"].sum()
             df_summary[["ff_pop", "cf_pop"]] = df_summary[["ff", "cf"]] / sample_size
+
+            # ADD COMMAS
+            # df_summary["ff_pop"] = "{:,.2f}".format(
+            #     float(df_summary["ff"] / sample_size)
+            # )
+            # df_summary["cf_pop"] = "{:,.2f}".format(
+            #     float(df_summary["cf"] / sample_size)
+            # )
 
         df_summary["fm"] = df_summary.index
 
@@ -595,7 +624,7 @@ class Component(PofBase):
         suffix = ["", "_annual", "_cumulative"]
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
-        for i in np.arange(lower, upper, step_size):
+        for i in np.arange(lower, upper + 1, step_size):
             if not self.up_to_date:
                 break
             try:
@@ -794,6 +823,13 @@ class Component(PofBase):
             units=self.units,
             prev=prev,
         )
+
+    def plot_pop_table(self):
+
+        df = self.population_table()
+        fig = make_pop_table_fig(df)
+
+        return fig
 
     def plot_forecast_table(self, cohort=None):
 

@@ -102,8 +102,19 @@ param_inputs = [
 ##Collapsable edit functions
 @app.callback(
     Output("collapse_y_limits", "is_open"),
-    [Input("collapse_y_limits-button", "n_clicks")],
-    [State("collapse_y_limits", "is_open")],
+    Input("collapse_y_limits-button", "n_clicks"),
+    State("collapse_y_limits", "is_open"),
+)
+def collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
+
+
+@app.callback(
+    Output("collapse_sim_params", "is_open"),
+    Input("sim_metadata-button", "n_clicks"),
+    State("collapse_sim_params", "is_open"),
 )
 def collapse(n, is_open):
     if n:
@@ -297,6 +308,7 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
+    Output("pop_table-fig", "figure"),
     Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
     Input("cond_1_var_y-input", "value"),
@@ -345,12 +357,21 @@ def update_figures(
 
         task_forecast_fig = pof_sim.plot_task(y_max=task_var_y, prev=prev_task_fig)
 
+        pop_table_fig = pof_sim.plot_pop_table()
+
         forecast_table_fig = pof_sim.plot_forecast_table(sfd.df_age)
 
     else:
         raise PreventUpdate
 
-    return cond_fig, ms_fig, pof_fig, task_forecast_fig, forecast_table_fig
+    return (
+        cond_fig,
+        ms_fig,
+        pof_fig,
+        task_forecast_fig,
+        pop_table_fig,
+        forecast_table_fig,
+    )
 
 
 @app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
