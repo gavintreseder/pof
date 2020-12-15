@@ -319,6 +319,8 @@ def make_pop_table_fig(df):
         ]
     )
 
+    fig.update_layout(title="Population Summary")
+
     return fig
 
 
@@ -334,6 +336,8 @@ def make_table_fig(df):
             )
         ]
     )
+
+    fig.update_layout(title="Population Summary")
 
     return fig
 

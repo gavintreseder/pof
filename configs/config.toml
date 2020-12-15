@@ -5,7 +5,7 @@ replace_sep_with = "."
 
 [Layouts]
 y_value_default = "cost_cumulative"
-axis_lock = false
+axis_lock = true
 
 [PofBase]
 on_error_use_default = true

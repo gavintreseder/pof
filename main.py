@@ -91,7 +91,7 @@ def toggle_collapses(*args):
     return is_open
 
 
-ms_fig_update = comp.get_dash_ids()
+ms_fig_update = comp.get_dash_ids(integer=True)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
     for dash_id in ms_fig_update
@@ -306,7 +306,7 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
-    Output("pop_table-fig", "figure"),
+    # Output("pop_table-fig", "figure"),
     Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
     Input("cond_1_var_y-input", "value"),
@@ -355,7 +355,7 @@ def update_figures(
 
         task_forecast_fig = pof_sim.plot_task(y_max=task_var_y, prev=prev_task_fig)
 
-        pop_table_fig = pof_sim.plot_pop_table()
+        # pop_table_fig = pof_sim.plot_pop_table()
 
         forecast_table_fig = pof_sim.plot_forecast_table(sfd.df_age)
 
@@ -367,7 +367,7 @@ def update_figures(
         ms_fig,
         pof_fig,
         task_forecast_fig,
-        pop_table_fig,
+        # pop_table_fig,
         forecast_table_fig,
     )
 

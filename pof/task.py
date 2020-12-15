@@ -330,14 +330,18 @@ class Task(PofBase):
     # ********************* interface methods ******************
 
     def get_dash_ids(
-        self, prefix: str = "", sep: str = "-", active: bool = None
+        self, integer: bool, prefix: str = "", sep: str = "-", active: bool = None
     ) -> List:
 
         if active is None or (self.active == active):
             prefix = prefix + self.name + sep
 
             # task parameters
-            param_list = ["active", "p_effective", "cost"]
+            if integer:
+                param_list = ["active", "p_effective", "cost"]
+            else:
+                param_list = ["p_effective", "cost"]
+
             if self.trigger == "time":
                 param_list = param_list + ["t_interval", "t_delay"]
 

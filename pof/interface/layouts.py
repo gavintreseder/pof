@@ -78,7 +78,8 @@ def get_chart_list():
 def make_layout(comp):
     mcl = make_component_layout(comp)
     update_list = [
-        {"label": option, "value": option} for option in comp.get_update_ids()
+        {"label": option, "value": option}
+        for option in comp.get_update_ids(integer=True)
     ]
 
     y_values = ["cost", "cost_cumulative", "cost_annual"]
@@ -314,10 +315,7 @@ def make_layout(comp):
                 [
                     dbc.Col(dcc.Graph(id="task_forecast-fig")),
                     dbc.Col(
-                        [
-                            dbc.Row([dcc.Graph(id="pop_table-fig")]),
-                            dbc.Row([dcc.Graph(id="forecast_table-fig")]),
-                        ]
+                        dbc.Row([dcc.Graph(id="forecast_table-fig")]),
                     ),
                 ]
             ),
@@ -398,7 +396,7 @@ def make_layout(comp):
                             dcc.Dropdown(
                                 id="sens_var_id-dropdown",
                                 options=update_list,
-                                value=comp.get_update_ids()[0],
+                                value=comp.get_update_ids(integer=True)[0],
                             ),
                         ]
                     ),
