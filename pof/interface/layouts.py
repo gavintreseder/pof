@@ -87,20 +87,20 @@ def make_layout(comp):
     layouts = html.Div(
         [
             html.Div(id="log"),
-            dbc.Checkbox(
-                id="axis_lock-checkbox",
-                checked=False,
-            ),
             html.Div(children=None, id="graph_limits"),
-            html.Div(children="Update State:", id="update_state"),
-            html.Div(
+            dbc.Row(
                 [
-                    html.P(children="Sim State", id="sim_state"),
-                    html.P(id="sim_state_err", style={"color": "red"}),
+                    dbc.Col(
+                        [
+                            "Axis Lock",
+                            dbc.Checkbox(
+                                id="axis_lock-checkbox",
+                                checked=False,
+                            ),
+                        ]
+                    )
                 ]
             ),
-            html.Div(children="Fig State", id="fig_state"),
-            html.P(id="ffcf"),
             dbc.Row(
                 [
                     dbc.Col(
@@ -310,7 +310,12 @@ def make_layout(comp):
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="task_forecast-fig")),
-                    dbc.Col(dcc.Graph(id="forecast_table-fig")),
+                    dbc.Col(
+                        [
+                            dbc.Row([dcc.Graph(id="pop_table-fig")]),
+                            dbc.Row([dcc.Graph(id="forecast_table-fig")]),
+                        ]
+                    ),
                 ]
             ),
             html.Div(
@@ -452,6 +457,47 @@ def make_layout(comp):
                 ]
             ),
             mcl,
+            dbc.InputGroup(
+                [
+                    dbc.Button(
+                        "Sim metadata",
+                        color="link",
+                        id="sim_metadata-button",
+                    ),
+                    dbc.Collapse(
+                        dbc.Card(
+                            [
+                                dbc.CardBody(
+                                    [
+                                        html.Div(
+                                            children="Update State:",
+                                            id="update_state",
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    children="Sim State",
+                                                    id="sim_state",
+                                                ),
+                                                html.P(
+                                                    id="sim_state_err",
+                                                    style={"color": "red"},
+                                                ),
+                                            ]
+                                        ),
+                                        html.Div(
+                                            children="Fig State",
+                                            id="fig_state",
+                                        ),
+                                        html.P(id="ffcf"),
+                                    ]
+                                )
+                            ]
+                        ),
+                        id="collapse_sim_params",
+                    ),
+                ]
+            ),
         ]
     )
 

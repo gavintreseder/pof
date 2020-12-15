@@ -309,12 +309,28 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
     return fig
 
 
-def make_table_fig(df):
+def make_pop_table_fig(df):
     fig = go.Figure(
         data=[
             go.Table(
                 header=dict(values=list(df.columns), align="left"),
                 cells=dict(values=[df[col] for col in list(df)], align="left"),
+            )
+        ]
+    )
+
+    return fig
+
+
+def make_table_fig(df):
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header=dict(values=list(df.columns), align="left"),
+                cells=dict(
+                    values=[df[col] for col in list(df)],
+                    align="left",
+                ),
             )
         ]
     )
