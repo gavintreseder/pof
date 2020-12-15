@@ -19,7 +19,9 @@ from pof.interface.layouts import (
     get_chart_list,
     make_layout,
     cf,
-)  # TODO fix the need to import cf
+)
+
+# TODO fix the need to import cf
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
@@ -337,7 +339,9 @@ def update_figures(
 
         pof_fig = pof_sim.plot_pof(y_max=pof_var_y, prev=prev_pof_fig)
 
-        cond_fig = pof_sim.plot_cond(y_max=[cond_1_var_y, cond_2_var_y, cond_3_var_y], prev=prev_cond_fig)
+        cond_fig = pof_sim.plot_cond(
+            y_max=[cond_1_var_y, cond_2_var_y, cond_3_var_y], prev=prev_cond_fig
+        )
 
         task_forecast_fig = pof_sim.plot_task(y_max=task_var_y, prev=prev_task_fig)
 
