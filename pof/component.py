@@ -71,6 +71,8 @@ class Component(PofBase):
 
         super().__init__(name=name, *args, **kwargs)
 
+        self.fleet_data = "temp fix until creating asset class"
+
         self.active = active
         self.indicator = PofContainer()
         self.fm = PofContainer()
@@ -290,7 +292,7 @@ class Component(PofBase):
                 fm.renew(t_renew)
 
     def increment_counter(self):
-        self._sim_counter = self._sim_counter + 1
+        self._sim_counter += 1
 
         for fm in self.fm.values():
             fm.increment_counter()
@@ -307,15 +309,15 @@ class Component(PofBase):
     def population_table(self):
         """ Reports a summary of the in service, FF and CF outcomes over the MC simulation """
         pop_table = {}
-        ff = 0
-        cf = 0
+        _ff = 0
+        _cf = 0
         for fm in self.fm.values():
-            ff = ff + len(fm.expected_ff())
-            cf = cf + len(fm.expected_cf())
+            _ff = _ff + len(fm.expected_ff())
+            _cf = _cf + len(fm.expected_cf())
         pop_table["summary"] = {
-            "is": self._sim_counter - ff - cf,
-            "cf": cf,
-            "ff": ff,
+            "is": self._sim_counter - _ff - _cf,
+            "cf": _cf,
+            "ff": _ff,
         }
 
         df_pop_summary = pd.DataFrame.from_dict(pop_table).T
@@ -333,6 +335,7 @@ class Component(PofBase):
                 _ff = len(fm.expected_ff())
                 _cf = len(fm.expected_cf())
                 n = self._sim_counter
+
                 ff_cf[fm.name] = {
                     "ie %": round((1 - insp_effective) * 100, 2),
                     "is": n - _cf - _ff,
@@ -709,27 +712,10 @@ class Component(PofBase):
 
         return self.df_pof
 
-    def get_df_task_forecast(self):
+    def get_df_task_forecast(self, fleet_data):
         """ Create the task plot dataframe """
 
-        # Population Data
-        file_path = (
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            + r"\inputs"
-            + os.sep
-        )
-        file_name = r"population_summary.csv"
-
-        # Forecast years
-        start_year = 2015
-        end_year = 2024
-        current_year = 2020
-
-        sfd = SimpleFleet(file_path + file_name)
-        sfd.load()
-        sfd.calc_forecast_age(start_year, end_year, current_year)
-
-        df = sfd.get_population_tasks(df_erc=self.df_erc)
+        df = fleet_data.get_task_forecast(df_erc=self.df_erc)
 
         df_ordered = df_order(df=df, column="task")
 
@@ -786,7 +772,7 @@ class Component(PofBase):
             prev=prev,
         )
 
-    def plot_task(
+    def plot_task_forecast(
         self,
         y_max=None,
         prev=None,
@@ -939,10 +925,6 @@ class Component(PofBase):
             objects = objects + fms.get_objects(prefix=prefix + "fm" + sep)
 
         return objects
-
-    def get_timeline(self):
-
-        raise NotImplementedError()
 
     # ****************** Demonstration parameters ******************
 
