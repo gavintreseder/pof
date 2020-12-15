@@ -277,7 +277,7 @@ def make_sensitivity_fig(
 
 def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
 
-    title = "Quantity of tasks for Population"
+    title = "Population Forecast"
 
     try:
         color_map = get_color_map(df=df, column="task")

@@ -30,6 +30,8 @@ class SimpleFleet:
 
         self.df_age = df_age
 
+        logging.info("Fleet Data loaded")
+        
         return self.df_age
 
     def calc_forecast_age(self, start_year, end_year, current_year=None):
@@ -73,7 +75,7 @@ class SimpleFleet:
 
         return self.df_forecast
 
-    def get_population_tasks(self, df_erc=None):
+    def get_task_forecast(self, df_erc=None):
         """ Get the number of assets that would require each task by year """
 
         # Merge with the estimated risk cost

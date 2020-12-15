@@ -4,11 +4,8 @@ import logging
 
 import dash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import pandas as pd
 
 from config import config
 from pof import Component
@@ -22,6 +19,7 @@ from pof.interface.layouts import (
 )
 
 # TODO fix the need to import cf
+
 from pof.interface.figures import (
     update_condition_fig,
     update_pof_fig,
@@ -34,14 +32,6 @@ START_YEAR = 2015
 END_YEAR = 2024
 CURRENT_YEAR = 2020
 
-# Asset Model Data
-file_path = os.getcwd() + r"\data\inputs" + os.sep
-FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
-
-aml = AssetModelLoader(file_path + FILE_NAME)
-comp_data = aml.load()
-comp = Component.from_dict(comp_data["pole"])
-
 # Population Data
 file_path = os.path.dirname(os.path.dirname(__file__)) + r"\inputs" + os.sep
 FILE_NAME = r"population_summary.csv"
@@ -49,6 +39,15 @@ FILE_NAME = r"population_summary.csv"
 sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
 sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
+
+# Asset Model Data
+file_path = os.getcwd() + r"\data\inputs" + os.sep
+FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
+
+aml = AssetModelLoader(file_path + FILE_NAME)
+comp_data = aml.load()
+comp = Component.from_dict(comp_data["pole"])
+comp.fleet_data = sfd  # TODO fix by creating asset class
 
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.CRITICAL)
@@ -68,6 +67,11 @@ sens_sim = copy.copy(comp)
 var_to_scale = cf.scaling
 app.layout = make_layout(comp)
 
+# ========================================================
+# Collapsable objects to hide information when not needed.
+# ========================================================
+
+# Get the dash ids for all the objects that have a collapse button
 collapse_ids = comp.get_objects()
 
 
@@ -77,6 +81,7 @@ collapse_ids = comp.get_objects()
     [State(f"{prefix}-collapse", "is_open") for prefix in collapse_ids],
 )
 def toggle_collapses(*args):
+    """ Expands and collapses hidden dash components in the interface"""
     ctx = dash.callback_context
 
     state_id = ""
@@ -99,7 +104,7 @@ param_inputs = [
     for dash_id in ms_fig_update
 ]
 
-##Collapsable edit functions
+# Collapsable edit functions
 @app.callback(
     Output("collapse_y_limits", "is_open"),
     Input("collapse_y_limits-button", "n_clicks"),
@@ -122,7 +127,9 @@ def collapse(n, is_open):
     return is_open
 
 
-# Update --> Simulate --> Figures
+# ========================================================
+# UPDATE --> Simulate --> Figures
+# ========================================================
 
 
 @app.callback(Output("update_state", "children"), param_inputs)
@@ -162,6 +169,7 @@ def update_parameter(*args):
 def update_simulation(__, active, t_end, n_iterations, time_unit):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
+    global sfd
 
     pof_sim.cancel_sim()
 
@@ -226,7 +234,7 @@ def save_figure_limits(__, t_end, x_axis, y_axis, axis_lock):
     f = y_max_values[5]
     g = y_max_values[6]
 
-    return a, b, c, d, e, f, g
+    return a, b, c, d, e, f, g  # tuple(my_list)
 
 
 def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
@@ -234,6 +242,8 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
 
     global pof_sim
     global sens_sim
+
+    scale = 1.05
 
     if "pof" in chart:
         df = pof_sim.df_pof
@@ -259,42 +269,19 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
     try:
         if axis_lock is False:
             if x_col is not None:
-                y_max = df.groupby(x_col)[y_col].sum().max() * 1.05
+                y_max = df.groupby(x_col)[y_col].sum().max() * scale
             else:
-                y_max = df[y_col].max() * 1.05
+                y_max = df[y_col].max() * scale
         else:
             ctx = dash.callback_context
             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
             if dash_id == "sens_var_y-dropdown" and x_col is not None:
-                y_max = df.groupby(x_col)[y_col].sum().max() * 1.05
+                y_max = df.groupby(x_col)[y_col].sum().max() * scale
             else:
                 return dash.no_update
     except:
         y_max = None
     return y_max
-
-
-# @app.callback(
-#     Output("sens_var_y-input", "value"),
-#     Input("sim_state", "children"),
-#     Input("sens_var_y-dropdown", "value"),  # TODO change name of this
-#     Input("axis_lock-checkbox", "checked"),  # TODO should this be a state?
-# )
-# def save_figure_limits(__, y_axis, axis_lock):
-#     """ Save the figure limits so they can be used for the axis lock"""
-#     try:
-#         if not axis_lock:
-#             y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
-#         else:
-#             ctx = dash.callback_context
-#             dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
-#             if dash_id == "sens_var_y-dropdown":
-#                 y_max = pof_sim.df_erc.groupby("time")[y_axis].sum().max() * 1.05
-#             else:
-#                 return dash.no_update
-#     except:
-#         y_max = None
-#     return y_max
 
 
 @app.callback(
@@ -306,6 +293,7 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
     Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
     Input("cond_1_var_y-input", "value"),
+    # TODO this will need be a list because you can have n conditions
     Input("cond_2_var_y-input", "value"),
     Input("cond_3_var_y-input", "value"),
     Input("cost_var_y-input", "value"),
@@ -339,17 +327,18 @@ def update_figures(
     *args,
 ):
     global pof_sim
-
+    global sfd
+    
     if active:
-        ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, prev=prev_ms_fig)
 
         pof_fig = pof_sim.plot_pof(y_max=pof_var_y, prev=prev_pof_fig)
 
-        cond_fig = pof_sim.plot_cond(
-            y_max=[cond_1_var_y, cond_2_var_y, cond_3_var_y], prev=prev_cond_fig
-        )
+        cond_y_var = [cond_1_var_y, cond_2_var_y, cond_3_var_y]
+        cond_fig = pof_sim.plot_cond(y_max=cond_y_var, prev=prev_cond_fig)
 
-        task_forecast_fig = pof_sim.plot_task(y_max=task_var_y, prev=prev_task_fig)
+        task_forecast_fig = pof_sim.plot_task_forecast(
+            y_max=task_var_y, prev=prev_task_fig
+        )
 
         # pop_table_fig = pof_sim.plot_pop_table()
 
