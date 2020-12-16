@@ -98,7 +98,7 @@ def toggle_collapses(*args):
     return is_open
 
 
-ms_fig_update = comp.get_dash_ids(numericalOnly=True)
+ms_fig_update = comp.get_dash_ids(numericalOnly=False)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
     for dash_id in ms_fig_update

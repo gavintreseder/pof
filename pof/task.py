@@ -338,9 +338,9 @@ class Task(PofBase):
 
             # task parameters
             if numericalOnly:
-                param_list = ["active", "p_effective", "cost"]
-            else:
                 param_list = ["p_effective", "cost"]
+            else:
+                param_list = ["active", "p_effective", "cost"]
 
             if self.trigger == "time":
                 param_list = param_list + ["t_interval", "t_delay"]
