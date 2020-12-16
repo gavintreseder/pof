@@ -345,7 +345,7 @@ class Component(PofBase):
                     "ie": insp_effective,
                     "is": self._sim_counter - _cf - _ff,
                     "ff": _ff,
-                    "cf": _ff,
+                    "cf": _cf,
                 }
 
         df = pd.DataFrame.from_dict(ff_cf).T
