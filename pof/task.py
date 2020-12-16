@@ -239,12 +239,12 @@ class Task(PofBase):
 
     # ********************* expected methods ******************
 
-    def expected(self, scaling=1):
+    def expected(self, scaling=1) -> dict:
         """ Retuns a dictionary with the quantity and cost of completing a task over time scaled by a scaling factor"""
         time, count = np.unique(self.t_completion, return_counts=True)
         quantity = count / scaling
         cost = quantity * self.cost
-        return dict(active=self.active, time=time, quantity=quantity, cost=cost)
+        return {'active':self.active, 'time':time, 'quantity':quantity,'cost':cost}
 
     def expected_costs(self, scaling=1):
         """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""

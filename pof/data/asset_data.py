@@ -31,7 +31,7 @@ class SimpleFleet:
         self.df_age = df_age
 
         logging.info("Fleet Data loaded")
-        
+
         return self.df_age
 
     def calc_forecast_age(self, start_year, end_year, current_year=None):
@@ -87,17 +87,31 @@ class SimpleFleet:
 
         # Get Task forecast
         self.df_forecast_task = (
-            df.groupby(by=["year", "task", "active"])[["pop_quantity"]]
+            df.groupby(by=["year", "task", "active"])[["pop_quantity", "pop_cost"]]
             .sum()
             .reset_index()
         )
 
-        # df_task_table = self.df_forecast_task.pivot(
-        #     index="task", columns="year", values="pop_quantity"
-        # )
-        # df_task_table.columns = df_task_table.columns.droplevel()
+        return self.df_forecast_task
 
-        # self.df_task_table = df_task_table
+    def get_cf_ff_forecast(self, df_erc=None):
+        """ Get the number of assets that would require each task by year """
+
+        # Merge with the estimated risk cost
+        df = self.df_forecast.merge(df_erc, left_on="age", right_on="time")
+
+        # Calculated population outcomes
+        df["pop_quantity"] = df["assets"] * df["quantity"]
+        df["pop_cost"] = df["pop_quantity"] * df["cost"]
+
+        # Get Task forecast
+        self.df_forecast_task = (
+            df.groupby(by=["year", "task", "active", "system_impact"])[
+                ["pop_quantity", "pop_cost"]
+            ]
+            .sum()
+            .reset_index()
+        )
 
         return self.df_forecast_task
 

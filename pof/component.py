@@ -6,7 +6,6 @@ Author: Gavin Treseder
 # ************ Packages ********************
 from typing import Dict
 import logging
-import os
 
 import numpy as np
 import pandas as pd
@@ -334,19 +333,35 @@ class Component(PofBase):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         # Get the key data from each of the failuremodes
         ff_cf = {}
+
         for fm in self.fm.values():
             if fm.active:
                 insp_effective = fm.inspection_effectiveness()
-                _ff = len(fm.expected_ff())
-                _cf = len(fm.expected_cf())
+                _ff = fm.expected_ff()
+                _cf = fm.expected_cf()
 
                 ff_cf[fm.name] = {
                     "fm": fm.name,
                     "ie": insp_effective,
-                    "is": self._sim_counter - _cf - _ff,
-                    "ff": _ff,
-                    "cf": _cf,
+                    "is": self._sim_counter - len(_cf) - len(_ff),
+                    "ff": len(_ff),
+                    "cf": len(_cf),
                 }
+
+                if cohort is not None:
+                    # for times, name in zip()
+                    age, count = np.unique(_cf, return_counts=True)
+                    age, count = np.unique(_cf, return_counts=True)
+                    ff_cf[fm.name]["cf_pop_annual_avg"] = (
+                        cohort.reindex(age).mul(count, axis=0).sum()[0]
+                        / self._sim_counter
+                    )
+
+                    age, count = np.unique(_ff, return_counts=True)
+                    ff_cf[fm.name]["ff_pop_annual_avg"] = (
+                        cohort.reindex(age).mul(count, axis=0).sum()[0]
+                        / self._sim_counter
+                    )
 
         df = pd.DataFrame.from_dict(ff_cf).T
 
@@ -361,12 +376,20 @@ class Component(PofBase):
         df = df.append(total, ignore_index=True).set_index("fm")
 
         # Calculate the ratio of cf to ff
-        mask_failures = (df['cf'] != 0 ) & (df['cf'] != 0 )
-        for var in ['ff', 'cf']:
-            df[var + "%"] = (df.loc[mask_failures, var] / (df.loc[mask_failures,"cf"] + df.loc[mask_failures,"ff"]) * 100).astype(float).round(2)
+        mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
+        for var in ["ff", "cf"]:
+            df[var + "%"] = (
+                (
+                    df.loc[mask_failures, var]
+                    / (df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"])
+                    * 100
+                )
+                .astype(float)
+                .round(2)
+            )
             df[var + "%"].fillna("", inplace=True)
 
-        df["cf:ff (%)"] = df['ff%'].astype(str) + ":" + df['cf%'].astype(str)
+        df["cf:ff (%)"] = df["ff%"].astype(str) + ":" + df["cf%"].astype(str)
 
         # Add the cohort data if it is supplied
         if cohort is not None:
@@ -375,6 +398,8 @@ class Component(PofBase):
 
             df.loc["total", "ff_pop"] = df["ff_pop"].sum()
             df.loc["total", "cf_pop"] = df["cf_pop"].sum()
+            df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
+            df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
             df.loc["total", "total"] = cohort["assets"].sum()
 
         # Format for display
@@ -385,6 +410,8 @@ class Component(PofBase):
             "is",
             "ff",
             "cf",
+            "ff_pop_annual_avg",
+            "cf_pop_annual_avg",
             "ff_pop",
             "cf_pop",
             "total",
