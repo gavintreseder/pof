@@ -372,7 +372,7 @@ class TestFailureMode(TestPofBaseCommon, unittest.TestCase):
 
         fm = FailureMode.demo()
 
-        dash_ids = fm.get_dash_ids()
+        dash_ids = fm.get_dash_ids(numericalOnly=True)
 
     # ************ Test update methods *****************
 

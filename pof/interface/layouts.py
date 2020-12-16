@@ -530,7 +530,7 @@ def validate_layout(pof_obj, layout):
         id + "-collapse-button" for id in objs if id + "-collapse-button" not in layout
     ]
 
-    params = pof_obj.get_dash_ids()
+    params = pof_obj.get_dash_ids(numericalOnly=False)
 
     layout_objects = collapse + collapse_button + params
 
