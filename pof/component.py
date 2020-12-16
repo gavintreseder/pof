@@ -388,7 +388,7 @@ class Component(PofBase):
         ]
         df = df.reset_index().reindex(columns=col_order)
 
-        df["ie"] = df["ie"].mul(100).round(2)
+        df["ie"] = df["ie"].mul(100)
         df.rename(columns={"ie": "ie (%)"}, inplace=True)
 
         return df

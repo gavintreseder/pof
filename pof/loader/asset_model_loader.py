@@ -34,7 +34,7 @@ class AssetModelLoader:
         self.filename = filename
 
     def load(self, filename=None):
-
+        logging.info("Asset Model loading...")
         # Load a filename if it has been passed to it
         if filename is None:
             if self.filename is None:
@@ -70,9 +70,16 @@ class AssetModelLoader:
         """
 
         try:
-            df = pd.read_excel(self.filename, sheet_name="Model Input", header=[0, 1, 2], engine='openpyxl')
+            df = pd.read_excel(
+                self.filename,
+                sheet_name="Model Input",
+                header=[0, 1, 2],
+                engine="openpyxl",
+            )
         except AttributeError:
-            ddf = pd.read_excel(self.filename, sheet_name="Model Input", header=[0, 1, 2], engine='xlrd')
+            ddf = pd.read_excel(
+                self.filename, sheet_name="Model Input", header=[0, 1, 2], engine="xlrd"
+            )
 
         # Create keys
         keys = dict(
