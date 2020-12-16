@@ -147,13 +147,17 @@ class Component(PofBase):
 
     # ****************** Set data ******************
 
-    def mc(self, t_end, t_start, n_iterations):
+    def mc(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Complete MC simulation and calculate all the metrics for the component"""
 
         # Simulate a timeline
         self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
 
         # Produce reports
+        self.expected_risk_cost_df(t_end=t_end)
+        self.calc_pof_df(t_end=t_end)
+        self.calc_df_task_forecast()
+        self.calc_df_cond()
 
         return NotImplemented
 
@@ -643,7 +647,7 @@ class Component(PofBase):
 
     # ****************** Reports ****************
 
-    def get_df_erc(self):
+    def calc_df_erc(self):
         if self.up_to_date:
             if self.df_erc is not None:
                 df_erc = self.df_erc
@@ -652,7 +656,7 @@ class Component(PofBase):
 
         raise NotImplementedError()
 
-    def get_pof_df(self, t_end=None):
+    def calc_pof_df(self, t_end=None):
         # TODO this could be way more efficient
         pof = dict(
             maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
@@ -696,7 +700,7 @@ class Component(PofBase):
 
         return self.df_pof
 
-    def get_df_task_forecast(self, fleet_data):
+    def calc_df_task_forecast(self):
         """ Create the task plot dataframe """
 
         df = fleet_data.get_task_forecast(df_erc=self.df_erc)
@@ -707,7 +711,7 @@ class Component(PofBase):
 
         return self.df_task
 
-    def get_df_cond(self):
+    def calc_df_cond(self):
         ecl = self.expected_condition()
 
         df = pd.DataFrame()
@@ -855,7 +859,7 @@ class Component(PofBase):
         for fm in self.fm.values():
             fm.update_task_group(data)
 
-    def get_dash_ids(self, integer: bool = False, prefix="", sep="-", active=None):
+    def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
 
         if active is None or (self.active == active):
@@ -867,7 +871,10 @@ class Component(PofBase):
             fm_ids = []
             for fm in self.fm.values():
                 fm_ids = fm_ids + fm.get_dash_ids(
-                    integer=integer, prefix=prefix + "fm" + sep, sep=sep, active=active
+                    numericalOnly=numericalOnly,
+                    prefix=prefix + "fm" + sep,
+                    sep=sep,
+                    active=active,
                 )
 
             dash_ids = comp_ids + fm_ids
@@ -876,12 +883,12 @@ class Component(PofBase):
 
         return dash_ids
 
-    def get_update_ids(self, integer=bool, prefix="", sep="-"):
+    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
         """ Get the ids for all objects that should be updated"""
         # TODO remove this once task groups added to the interface
         # TODO fix encapsulation
 
-        ids = self.get_dash_ids(integer=integer, active=True)
+        ids = self.get_dash_ids(numericalOnly=numericalOnly, active=True)
 
         update_ids = dict()
         for fm in self.fm.values():

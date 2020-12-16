@@ -98,7 +98,7 @@ def toggle_collapses(*args):
     return is_open
 
 
-ms_fig_update = comp.get_dash_ids(integer=True)
+ms_fig_update = comp.get_dash_ids(numericalOnly=True)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
     for dash_id in ms_fig_update
@@ -179,13 +179,7 @@ def update_simulation(__, active, t_end, n_iterations, time_unit):
         pof_sim = copy.copy(comp)
 
         # Complete the simulations
-        pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
-
-        # Generate the reports
-        pof_sim.expected_risk_cost_df(t_end=t_end)
-        pof_sim.get_pof_df(t_end=t_end)
-        pof_sim.get_df_task_forecast(sfd)
-        pof_sim.get_df_cond()
+        pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
 
         if not pof_sim.up_to_date:
             return dash.no_update, f"Update cancelled"
@@ -334,9 +328,8 @@ def update_figures(
 ):
     global pof_sim
     global sfd
-
+    
     if active:
-        ms_fig = pof_sim.plot_ms(y_axis=y_axis, y_max=ms_var_y, prev=prev_ms_fig)
 
         pof_fig = pof_sim.plot_pof(y_max=pof_var_y, prev=prev_pof_fig)
 

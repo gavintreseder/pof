@@ -79,7 +79,7 @@ def make_layout(comp):
     mcl = make_component_layout(comp)
     update_list = [
         {"label": option, "value": option}
-        for option in comp.get_update_ids(integer=True)
+        for option in comp.get_update_ids(numericalOnly=True)
     ]
 
     y_values = ["cost", "cost_cumulative", "cost_annual", 'quantity', 'quantity_cumulative']
@@ -396,7 +396,7 @@ def make_layout(comp):
                             dcc.Dropdown(
                                 id="sens_var_id-dropdown",
                                 options=update_list,
-                                value=comp.get_update_ids(integer=True)[0],
+                                value=comp.get_update_ids(numericalOnly=True)[0],
                             ),
                         ]
                     ),
@@ -530,7 +530,7 @@ def validate_layout(pof_obj, layout):
         id + "-collapse-button" for id in objs if id + "-collapse-button" not in layout
     ]
 
-    params = pof_obj.get_dash_ids()
+    params = pof_obj.get_dash_ids(numericalOnly=False)
 
     layout_objects = collapse + collapse_button + params
 
