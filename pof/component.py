@@ -337,7 +337,7 @@ class Component(PofBase):
                 n = self._sim_counter
 
                 ff_cf[fm.name] = {
-                    "ie %": insp_effective,
+                    "ie": insp_effective,
                     "is": n,  # - _cf - _ff,
                     "ff": _ff,
                     "cf": _ff,
@@ -350,32 +350,23 @@ class Component(PofBase):
             sample_size = self._sim_counter / cohort["assets"].sum()
             df[["ff_pop", "cf_pop"]] = df[["ff", "cf"]] / sample_size
 
-            # ADD COMMAS
-            # df_summary["ff_pop"] = "{:,.2f}".format(
-            #     float(df_summary["ff"] / sample_size)
-            # )
-            # df_summary["cf_pop"] = "{:,.2f}".format(
-            #     float(df_summary["cf"] / sample_size)
-            # )
-
         df["fm"] = df.index
 
         # Calculate the total row
         df.loc["total", "fm"] = "total"
         # df.loc['total', 'ie'] = (1 - df['ie'])
-        df.loc["total", ["ff", "cf", "ff_pop", "cf_pop"]] = df[
-            ["ff", "cf", "ff_pop", "cf_pop"]
-        ].sum()
+        sum_cols = ["ff", "cf", "ff_pop", "cf_pop"]
+        df.loc["total", sum_cols] = df[sum_cols].sum()
 
         # Calculate the ratio of cf to ff
         ff_percent = round((df["cf"] / (df["cf"] + df["ff"]) * 100), 2)
-        cf_perfect = round((df["cf"] / (df["cf"] + df["ff"]) * 100), 2)
-        df["cf:ff (%)"] = f"{cf_percent}:{ff_perfect}"
+        cf_percent = round((df["cf"] / (df["cf"] + df["ff"]) * 100), 2)
+        df["cf:ff (%)"] = f"{cf_percent}:{ff_percent}"
 
         # Format for display
         col_order = [
             "fm",
-            "ie %",
+            "ie",
             "cf:ff (%)",
             "is",
             "ff",
@@ -383,11 +374,12 @@ class Component(PofBase):
             "ff_pop",
             "cf_pop",
         ]
-        df = df_summary.reindex(columns=col_order)
+        df = df.reindex(columns=col_order)
 
         df["ie"] = df["ie"].mul(100).round(2)
 
-        df.rename({"ie": "ie (%)"}, inplace=True)
+        # df.rename({"ie": "ie (%)"}, inplace=True)
+        df
 
         return df
 
