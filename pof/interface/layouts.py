@@ -99,7 +99,7 @@ def make_layout(comp):
                             "Axis Lock",
                             dbc.Checkbox(
                                 id="axis_lock-checkbox",
-                                checked=defaults.get("config.axis_lock"),
+                                checked=defaults.get("axis_lock"),
                             ),
                         ]
                     )
