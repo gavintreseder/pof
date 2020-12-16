@@ -179,7 +179,15 @@ def update_simulation(__, active, t_end, n_iterations, time_unit):
         pof_sim = copy.copy(comp)
 
         # Complete the simulations
-        pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
+        #pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
+
+        pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
+
+        # Produce reports
+        pof_sim.expected_risk_cost_df(t_end=t_end)
+        pof_sim.calc_pof_df(t_end=t_end)
+        pof_sim.calc_df_task_forecast(sfd)
+        pof_sim.calc_df_cond()
 
         if not pof_sim.up_to_date:
             return dash.no_update, f"Update cancelled"

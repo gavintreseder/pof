@@ -156,7 +156,7 @@ class Component(PofBase):
         # Produce reports
         self.expected_risk_cost_df(t_end=t_end)
         self.calc_pof_df(t_end=t_end)
-        self.calc_df_task_forecast()
+        #self.calc_df_task_forecast()
         self.calc_df_cond()
 
         return NotImplemented
@@ -700,7 +700,7 @@ class Component(PofBase):
 
         return self.df_pof
 
-    def calc_df_task_forecast(self):
+    def calc_df_task_forecast(self, fleet_data):
         """ Create the task plot dataframe """
 
         df = fleet_data.get_task_forecast(df_erc=self.df_erc)
