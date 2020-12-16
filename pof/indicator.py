@@ -187,7 +187,8 @@ class Indicator(PofBase):
         return self._perfect
 
     @perfect.setter
-    def perfect(self, value):
+    @coerce_arg_type
+    def perfect(self, value: int):
         self._perfect = value
         self.set_limits()
 
@@ -196,7 +197,8 @@ class Indicator(PofBase):
         return self._failed
 
     @failed.setter
-    def failed(self, value):
+    @coerce_arg_type
+    def failed(self, value: int):
         self._failed = value
         self.set_limits()
 
@@ -231,6 +233,8 @@ class Indicator(PofBase):
             self._initial = self._perfect
         else:
             self._initial = value
+
+        self.reset_for_next_sim()  # TODO combine set and reset
 
     def set_threshold(self, detection=None, failure=None):
         if detection is None:
@@ -287,16 +291,15 @@ class Indicator(PofBase):
     def get_timeline(self, name=None):
         # maybe add t_start?
         """ Returns the timeline for a name if it is in the key or if no key is passed and None is not a key, it aggregates all timelines"""
-        try:
+        if name in self._timeline:
             timeline = self._timeline[name]
-        except KeyError as name_not_in_timeline:
-            if name is None:
-                timeline = self.agg_timeline()
-            else:
-                raise KeyError(
-                    "Name - %s - is not in %s %s timeline"
-                    % (name, self.__class__.__name__, self.name)
-                ) from name_not_in_timeline
+        elif name is None:
+            timeline = self.agg_timeline()
+        else:
+            raise KeyError(
+                "Name - %s - is not in %s %s timeline"
+                % (name, self.__class__.__name__, self.name)
+            )
 
         return timeline
 
@@ -460,8 +463,8 @@ class ConditionIndicator(Indicator):
 
         # Get the timeline
         timeline = self._acc_timeline(
-            t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
-        )
+            t_start=t_start, t_stop=t_stop, pf_interval=pf_interval
+        )  # , name=name
 
         return timeline
 
@@ -520,7 +523,7 @@ class ConditionIndicator(Indicator):
 
         # Validate times
         t_max = pf_interval  # len(self._profile[pf_interval]) - 1
-        if t_stop == None:
+        if t_stop is None:
             t_stop = t_max
 
         if t_start > t_stop:
@@ -558,25 +561,6 @@ class ConditionIndicator(Indicator):
 
         return profile
 
-    # def _accc_timeline(self, t_start=0, t_initiate=0, t_end=0, pf_interval=None):
-
-    #     # Adjust times
-    #     t_no_change = t_initiate - t_start
-    #     t_change_starts =
-    #     t_change_ends
-    #     t_end
-
-    #     # Start
-
-    #     # Profile
-    #     t_min = max(0, t_start - t_initiate)
-    #     t_max
-    #     profile = self._profile[pf_interval][
-    #         max(0, min(t_initiate, t_max)) : min(t_stop, t_max)  # + 1
-    #     ]
-
-    #     # Additions
-
     def sim_failure_timeline(
         self,
         t_stop=None,
@@ -592,9 +576,9 @@ class ConditionIndicator(Indicator):
         """
 
         if self.decreasing == True:
-            tl_f = self._timeline[name][t_delay:] <= self.threshold_failure
+            tl_f = self.get_timeline(name)[t_delay:] <= self.threshold_failure
         else:
-            tl_f = self._timeline[name][t_delay:] >= self.threshold_failure
+            tl_f = self.get_timeline(name)[t_delay:] >= self.threshold_failure
 
         return tl_f
 
@@ -615,12 +599,6 @@ class ConditionIndicator(Indicator):
             return self._perfect - self.get_accumulated()
         else:
             return self._perfect + self.get_accumulated()
-
-    def get_timeline(self, name=None):
-        return self._timeline[name]
-
-    def get_timelines(self):
-        return self._timelines
 
     def get_accumulated(self, name=None):  # TODO make this work for arrays of names
         """
@@ -652,8 +630,8 @@ class ConditionIndicator(Indicator):
 
     def set_t_condition(self, t, name=None):
         """ Set the condition base on a time t"""
-        condition = float(self._timeline[name][t])
-        self.set_condition(condition)
+        condition = float(self.get_timeline(name)[t])
+        self.set_condition(condition, name)
 
     def set_condition(self, condition, name=None):
         """ Set the condition based on a condition"""
@@ -789,9 +767,9 @@ class PoleSafetyFactor(Indicator):
     def sim_failure_timeline(self, t_delay=0, *args, **kwargs):
 
         if self.decreasing == True:
-            tl_f = self._timeline[None][t_delay:] <= self.threshold_failure
+            tl_f = self.get_timeline()[t_delay:] <= self.threshold_failure
         else:
-            tl_f = self._timeline[None][t_delay:] >= self.threshold_failure
+            tl_f = self.get_timeline()[t_delay:] >= self.threshold_failure
 
         return tl_f
 

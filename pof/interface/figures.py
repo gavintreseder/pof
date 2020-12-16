@@ -4,12 +4,9 @@
 
 from typing import List
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -310,14 +307,20 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
 
 
 def make_pop_table_fig(df):
-    fig = go.Figure(
-        data=[
-            go.Table(
-                header=dict(values=list(df.columns), align="left"),
-                cells=dict(values=[df[col] for col in list(df)], align="left"),
-            )
-        ]
+
+    alignment = {
+        "fm": "left",
+        "cf:ff (%)": "center",
+    }
+
+    align = [[alignment[h]] if h in alignment else ["right"] for h in df.columns]
+
+    tbl = go.Table(
+        header=dict(values=list(df.columns), align=align),
+        cells=dict(values=[df[col] for col in list(df)], align=align, format=[".2f"]),
     )
+
+    fig = go.Figure(data=[tbl])
 
     fig.update_layout(title="Population Summary")
 

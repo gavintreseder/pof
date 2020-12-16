@@ -363,9 +363,10 @@ class Component(PofBase):
         # Calculate the ratio of cf to ff
         mask_failures = (df['cf'] != 0 ) & (df['cf'] != 0 )
         for var in ['ff', 'cf']:
-            df[var + "%"] = (df.loc[mask_failures, "cf"] / (df.loc[mask_failures,"cf"] + df.loc[mask_failures,"ff"]) * 100).astype(str)
+            df[var + "%"] = (df.loc[mask_failures, var] / (df.loc[mask_failures,"cf"] + df.loc[mask_failures,"ff"]) * 100).astype(float).round(2)
+            df[var + "%"].fillna("", inplace=True)
 
-        df["cf:ff (%)"] = df["ff%"] + ":" + df["cf%"]
+        df["cf:ff (%)"] = df['ff%'].astype(str) + ":" + df['cf%'].astype(str)
 
         # Add the cohort data if it is supplied
         if cohort is not None:

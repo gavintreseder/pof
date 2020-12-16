@@ -60,7 +60,7 @@ class TestScheduledTask(TestTaskCommon, unittest.TestCase):
                         [
                             delay,
                             np.tile(
-                                np.linspace(t_interval, 0, t_interval + 1),
+                                np.linspace(t_interval - 1, 0, t_interval, dtype=int),
                                 int((t_end - t_delay) / t_interval) + 1,
                             ),
                         ]

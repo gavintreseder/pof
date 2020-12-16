@@ -1,5 +1,44 @@
+"""
+Generates a layout for the project
+
+    Components
+        name
+        Failure Mode(s)
+            ...
+
+    Failure Mode
+        name
+        Distribution(s)
+            Untreated only
+        Task(s)
+
+    Task
+        name
+        Probability Effective
+        Cost
+        Trigger
+            State(s)
+                name
+                state (True/False)
+            Condition(s)
+                condition_name
+                lower_threshold
+                upper_threshold
+        Impacts
+            State(s)
+                name
+                state (True/False)
+            Condition(s)
+                name
+                method
+                axis
+                reduction_factor / target
+
+# Condition
+# Task Groups ( move to assets)
+"""
+
 import logging
-import os
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -14,49 +53,6 @@ IS_OPEN = cf.is_open
 SCALING = cf.scaling
 defaults = config["Layouts"]
 
-# Asset
-
-# Components
-
-# Condition
-
-# Task Groups ( move to assets)
-
-# Failure Modes
-
-# Failure Distribution
-
-# Condition (Loss)
-
-# Tasks
-
-# Tasks
-# Params
-# Probability Effective
-# Cost
-# Consequence
-
-# Trigger
-# Time TODO
-# State (n)
-# state_name
-# state (True/False)
-# Conditions (n)
-# condition_name
-# lower_threshold
-# upper_threshold
-# Impacts
-# Time TODO
-# States (n)
-# state_name
-# state (True / False)
-# Conditions (n)
-# condition_name
-# method
-# axis
-# reduction_factor / target
-
-#
 
 # *************** Main ******************************
 
@@ -82,7 +78,13 @@ def make_layout(comp):
         for option in comp.get_update_ids(numericalOnly=True)
     ]
 
-    y_values = ["cost", "cost_cumulative", "cost_annual", 'quantity', 'quantity_cumulative']
+    y_values = [
+        "cost",
+        "cost_cumulative",
+        "cost_annual",
+        "quantity",
+        "quantity_cumulative",
+    ]
     y_value_default = defaults.get("y_value_default")
     update_list_y = [{"label": option, "value": option} for option in y_values]
 
