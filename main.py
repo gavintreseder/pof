@@ -179,7 +179,7 @@ def update_simulation(__, active, t_end, n_iterations, time_unit):
         pof_sim = copy.copy(comp)
 
         # Complete the simulations
-        #pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
+        # pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
 
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
 
@@ -234,15 +234,18 @@ def save_figure_limits(__, t_end, x_axis, y_axis, axis_lock):
             )
         )
 
-    a = y_max_values[0]
-    b = y_max_values[1]
-    c = y_max_values[2]
-    d = y_max_values[3]
-    e = y_max_values[4]
-    f = y_max_values[5]
-    g = y_max_values[6]
+    return_values = tuple(y_max_values)
+    # a = y_max_values[0]
+    # b = y_max_values[1]
+    # c = y_max_values[2]
+    # d = y_max_values[3]
+    # e = y_max_values[4]
+    # f = y_max_values[5]
+    # g = y_max_values[6]
 
-    return a, b, c, d, e, f, g  # tuple(my_list)
+    # return a, b, c, d, e, f, g  # tuple(my_list)
+
+    return return_values
 
 
 def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
@@ -336,10 +339,12 @@ def update_figures(
 ):
     global pof_sim
     global sfd
-    
+
     if active:
 
         pof_fig = pof_sim.plot_pof(y_max=pof_var_y, prev=prev_pof_fig)
+
+        ms_fig = pof_sim.plot_ms(y_max=ms_var_y, prev=prev_pof_fig)
 
         cond_y_var = [cond_1_var_y, cond_2_var_y, cond_3_var_y]
         cond_fig = pof_sim.plot_cond(y_max=cond_y_var, prev=prev_cond_fig)
