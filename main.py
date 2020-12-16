@@ -344,7 +344,7 @@ def update_figures(
 
         pof_fig = pof_sim.plot_pof(y_max=pof_var_y, prev=prev_pof_fig)
 
-        ms_fig = pof_sim.plot_ms(y_max=ms_var_y, prev=prev_pof_fig)
+        ms_fig = pof_sim.plot_ms(y_max=ms_var_y, prev=prev_ms_fig)
 
         cond_y_var = [cond_1_var_y, cond_2_var_y, cond_3_var_y]
         cond_fig = pof_sim.plot_cond(y_max=cond_y_var, prev=prev_cond_fig)
