@@ -82,7 +82,7 @@ def make_layout(comp):
         for option in comp.get_update_ids(integer=True)
     ]
 
-    y_values = ["cost", "cost_cumulative", "cost_annual"]
+    y_values = ["cost", "cost_cumulative", "cost_annual", 'quantity', 'quantity_cumulative']
     y_value_default = defaults.get("y_value_default")
     update_list_y = [{"label": option, "value": option} for option in y_values]
 

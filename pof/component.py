@@ -337,22 +337,18 @@ class Component(PofBase):
                 n = self._sim_counter
 
                 ff_cf[fm.name] = {
-                    "ie %": round((1 - insp_effective) * 100, 2),
-                    "is": n - _cf - _ff,
+                    "ie %": insp_effective,
+                    "is": n,  # - _cf - _ff,
                     "ff": _ff,
                     "cf": _ff,
                 }
 
-        df_summary = pd.DataFrame.from_dict(ff_cf).T
-        df_summary.index.name = "fm"
-        failures = df_summary[["ff", "cf"]].sum(axis=1)
-        df_summary[["ff %", "cf %"]] = round(
-            df_summary.loc[failures != 0, ["ff", "cf"]].div(failures, axis=0) * 100, 2
-        )
+        df = pd.DataFrame.from_dict(ff_cf).T
+        df.index.name = "fm"
 
         if cohort is not None:
             sample_size = self._sim_counter / cohort["assets"].sum()
-            df_summary[["ff_pop", "cf_pop"]] = df_summary[["ff", "cf"]] / sample_size
+            df[["ff_pop", "cf_pop"]] = df[["ff", "cf"]] / sample_size
 
             # ADD COMMAS
             # df_summary["ff_pop"] = "{:,.2f}".format(
@@ -362,40 +358,36 @@ class Component(PofBase):
             #     float(df_summary["cf"] / sample_size)
             # )
 
-        df_summary["fm"] = df_summary.index
+        df["fm"] = df.index
 
+        # Calculate the total row
+        df.loc["total", "fm"] = "total"
+        # df.loc['total', 'ie'] = (1 - df['ie'])
+        df.loc["total", ["ff", "cf", "ff_pop", "cf_pop"]] = df[
+            ["ff", "cf", "ff_pop", "cf_pop"]
+        ].sum()
+
+        # Calculate the ratio of cf to ff
+        ff_percent = round((df["cf"] / (df["cf"] + df["ff"]) * 100), 2)
+        cf_perfect = round((df["cf"] / (df["cf"] + df["ff"]) * 100), 2)
+        df["cf:ff (%)"] = f"{cf_percent}:{ff_perfect}"
+
+        # Format for display
         col_order = [
             "fm",
             "ie %",
+            "cf:ff (%)",
             "is",
             "ff",
             "cf",
-            "ff %",
-            "cf %",
             "ff_pop",
             "cf_pop",
         ]
         df = df_summary.reindex(columns=col_order)
 
-        df_total_row = pd.DataFrame(
-            [
-                [
-                    "Total",
-                    None,
-                    df["ff"].sum(),
-                    df["cf"].sum(),
-                    None,
-                    None,
-                    df["ff"].sum() - df["cf"].sum(),
-                    None,
-                    None,
-                ]
-            ],
-            columns=col_order,
-        )
-        df.append(df_total_row)
+        df["ie"] = df["ie"].mul(100).round(2)
 
-        # df.loc['Total', ["fm"]]
+        df.rename({"ie": "ie (%)"}, inplace=True)
 
         return df
 
@@ -815,7 +807,7 @@ class Component(PofBase):
 
         return fig
 
-    def plot_forecast_table(self, cohort=None):
+    def plot_summary(self, cohort=None):
 
         df = self.expected_forecast_table(cohort=cohort)
         fig = make_table_fig(df)

@@ -349,7 +349,7 @@ def update_figures(
 
         # pop_table_fig = pof_sim.plot_pop_table()
 
-        forecast_table_fig = pof_sim.plot_forecast_table(sfd.df_age)
+        forecast_table_fig = pof_sim.plot_summary(sfd.df_age)
 
     else:
         raise PreventUpdate
