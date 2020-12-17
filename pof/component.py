@@ -377,7 +377,7 @@ class Component(PofBase):
 
         # Calculate the ratio of cf to ff
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        for var in ["ff", "cf"]:
+        for var in ["cf", "ff"]:
             df[var + "%"] = (
                 (
                     df.loc[mask_failures, var]
@@ -389,17 +389,13 @@ class Component(PofBase):
             )
             df[var + "%"].fillna("", inplace=True)
 
-        df["cf:ff (%)"] = df["ff%"].astype(str) + ":" + df["cf%"].astype(str)
+        df["cf:ff (%)"] = df["cf%"].astype(str) + ":" + df["ff%"].astype(str)
 
         # Add the cohort data if it is supplied
         if cohort is not None:
             sample_size = self._sim_counter / cohort["assets"].sum()
-            df[["ff_pop", "cf_pop"]] = df[["ff", "cf"]] / sample_size
-
-            df.loc["total", "ff_pop"] = df["ff_pop"].sum()
-            df.loc["total", "cf_pop"] = df["cf_pop"].sum()
             df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
-            df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
+            df.loc["total", "ff_pop_annual_avg"] = df["ff_pop_annual_avg"].sum()
             df.loc["total", "total"] = cohort["assets"].sum()
 
         # Format for display
@@ -408,12 +404,10 @@ class Component(PofBase):
             "ie",
             "cf:ff (%)",
             "is",
-            "ff",
             "cf",
-            "ff_pop_annual_avg",
+            "ff",
             "cf_pop_annual_avg",
-            "ff_pop",
-            "cf_pop",
+            "ff_pop_annual_avg",
             "total",
         ]
         df = df.reset_index().reindex(columns=col_order)
