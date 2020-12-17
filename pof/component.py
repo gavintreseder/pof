@@ -156,7 +156,7 @@ class Component(PofBase):
         # Produce reports
         self.expected_risk_cost_df(t_end=t_end)
         self.calc_pof_df(t_end=t_end)
-        #self.calc_df_task_forecast()
+        # self.calc_df_task_forecast()
         self.calc_df_cond()
 
         return NotImplemented
@@ -732,7 +732,7 @@ class Component(PofBase):
     def plot_ms(
         self,
         y_axis="cost_cumulative",
-        y_max=None,
+        keep_axis=False,
         prev=None,
     ):
         """ Returns a cost figure if df has aleady been calculated"""
@@ -740,43 +740,45 @@ class Component(PofBase):
         return make_ms_fig(
             df=self.df_erc,
             y_axis=y_axis,
-            y_max=y_max,
+            keep_axis=keep_axis,
             units=self.units,
             prev=prev,
         )
 
-    def plot_pof(self, y_max=None, prev=None):
+    def plot_pof(self, keep_axis=False, prev=None):
         """ Returns a pof figure if df has aleady been calculated"""
 
-        return update_pof_fig(df=self.df_pof, y_max=y_max, units=self.units, prev=prev)
+        return update_pof_fig(
+            df=self.df_pof, keep_axis=keep_axis, units=self.units, prev=prev
+        )
 
-    def plot_cond(self, y_max=None, prev=None):
+    def plot_cond(self, keep_axis=False, prev=None):
         """ Returns a condition figure if df has aleady been calculated"""
         return update_condition_fig(
             df=self.df_cond,
             ecl=self.expected_condition(),
-            y_max=y_max,
+            keep_axis=keep_axis,
             units=self.units,
             prev=prev,
         )
 
     def plot_task_forecast(
         self,
-        y_max=None,
+        keep_axis=False,
         prev=None,
     ):
         """ Return a task figure if df has aleady been calculated """
 
         return make_task_forecast_fig(
             df=self.df_task,
-            y_max=y_max,
+            keep_axis=keep_axis,
             prev=prev,
         )
 
     def plot_sens(
         self,
         y_axis="cost_cumulative",
-        y_max=None,
+        keep_axis=False,
         units=NotImplemented,  # TODO add a plot here to make sure it
         var_id="",
         prev=None,
@@ -791,7 +793,7 @@ class Component(PofBase):
             df=df,
             var_name=var_name,
             y_axis=y_axis,
-            y_max=y_max,
+            keep_axis=keep_axis,
             units=self.units,
             prev=prev,
         )

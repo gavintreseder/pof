@@ -13,7 +13,6 @@ from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import (
-    get_chart_list,
     make_layout,
     cf,
 )
@@ -73,6 +72,7 @@ app.layout = make_layout(comp)
 
 # Get the dash ids for all the objects that have a collapse button
 collapse_ids = comp.get_objects()
+collapse_ids.append("sim_params")
 
 
 @app.callback(
@@ -103,29 +103,6 @@ param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
     for dash_id in ms_fig_update
 ]
-
-# Collapsable edit functions
-@app.callback(
-    Output("collapse_y_limits", "is_open"),
-    Input("collapse_y_limits-button", "n_clicks"),
-    State("collapse_y_limits", "is_open"),
-)
-def collapse(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-
-@app.callback(
-    Output("collapse_sim_params", "is_open"),
-    Input("sim_metadata-button", "n_clicks"),
-    State("collapse_sim_params", "is_open"),
-)
-def collapse(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
 
 # ========================================================
 # UPDATE --> Simulate --> Figures
@@ -204,98 +181,6 @@ def update_simulation(__, active, t_end, n_iterations, time_unit):
 
 
 @app.callback(
-    Output("pof_var_y-input", "value"),
-    Output("cond_1_var_y-input", "value"),
-    Output("cond_2_var_y-input", "value"),
-    Output("cond_3_var_y-input", "value"),
-    Output("cost_var_y-input", "value"),  # Output('fig_limit_maint_strat', 'children')
-    Output("sens_var_y-input", "value"),
-    Output("task_var_y-input", "value"),
-    Input("sim_state", "children"),
-    Input("t_end-input", "value"),
-    Input("sens_var_id-dropdown", "value"),
-    Input("sens_var_y-dropdown", "value"),  # TODO change name of this
-    Input("axis_lock-checkbox", "checked"),  # TODO should this be a state?
-)
-def save_figure_limits(__, t_end, x_axis, y_axis, axis_lock):
-    """ Save the figure limits so they can be used for the axis lock """
-
-    y_max_values = []
-    chart_list = get_chart_list()
-
-    for chart in chart_list:
-        y_max_values.append(
-            get_y_max(
-                chart=chart,
-                t_end=t_end,
-                x_axis=x_axis,
-                y_axis=y_axis,
-                axis_lock=axis_lock,
-            )
-        )
-
-    return_values = tuple(y_max_values)
-    # a = y_max_values[0]
-    # b = y_max_values[1]
-    # c = y_max_values[2]
-    # d = y_max_values[3]
-    # e = y_max_values[4]
-    # f = y_max_values[5]
-    # g = y_max_values[6]
-
-    # return a, b, c, d, e, f, g  # tuple(my_list)
-
-    return return_values
-
-
-def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
-    """ Determine the maximum y value for a given axis """
-
-    global pof_sim
-    global sens_sim
-
-    scale = 1.05
-
-    if "pof" in chart:
-        df = pof_sim.df_pof
-        x_col = None
-        y_col = "pof"
-    elif "cond" in chart:
-        df = pof_sim.df_cond
-        x_col = None
-        y_col = "y" + chart.split("_")[-1]
-    elif "ms" in chart:
-        df = pof_sim.df_erc
-        x_col = "time"
-        y_col = y_axis
-    elif "sens" in chart:
-        df = sens_sim.df_sens
-        x_col = x_axis.split("-")[-1]
-        y_col = y_axis
-    elif "task" in chart:
-        df = pof_sim.df_task
-        x_col = None
-        y_col = "pop_quantity"
-
-    try:
-        if axis_lock is False:
-            if x_col is not None:
-                y_max = df.groupby(x_col)[y_col].sum().max() * scale
-            else:
-                y_max = df[y_col].max() * scale
-        else:
-            ctx = dash.callback_context
-            dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
-            if dash_id == "sens_var_y-dropdown" and x_col is not None:
-                y_max = df.groupby(x_col)[y_col].sum().max() * scale
-            else:
-                return dash.no_update
-    except:
-        y_max = None
-    return y_max
-
-
-@app.callback(
     Output("cond-fig", "figure"),
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
@@ -303,17 +188,10 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
     # Output("pop_table-fig", "figure"),
     Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
-    Input("cond_1_var_y-input", "value"),
-    # TODO this will need be a list because you can have n conditions
-    Input("cond_2_var_y-input", "value"),
-    Input("cond_3_var_y-input", "value"),
-    Input("cost_var_y-input", "value"),
-    Input("pof_var_y-input", "value"),
-    Input("task_var_y-input", "value"),
-    Input("sens_var_y-dropdown", "value"),  # TODO change to an appropriate name
+    Input("ms_var_y-dropdown", "value"),
     Input("t_end-input", "value"),
+    Input("axis_lock-checkbox", "checked"),
     State("sim_n_active", "checked"),
-    State("axis_lock-checkbox", "checked"),
     State("cond-fig", "figure"),
     State("ms-fig", "figure"),
     State("pof-fig", "figure"),
@@ -321,12 +199,6 @@ def get_y_max(chart, t_end=None, x_axis=None, y_axis=None, axis_lock=None):
 )
 def update_figures(
     state,
-    cond_1_var_y,  # TODO this will need be a list because you can have n conditions
-    cond_2_var_y,
-    cond_3_var_y,
-    ms_var_y,
-    pof_var_y,
-    task_var_y,
     y_axis,
     t_end,
     active,
@@ -342,15 +214,18 @@ def update_figures(
 
     if active:
 
-        pof_fig = pof_sim.plot_pof(y_max=pof_var_y, prev=prev_pof_fig)
+        ctx = dash.callback_context
+        dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        keep_axis = dash_id == "sim_state" and axis_lock
 
-        ms_fig = pof_sim.plot_ms(y_max=ms_var_y, prev=prev_ms_fig)
+        pof_fig = pof_sim.plot_pof(keep_axis=keep_axis, prev=prev_pof_fig)
 
-        cond_y_var = [cond_1_var_y, cond_2_var_y, cond_3_var_y]
-        cond_fig = pof_sim.plot_cond(y_max=cond_y_var, prev=prev_cond_fig)
+        ms_fig = pof_sim.plot_ms(y_axis=y_axis, keep_axis=keep_axis, prev=prev_ms_fig)
+
+        cond_fig = pof_sim.plot_cond(keep_axis=keep_axis, prev=prev_cond_fig)
 
         task_forecast_fig = pof_sim.plot_task_forecast(
-            y_max=task_var_y, prev=prev_task_fig
+            keep_axis=keep_axis, prev=prev_task_fig
         )
 
         # pop_table_fig = pof_sim.plot_pop_table()
@@ -412,7 +287,7 @@ def update_ffcf(*args):
     Input("sens_upper-input", "value"),
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
-    Input("sens_var_y-input", "value"),
+    Input("axis_lock-checkbox", "checked"),
     # Input("ms-fig", "figure"),  # TODO change this trigger
     State("sensitivity-fig", "figure"),
 )
@@ -425,7 +300,7 @@ def update_sensitivity(
     upper,
     step_size,
     t_end,
-    y_max,
+    axis_lock,
     prev_sens,
     *args,
 ):
@@ -435,6 +310,11 @@ def update_sensitivity(
     sens_sim.cancel_sim()
 
     if active:
+
+        ctx = dash.callback_context
+        dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        keep_axis = dash_id == "sim_state" and axis_lock
+
         sens_sim = copy.deepcopy(comp)
 
         sens_sim.expected_sensitivity(
@@ -447,7 +327,7 @@ def update_sensitivity(
         )
 
         sens_fig = sens_sim.plot_sens(
-            var_id=var_id, y_axis=y_axis, y_max=y_max, prev=prev_sens
+            var_id=var_id, y_axis=y_axis, keep_axis=keep_axis, prev=prev_sens
         )
 
         return sens_fig
@@ -475,7 +355,7 @@ def update_progress(n):
 
 @app.callback(
     [Output("n_sens-progress", "value"), Output("n_sens-progress", "children")],
-    [Input("progress-interval", "n_intervals")],
+    [Input("sens_progress-interval", "n_intervals")],
 )
 def update_progress_sens(n):
     if sens_sim.n is None:

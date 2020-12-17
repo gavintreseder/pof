@@ -31,7 +31,9 @@ def get_color_map(df, column):
     return color_map
 
 
-def make_ms_fig(df, y_axis="cost_cumulative", y_max=None, units="unknown", prev=None):
+def make_ms_fig(
+    df, y_axis="cost_cumulative", keep_axis=False, units="unknown", prev=None
+):
     try:
         color_map = get_color_map(df=df, column="task")
         df = df[df["active"]]
@@ -52,6 +54,7 @@ def make_ms_fig(df, y_axis="cost_cumulative", y_max=None, units="unknown", prev=
 
         fig = px.area(**px_args, line_group="failure_mode")
 
+        y_max = calc_y_max(keep_axis=keep_axis, method="sum", prev=prev)
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
@@ -70,7 +73,7 @@ def make_ms_fig(df, y_axis="cost_cumulative", y_max=None, units="unknown", prev=
     return fig
 
 
-def update_pof_fig(df, y_max=None, units="unknown", prev=None):
+def update_pof_fig(df, keep_axis=False, units="unknown", prev=None):
 
     try:
 
@@ -101,6 +104,7 @@ def update_pof_fig(df, y_max=None, units="unknown", prev=None):
         fig.update_xaxes(automargin=True)
         fig.update_xaxes(title_text=col_names["time"])
 
+        y_max = calc_y_max(keep_axis=keep_axis, method="max", prev=prev)
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
@@ -117,7 +121,7 @@ def update_pof_fig(df, y_max=None, units="unknown", prev=None):
 
 
 def update_condition_fig(
-    df, ecl, conf=0.95, y_max: List = None, units="unknown", prev=None
+    df, ecl, conf=0.95, keep_axis=False, units="unknown", prev=None
 ):
     """ Updates the condition figure"""
 
@@ -205,7 +209,7 @@ def make_sensitivity_fig(
     df,
     var_name="",
     y_axis="",
-    y_max=None,
+    keep_axis=False,
     units="unknown",
     summarise=True,
     prev=None,
@@ -256,6 +260,7 @@ def make_sensitivity_fig(
         fig.update_yaxes(automargin=True)
         fig.update_xaxes(automargin=True)
 
+        y_max = calc_y_max(keep_axis=keep_axis, method="max", prev=prev)
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
@@ -275,7 +280,7 @@ def make_sensitivity_fig(
     return fig
 
 
-def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
+def make_task_forecast_fig(df, y_axis="pop_quantity", keep_axis=False, prev=None):
 
     title = "Population Forecast"
 
@@ -292,6 +297,10 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", y_max=None, prev=None):
             color_discrete_map=color_map,
             title=title,
         )
+        fig.update_yaxes(automargin=True)
+        fig.update_xaxes(automargin=True)
+
+        y_max = calc_y_max(keep_axis=keep_axis, method="max", prev=prev)
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
@@ -361,6 +370,28 @@ def update_visibility(curr, prev=None):
             if trace.name in list(visibilities.keys()):
                 trace.update(visible=visibilities[trace.name])
             else:
-                trace.update(visible="legendonly")
+                trace.update(visible=True)
 
     return curr
+
+
+def calc_y_max(keep_axis, method, prev):
+    """ Determines the y_max value of the previous chart """
+    scale = 1.05
+    y_max = None
+    if keep_axis:
+        if prev is not None:
+            # If the y_limit already exists use last one, otherwise calculate a new y_max
+            if prev["layout"].get("yaxis").get("range") is not None:
+                y_max = prev["layout"].get("yaxis").get("range")[1]
+            else:
+                y_vals = []
+                for trace in prev["data"]:
+                    y_vals.append(max(trace.get("y")))
+
+                if method == "sum":  # If area chart
+                    y_max = sum(y_vals) * scale
+                elif method == "max":  # For all other charts
+                    y_max = max(y_vals) * scale
+
+    return y_max
