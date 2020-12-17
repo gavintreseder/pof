@@ -57,7 +57,7 @@ class TestAssetModelLoader(unittest.TestCase):
             self.fail(msg="Component cannot sim_timline after being loaded")
 
         try:
-            comp.mc_timeline(t_end=10, n_iterations=10)
+            comp.mc_timeline(t_end=100, n_iterations=10)
         except:
             self.fail(msg="Component cannot mc_timline after being loaded")
 

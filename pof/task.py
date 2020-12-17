@@ -239,12 +239,12 @@ class Task(PofBase):
 
     # ********************* expected methods ******************
 
-    def expected(self, scaling=1):
+    def expected(self, scaling=1) -> dict:
         """ Retuns a dictionary with the quantity and cost of completing a task over time scaled by a scaling factor"""
         time, count = np.unique(self.t_completion, return_counts=True)
         quantity = count / scaling
         cost = quantity * self.cost
-        return dict(active=self.active, time=time, quantity=quantity, cost=cost)
+        return {'active':self.active, 'time':time, 'quantity':quantity,'cost':cost}
 
     def expected_costs(self, scaling=1):
         """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""
@@ -416,8 +416,8 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     def _sim_timeline(self, t_end, t_start=0, *args, **kwargs):
 
         schedule = np.tile(
-            np.linspace(self.t_interval, 0, int(self.t_interval) + 1),
-            math.ceil(max((t_end - self.t_delay), 0) / self.t_interval),
+            np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
+            math.ceil(max((t_end - self.t_delay), 0) / self.t_interval + 1),
         )
 
         if self.t_delay > 0:
