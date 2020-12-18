@@ -332,7 +332,7 @@ class Component(PofBase):
     def expected_forecast_table(self, cohort=None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         # Get the key data from each of the failuremodes
-        ff_cf = {}
+        summary = {}
 
         for fm in self.fm.values():
             if fm.active:
@@ -340,7 +340,7 @@ class Component(PofBase):
                 _ff = fm.expected_ff()
                 _cf = fm.expected_cf()
 
-                ff_cf[fm.name] = {
+                summary[fm.name] = {
                     "fm": fm.name,
                     "ie": insp_effective,
                     "is": self._sim_counter - len(_cf) - len(_ff),
@@ -349,21 +349,16 @@ class Component(PofBase):
                 }
 
                 if cohort is not None:
-                    # for times, name in zip()
-                    age, count = np.unique(_cf, return_counts=True)
-                    age, count = np.unique(_cf, return_counts=True)
-                    ff_cf[fm.name]["cf_pop_annual_avg"] = (
-                        cohort.reindex(age).mul(count, axis=0).sum()[0]
-                        / self._sim_counter
-                    )
+                    f_names = ['cf', 'ff']
+                    f_ages = [_cf, _ff]
+                    for f_name, f_age in zip(f_names, f_ages):
+                        age, count = np.unique(f_age, return_counts=True)
+                        summary[fm.name][f_name + "_pop_annual_avg"] = (
+                            cohort.reindex(age).mul(count, axis=0).sum()[0]
+                            / self._sim_counter
+                        )
 
-                    age, count = np.unique(_ff, return_counts=True)
-                    ff_cf[fm.name]["ff_pop_annual_avg"] = (
-                        cohort.reindex(age).mul(count, axis=0).sum()[0]
-                        / self._sim_counter
-                    )
-
-        df = pd.DataFrame.from_dict(ff_cf).T
+        df = pd.DataFrame.from_dict(summary).T
 
         # Calculate the total row and append to the df
         total = {
@@ -375,25 +370,13 @@ class Component(PofBase):
         }
         df = df.append(total, ignore_index=True).set_index("fm")
 
-        # Calculate the ratio of cf to ff
+        # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        for var in ["cf", "ff"]:
-            df[var + "%"] = (
-                (
-                    df.loc[mask_failures, var]
-                    / (df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"])
-                    * 100
-                )
-                .astype(float)
-                .round(2)
-            )
-            df[var + "%"].fillna("", inplace=True)
-
-        df["cf:ff (%)"] = df["cf%"].astype(str) + ":" + df["ff%"].astype(str)
+        df['sim'] = df.loc[mask_failures, 'cf'] / (df.loc[mask_failures, 'cf'] + df.loc[mask_failures, 'ff'])
+        df['sim'].fillna("")
 
         # Add the cohort data if it is supplied
         if cohort is not None:
-            sample_size = self._sim_counter / cohort["assets"].sum()
             df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
             df.loc["total", "ff_pop_annual_avg"] = df["ff_pop_annual_avg"].sum()
             df.loc["total", "total"] = cohort["assets"].sum()
@@ -402,18 +385,20 @@ class Component(PofBase):
         col_order = [
             "fm",
             "ie",
-            "cf:ff (%)",
             "is",
             "cf",
             "ff",
+            'sim',
             "cf_pop_annual_avg",
             "ff_pop_annual_avg",
             "total",
         ]
         df = df.reset_index().reindex(columns=col_order)
 
-        df["ie"] = df["ie"].mul(100)
-        df.rename(columns={"ie": "ie (%)"}, inplace=True)
+        percent_col = ["ie", "sim"]
+        df[percent_col] = df[percent_col].mul(100)
+        rename_cols = {col : col + " (%)" for col in percent_col}
+        df.rename(columns=rename_cols, inplace=True)
 
         return df
 

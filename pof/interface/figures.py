@@ -317,11 +317,7 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", keep_axis=False, prev=None
 
 def make_pop_table_fig(df):
 
-    alignment = {
-        "fm": "left",
-        "cf:ff (%)": "center",
-    }
-
+    alignment = {"fm": "left"}
     align = [[alignment[h]] if h in alignment else ["right"] for h in df.columns]
 
     tbl = go.Table(
