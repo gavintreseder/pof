@@ -74,6 +74,7 @@ app.layout = make_layout(comp)
 collapse_ids = comp.get_objects()
 collapse_ids.append("sim_params")
 collapse_ids.append("indicator_inputs")
+collapse_ids.append("consequence_input")
 
 
 @app.callback(

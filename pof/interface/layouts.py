@@ -105,6 +105,8 @@ def make_layout(comp):
 
     indicators_default = comp.get_ind_default_values()
     ind_inputs = make_indicator_inputs_form(indicators=indicators_default)
+    consequence_default = 100
+    consequence_input = make_consequence_input(consequence_default=consequence_default)
 
     # Make layout
     layouts = html.Div(
@@ -116,7 +118,12 @@ def make_layout(comp):
                     dbc.Col(
                         [inputs],
                     ),
-                    dbc.Col([ind_inputs]),
+                    dbc.Col(
+                        [
+                            dbc.Row([consequence_input]),
+                            dbc.Row([ind_inputs]),
+                        ]
+                    ),
                 ]
             ),
             dbc.Row(
@@ -986,6 +993,53 @@ def make_sim_sens_inputs(
     return form
 
 
+def make_sim_layout():
+    layout = dbc.InputGroup(
+        [
+            dbc.Button(
+                "Sim metadata",
+                color="link",
+                id="sim_params-collapse-button",
+            ),
+            dbc.Collapse(
+                dbc.Card(
+                    [
+                        dbc.CardBody(
+                            [
+                                html.Div(
+                                    children="Update State:",
+                                    id="update_state",
+                                ),
+                                html.Div(
+                                    [
+                                        html.P(
+                                            children="Sim State",
+                                            id="sim_state",
+                                        ),
+                                        html.P(
+                                            id="sim_state_err",
+                                            style={"color": "red"},
+                                        ),
+                                    ]
+                                ),
+                                html.Div(
+                                    children="Fig State",
+                                    id="fig_state",
+                                ),
+                                html.P(id="ffcf"),
+                            ]
+                        )
+                    ]
+                ),
+                id="sim_params-collapse",
+            ),
+        ]
+    )
+
+    return layout
+
+
+# *************** Indicator & Consequence Inputs ************
 def make_indicator_inputs_form(indicators):
 
     ind_inputs = []
@@ -1047,45 +1101,32 @@ def make_param_inputs(indicators, key):
     return form
 
 
-def make_sim_layout():
+def make_consequence_input(consequence_default):
     layout = dbc.InputGroup(
         [
             dbc.Button(
-                "Sim metadata",
+                "Consequence input - N/A",
                 color="link",
-                id="sim_params-collapse-button",
+                id="consequence_input-collapse-button",
             ),
             dbc.Collapse(
                 dbc.Card(
                     [
                         dbc.CardBody(
                             [
-                                html.Div(
-                                    children="Update State:",
-                                    id="update_state",
+                                dbc.Input(
+                                    type="number",
+                                    id="consquence_input",
+                                    value=consequence_default,
+                                    debounce=True,
+                                    style={"width": 100},
                                 ),
-                                html.Div(
-                                    [
-                                        html.P(
-                                            children="Sim State",
-                                            id="sim_state",
-                                        ),
-                                        html.P(
-                                            id="sim_state_err",
-                                            style={"color": "red"},
-                                        ),
-                                    ]
-                                ),
-                                html.Div(
-                                    children="Fig State",
-                                    id="fig_state",
-                                ),
-                                html.P(id="ffcf"),
                             ]
                         )
                     ]
                 ),
-                id="sim_params-collapse",
+                id="consequence_input-collapse",
+                is_open=IS_OPEN,
             ),
         ]
     )
