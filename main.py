@@ -73,6 +73,7 @@ app.layout = make_layout(comp)
 # Get the dash ids for all the objects that have a collapse button
 collapse_ids = comp.get_objects()
 collapse_ids.append("sim_params")
+collapse_ids.append("indicator_inputs")
 
 
 @app.callback(
@@ -98,10 +99,10 @@ def toggle_collapses(*args):
     return is_open
 
 
-ms_fig_update = comp.get_dash_ids(numericalOnly=False)
+sim_triggers = comp.get_dash_ids(numericalOnly=False)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
-    for dash_id in ms_fig_update
+    for dash_id in sim_triggers
 ]
 
 # ========================================================
@@ -141,7 +142,7 @@ def update_parameter(*args):
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
-    Input("sens_time_unit-dropdown", "value"),
+    Input("time_unit-dropdown", "value"),
 )
 def update_simulation(__, active, t_end, n_iterations, time_unit):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
