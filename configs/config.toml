@@ -6,6 +6,7 @@ replace_sep_with = "."
 [Layouts]
 y_value_default = "cost_cumulative"
 axis_lock = true
+collapse_open = false
 
 [PofBase]
 on_error_use_default = true
@@ -15,6 +16,7 @@ use_default = false
 
 [Component]
 allow_system_impact = true
+indicator_input_fields = ["perfect", "initial", "failed"] 
 
 [FailureMode]
 remain_failed = true

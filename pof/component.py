@@ -894,11 +894,30 @@ class Component(PofBase):
                     active=active,
                 )
 
-            dash_ids = comp_ids + fm_ids
+            # Indicators
+            ind_ids = []
+            for ind in self.indicator.keys():
+                for param in cf.get("indicator_input_fields"):
+                    ind_ids.append(ind + "_" + param + "_input")
+
+            dash_ids = comp_ids + fm_ids + ind_ids
         else:
             dash_ids = []
 
         return dash_ids
+
+
+    def get_ind_default_values(self):
+        """ Returns a dictionary of default indicator values for the Indicator input fields """
+        d_ind = {}
+
+        for ind in self.indicator.values():
+            d_ind[ind.name] = {
+                param: getattr(ind, param) for param in cf.get("indicator_input_fields")
+            }
+
+        return d_ind
+
 
     def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
         """ Get the ids for all objects that should be updated"""

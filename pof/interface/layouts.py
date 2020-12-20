@@ -49,7 +49,6 @@ from pof import Component, FailureMode, Task
 from pof.units import valid_units
 from config import config
 
-IS_OPEN = cf.is_open
 SCALING = cf.scaling
 defaults = config["Layouts"]
 TIME_VARS = [
@@ -63,6 +62,8 @@ TIME_VARS = [
 ]
 
 SCALING = {"p_effective": 100}
+IS_OPEN = defaults.get("collapse_open")
+
 
 # *************** Main ******************************
 
@@ -132,12 +133,29 @@ def make_layout(comp):
     mcl = make_component_layout(comp)
     sim = make_sim_layout()
 
+    indicators_default = comp.get_ind_default_values()
+    ind_inputs = make_indicator_inputs_form(indicators=indicators_default)
+    consequence_default = 100
+    consequence_input = make_consequence_input(consequence_default=consequence_default)
+
     # Make layout
     layouts = html.Div(
         [
             html.Div(id="log"),
             html.Div(children=None, id="graph_limits"),
-            inputs,
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [inputs],
+                    ),
+                    dbc.Col(
+                        [
+                            dbc.Row([consequence_input]),
+                            dbc.Row([ind_inputs]),
+                        ]
+                    ),
+                ]
+            ),
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="pof-fig")),
@@ -787,7 +805,7 @@ def make_input_component(update_list_unit, unit_default):
                         [
                             "Model Units",
                             dcc.Dropdown(
-                                id="sens_time_unit-dropdown",
+                                id="time_unit-dropdown",
                                 options=update_list_unit,
                                 value=unit_default,
                             ),
@@ -1053,6 +1071,101 @@ def make_sim_layout():
                     ]
                 ),
                 id="sim_params-collapse",
+            ),
+        ]
+    )
+
+    return layout
+
+
+# *************** Indicator & Consequence Inputs ************
+def make_indicator_inputs_form(indicators):
+
+    ind_inputs = []
+    for key in indicators.keys():
+        name = str(key).replace("_", " ").capitalize()
+        ind_input = dbc.InputGroup(
+            [
+                dbc.Col([dbc.InputGroupAddon(name, addon_type="prepend")]),
+                make_param_inputs(indicators, key),
+            ],
+        )
+        ind_inputs = ind_inputs + [ind_input]
+
+    layout = dbc.InputGroup(
+        [
+            dbc.Button(
+                "Indicator inputs",
+                color="link",
+                id="indicator_inputs-collapse-button",
+            ),
+            dbc.Collapse(
+                dbc.Card(
+                    [
+                        dbc.CardBody(
+                            [
+                                dbc.Form(ind_inputs),
+                            ]
+                        )
+                    ]
+                ),
+                id="indicator_inputs-collapse",
+                is_open=IS_OPEN,
+            ),
+        ]
+    )
+
+    return layout
+
+
+def make_param_inputs(indicators, key):
+    param_inputs = []
+    for param, value in indicators[key].items():
+        param_input = dbc.InputGroup(
+            [
+                dbc.InputGroupAddon(param.capitalize(), className="I1"),
+                dbc.Input(
+                    type="number",
+                    id=key + "_" + param + "_input",
+                    value=value,
+                    debounce=True,
+                    style={"width": 100},
+                ),
+            ]
+        )
+        param_inputs = param_inputs + [param_input]
+
+    form = dbc.Form(param_inputs, inline=True)
+
+    return form
+
+
+def make_consequence_input(consequence_default):
+    layout = dbc.InputGroup(
+        [
+            dbc.Button(
+                "Consequence input - N/A",
+                color="link",
+                id="consequence_input-collapse-button",
+            ),
+            dbc.Collapse(
+                dbc.Card(
+                    [
+                        dbc.CardBody(
+                            [
+                                dbc.Input(
+                                    type="number",
+                                    id="consquence_input",
+                                    value=consequence_default,
+                                    debounce=True,
+                                    style={"width": 100},
+                                ),
+                            ]
+                        )
+                    ]
+                ),
+                id="consequence_input-collapse",
+                is_open=IS_OPEN,
             ),
         ]
     )
