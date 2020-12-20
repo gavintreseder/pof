@@ -52,6 +52,7 @@ from config import config
 SCALING = cf.scaling
 defaults = config["Layouts"]
 TIME_VARS = [
+    "t_end"
     "pf_interval",
     "pf_std",
     "t_delay",
@@ -805,7 +806,7 @@ def make_input_component(update_list_unit, unit_default):
                         [
                             "Model Units",
                             dcc.Dropdown(
-                                id="time_unit-dropdown",
+                                id="model_units-dropdown",
                                 options=update_list_unit,
                                 value=unit_default,
                             ),

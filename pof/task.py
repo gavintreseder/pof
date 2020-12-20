@@ -244,7 +244,7 @@ class Task(PofBase):
         time, count = np.unique(self.t_completion, return_counts=True)
         quantity = count / scaling
         cost = quantity * self.cost
-        return {'active':self.active, 'time':time, 'quantity':quantity,'cost':cost}
+        return {"active": self.active, "time": time, "quantity": quantity, "cost": cost}
 
     def expected_costs(self, scaling=1):
         """ Retuns a dictionary with the cost of completing a task over time scaled by a scaling factor"""
@@ -393,10 +393,10 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     @t_interval.setter
     def t_interval(self, value):
 
-        if int(value) < 0:
+        if value < 0:
             raise ValueError("t_interval must be a positive time - %s", value)
         else:
-            self._t_interval = int(value)
+            self._t_interval = value
 
             if math.ceil(value) != value:
                 logging.warning("t_interval must be an integer - %s", value)
@@ -408,21 +408,27 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
     @t_delay.setter
     def t_delay(self, value):
 
-        self._t_delay = int(value)
+        if value < 0:
+            raise ValueError("t_interval must be a positive time - %s", value)
+        else:
+            self._t_delay = value
 
-        if math.ceil(value) != value:
-            logging.warning("t_interval must be an integer - %s", value)
+            if math.ceil(value) != value:
+                logging.warning("t_interval must be an integer - %s", value)
 
     def _sim_timeline(self, t_end, t_start=0, *args, **kwargs):
 
+        t_interval = int(self._t_interval)
+        t_delay = int(self._t_delay)
+
         schedule = np.tile(
-            np.linspace(self.t_interval - 1, 0, int(self.t_interval)),
-            math.ceil(max((t_end - self.t_delay), 0) / self.t_interval + 1),
+            np.linspace(t_interval - 1, 0, t_interval),
+            math.ceil(max((t_end - t_delay), 0) / t_interval + 1),
         )
 
-        if self.t_delay > 0:
-            self.t_delay = min(self.t_delay, t_end)
-            sched_start = np.linspace(self.t_delay, 0, self.t_delay + 1)
+        if t_delay > 0:
+            t_delay = min(t_delay, t_end)
+            sched_start = np.linspace(t_delay, 0, t_delay + 1)
             schedule = np.concatenate((sched_start, schedule))
 
         schedule = schedule[t_start : t_end + 1]
@@ -552,9 +558,9 @@ class Inspection(ScheduledTask):
 
         # Binomial parameters
         r = 0  # Only one succesful trial is required
-        n = math.floor(pf_interval / self.t_interval)
+        n = math.floor(pf_interval / self._t_interval)
         p = self.p_effective
-        p_n = 1 - (pf_interval % self.t_interval) / self.t_interval
+        p_n = 1 - (pf_interval % self._t_interval) / self._t_interval
 
         # Calculate the probability of an effective inspection during the t_interval
         p_ie = p_n * (1 - ss.binom.pmf(r, n, p)) + (1 - p_n) * (
@@ -562,9 +568,9 @@ class Inspection(ScheduledTask):
         )
 
         # Adjust the probability to reflect failures that occur during the t_delay
-        if self.t_delay:
+        if self._t_delay:
             if failure_dist is not None:
-                p_fd = failure_dist.cdf(t_start=self.t_delay, t_end=self.t_delay)[0]
+                p_fd = failure_dist.cdf(t_start=self._t_delay, t_end=self._t_delay)[0]
                 p_ie = (1 - p_fd) * p_ie
             else:
                 raise ValueError("Failure Distribution requried")

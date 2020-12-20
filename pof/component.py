@@ -752,11 +752,12 @@ class Component(PofBase):
     ):
         """ Returns a cost figure if df has aleady been calculated"""
         # TODO Add conversion for units when plotting if units != self.units
+        
         return make_ms_fig(
             df=self.df_erc,
             y_axis=y_axis,
             keep_axis=keep_axis,
-            units=self.units,
+            units=self.graph_units,
             prev=prev,
         )
 
@@ -764,7 +765,7 @@ class Component(PofBase):
         """ Returns a pof figure if df has aleady been calculated"""
 
         return update_pof_fig(
-            df=self.df_pof, keep_axis=keep_axis, units=self.units, prev=prev
+            df=self.df_pof, keep_axis=keep_axis, units=self.graph_units, prev=prev
         )
 
     def plot_cond(self, keep_axis=False, prev=None):
@@ -773,7 +774,7 @@ class Component(PofBase):
             df=self.df_cond,
             ecl=self.expected_condition(),
             keep_axis=keep_axis,
-            units=self.units,
+            units=self.graph_units,
             prev=prev,
         )
 
@@ -809,7 +810,7 @@ class Component(PofBase):
             var_name=var_name,
             y_axis=y_axis,
             keep_axis=keep_axis,
-            units=self.units,
+            units=self.graph_units,
             prev=prev,
         )
 
