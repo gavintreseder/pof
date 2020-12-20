@@ -52,9 +52,38 @@ from config import config
 IS_OPEN = cf.is_open
 SCALING = cf.scaling
 defaults = config["Layouts"]
+TIME_VARS = [
+    "pf_interval",
+    "pf_std",
+    "t_delay",
+    "t_interval",
+    "alpha",
+    "beta",
+    "gamma",
+]
 
+SCALING = {"p_effective": 100}
 
 # *************** Main ******************************
+
+
+def scale_input(pof_obj, attr: str, value: float, units: str = None) -> float:
+
+    # TODO combine this with update and set methods
+    if attr in SCALING:
+        value = value / SCALING.get(attr, 1)
+
+    if units is not None:
+        if pof_obj.units is not None:
+
+            if attr in TIME_VARS:
+                ratio = valid_units.get(units) / valid_units.get(pof_obj.units)
+                value = value * ratio
+
+        else:
+            logging.warning("Please set units for the pof_obj before scaling")
+
+    return value
 
 
 def make_layout(comp):
@@ -756,7 +785,7 @@ def make_input_component(update_list_unit, unit_default):
                 [
                     dbc.Col(
                         [
-                            "Time Units",
+                            "Model Units",
                             dcc.Dropdown(
                                 id="sens_time_unit-dropdown",
                                 options=update_list_unit,
@@ -764,7 +793,16 @@ def make_input_component(update_list_unit, unit_default):
                             ),
                         ]
                     ),
-                    dbc.Col(),
+                    dbc.Col(
+                        [
+                            "Input Units",
+                            dcc.Dropdown(
+                                id="input_units-dropdown",
+                                options=update_list_unit,
+                                value=unit_default,
+                            ),
+                        ]
+                    ),
                     dbc.Col(),
                     dbc.Col(),
                     dbc.Col(),

@@ -15,6 +15,7 @@ from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import (
     make_layout,
     cf,
+    scale_input,
 )
 
 # TODO fix the need to import cf
@@ -108,10 +109,17 @@ param_inputs = [
 # UPDATE --> Simulate --> Figures
 # ========================================================
 
+# TODO make a better unit update
 
-@app.callback(Output("update_state", "children"), param_inputs)
-def update_parameter(*args):
-    """Update a the pof object whenever an input is changes"""
+
+@app.callback(
+    Output("update_state", "children"),
+    Input("input_units-dropdown", "value"),
+    Input("sens_time_unit-dropdown", "value"),
+    param_inputs,
+)
+def update_parameter(input_units, model_units, *args):
+    """Update a the pof object whenever an input is changes""",
 
     # Check the parameters that changed
     ctx = dash.callback_context
@@ -120,13 +128,14 @@ def update_parameter(*args):
 
     # If any parameters have changed update the objecte
     if ctx.triggered:
+        comp.units = model_units
+        comp.graph_units = input_units
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
         # Scale the value if req
         var = dash_id.split("-")[-1]
-        if var in var_to_scale:
-            value = value / var_to_scale.get(var, 1)
+        value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
 
         # update the model
         comp.update(dash_id, value)
@@ -141,9 +150,9 @@ def update_parameter(*args):
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
-    Input("sens_time_unit-dropdown", "value"),
+    Input("input_units-dropdown", "value"),
 )
-def update_simulation(__, active, t_end, n_iterations, time_unit):
+def update_simulation(__, active, t_end, n_iterations, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
     global sfd
@@ -152,12 +161,9 @@ def update_simulation(__, active, t_end, n_iterations, time_unit):
 
     # time.sleep(1)
     if active:
-        comp.units = time_unit  # TODO Mel move this to a param update
         pof_sim = copy.copy(comp)
 
         # Complete the simulations
-        # pof_sim.mc(t_end=t_end, n_iterations=n_iterations)
-
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
 
         # Produce reports

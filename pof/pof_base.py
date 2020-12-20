@@ -144,11 +144,11 @@ class PofBase:
         else:
             raise ValueError(f"Unit must be in {list(valid_units)}")
 
-    def _scale_units(self, value, current_units):
+    def _scale_units(self, new_units, current_units):
         """ Take current and loaded units and return the ratio between """
         # Determine the ratio between the current and uploaded unit
         ratio = (
-            valid_units[current_units] / valid_units[value]
+            valid_units[current_units] / valid_units[new_units]
         )  # Current value over loaded value
 
         # Update the variables on this instance
@@ -160,9 +160,9 @@ class PofBase:
             var = getattr(self, var_name)
             if isinstance(var, dict):
                 for val in var.values():
-                    val.units = value
+                    val.units = new_units
             elif var is not None:
-                var.units = value
+                var.units = new_units
             else:
                 raise ValueError(f"Something is wrong")
 
@@ -292,6 +292,7 @@ class PofBase:
                 update_dict(data=attr_to_update, update=still_to_update)
 
             else:
+                # Scale the units
                 setattr(self, attr, value)
 
     def sensitivity(
