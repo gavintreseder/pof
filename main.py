@@ -21,14 +21,17 @@ from pof.interface.layouts import (
 # TODO fix the need to import cf
 
 from pof.data.asset_data import SimpleFleet
+from pof.paths import Paths
 
 # Forecast years
 START_YEAR = 2015
 END_YEAR = 2024
 CURRENT_YEAR = 2020
 
+paths = Paths()
+
 # Population Data
-file_path = os.path.dirname(os.path.dirname(__file__)) + r"\inputs" + os.sep
+file_path = paths._input_path + os.sep
 FILE_NAME = r"population_summary.csv"
 
 sfd = SimpleFleet(file_path + FILE_NAME)
@@ -36,7 +39,7 @@ sfd.load()
 sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 # Asset Model Data
-file_path = os.getcwd() + r"\data\inputs" + os.sep
+file_path = paths._demo_path + os.sep
 FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
 
 aml = AssetModelLoader(file_path + FILE_NAME)
