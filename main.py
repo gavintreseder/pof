@@ -302,8 +302,7 @@ def update_sensitivity(
         keep_axis = dash_id == "sim_state" and axis_lock
 
         # Scale the inputs if needed
-        var = dash_id.split("-")[-1]
-        logging.warning(var)
+        var = var_id.split("-")[-1]
         lower = scale_input(sens_sim, var, lower, units)
         upper = scale_input(sens_sim, var, upper, units)
 
