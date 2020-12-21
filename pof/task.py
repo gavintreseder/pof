@@ -427,11 +427,14 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
         if t_interval == 0:
             n_tiles = max((t_end - t_delay), 0)
+            tile = [0]
         else:
             n_tiles = math.ceil(max((t_end - t_delay), 0) / t_interval + 1)
+            tile = np.linspace(t_interval - 1, 0, t_interval)
+
 
         schedule = np.tile(
-            np.linspace(t_interval - 1, 0, t_interval),
+            tile,
             n_tiles,
         )
 

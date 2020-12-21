@@ -126,17 +126,19 @@ def update_parameter(input_units, model_units, *args):
 
     # If any parameters have changed update the objecte
     if ctx.triggered:
-        comp.units = model_units
         comp.graph_units = input_units  # use the input units for graphing
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
-        # Scale the value if req
-        var = dash_id.split("-")[-1]
-        value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
+        if dash_id in ['input_units-dropdown', 'model_units-dropdown']:
+            comp.units = model_units
+        else:
+            # Scale the value if req
+            var = dash_id.split("-")[-1]
+            value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
 
-        # update the model
-        comp.update(dash_id, value)
+            # update the model
+            comp.update(dash_id, value)
 
     return f"Update State: {dash_id} - {value}"
 
@@ -305,6 +307,7 @@ def update_sensitivity(
         var = var_id.split("-")[-1]
         lower = scale_input(sens_sim, var, lower, units)
         upper = scale_input(sens_sim, var, upper, units)
+        step_size = scale_input(sens_sim, var, step_size, units)
 
         sens_sim = copy.deepcopy(comp)
 
@@ -336,7 +339,7 @@ def update_sensitivity(
     Output("n-progress", "children"),
     Input("progress-interval", "n_intervals"),
 )
-def update_progress(n):
+def update_progress(__):
     if pof_sim.n is None:
         raise Exception("no process started")
     progress = int(pof_sim.progress() * 100)
@@ -348,7 +351,7 @@ def update_progress(n):
     [Output("n_sens-progress", "value"), Output("n_sens-progress", "children")],
     [Input("sens_progress-interval", "n_intervals")],
 )
-def update_progress_sens(n):
+def update_progress_sens(__):
     if sens_sim.n is None:
         raise Exception("no process started")
     progress = int(sens_sim.sens_progress() * 100)
