@@ -337,7 +337,7 @@ def make_pop_table_fig(df):
 
     fig = go.Figure(data=[tbl])
 
-    fig.update_layout(title="Population Summary")
+    fig.update_layout(title="Forecast Summary")
 
     return fig
 
@@ -355,7 +355,7 @@ def make_table_fig(df):
         ]
     )
 
-    fig.update_layout(title="Population Summary")
+    fig.update_layout(title="Forecast Summary")
 
     return fig
 

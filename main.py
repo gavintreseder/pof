@@ -322,7 +322,7 @@ def update_sensitivity(
         )
 
         sens_fig = sens_sim.plot_sens(
-            var_id=var_id, y_axis=y_axis, keep_axis=keep_axis, prev=prev_sens
+            var_id=var_id, y_axis=y_axis, keep_axis=keep_axis, prev=prev_sens, units=input_units
         )
 
         return sens_fig

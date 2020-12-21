@@ -4,8 +4,9 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
-from typing import Dict
+import copy
 import logging
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -829,6 +830,8 @@ class Component(PofBase):
             df=self.df_sens, column="source", var=var_name
         )  # Sens ordered here as x var is needed
 
+        df, units = scale_units(df, units, self.units)
+
         return make_sensitivity_fig(
             df=df,
             var_name=var_name,
@@ -1071,6 +1074,7 @@ def scale_units(df, input_units: str = None, model_units: str = None):
         logging.warning("Invalid model units. No scaling completed")
     else:
         ratio = model_factor / input_factor
+        df = copy.deepcopy(df)
         df.loc[:,unit_cols] = df[unit_cols] * ratio
 
     return df, units
