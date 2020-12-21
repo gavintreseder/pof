@@ -399,7 +399,9 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             self._t_interval = value
 
             if math.ceil(value) != value:
-                logging.warning("t_interval must be an integer - %s", value)
+                logging.warning(
+                    "t_interval will be scaled to the nearest integer - %s", value
+                )
 
     @property
     def t_delay(self):
@@ -414,16 +416,23 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             self._t_delay = value
 
             if math.ceil(value) != value:
-                logging.warning("t_interval must be an integer - %s", value)
+                logging.warning(
+                    "t_interval will be scaled to the nearest integer - %s", value
+                )
 
     def _sim_timeline(self, t_end, t_start=0, *args, **kwargs):
 
         t_interval = int(self._t_interval)
         t_delay = int(self._t_delay)
 
+        if t_interval == 0:
+            n_tiles = max((t_end - t_delay), 0)
+        else:
+            n_tiles = math.ceil(max((t_end - t_delay), 0) / t_interval + 1)
+
         schedule = np.tile(
             np.linspace(t_interval - 1, 0, t_interval),
-            math.ceil(max((t_end - t_delay), 0) / t_interval + 1),
+            n_tiles,
         )
 
         if t_delay > 0:
@@ -570,7 +579,9 @@ class Inspection(ScheduledTask):
         # Adjust the probability to reflect failures that occur during the t_delay
         if self._t_delay:
             if failure_dist is not None:
-                p_fd = failure_dist.cdf(t_start=self._t_delay, t_end=self._t_delay)[0]
+                p_fd = failure_dist.cdf(
+                    t_start=int(self._t_delay), t_end=int(self._t_delay)
+                )[0]
                 p_ie = (1 - p_fd) * p_ie
             else:
                 raise ValueError("Failure Distribution requried")

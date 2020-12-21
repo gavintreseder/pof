@@ -45,7 +45,7 @@ comp = Component.from_dict(comp_data["pole"])
 comp.fleet_data = sfd  # TODO fix by creating asset class
 
 # Turn off logging level to speed up implementation
-logging.getLogger().setLevel(logging.CRITICAL)
+logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 # Build App
@@ -162,7 +162,7 @@ def update_simulation(__, active, t_end, n_iterations, units):
         pof_sim = copy.copy(comp)
 
         # Scale t_end # TODO generalise funciton and move
-        t_end = scale_input(pof_sim, 't_end', t_end, units)
+        t_end = scale_input(pof_sim, "t_end", t_end, units)
 
         # Complete the simulations
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
@@ -303,6 +303,7 @@ def update_sensitivity(
 
         # Scale the inputs if needed
         var = dash_id.split("-")[-1]
+        logging.warning(var)
         lower = scale_input(sens_sim, var, lower, units)
         upper = scale_input(sens_sim, var, upper, units)
 

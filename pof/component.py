@@ -349,7 +349,7 @@ class Component(PofBase):
                 }
 
                 if cohort is not None:
-                    f_names = ['cf', 'ff']
+                    f_names = ["cf", "ff"]
                     f_ages = [_cf, _ff]
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
@@ -372,8 +372,10 @@ class Component(PofBase):
 
         # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df['sim'] = df.loc[mask_failures, 'cf'] / (df.loc[mask_failures, 'cf'] + df.loc[mask_failures, 'ff'])
-        df['sim'].fillna("")
+        df["sim"] = df.loc[mask_failures, "cf"] / (
+            df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"]
+        )
+        df["sim"].fillna("")
 
         # Add the cohort data if it is supplied
         if cohort is not None:
@@ -388,7 +390,7 @@ class Component(PofBase):
             "is",
             "cf",
             "ff",
-            'sim',
+            "sim",
             "cf_pop_annual_avg",
             "ff_pop_annual_avg",
             "total",
@@ -397,7 +399,7 @@ class Component(PofBase):
 
         percent_col = ["ie", "sim"]
         df[percent_col] = df[percent_col].mul(100)
-        rename_cols = {col : col + " (%)" for col in percent_col}
+        rename_cols = {col: col + " (%)" for col in percent_col}
         df.rename(columns=rename_cols, inplace=True)
 
         return df
@@ -628,9 +630,9 @@ class Component(PofBase):
         suffix = ["", "_annual", "_cumulative"]
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
-        for i in np.arange(lower, upper + 1, step_size):
+        for i in np.arange(lower, upper + step_size, step_size):
             if not self.up_to_date:
-                break
+                return 'sim cancelled'
             try:
                 # Reset component
                 self.reset()
@@ -752,7 +754,7 @@ class Component(PofBase):
     ):
         """ Returns a cost figure if df has aleady been calculated"""
         # TODO Add conversion for units when plotting if units != self.units
-        
+
         return make_ms_fig(
             df=self.df_erc,
             y_axis=y_axis,
@@ -907,7 +909,6 @@ class Component(PofBase):
 
         return dash_ids
 
-
     def get_ind_default_values(self):
         """ Returns a dictionary of default indicator values for the Indicator input fields """
         d_ind = {}
@@ -918,7 +919,6 @@ class Component(PofBase):
             }
 
         return d_ind
-
 
     def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
         """ Get the ids for all objects that should be updated"""

@@ -308,7 +308,7 @@ class FailureMode(PofBase):
         return int(pf_interval)
 
     def get_pf_std(self, cond_name=None):
-        return self.conditions.get(cond_name, {}).get("pf_std", self._pf_std)
+        return self.conditions.get(cond_name, {}).get("pf_std", self.pf_std)
 
     # ************** Is Function *******************
 

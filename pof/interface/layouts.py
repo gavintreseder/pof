@@ -52,8 +52,7 @@ from config import config
 SCALING = cf.scaling
 defaults = config["Layouts"]
 TIME_VARS = [
-    "t_end"
-    "pf_interval",
+    "t_end" "pf_interval",
     "pf_std",
     "t_delay",
     "t_interval",
@@ -1019,6 +1018,7 @@ def make_sim_sens_inputs(
                                         value=1,
                                         type="number",
                                         style={"width": 100},
+                                        debounce=True,
                                     ),
                                 ],
                                 addon_type="prepend",

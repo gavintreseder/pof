@@ -451,7 +451,7 @@ class ConditionIndicator(Indicator):
             pf_interval = self._pf_interval
 
         if pf_std is None:
-            pf_std = self._pf_std
+            pf_std = self.pf_std
 
         # Adjust the pf_interval based on the expected variance in pf_std
         if pf_std is not None and pf_std != 0:
@@ -493,7 +493,7 @@ class ConditionIndicator(Indicator):
             pf_interval = self._pf_interval
 
         if pf_std is None:
-            pf_std = self._pf_std
+            pf_std = self.pf_std
 
         # Get the time to be investigated #TODO Does this work GTGTGTGT
         x = np.linspace(0, pf_interval, pf_interval + 1)
