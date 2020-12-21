@@ -10,6 +10,7 @@ import logging
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
+from statistics import mean
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -864,10 +865,12 @@ class Component(PofBase):
     def update_from_dict(self, data):
         """ Adds an additional update method for task groups"""
 
-        # Loop through all the varaibles to update
+        # Loop through all the variables to update
         for attr, detail in data.items():
             if attr == "task_group_name":
                 self.update_task_group(detail)
+            elif attr == "consequence":
+                self.update_consequence(detail)
 
             else:
                 super().update_from_dict({attr: detail})
@@ -878,6 +881,20 @@ class Component(PofBase):
 
         for fm in self.fm.values():
             fm.update_task_group(data)
+
+    def update_consequence(self, value):
+        """ Update the consequence of any failure mode """
+
+        for fm in self.fm.values():
+            fm.update_consequence(value)
+
+    def get_consequence_default(self):
+        """ Return the current value of consequence on failure mode """
+        val = []
+        for fm in self.fm.values():
+            val.append(fm.get_consequence_default())
+
+        return mean(val)
 
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""

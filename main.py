@@ -114,6 +114,7 @@ param_inputs = [
     Output("update_state", "children"),
     Input("input_units-dropdown", "value"),
     Input("model_units-dropdown", "value"),
+    Input("consequence_input", "value"),
     param_inputs,
 )
 def update_parameter(input_units, model_units, *args):
@@ -130,8 +131,10 @@ def update_parameter(input_units, model_units, *args):
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
-        if dash_id in ['input_units-dropdown', 'model_units-dropdown']:
+        if dash_id in ["input_units-dropdown", "model_units-dropdown"]:
             comp.units = model_units
+        elif dash_id == "consequence_input":
+            comp.update_from_dict({"consequence": value})
         else:
             # Scale the value if req
             var = dash_id.split("-")[-1]
@@ -205,8 +208,8 @@ def update_figures(
     state,
     y_axis,
     t_end,
-    active,
     axis_lock,
+    active,
     prev_cond_fig,
     prev_ms_fig,
     prev_pof_fig,
