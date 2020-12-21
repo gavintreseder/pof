@@ -37,7 +37,7 @@ def make_ms_fig(
 
         # Format the labels
         labels = {label: label.replace("_", " ").title() for label in list(df)}
-        labels["Time"] = f"Age ({units})"
+        labels["time"] = f"Age ({units})"
 
         px_args = dict(
             data_frame=df,
@@ -121,6 +121,8 @@ def update_condition_fig(
     df, ecl, conf=0.95, keep_axis=False, units="unknown", prev=None
 ):
     """ Updates the condition figure"""
+
+    # TODO remake this so that it takes a df in the right format and filter, rather than repeat expected condition twice
 
     try:
         subplot_titles = [x.replace("_", " ").title() for x in list(ecl.keys())]
@@ -261,12 +263,20 @@ def make_sensitivity_fig(
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
-        if var in ("t_delay", "t_interval"):
+        if var in (
+            "t_delay",
+            "t_interval",
+            "pf_interval",
+            "pf_std",
+            "alpha",
+            "beta",
+            "gamma",
+        ):
             col_names = {"time": f"{var} ({units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
         fig = update_visibility(fig, prev)
-        fig.update_layout(xaxis=dict(tickvals=df_plot[var].tolist()))
+        # fig.update_layout(xaxis=dict(tickvals=df_plot[var].tolist()))
 
     except Exception as error:
         raise error

@@ -112,12 +112,14 @@ param_inputs = [
 
 @app.callback(
     Output("update_state", "children"),
-    Input("input_units-dropdown", "value"),
-    Input("model_units-dropdown", "value"),
+    Input(
+        "model_units-dropdown", "value"
+    ),  # TODO Change the layout name so this updates normally
     Input("consequence_input", "value"),
+    Input("input_units-dropdown", "value"),
     param_inputs,
 )
-def update_parameter(input_units, model_units, *args):
+def update_parameter(model_units, cons, input_units, *args):
     """Update a the pof object whenever an input is changes""",
 
     # Check the parameters that changed
@@ -127,14 +129,16 @@ def update_parameter(input_units, model_units, *args):
 
     # If any parameters have changed update the objecte
     if ctx.triggered:
-        comp.graph_units = input_units  # use the input units for graphing
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
-        if dash_id in ["input_units-dropdown", "model_units-dropdown"]:
+        if dash_id == "model_units-dropdown":
             comp.units = model_units
+        elif dash_id == "input_units-dropdown":
+            pass
         elif dash_id == "consequence_input":
             comp.update_from_dict({"consequence": value})
+
         else:
             # Scale the value if req
             var = dash_id.split("-")[-1]
@@ -155,7 +159,7 @@ def update_parameter(input_units, model_units, *args):
     Input("n_iterations-input", "value"),
     State("input_units-dropdown", "value"),
 )
-def update_simulation(__, active, t_end, n_iterations, units):
+def update_simulation(__, active, t_end, n_iterations, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
     global sfd
@@ -167,7 +171,7 @@ def update_simulation(__, active, t_end, n_iterations, units):
         pof_sim = copy.copy(comp)
 
         # Scale t_end # TODO generalise funciton and move
-        t_end = scale_input(pof_sim, "t_end", t_end, units)
+        t_end = int(scale_input(pof_sim, "t_end", t_end, input_units))
 
         # Complete the simulations
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
@@ -175,11 +179,11 @@ def update_simulation(__, active, t_end, n_iterations, units):
         # Produce reports
         pof_sim.expected_risk_cost_df(t_end=t_end)
         pof_sim.calc_pof_df(t_end=t_end)
-        pof_sim.calc_df_task_forecast(sfd)
+        pof_sim.calc_df_task_forecast(sfd, units=input_units)
         pof_sim.calc_df_cond()
 
         if not pof_sim.up_to_date:
-            return dash.no_update, f"Update cancelled"
+            return dash.no_update, "Update cancelled"
 
     else:
         return dash.no_update, "Not active"
@@ -192,12 +196,11 @@ def update_simulation(__, active, t_end, n_iterations, units):
     Output("ms-fig", "figure"),
     Output("pof-fig", "figure"),
     Output("task_forecast-fig", "figure"),
-    # Output("pop_table-fig", "figure"),
     Output("forecast_table-fig", "figure"),
     Input("sim_state", "children"),
     Input("ms_var_y-dropdown", "value"),
-    Input("t_end-input", "value"),
     Input("axis_lock-checkbox", "checked"),
+    State("input_units-dropdown", "value"),
     State("sim_n_active", "checked"),
     State("cond-fig", "figure"),
     State("ms-fig", "figure"),
@@ -205,10 +208,10 @@ def update_simulation(__, active, t_end, n_iterations, units):
     State("task_forecast-fig", "figure"),
 )
 def update_figures(
-    state,
+    __,
     y_axis,
-    t_end,
     axis_lock,
+    input_units,
     active,
     prev_cond_fig,
     prev_ms_fig,
@@ -225,11 +228,17 @@ def update_figures(
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
 
-        pof_fig = pof_sim.plot_pof(keep_axis=keep_axis, prev=prev_pof_fig)
+        pof_fig = pof_sim.plot_pof(
+            keep_axis=keep_axis, units=input_units, prev=prev_pof_fig
+        )
 
-        ms_fig = pof_sim.plot_ms(y_axis=y_axis, keep_axis=keep_axis, prev=prev_ms_fig)
+        ms_fig = pof_sim.plot_ms(
+            y_axis=y_axis, keep_axis=keep_axis, units=input_units, prev=prev_ms_fig
+        )
 
-        cond_fig = pof_sim.plot_cond(keep_axis=keep_axis, prev=prev_cond_fig)
+        cond_fig = pof_sim.plot_cond(
+            keep_axis=keep_axis, units=input_units, prev=prev_cond_fig
+        )
 
         task_forecast_fig = pof_sim.plot_task_forecast(
             keep_axis=keep_axis, prev=prev_task_fig
@@ -247,23 +256,8 @@ def update_figures(
         ms_fig,
         pof_fig,
         task_forecast_fig,
-        # pop_table_fig,
         forecast_table_fig,
     )
-
-
-@app.callback(Output("ffcf", "children"), [Input("sim_state", "children")])
-def update_ffcf(*args):
-    """ Returns the ratio between conditional failures, functional failures and in service assets"""
-    n_cf = len(pof_sim.expected_cf())
-    n_ff = len(pof_sim.expected_ff())
-
-    try:
-        ratio = round(n_ff / (n_cf + n_ff), 2)
-    except:
-        ratio = "--.--"
-
-    return f"Conditional {n_cf} : {n_ff} Functional. {ratio}%"
 
 
 @app.callback(
@@ -292,7 +286,7 @@ def update_sensitivity(
     t_end,
     axis_lock,
     prev_sens,
-    units,
+    input_units,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -306,13 +300,14 @@ def update_sensitivity(
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
 
+        sens_sim = copy.deepcopy(comp)
+
         # Scale the inputs if needed
         var = var_id.split("-")[-1]
-        lower = scale_input(sens_sim, var, lower, units)
-        upper = scale_input(sens_sim, var, upper, units)
-        step_size = scale_input(sens_sim, var, step_size, units)
-
-        sens_sim = copy.deepcopy(comp)
+        lower = scale_input(sens_sim, var, lower, input_units)
+        upper = scale_input(sens_sim, var, upper, input_units)
+        step_size = scale_input(sens_sim, var, step_size, input_units)
+        t_end = int(scale_input(sens_sim, "t_end", t_end, input_units))
 
         sens_sim.expected_sensitivity(
             var_id=var_id,

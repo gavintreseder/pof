@@ -37,6 +37,7 @@ from pof.interface.figures import (
 )
 from pof.data.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
+from pof.units import valid_units
 
 DEFAULT_ITERATIONS = 10
 
@@ -350,6 +351,9 @@ class Component(PofBase):
                 }
 
                 if cohort is not None:
+
+                    cohort, __ = scale_units(cohort, 'years', self.units)
+
                     f_names = ["cf", "ff"]
                     f_ages = [_cf, _ff]
                     for f_name, f_age in zip(f_names, f_ages):
@@ -633,7 +637,7 @@ class Component(PofBase):
 
         for i in np.arange(lower, upper + step_size, step_size):
             if not self.up_to_date:
-                return 'sim cancelled'
+                return "sim cancelled"
             try:
                 # Reset component
                 self.reset()
@@ -718,10 +722,12 @@ class Component(PofBase):
 
         return self.df_pof
 
-    def calc_df_task_forecast(self, fleet_data):
+    def calc_df_task_forecast(self, fleet_data, units=None):
         """ Create the task plot dataframe """
 
-        df = fleet_data.get_task_forecast(df_erc=self.df_erc)
+        df, __ = scale_units(self.df_erc, 'years', self.units) # Scale to ensure age merge 
+
+        df = fleet_data.get_task_forecast(df_erc=df)
 
         df_ordered = df_order(df=df, column="task")
 
@@ -739,6 +745,9 @@ class Component(PofBase):
             df["y" + str(i)] = data
             i = i + 1
 
+            # TODO temp fix that won't work for t_start
+            df["time"] = df.index
+
         self.df_cond = df
 
         return self.df_cond
@@ -751,33 +760,45 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         keep_axis=False,
+        units: str = None,
         prev=None,
     ):
         """ Returns a cost figure if df has aleady been calculated"""
         # TODO Add conversion for units when plotting if units != self.units
 
+        df, units = scale_units(
+            df=self.df_erc, input_units=units, model_units=self.units
+        )
+
         return make_ms_fig(
-            df=self.df_erc,
+            df=df,
             y_axis=y_axis,
             keep_axis=keep_axis,
-            units=self.graph_units,
+            units=units,
             prev=prev,
         )
 
-    def plot_pof(self, keep_axis=False, prev=None):
+    def plot_pof(self, keep_axis=False, units=None, prev=None):
         """ Returns a pof figure if df has aleady been calculated"""
 
-        return update_pof_fig(
-            df=self.df_pof, keep_axis=keep_axis, units=self.graph_units, prev=prev
+        df, units = scale_units(
+            df=self.df_pof, input_units=units, model_units=self.units
         )
 
-    def plot_cond(self, keep_axis=False, prev=None):
+        return update_pof_fig(df=df, keep_axis=keep_axis, units=units, prev=prev)
+
+    def plot_cond(self, keep_axis=False, units=None, prev=None):
         """ Returns a condition figure if df has aleady been calculated"""
+
+        df, units = scale_units(
+            df=self.df_cond, input_units=units, model_units=self.units
+        )
+
         return update_condition_fig(
-            df=self.df_cond,
+            df=df,
             ecl=self.expected_condition(),
             keep_axis=keep_axis,
-            units=self.graph_units,
+            units=units,
             prev=prev,
         )
 
@@ -798,7 +819,7 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         keep_axis=False,
-        units=NotImplemented,  # TODO add a plot here to make sure it
+        units=None,
         var_id="",
         prev=None,
     ):
@@ -813,7 +834,7 @@ class Component(PofBase):
             var_name=var_name,
             y_axis=y_axis,
             keep_axis=keep_axis,
-            units=self.graph_units,
+            units=units,
             prev=prev,
         )
 
@@ -869,6 +890,7 @@ class Component(PofBase):
         for attr, detail in data.items():
             if attr == "task_group_name":
                 self.update_task_group(detail)
+
             elif attr == "consequence":
                 self.update_consequence(detail)
 
@@ -1031,6 +1053,27 @@ def df_order(df=None, column=None, var=None):
     df_ordered = df.sort_values(by=columns)
 
     return df_ordered
+
+
+def scale_units(df, input_units: str = None, model_units: str = None):
+
+    # expand to include all cols
+    unit_cols = list(set(['time', 'age']) & set(df.columns))
+
+    input_factor = valid_units.get(input_units, None)
+    model_factor = valid_units.get(model_units, None)
+
+    units = input_units
+
+    if input_factor is None:
+        units = model_units
+    elif model_factor is None:
+        logging.warning("Invalid model units. No scaling completed")
+    else:
+        ratio = model_factor / input_factor
+        df.loc[:,unit_cols] = df[unit_cols] * ratio
+
+    return df, units
 
 
 if __name__ == "__main__":

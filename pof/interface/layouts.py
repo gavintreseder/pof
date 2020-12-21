@@ -52,7 +52,8 @@ from config import config
 SCALING = cf.scaling
 defaults = config["Layouts"]
 TIME_VARS = [
-    "t_end" "pf_interval",
+    "t_end",
+    "pf_interval",
     "pf_std",
     "t_delay",
     "t_interval",
@@ -171,9 +172,7 @@ def make_layout(comp):
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="task_forecast-fig")),
-                    dbc.Col(
-                        dbc.Row([dcc.Graph(id="forecast_table-fig")]),
-                    ),
+                    dbc.Col(dcc.Graph(id="forecast_table-fig")),
                 ]
             ),
             dbc.Row(

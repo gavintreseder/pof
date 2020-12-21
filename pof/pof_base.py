@@ -45,7 +45,6 @@ class PofBase:
 
         self.name = name
         self.units = units
-        self.graph_units = units #TODO temp fix
 
         # Dash feature
         self.up_to_date = True
@@ -159,7 +158,7 @@ class PofBase:
         # Update the variables on the child instance
         for var_name in self.POF_VARIABLES:
             var = getattr(self, var_name)
-            if isinstance(var, dict):
+            if isinstance(var, dict) or isinstance(var, PofContainer):
                 for val in var.values():
                     val.units = new_units
             elif var is not None:
