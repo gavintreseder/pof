@@ -977,6 +977,15 @@ class FailureMode(PofBase):
                 if task.task_group_name == task_group_name:
                     task.update_from_dict(details)
 
+    def update_consequence(self, value):
+        """ Update the consequence of any failure mode """
+        self.consequence.set_risk_cost_total(cost=value)
+
+    def get_consequence_default(self):
+        val = self.consequence.get_cost()
+
+        return val
+
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
 

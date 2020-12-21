@@ -135,7 +135,7 @@ def make_layout(comp):
 
     indicators_default = comp.get_ind_default_values()
     ind_inputs = make_indicator_inputs_form(indicators=indicators_default)
-    consequence_default = 100
+    consequence_default = comp.get_consequence_default()
     consequence_input = make_consequence_input(consequence_default=consequence_default)
 
     # Make layout
@@ -1144,7 +1144,7 @@ def make_consequence_input(consequence_default):
     layout = dbc.InputGroup(
         [
             dbc.Button(
-                "Consequence input - N/A",
+                "Consequence input",
                 color="link",
                 id="consequence_input-collapse-button",
             ),
@@ -1155,7 +1155,7 @@ def make_consequence_input(consequence_default):
                             [
                                 dbc.Input(
                                     type="number",
-                                    id="consquence_input",
+                                    id="consequence_input",
                                     value=consequence_default,
                                     debounce=True,
                                     style={"width": 100},

@@ -10,6 +10,7 @@ import logging
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
+from statistics import mean
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -349,7 +350,7 @@ class Component(PofBase):
                 }
 
                 if cohort is not None:
-                    f_names = ['cf', 'ff']
+                    f_names = ["cf", "ff"]
                     f_ages = [_cf, _ff]
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
@@ -372,8 +373,10 @@ class Component(PofBase):
 
         # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df['sim'] = df.loc[mask_failures, 'cf'] / (df.loc[mask_failures, 'cf'] + df.loc[mask_failures, 'ff'])
-        df['sim'].fillna("")
+        df["sim"] = df.loc[mask_failures, "cf"] / (
+            df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"]
+        )
+        df["sim"].fillna("")
 
         # Add the cohort data if it is supplied
         if cohort is not None:
@@ -388,7 +391,7 @@ class Component(PofBase):
             "is",
             "cf",
             "ff",
-            'sim',
+            "sim",
             "cf_pop_annual_avg",
             "ff_pop_annual_avg",
             "total",
@@ -397,7 +400,7 @@ class Component(PofBase):
 
         percent_col = ["ie", "sim"]
         df[percent_col] = df[percent_col].mul(100)
-        rename_cols = {col : col + " (%)" for col in percent_col}
+        rename_cols = {col: col + " (%)" for col in percent_col}
         df.rename(columns=rename_cols, inplace=True)
 
         return df
@@ -861,10 +864,12 @@ class Component(PofBase):
     def update_from_dict(self, data):
         """ Adds an additional update method for task groups"""
 
-        # Loop through all the varaibles to update
+        # Loop through all the variables to update
         for attr, detail in data.items():
             if attr == "task_group_name":
                 self.update_task_group(detail)
+            elif attr == "consequence":
+                self.update_consequence(detail)
 
             else:
                 super().update_from_dict({attr: detail})
@@ -875,6 +880,20 @@ class Component(PofBase):
 
         for fm in self.fm.values():
             fm.update_task_group(data)
+
+    def update_consequence(self, value):
+        """ Update the consequence of any failure mode """
+
+        for fm in self.fm.values():
+            fm.update_consequence(value)
+
+    def get_consequence_default(self):
+        """ Return the current value of consequence on failure mode """
+        val = []
+        for fm in self.fm.values():
+            val.append(fm.get_consequence_default())
+
+        return mean(val)
 
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""
@@ -906,7 +925,6 @@ class Component(PofBase):
 
         return dash_ids
 
-
     def get_ind_default_values(self):
         """ Returns a dictionary of default indicator values for the Indicator input fields """
         d_ind = {}
@@ -917,7 +935,6 @@ class Component(PofBase):
             }
 
         return d_ind
-
 
     def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
         """ Get the ids for all objects that should be updated"""

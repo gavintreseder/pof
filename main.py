@@ -117,7 +117,8 @@ param_inputs = [
 @app.callback(
     Output("update_state", "children"),
     Input("input_units-dropdown", "value"),
-    Input("sens_time_unit-dropdown", "value"),
+    Input("time_unit-dropdown", "value"),
+    Input("consequence_input", "value"),
     param_inputs,
 )
 def update_parameter(input_units, model_units, *args):
@@ -135,12 +136,15 @@ def update_parameter(input_units, model_units, *args):
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
-        # Scale the value if req
-        var = dash_id.split("-")[-1]
-        value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
+        if dash_id == "consequence_input":
+            comp.update_from_dict({"consequence": value})
+        else:
+            # Scale the value if req
+            var = dash_id.split("-")[-1]
+            value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
 
-        # update the model
-        comp.update(dash_id, value)
+            # update the model
+            comp.update(dash_id, value)
 
     return f"Update State: {dash_id} - {value}"
 
