@@ -20,11 +20,6 @@ from pof.interface.layouts import (
 
 # TODO fix the need to import cf
 
-from pof.interface.figures import (
-    update_condition_fig,
-    update_pof_fig,
-    make_task_forecast_fig,
-)
 from pof.data.asset_data import SimpleFleet
 from pof.paths import Paths
 
@@ -53,7 +48,7 @@ comp = Component.from_dict(comp_data["pole"])
 comp.fleet_data = sfd  # TODO fix by creating asset class
 
 # Turn off logging level to speed up implementation
-logging.getLogger().setLevel(logging.CRITICAL)
+logging.getLogger().setLevel(logging.INFO)
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 # Build App
@@ -112,6 +107,7 @@ param_inputs = [
 
 # ========================================================
 # UPDATE --> Simulate --> Figures
+#        --> Simulate --> Figures
 # ========================================================
 
 # TODO make a better unit update
@@ -120,7 +116,7 @@ param_inputs = [
 @app.callback(
     Output("update_state", "children"),
     Input("input_units-dropdown", "value"),
-    Input("time_unit-dropdown", "value"),
+    Input("model_units-dropdown", "value"),
     Input("consequence_input", "value"),
     param_inputs,
 )
@@ -134,12 +130,13 @@ def update_parameter(input_units, model_units, *args):
 
     # If any parameters have changed update the objecte
     if ctx.triggered:
-        comp.units = model_units
-        comp.graph_units = input_units
+        comp.graph_units = input_units  # use the input units for graphing
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
-        if dash_id == "consequence_input":
+        if dash_id in ["input_units-dropdown", "model_units-dropdown"]:
+            comp.units = model_units
+        elif dash_id == "consequence_input":
             comp.update_from_dict({"consequence": value})
         else:
             # Scale the value if req
@@ -159,9 +156,9 @@ def update_parameter(input_units, model_units, *args):
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
-    Input("time_unit-dropdown", "value"),
+    State("input_units-dropdown", "value"),
 )
-def update_simulation(__, active, t_end, n_iterations, input_units):
+def update_simulation(__, active, t_end, n_iterations, units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
     global sfd
@@ -171,6 +168,9 @@ def update_simulation(__, active, t_end, n_iterations, input_units):
     # time.sleep(1)
     if active:
         pof_sim = copy.copy(comp)
+
+        # Scale t_end # TODO generalise funciton and move
+        t_end = scale_input(pof_sim, "t_end", t_end, units)
 
         # Complete the simulations
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
@@ -188,11 +188,6 @@ def update_simulation(__, active, t_end, n_iterations, input_units):
         return dash.no_update, "Not active"
 
     return f"Sim State: {pof_sim.n_iterations} - {n_iterations}", ""
-
-
-# ========================================================
-# After a simulation the following callbacks are triggered: (save_figure_limits, update_figs)
-# ========================================================
 
 
 @app.callback(
@@ -274,24 +269,6 @@ def update_ffcf(*args):
     return f"Conditional {n_cf} : {n_ff} Functional. {ratio}%"
 
 
-# Calcaulate sensitivity
-
-# Plot Sensitivity
-
-# @app.callback(
-#     Output("insp_interval-fig", "figure"),
-#     Input("sim_sens_active-check", "checked"),
-#     Input("n_sens_iterations-input", "value"),
-#     Input("sens_var_id-dropdown", "value"),
-#     Input("sens_var_y-dropdown", "value"),
-#     State("t_end-input", "value"),
-#     State("sens_var_y-input", "value"),
-# )
-
-# def update_sensitivity_figure()
-#     """ Updates the sensitivity figure whenever a new sensitivity simulation is completed"""
-
-
 @app.callback(
     Output("sensitivity-fig", "figure"),
     Input("sim_sens_active-check", "checked"),
@@ -305,6 +282,7 @@ def update_ffcf(*args):
     Input("axis_lock-checkbox", "checked"),
     # Input("ms-fig", "figure"),  # TODO change this trigger
     State("sensitivity-fig", "figure"),
+    State("input_units-dropdown", "value"),
 )
 def update_sensitivity(
     active,
@@ -317,6 +295,7 @@ def update_sensitivity(
     t_end,
     axis_lock,
     prev_sens,
+    units,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
@@ -329,6 +308,12 @@ def update_sensitivity(
         ctx = dash.callback_context
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
+
+        # Scale the inputs if needed
+        var = var_id.split("-")[-1]
+        lower = scale_input(sens_sim, var, lower, units)
+        upper = scale_input(sens_sim, var, upper, units)
+        step_size = scale_input(sens_sim, var, step_size, units)
 
         sens_sim = copy.deepcopy(comp)
 
@@ -360,7 +345,7 @@ def update_sensitivity(
     Output("n-progress", "children"),
     Input("progress-interval", "n_intervals"),
 )
-def update_progress(n):
+def update_progress(__):
     if pof_sim.n is None:
         raise Exception("no process started")
     progress = int(pof_sim.progress() * 100)
@@ -372,7 +357,7 @@ def update_progress(n):
     [Output("n_sens-progress", "value"), Output("n_sens-progress", "children")],
     [Input("sens_progress-interval", "n_intervals")],
 )
-def update_progress_sens(n):
+def update_progress_sens(__):
     if sens_sim.n is None:
         raise Exception("no process started")
     progress = int(sens_sim.sens_progress() * 100)

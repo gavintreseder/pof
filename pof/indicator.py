@@ -167,9 +167,9 @@ class Indicator(PofBase):
         return self._pf_curve
 
     @pf_curve.setter
-    def pf_curve(self, pf_curve=None):
-        if pf_curve in self.PF_CURVES:
-            self._pf_curve = pf_curve
+    def pf_curve(self, value):
+        if value in self.PF_CURVES:
+            self._pf_curve = value
         else:
             raise ValueError("pf_curve must be from: %s" % (self.PF_CURVES))
 
@@ -179,7 +179,7 @@ class Indicator(PofBase):
 
     @pf_interval.setter
     @coerce_arg_type
-    def pf_interval(self, value: int):
+    def pf_interval(self, value: float):
         self._pf_interval = value
 
     @property
@@ -188,7 +188,7 @@ class Indicator(PofBase):
 
     @perfect.setter
     @coerce_arg_type
-    def perfect(self, value: int):
+    def perfect(self, value: float):
         self._perfect = value
         self.set_limits()
 
@@ -198,7 +198,7 @@ class Indicator(PofBase):
 
     @failed.setter
     @coerce_arg_type
-    def failed(self, value: int):
+    def failed(self, value: float):
         self._failed = value
         self.set_limits()
 
@@ -490,7 +490,7 @@ class ConditionIndicator(Indicator):
             failed = self._failed
 
         if pf_interval is None:
-            pf_interval = self.pf_interval
+            pf_interval = self._pf_interval
 
         if pf_std is None:
             pf_std = self.pf_std

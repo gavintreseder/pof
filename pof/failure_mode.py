@@ -135,7 +135,7 @@ class FailureMode(PofBase):
         self._t_cond_failure = []  # System impact without a failure event
 
     @property
-    def active(self):
+    def active(self) -> bool:
         return self._active
 
     @active.setter
@@ -174,7 +174,7 @@ class FailureMode(PofBase):
 
     @pf_interval.setter
     @check_arg_positive("value")
-    def pf_interval(self, value: int):
+    def pf_interval(self, value: float):
         self._pf_interval = value
         if "untreated" in self.dists:
             self._set_init()
@@ -195,7 +195,7 @@ class FailureMode(PofBase):
             self._set_init()
 
     def _set_init(self):
-        init = Distribution.from_pf_interval(self.dists["untreated"], self.pf_interval)
+        init = Distribution.from_pf_interval(self.dists["untreated"], self._pf_interval)
         init.name = "init"
         self.set_dists({"init": init})
 
@@ -301,10 +301,10 @@ class FailureMode(PofBase):
 
     def get_pf_interval(self, cond_name=None):
         pf_interval = self.conditions.get(cond_name, {}).get(
-            "pf_interval", self.pf_interval
+            "pf_interval", self._pf_interval
         )
         if pf_interval is None:
-            pf_interval = self.pf_interval
+            pf_interval = self._pf_interval
         return int(pf_interval)
 
     def get_pf_std(self, cond_name=None):

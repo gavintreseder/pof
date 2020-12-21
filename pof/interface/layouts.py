@@ -52,7 +52,7 @@ from config import config
 SCALING = cf.scaling
 defaults = config["Layouts"]
 TIME_VARS = [
-    "pf_interval",
+    "t_end" "pf_interval",
     "pf_std",
     "t_delay",
     "t_interval",
@@ -805,7 +805,7 @@ def make_input_component(update_list_unit, unit_default):
                         [
                             "Model Units",
                             dcc.Dropdown(
-                                id="time_unit-dropdown",
+                                id="model_units-dropdown",
                                 options=update_list_unit,
                                 value=unit_default,
                             ),
@@ -986,6 +986,7 @@ def make_sim_sens_inputs(
                                         value=0,
                                         type="number",
                                         style={"width": 100},
+                                        debounce=True,
                                     ),
                                 ],
                                 addon_type="prepend",
@@ -1002,6 +1003,7 @@ def make_sim_sens_inputs(
                                         value=10,
                                         type="number",
                                         style={"width": 100},
+                                        debounce=True,
                                     ),
                                 ],
                                 addon_type="prepend",
@@ -1018,6 +1020,7 @@ def make_sim_sens_inputs(
                                         value=1,
                                         type="number",
                                         style={"width": 100},
+                                        debounce=True,
                                     ),
                                 ],
                                 addon_type="prepend",
