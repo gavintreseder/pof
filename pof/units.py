@@ -2,7 +2,7 @@
 import copy
 import logging
 
-valid_units = dict(
+VALID_UNITS = dict(
     seconds=1 / 3600,
     minutes=1 / 60,
     hours=1,
@@ -12,14 +12,18 @@ valid_units = dict(
     years=8760,  # 24 * 365
 )
 
+valid_units = VALID_UNITS
+
 def scale_units(df, input_units: str = None, model_units: str = None):
+
+    # TODO change to before / after
 
     # expand to include all cols
     time_cols = ["time", "age"]
     unit_cols = list(set(time_cols) & set(df.columns))
 
-    input_factor = valid_units.get(input_units, None)
-    model_factor = valid_units.get(model_units, None)
+    input_factor = VALID_UNITS.get(input_units, None)
+    model_factor = VALID_UNITS.get(model_units, None)
 
     units = input_units
 
@@ -39,3 +43,8 @@ def scale_units(df, input_units: str = None, model_units: str = None):
             df.index *= ratio
 
     return df, units
+
+
+def unit_ratio(left:str, right:str) -> float:
+    """ Returns the ratio between the left units and the right units"""
+    return VALID_UNITS.get(left) / VALID_UNITS.get(right)

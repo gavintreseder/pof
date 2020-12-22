@@ -36,7 +36,7 @@ class SimpleFleet:
 
         return self.df_age
 
-    def calc_forecast_age(self, start_year, end_year, current_year=None):
+    def calc_age_forecast(self, start_year, end_year, current_year=None):
         """ Get the simple population age that would have been expected between start and end without accounting for failures"""
         ## Quicker option
 
@@ -73,20 +73,20 @@ class SimpleFleet:
             id_vars="age", value_name="assets"
         )[["age", "year", "assets"]]
 
-        self.df_forecast = df_forecast
+        self.df_age_forecast = df_forecast
 
-        return self.df_forecast
+        return df_forecast
 
     def get_task_forecast(self, df_erc=None, units=None):
         """ Get the number of assets that would require each task by year """
 
         # Scale to ensure age merge
-        df_forecast, __ = scale_units(
-            self.df_forecast, "years", units
+        df_age_forecast, __ = scale_units(
+            self.df_age_forecast, "years", units
         )  
 
         # Merge with the estimated risk cost
-        df = df_forecast.merge(df_erc, left_on="age", right_on="time")
+        df = df_age_forecast.merge(df_erc, left_on="age", right_on="time")
 
         # Calculated population outcomes
         df["pop_quantity"] = df["assets"] * df["quantity"]

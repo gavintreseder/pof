@@ -36,7 +36,7 @@ FILE_NAME = r"population_summary.csv"
 
 sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
-sfd.calc_forecast_age(START_YEAR, END_YEAR, CURRENT_YEAR)
+sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 # Asset Model Data
 file_path = paths._demo_path + os.sep
@@ -182,7 +182,7 @@ def update_simulation(__, active, t_end, n_iterations, input_units):
         # Produce reports
         pof_sim.expected_risk_cost_df(t_end=t_end)
         pof_sim.calc_pof_df(t_end=t_end)
-        pof_sim.calc_df_task_forecast(sfd, units=input_units)
+        pof_sim.calc_df_task_forecast(sfd.df_age_forecast)
         # pof_sim.calc_summary(sfd.df_age)
         pof_sim.calc_df_cond()
 
