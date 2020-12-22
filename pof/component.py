@@ -353,7 +353,7 @@ class Component(PofBase):
 
                 if cohort is not None:
 
-                    cohort, __ = scale_units(cohort, 'years', self.units)
+                    cohort, __ = scale_units(cohort, "years", self.units)
 
                     f_names = ["cf", "ff"]
                     f_ages = [_cf, _ff]
@@ -726,7 +726,9 @@ class Component(PofBase):
     def calc_df_task_forecast(self, fleet_data, units=None):
         """ Create the task plot dataframe """
 
-        df, __ = scale_units(self.df_erc, 'years', self.units) # Scale to ensure age merge 
+        df, __ = scale_units(
+            self.df_erc, "years", self.units
+        )  # Scale to ensure age merge
 
         df = fleet_data.get_task_forecast(df_erc=df)
 
@@ -1061,7 +1063,8 @@ def df_order(df=None, column=None, var=None):
 def scale_units(df, input_units: str = None, model_units: str = None):
 
     # expand to include all cols
-    unit_cols = list(set(['time', 'age']) & set(df.columns))
+    time_cols = ["time", "age"]
+    unit_cols = list(set(time_cols) & set(df.columns))
 
     input_factor = valid_units.get(input_units, None)
     model_factor = valid_units.get(model_units, None)
@@ -1074,8 +1077,14 @@ def scale_units(df, input_units: str = None, model_units: str = None):
         logging.warning("Invalid model units. No scaling completed")
     else:
         ratio = model_factor / input_factor
+
+        # Scale the columns
         df = copy.deepcopy(df)
-        df.loc[:,unit_cols] = df[unit_cols] * ratio
+        df.loc[:, unit_cols] = df[unit_cols] * ratio
+
+        # Scale the index
+        if df.index.name in time_cols:
+            df.index.name *= ratio
 
     return df, units
 

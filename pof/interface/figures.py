@@ -136,7 +136,7 @@ def update_condition_fig(
 
         cmap = px.colors.qualitative.Safe
         idx = 1
-
+        time = df['time']
         for cond_name, cond in ecl.items():
             # Format the y_axis titles
             y_title = "".join(
@@ -145,9 +145,9 @@ def update_condition_fig(
 
             # Format the data for plotting
             length = len(cond["mean"])
-            time = np.linspace(
-                0, length - 1, length, dtype=int
-            )  # TODO take time as a variable
+            # time = np.linspace(
+            #     0, length - 1, length, dtype=int
+            # )  # TODO take time as a variable
             x = np.append(time, time[::-1])
             y = df["y" + str(idx)]
 
