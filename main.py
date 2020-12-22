@@ -183,6 +183,7 @@ def update_simulation(__, active, t_end, n_iterations, input_units):
         pof_sim.expected_risk_cost_df(t_end=t_end)
         pof_sim.calc_pof_df(t_end=t_end)
         pof_sim.calc_df_task_forecast(sfd, units=input_units)
+        # pof_sim.calc_summary(sfd.df_age)
         pof_sim.calc_df_cond()
 
         if not pof_sim.up_to_date:

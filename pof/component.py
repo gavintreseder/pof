@@ -38,7 +38,7 @@ from pof.interface.figures import (
 )
 from pof.data.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
-from pof.units import valid_units
+from pof.units import scale_units
 
 DEFAULT_ITERATIONS = 10
 
@@ -332,7 +332,7 @@ class Component(PofBase):
 
         return df
 
-    def expected_forecast_table(self, cohort=None):
+    def calc_summary(self, cohort=None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         # Get the key data from each of the failuremodes
         summary = {}
@@ -726,11 +726,7 @@ class Component(PofBase):
     def calc_df_task_forecast(self, fleet_data, units=None):
         """ Create the task plot dataframe """
 
-        df, __ = scale_units(
-            self.df_erc, "years", self.units
-        )  # Scale to ensure age merge
-
-        df = fleet_data.get_task_forecast(df_erc=df)
+        df = fleet_data.get_task_forecast(df_erc=self.df_erc, units=units)
 
         df_ordered = df_order(df=df, column="task")
 
@@ -739,6 +735,9 @@ class Component(PofBase):
         return self.df_task
 
     def calc_df_cond(self):
+
+        #TODO fix this so that it isn't being repeated
+
         ecl = self.expected_condition()
 
         df = pd.DataFrame()
@@ -852,7 +851,7 @@ class Component(PofBase):
 
     def plot_summary(self, cohort=None):
 
-        df = self.expected_forecast_table(cohort=cohort)
+        df = self.calc_summary(cohort=cohort)
         fig = make_table_fig(df)
 
         return fig
@@ -1059,34 +1058,6 @@ def df_order(df=None, column=None, var=None):
 
     return df_ordered
 
-
-def scale_units(df, input_units: str = None, model_units: str = None):
-
-    # expand to include all cols
-    time_cols = ["time", "age"]
-    unit_cols = list(set(time_cols) & set(df.columns))
-
-    input_factor = valid_units.get(input_units, None)
-    model_factor = valid_units.get(model_units, None)
-
-    units = input_units
-
-    if input_factor is None:
-        units = model_units
-    elif model_factor is None:
-        logging.warning("Invalid model units. No scaling completed")
-    else:
-        ratio = model_factor / input_factor
-
-        # Scale the columns
-        df = copy.deepcopy(df)
-        df.loc[:, unit_cols] = df[unit_cols] * ratio
-
-        # Scale the index
-        if df.index.name in time_cols:
-            df.index.name *= ratio
-
-    return df, units
 
 
 if __name__ == "__main__":

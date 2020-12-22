@@ -2,6 +2,8 @@ import logging
 
 import pandas as pd
 
+from pof.units import scale_units
+
 
 class SimpleFleet:
     def __init__(self, filename=None):
@@ -75,11 +77,16 @@ class SimpleFleet:
 
         return self.df_forecast
 
-    def get_task_forecast(self, df_erc=None):
+    def get_task_forecast(self, df_erc=None, units=None):
         """ Get the number of assets that would require each task by year """
 
+        # Scale to ensure age merge
+        df_forecast, __ = scale_units(
+            self.df_forecast, "years", units
+        )  
+
         # Merge with the estimated risk cost
-        df = self.df_forecast.merge(df_erc, left_on="age", right_on="time")
+        df = df_forecast.merge(df_erc, left_on="age", right_on="time")
 
         # Calculated population outcomes
         df["pop_quantity"] = df["assets"] * df["quantity"]
