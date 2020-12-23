@@ -8,6 +8,7 @@ import logging
 
 import pandas as pd
 import numpy as np
+import json
 
 from config import config
 
@@ -43,8 +44,10 @@ class AssetModelLoader:
             self.set_filename(filename)
 
         # Load the data
-        # if self.filename.endswith()
-        data = self.load_xlsx()
+        if filename[-4:] == "json":
+            data = self.load_json()
+        else:
+            data = self.load_xlsx()
 
         logging.info("Asset Model Loaded")
         return data
@@ -104,6 +107,20 @@ class AssetModelLoader:
         df[key_list] = df[key_list].ffill()
 
         self.df = df
+
+    def load_json(self):
+        """
+        Use a dictionary in a json file to create an asset model
+        """
+
+        with open(self.filename) as json_file:
+            data = json.load(json_file)
+
+        self.df = pd.DataFrame.from_dict(data)
+
+        comp_data = self._get_component_data(self.df)
+
+        return comp_data
 
     def load_pof_object(self):
 

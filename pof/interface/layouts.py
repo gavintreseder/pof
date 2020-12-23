@@ -51,6 +51,7 @@ from config import config
 
 SCALING = cf.scaling
 defaults = config["Layouts"]
+data = config["Main"]
 TIME_VARS = [
     "t_end" "pf_interval",
     "pf_std",
@@ -138,6 +139,9 @@ def make_layout(comp):
     consequence_default = comp.get_consequence_default()
     consequence_input = make_consequence_input(consequence_default=consequence_default)
 
+    file_input = make_file_name_input()
+    save_button = make_save_button()
+
     # Make layout
     layouts = html.Div(
         [
@@ -150,6 +154,8 @@ def make_layout(comp):
                     ),
                     dbc.Col(
                         [
+                            dbc.Row([file_input]),
+                            dbc.Row([save_button]),
                             dbc.Row([consequence_input]),
                             dbc.Row([ind_inputs]),
                         ]
@@ -198,7 +204,7 @@ def make_layout(comp):
                     ),
                 ]
             ),
-            mcl,
+            html.Div(id="param_layout", children=mcl),
             sim,
         ]
     )
@@ -1074,6 +1080,57 @@ def make_sim_layout():
                     ]
                 ),
                 id="sim_params-collapse",
+            ),
+        ]
+    )
+
+    return layout
+
+
+def make_file_name_input():
+    layout = dbc.InputGroup(
+        [
+            dbc.InputGroupAddon(
+                [
+                    "File Name",
+                    dcc.Input(
+                        id="file_name-input",
+                        value=data.get("file_name_default"),
+                        type="text",
+                        # style={"width": 100},
+                        debounce=True,
+                    ),
+                ],
+                addon_type="prepend",
+            ),
+        ]
+    )
+
+    return layout
+
+
+def make_save_button():
+    layout = dbc.InputGroup(
+        [
+            dbc.Col(
+                [
+                    dbc.Button(
+                        "Save Component",
+                        color="link",
+                        id="save-button",
+                        disabled=False,
+                    )
+                ]
+            ),
+            dbc.Col(
+                [
+                    dbc.Button(
+                        "Load Component",
+                        color="link",
+                        id="load-button",
+                        disabled=False,
+                    )
+                ]
             ),
         ]
     )

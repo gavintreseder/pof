@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 from statistics import mean
+import json
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -37,6 +38,7 @@ from pof.interface.figures import (
 )
 from pof.data.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
+from pof.paths import Paths
 
 DEFAULT_ITERATIONS = 10
 
@@ -144,6 +146,15 @@ class Component(PofBase):
         for ind in self.indicator.values():
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
+
+    def save(self, file_name):
+        """ Save a json file with a component """
+
+        # Create the data set
+        data = self.to_dict()
+
+        with open(Paths()._input_path + file_name, "w") as json_file:
+            json.dump(data, json_file)
 
     # ****************** Set data ******************
 
@@ -633,7 +644,7 @@ class Component(PofBase):
 
         for i in np.arange(lower, upper + step_size, step_size):
             if not self.up_to_date:
-                return 'sim cancelled'
+                return "sim cancelled"
             try:
                 # Reset component
                 self.reset()
@@ -859,6 +870,9 @@ class Component(PofBase):
         # Reset stored reports
         self.df_erc = None
         self.df_sens = None
+        self.df_pof = None
+        self.df_cond = None
+        self.df_task = None
 
     # ****************** Interface ******************
 

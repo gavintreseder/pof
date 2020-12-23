@@ -8,6 +8,9 @@ y_value_default = "cost_cumulative"
 axis_lock = true
 collapse_open = false
 
+[Main]
+file_name_default = "Asset Model - Pole - Timber.xlsx"
+
 [PofBase]
 on_error_use_default = true
 handle_invalid_data = true

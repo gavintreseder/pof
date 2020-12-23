@@ -354,6 +354,15 @@ class TestPofBaseCommon(object):
             self.tc.assertEqual(return_value[i], current_value[i])
             i = i + 1
 
+        # Additional test
+        instance_1 = self._class.from_dict(self._data_complete[0])
+        instance_2 = self._class.from_dict(self._data_complete[0])
+
+        instance_1.units = "months"
+        instance_1.units = "years"
+
+        self.tc.assertEqual(instance_1, instance_2)
+
 
 class TestPofBase(TestPofBaseCommon, unittest.TestCase):
     def setUp(self):
