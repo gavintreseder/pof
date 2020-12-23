@@ -104,11 +104,6 @@ class FailureMode(PofBase):
         **kwargs,
     ):
 
-    for k, v in obj.ietms()
-        obj[k] = dict(v)
-        for key, value in v.items():
-            value = value._to_dict()
-
         super().__init__(name=name, **kwargs)
 
         self.dists = PofContainer()
