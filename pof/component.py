@@ -4,8 +4,9 @@ Author: Gavin Treseder
 """
 
 # ************ Packages ********************
-from typing import Dict
+import copy
 import logging
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -39,6 +40,8 @@ from pof.interface.figures import (
 from pof.data.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.paths import Paths
+from pof.units import scale_units, unit_ratio
+from pof.decorators import coerce_arg_type
 
 DEFAULT_ITERATIONS = 10
 
@@ -157,8 +160,8 @@ class Component(PofBase):
             json.dump(data, json_file)
 
     # ****************** Set data ******************
-
-    def mc(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
+    @coerce_arg_type
+    def mc(self, t_end: int, t_start: int = 0, n_iterations: int = DEFAULT_ITERATIONS):
         """ Complete MC simulation and calculate all the metrics for the component"""
 
         # Simulate a timeline
@@ -341,81 +344,6 @@ class Component(PofBase):
 
         return df
 
-    def expected_forecast_table(self, cohort=None):
-        """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
-        # Get the key data from each of the failuremodes
-        summary = {}
-
-        for fm in self.fm.values():
-            if fm.active:
-                insp_effective = fm.inspection_effectiveness()
-                _ff = fm.expected_ff()
-                _cf = fm.expected_cf()
-
-                summary[fm.name] = {
-                    "fm": fm.name,
-                    "ie": insp_effective,
-                    "is": self._sim_counter - len(_cf) - len(_ff),
-                    "ff": len(_ff),
-                    "cf": len(_cf),
-                }
-
-                if cohort is not None:
-                    f_names = ["cf", "ff"]
-                    f_ages = [_cf, _ff]
-                    for f_name, f_age in zip(f_names, f_ages):
-                        age, count = np.unique(f_age, return_counts=True)
-                        summary[fm.name][f_name + "_pop_annual_avg"] = (
-                            cohort.reindex(age).mul(count, axis=0).sum()[0]
-                            / self._sim_counter
-                        )
-
-        df = pd.DataFrame.from_dict(summary).T
-
-        # Calculate the total row and append to the df
-        total = {
-            "fm": "total",
-            "ie": df["ie"].prod(),
-            "is": self._sim_counter - df[["ff", "cf"]].sum().sum(),
-            "ff": df["ff"].sum(),
-            "cf": df["cf"].sum(),
-        }
-        df = df.append(total, ignore_index=True).set_index("fm")
-
-        # Calculate simulated effectiveness
-        mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df["sim"] = df.loc[mask_failures, "cf"] / (
-            df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"]
-        )
-        df["sim"].fillna("")
-
-        # Add the cohort data if it is supplied
-        if cohort is not None:
-            df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
-            df.loc["total", "ff_pop_annual_avg"] = df["ff_pop_annual_avg"].sum()
-            df.loc["total", "total"] = cohort["assets"].sum()
-
-        # Format for display
-        col_order = [
-            "fm",
-            "ie",
-            "is",
-            "cf",
-            "ff",
-            "sim",
-            "cf_pop_annual_avg",
-            "ff_pop_annual_avg",
-            "total",
-        ]
-        df = df.reset_index().reindex(columns=col_order)
-
-        percent_col = ["ie", "sim"]
-        df[percent_col] = df[percent_col].mul(100)
-        rename_cols = {col: col + " (%)" for col in percent_col}
-        df.rename(columns=rename_cols, inplace=True)
-
-        return df
-
     def expected_cf(self):
         """ Returns the conditional failures for the component """
         t_cf = []
@@ -548,8 +476,7 @@ class Component(PofBase):
             # df[col + "_lifecycle"] = df[col] / df['_annual'] self.expected_life()
 
         # Formatting
-        self.df_erc = df_order(df=df, column="task")
-        # TODO Mel change the function name to be order_df df_order makes it look like a variable not a function
+        self.df_erc = sort_df(df=df, column="task")
 
         return self.df_erc
 
@@ -729,18 +656,49 @@ class Component(PofBase):
 
         return self.df_pof
 
-    def calc_df_task_forecast(self, fleet_data):
-        """ Create the task plot dataframe """
+    def calc_df_task_forecast(self, df_age_forecast, age_units="years"):
+        """Create the task plot dataframe
 
-        df = fleet_data.get_task_forecast(df_erc=self.df_erc)
+        age_units - the units for the age in df_forecast age
+        """
 
-        df_ordered = df_order(df=df, column="task")
+        # Scale the units to match the desired outputs
+        df_age_forecast, __ = scale_units(df_age_forecast, self.units, age_units)
 
-        self.df_task = df_ordered
+        # Convert to floats for merging
+        df_erc = copy.deepcopy(self.df_erc)
+        df_erc["time"] = df_erc["time"].astype(float)
+        df_age_forecast["age"] = df_age_forecast["age"].astype(float)
+
+        # Merge the population details
+
+        df = pd.merge_asof(
+            df_erc.sort_values("time"),
+            df_age_forecast.sort_values("age"),
+            left_on="time",
+            right_on="age",
+            tolerance=unit_ratio(age_units, self.units),
+        )
+
+        # Calculated population outcomes
+        df["pop_quantity"] = df["assets"] * df["quantity"]
+        df["pop_cost"] = df["pop_quantity"] * df["cost"]
+
+        # Regroup into a task forecast
+        df = (
+            df.groupby(by=["year", "task", "active"])[["pop_quantity", "pop_cost"]]
+            .sum()
+            .reset_index()
+        )
+
+        self.df_task = sort_df(df=df, column="task")
 
         return self.df_task
 
     def calc_df_cond(self):
+
+        # TODO fix this so that it isn't being repeated
+
         ecl = self.expected_condition()
 
         df = pd.DataFrame()
@@ -750,9 +708,88 @@ class Component(PofBase):
             df["y" + str(i)] = data
             i = i + 1
 
+            # TODO temp fix that won't work for t_start
+            df["time"] = df.index
+
         self.df_cond = df
 
         return self.df_cond
+
+    def calc_summary(self, df_cohort=None):
+        """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
+        # Get the key data from each of the failuremodes
+        summary = {}
+
+        for fm in self.fm.values():
+            if fm.active:
+                insp_effective = fm.inspection_effectiveness()
+                _ff = fm.expected_ff()
+                _cf = fm.expected_cf()
+
+                summary[fm.name] = {
+                    "fm": fm.name,
+                    "ie": insp_effective,
+                    "is": self._sim_counter - len(_cf) - len(_ff),
+                    "ff": len(_ff),
+                    "cf": len(_cf),
+                }
+
+                if df_cohort is not None:
+
+                    f_names = ["cf", "ff"]
+                    f_ages = [_cf, _ff]
+                    for f_name, f_age in zip(f_names, f_ages):
+                        age, count = np.unique(f_age, return_counts=True)
+                        summary[fm.name][f_name + "_pop_annual_avg"] = (
+                            df_cohort.reindex(age).mul(count, axis=0).sum()[0]
+                            / self._sim_counter
+                        )
+
+        df = pd.DataFrame.from_dict(summary).T
+
+        # Calculate the total row and append to the df
+        total = {
+            "fm": "total",
+            "ie": df["ie"].prod(),
+            "is": self._sim_counter - df[["ff", "cf"]].sum().sum(),
+            "ff": df["ff"].sum(),
+            "cf": df["cf"].sum(),
+        }
+        df = df.append(total, ignore_index=True).set_index("fm")
+
+        # Calculate simulated effectiveness
+        mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
+        df["sim"] = df.loc[mask_failures, "cf"] / (
+            df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"]
+        )
+        df["sim"].fillna("")
+
+        # Add the cohort data if it is supplied
+        if df_cohort is not None:
+            df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
+            df.loc["total", "ff_pop_annual_avg"] = df["ff_pop_annual_avg"].sum()
+            df.loc["total", "total"] = df_cohort["assets"].sum()
+
+        # Format for display
+        col_order = [
+            "fm",
+            "ie",
+            "is",
+            "cf",
+            "ff",
+            "sim",
+            "cf_pop_annual_avg",
+            "ff_pop_annual_avg",
+            "total",
+        ]
+        df = df.reset_index().reindex(columns=col_order)
+
+        percent_col = ["ie", "sim"]
+        df[percent_col] = df[percent_col].mul(100)
+        rename_cols = {col: col + " (%)" for col in percent_col}
+        df.rename(columns=rename_cols, inplace=True)
+
+        return df
 
     # ***************** Figures *****************
 
@@ -762,33 +799,45 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         keep_axis=False,
+        units: str = None,
         prev=None,
     ):
         """ Returns a cost figure if df has aleady been calculated"""
         # TODO Add conversion for units when plotting if units != self.units
 
+        df, units = scale_units(
+            df=self.df_erc, input_units=units, model_units=self.units
+        )
+
         return make_ms_fig(
-            df=self.df_erc,
+            df=df,
             y_axis=y_axis,
             keep_axis=keep_axis,
-            units=self.graph_units,
+            units=units,
             prev=prev,
         )
 
-    def plot_pof(self, keep_axis=False, prev=None):
+    def plot_pof(self, keep_axis=False, units=None, prev=None):
         """ Returns a pof figure if df has aleady been calculated"""
 
-        return update_pof_fig(
-            df=self.df_pof, keep_axis=keep_axis, units=self.graph_units, prev=prev
+        df, units = scale_units(
+            df=self.df_pof, input_units=units, model_units=self.units
         )
 
-    def plot_cond(self, keep_axis=False, prev=None):
+        return update_pof_fig(df=df, keep_axis=keep_axis, units=units, prev=prev)
+
+    def plot_cond(self, keep_axis=False, units=None, prev=None):
         """ Returns a condition figure if df has aleady been calculated"""
+
+        df, units = scale_units(
+            df=self.df_cond, input_units=units, model_units=self.units
+        )
+
         return update_condition_fig(
-            df=self.df_cond,
+            df=df,
             ecl=self.expected_condition(),
             keep_axis=keep_axis,
-            units=self.graph_units,
+            units=units,
             prev=prev,
         )
 
@@ -809,22 +858,24 @@ class Component(PofBase):
         self,
         y_axis="cost_cumulative",
         keep_axis=False,
-        units=NotImplemented,  # TODO add a plot here to make sure it
+        units=None,
         var_id="",
         prev=None,
     ):
         """ Returns a sensitivity figure if df_sens has aleady been calculated"""
         var_name = var_id.split("-")[-1]
-        df = df_order(
+        df = sort_df(
             df=self.df_sens, column="source", var=var_name
         )  # Sens ordered here as x var is needed
+
+        df, units = scale_units(df, units, self.units)
 
         return make_sensitivity_fig(
             df=df,
             var_name=var_name,
             y_axis=y_axis,
             keep_axis=keep_axis,
-            units=self.graph_units,
+            units=units,
             prev=prev,
         )
 
@@ -835,9 +886,9 @@ class Component(PofBase):
 
         return fig
 
-    def plot_summary(self, cohort=None):
+    def plot_summary(self, df_cohort=None):
 
-        df = self.expected_forecast_table(cohort=cohort)
+        df = self.calc_summary(df_cohort=df_cohort)
         fig = make_table_fig(df)
 
         return fig
@@ -883,6 +934,7 @@ class Component(PofBase):
         for attr, detail in data.items():
             if attr == "task_group_name":
                 self.update_task_group(detail)
+
             elif attr == "consequence":
                 self.update_consequence(detail)
 
@@ -994,7 +1046,7 @@ class Component(PofBase):
         return cls.load(demo.component_data["comp"])
 
 
-def df_order(df=None, column=None, var=None):
+def sort_df(df=None, column=None, var=None):
     """
     sorts the dataframes for the graphs with total, risk and direct first
     """

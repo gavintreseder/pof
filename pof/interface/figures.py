@@ -37,7 +37,7 @@ def make_ms_fig(
 
         # Format the labels
         labels = {label: label.replace("_", " ").title() for label in list(df)}
-        labels["Time"] = f"Age ({units})"
+        labels["time"] = f"Age ({units})"
 
         px_args = dict(
             data_frame=df,
@@ -122,6 +122,8 @@ def update_condition_fig(
 ):
     """ Updates the condition figure"""
 
+    # TODO remake this so that it takes a df in the right format and filter, rather than repeat expected condition twice
+
     try:
         subplot_titles = [x.replace("_", " ").title() for x in list(ecl.keys())]
 
@@ -134,7 +136,7 @@ def update_condition_fig(
 
         cmap = px.colors.qualitative.Safe
         idx = 1
-
+        time = df['time']
         for cond_name, cond in ecl.items():
             # Format the y_axis titles
             y_title = "".join(
@@ -143,9 +145,9 @@ def update_condition_fig(
 
             # Format the data for plotting
             length = len(cond["mean"])
-            time = np.linspace(
-                0, length - 1, length, dtype=int
-            )  # TODO take time as a variable
+            # time = np.linspace(
+            #     0, length - 1, length, dtype=int
+            # )  # TODO take time as a variable
             x = np.append(time, time[::-1])
             y = df["y" + str(idx)]
 
@@ -261,12 +263,20 @@ def make_sensitivity_fig(
         if y_max is not None:
             fig.update_yaxes(range=[0, y_max])
 
-        if var in ("t_delay", "t_interval"):
+        if var in (
+            "t_delay",
+            "t_interval",
+            "pf_interval",
+            "pf_std",
+            "alpha",
+            "beta",
+            "gamma",
+        ):
             col_names = {"time": f"{var} ({units})"}
             fig.update_xaxes(title_text=col_names["time"])
 
         fig = update_visibility(fig, prev)
-        fig.update_layout(xaxis=dict(tickvals=df_plot[var].tolist()))
+        # fig.update_layout(xaxis=dict(tickvals=df_plot[var].tolist()))
 
     except Exception as error:
         raise error
@@ -327,7 +337,7 @@ def make_pop_table_fig(df):
 
     fig = go.Figure(data=[tbl])
 
-    fig.update_layout(title="Population Summary")
+    fig.update_layout(title="Forecast Summary")
 
     return fig
 
@@ -345,7 +355,7 @@ def make_table_fig(df):
         ]
     )
 
-    fig.update_layout(title="Population Summary")
+    fig.update_layout(title="Forecast Summary")
 
     return fig
 

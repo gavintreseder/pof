@@ -178,7 +178,7 @@ class Indicator(PofBase):
         return self._pf_interval
 
     @pf_interval.setter
-    @coerce_arg_type
+    # @check_arg_positive("value")
     def pf_interval(self, value: float):
         self._pf_interval = value
 
@@ -495,8 +495,7 @@ class ConditionIndicator(Indicator):
         if pf_std is None:
             pf_std = self.pf_std
 
-        # Get the time to be investigated #TODO Does this work GTGTGTGT
-        x = np.linspace(0, pf_interval, pf_interval + 1)
+        x = np.arange(0, pf_interval + 1, 1)
 
         if self._pf_curve == "linear":
             # Prevent zero division error
