@@ -485,28 +485,51 @@ class PofBase:
 
     def to_dict(self):
         """ Create a dict of the comp object to save to a json file """
-        # Get all of the things on self.__dict__
-        data_set = self.__dict__
 
-        # Get the information needed to create nother object
+        # Get the first layer
+        data_req = self.get_attr(data_req={})
+
+        # Unpack
+        data_req_unpacked = self.unpack_container(data_req)
+
+        return data_req_unpacked
+
+    def get_attr(self, data_req):
+        """ Create a dictionary of signature and attribute values of the class """
+
+        # Get the information needed to create object
         sig_list = list(get_signature(self.__class__))
 
-        # Create a dict of those items
-        data_req = {}
         for attr in sig_list:
             if hasattr(self, attr):
                 data_req[attr] = getattr(self, attr)
 
+        return data_req
+
+    def unpack_container(self, data_req):
+        """ Unpack the PofContainer and PofBase objects to create a dict """
+
         # Loop through all the items to keep
         for attr, val in data_req.items():
-            # Check if it is a container unpack it
+            # Check if it is a container and unpack it
             if isinstance(val, PofContainer):
-                data_req[attr] = dict(val)
-                # Unpack pof objects in those containers
-                for name, pof_obj in data_req[attr].items():
-                    data_req[attr][name] = pof_obj.to_dict()
+                data_req[attr] = val.data
+            # Check if it is a pof base and unpack it
             elif isinstance(val, PofBase):
-                data_req[attr] = val.to_dict()
+                data_req[attr] = {}
+                sig_list = list(get_signature(val.__class__))
+                sig_list = [n for n in sig_list if n != "component"]
+                for var in sig_list:
+                    if hasattr(val, var):
+                        if getattr(val, var) != NotImplemented:
+                            data_req[attr][var] = getattr(val, var)
+
+        # Trigger the call again to unpack the next layer
+        for attr, val in data_req.items():
+            if isinstance(val, dict):
+                for name, value in data_req[attr].items():
+                    if isinstance(value, (PofContainer, PofBase)):
+                        self.unpack_container(data_req[attr])
 
         return data_req
 

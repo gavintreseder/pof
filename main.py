@@ -93,12 +93,13 @@ def load_file(click, file_name_asset_data):
 )
 def save_file(click, file_name_new):
     """ Save a component dict to a json file """
-    # If file_name_new ends in xlsx, replace with json
-    if file_name_new[-4:] == "xlsx":
-        file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
+    if click:
+        # If file_name_new ends in xlsx, replace with json
+        if file_name_new[-4:] == "xlsx":
+            file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
 
-    # Save to json
-    comp.save(file_name_new)
+        # Save to json
+        comp.save(file_name_new)
 
     return False
 

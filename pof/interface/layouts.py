@@ -795,11 +795,11 @@ def make_input_component(update_list_unit, unit_default):
                 [
                     dbc.Col(
                         [
-                            "Axis Lock",
                             dbc.Checkbox(
                                 id="axis_lock-checkbox",
                                 checked=defaults.get("axis_lock"),
                             ),
+                            "Axis Lock",
                         ]
                     )
                 ]

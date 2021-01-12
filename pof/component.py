@@ -156,7 +156,7 @@ class Component(PofBase):
         # Create the data set
         data = self.to_dict()
 
-        with open(Paths()._input_path + file_name, "w") as json_file:
+        with open(Paths()._input_path + "\\" + file_name, "w") as json_file:
             json.dump(data, json_file)
 
     # ****************** Set data ******************
@@ -1094,9 +1094,9 @@ def sort_df(df=None, column=None, var=None):
 
     # Sort by sort column list
     df[column] = pd.Categorical(df[column], return_order)
-    df_ordered = df.sort_values(by=columns)
+    ordered_df = df.sort_values(by=columns)
 
-    return df_ordered
+    return ordered_df
 
 
 if __name__ == "__main__":
