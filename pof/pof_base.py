@@ -27,7 +27,8 @@ from pof.pof_container import PofContainer
 from pof.helper import str_to_dict, valid_signature
 from config import config
 from pof.units import valid_units
-
+from pof.helper import get_signature
+from pof.pof_container import PofContainer
 
 cf = config["PofBase"]
 
@@ -45,6 +46,7 @@ class PofBase:
 
         self.name = name
         self.units = units
+        self.graph_units = units  # TODO temp fix
 
         # Dash feature
         self.up_to_date = True
@@ -480,6 +482,56 @@ class PofBase:
 
     def mc_timeline(self, t_start=None, t_end=None, n_iterations=None):
         raise NotImplementedError()
+
+    def to_dict(self):
+        """ Create a dict of the comp object to save to a json file """
+
+        # Get the first layer
+        data_req = self.get_attr(data_req={})
+
+        # Unpack
+        data_req_unpacked = self.unpack_container(data_req)
+
+        return data_req_unpacked
+
+    def get_attr(self, data_req):
+        """ Create a dictionary of signature and attribute values of the class """
+
+        # Get the information needed to create object
+        sig_list = list(get_signature(self.__class__))
+
+        for attr in sig_list:
+            if hasattr(self, attr):
+                data_req[attr] = getattr(self, attr)
+
+        return data_req
+
+    def unpack_container(self, data_req):
+        """ Unpack the PofContainer and PofBase objects to create a dict """
+
+        # Loop through all the items to keep
+        for attr, val in data_req.items():
+            # Check if it is a container and unpack it
+            if isinstance(val, PofContainer):
+                data_req[attr] = val.data
+            # Check if it is a pof base and unpack it
+            elif isinstance(val, PofBase):
+                data_req[attr] = {}
+                sig_list = list(get_signature(val.__class__))
+                sig_list = [n for n in sig_list if n != "component"]
+                for var in sig_list:
+                    if hasattr(val, var):
+                        if getattr(val, var) != NotImplemented:
+                            data_req[attr][var] = getattr(val, var)
+
+        # Trigger the call again to unpack the next layer
+        for attr, val in data_req.items():
+            if isinstance(val, dict):
+                for name, value in data_req[attr].items():
+                    if isinstance(value, (PofContainer, PofBase)):
+                        self.unpack_container(data_req[attr])
+
+        return data_req
 
 
 def update_dict(data: Dict, update: Dict):

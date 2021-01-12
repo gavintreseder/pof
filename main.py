@@ -12,16 +12,28 @@ from pof import Component
 from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
-from pof.interface.layouts import (
-    make_layout,
-    cf,
-    scale_input,
-)
+from pof.interface.layouts import make_layout, cf, scale_input, make_component_layout
 
 # TODO fix the need to import cf
 
 from pof.data.asset_data import SimpleFleet
 from pof.paths import Paths
+
+data = config["Main"]
+
+# Turn off logging level to speed up implementation
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
+
+# Build App
+external_stylesheets = [dbc.themes.BOOTSTRAP]
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+server = app.server
+
+# ========================================================
+# Load the data sets.
+# ========================================================
 
 # Forecast years
 START_YEAR = 2015
@@ -40,22 +52,12 @@ sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 # Asset Model Data
 file_path = paths._demo_path + os.sep
-FILE_NAME = r"Asset Model - Pole - Timber.xlsx"
+FILE_NAME = data.get("file_name_default")
 
 aml = AssetModelLoader(file_path + FILE_NAME)
-comp_data = aml.load()
+comp_data = aml.load(filename=file_path + FILE_NAME)
 comp = Component.from_dict(comp_data["pole"])
 comp.fleet_data = sfd  # TODO fix by creating asset class
-
-# Turn off logging level to speed up implementation
-logging.getLogger().setLevel(logging.INFO)
-logging.getLogger("werkzeug").setLevel(logging.WARNING)
-
-# Build App
-external_stylesheets = [dbc.themes.BOOTSTRAP]
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-server = app.server
 
 # Globals
 pof_sim = copy.copy(comp)
@@ -64,6 +66,43 @@ sens_sim = copy.copy(comp)
 # Layout
 var_to_scale = cf.scaling
 app.layout = make_layout(comp)
+
+
+@app.callback(
+    Output("param_layout", "children"),
+    Input("load-button", "n_clicks"),
+    State("file_name-input", "value"),
+)
+def load_file(click, file_name_asset_data):
+    """ Load the data of the user input file """
+
+    aml_new = AssetModelLoader(file_path + file_name_asset_data)
+    comp_data_new = aml_new.load(filename=file_path + file_name_asset_data)
+    comp_new = Component.from_dict(comp_data_new["pole"])
+    comp_new.fleet_data = sfd  # TODO fix by creating asset class
+
+    param_layout = make_component_layout(comp_new)
+
+    return param_layout
+
+
+@app.callback(
+    Output("save-button", "disabled"),
+    Input("save-button", "n_clicks"),
+    State("file_name-input", "value"),
+)
+def save_file(click, file_name_new):
+    """ Save a component dict to a json file """
+    if click:
+        # If file_name_new ends in xlsx, replace with json
+        if file_name_new[-4:] == "xlsx":
+            file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
+
+        # Save to json
+        comp.save(file_name_new)
+
+    return False
+
 
 # ========================================================
 # Collapsable objects to hide information when not needed.
