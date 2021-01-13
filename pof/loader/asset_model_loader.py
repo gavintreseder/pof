@@ -17,7 +17,7 @@ cf = config["AssetModelLoader"]
 
 class AssetModelLoader:
     """
-    ModelLoader is used to load model parameters from an excel sheet and transform them into a json/dict structure that can be used to load pof objects.
+    ModelLoader is used to load model parameters from an excel sheet or a json file and transform them into a json/dict structure that can be used to load pof objects.
 
 
     Usage:
@@ -45,8 +45,10 @@ class AssetModelLoader:
 
         # Load the data
         if filename[-4:] == "json":
+            logging.info("Loading json file")
             data = self.load_json()
         else:
+            logging.info("Loading excel file")
             data = self.load_xlsx()
 
         logging.info("Asset Model Loaded")
@@ -112,15 +114,17 @@ class AssetModelLoader:
         """
         Use a dictionary in a json file to create an asset model
         """
+        try:
+            with open(self.filename) as json_file:
+                comp_data = json.load(json_file)
 
-        with open(self.filename) as json_file:
-            data = json.load(json_file)
+            self.df = pd.DataFrame.from_dict(comp_data)
+            
+            return comp_data
 
-        self.df = pd.DataFrame.from_dict(data)
+        except Exception as error:
+            logging.error("Error saving file", exc_info=error)
 
-        comp_data = self._get_component_data(self.df)
-
-        return comp_data
 
     def load_pof_object(self):
 

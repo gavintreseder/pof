@@ -43,7 +43,7 @@ CURRENT_YEAR = 2020
 paths = Paths()
 
 # Population Data
-file_path = paths._input_path + os.sep
+file_path = paths.input_path + os.sep
 FILE_NAME = r"population_summary.csv"
 
 sfd = SimpleFleet(file_path + FILE_NAME)
@@ -51,12 +51,12 @@ sfd.load()
 sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 # Asset Model Data
-file_path = paths._demo_path + os.sep
+file_path = paths.model_path + os.sep
 FILE_NAME = data.get("file_name_default")
 
 aml = AssetModelLoader(file_path + FILE_NAME)
 comp_data = aml.load(filename=file_path + FILE_NAME)
-comp = Component.from_dict(comp_data["pole"])
+comp = Component.from_dict(comp_data["pole"])  # TODO hardcoded for poles
 comp.fleet_data = sfd  # TODO fix by creating asset class
 
 # Globals
@@ -70,38 +70,65 @@ app.layout = make_layout(comp)
 
 @app.callback(
     Output("param_layout", "children"),
+    Output("load_error-input", "hidden"),
+    Output("load_success-input", "hidden"),
     Input("load-button", "n_clicks"),
     State("file_name-input", "value"),
 )
-def load_file(click, file_name_asset_data):
+def load_file(click_load, file_name_new):
     """ Load the data of the user input file """
+    data_set = None
+    error_hide = True
+    success_hide = True
 
-    aml_new = AssetModelLoader(file_path + file_name_asset_data)
-    comp_data_new = aml_new.load(filename=file_path + file_name_asset_data)
-    comp_new = Component.from_dict(comp_data_new["pole"])
-    comp_new.fleet_data = sfd  # TODO fix by creating asset class
+    if click_load:
+        file_path_new = paths.model_path + os.sep + file_name_new
 
-    param_layout = make_component_layout(comp_new)
+        if os.path.exists(file_path_new):
+            aml_new = AssetModelLoader(file_path_new)
+            comp_data_new = aml_new.load(file_path_new)
+            comp_new = Component.from_dict(comp_data_new["pole"])
+            comp_new.fleet_data = sfd  # TODO fix by creating asset class
 
-    return param_layout
+            data_set = comp_new
+            success_hide = False
+
+        else:
+            data_set = comp
+            error_hide = False
+
+    else:
+        data_set = comp
+
+    return make_component_layout(data_set), error_hide, success_hide
 
 
 @app.callback(
-    Output("save-button", "disabled"),
+    Output("save_error-input", "hidden"),
+    Output("save_success-input", "hidden"),
     Input("save-button", "n_clicks"),
     State("file_name-input", "value"),
 )
-def save_file(click, file_name_new):
-    """ Save a component dict to a json file """
-    if click:
-        # If file_name_new ends in xlsx, replace with json
-        if file_name_new[-4:] == "xlsx":
-            file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
+def save_file(click_save, file_name_new):
+    """ Save the data of the user input file """
+    error_hide = True
+    success_hide = True
 
-        # Save to json
-        comp.save(file_name_new)
+    if click_save:
+        try:
+            # If file_name_new ends in xlsx, replace with json
+            if file_name_new[-4:] == "xlsx":
+                file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
 
-    return False
+            # Save to json
+            comp.save(file_name_new)
+            success_hide = False
+
+        except Exception as error:
+            logging.error("Error saving file", exc_info=error)
+            error_hide = False
+
+    return error_hide, success_hide
 
 
 # ========================================================
@@ -199,9 +226,10 @@ def update_parameter(model_units, cons, input_units, *args):
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
+    Input("param_layout", "children"),
     State("input_units-dropdown", "value"),
 )
-def update_simulation(__, active, t_end, n_iterations, input_units):
+def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global pof_sim
     global sfd
@@ -362,7 +390,11 @@ def update_sensitivity(
         )
 
         sens_fig = sens_sim.plot_sens(
-            var_id=var_id, y_axis=y_axis, keep_axis=keep_axis, prev=prev_sens, units=input_units
+            var_id=var_id,
+            y_axis=y_axis,
+            keep_axis=keep_axis,
+            prev=prev_sens,
+            units=input_units,
         )
 
         return sens_fig

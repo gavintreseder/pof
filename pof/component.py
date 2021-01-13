@@ -156,7 +156,7 @@ class Component(PofBase):
         # Create the data set
         data = self.to_dict()
 
-        with open(Paths()._input_path + "\\" + file_name, "w") as json_file:
+        with open(Paths().model_path + "\\" + file_name, "w") as json_file:
             json.dump(data, json_file)
 
     # ****************** Set data ******************

@@ -24,10 +24,9 @@ if __package__ is None or __package__ == "":
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from pof.pof_container import PofContainer
-from pof.helper import str_to_dict, valid_signature
+from pof.helper import str_to_dict, valid_signature, get_signature
 from config import config
 from pof.units import valid_units
-from pof.helper import get_signature
 from pof.pof_container import PofContainer
 
 cf = config["PofBase"]
@@ -489,8 +488,12 @@ class PofBase:
         # Get the first layer
         data_req = self.get_attr(data_req={})
 
+        # Add the comp key
+        data_req_pole = {}
+        data_req_pole["pole"] = data_req  # TODO Hardcoded to match filter in main.py
+
         # Unpack
-        data_req_unpacked = self.unpack_container(data_req)
+        data_req_unpacked = self.unpack_container(data_req_pole)
 
         return data_req_unpacked
 

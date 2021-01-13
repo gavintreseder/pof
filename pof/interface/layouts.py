@@ -135,13 +135,8 @@ def make_layout(comp):
     mcl = make_component_layout(comp)
     sim = make_sim_layout()
 
-    indicators_default = comp.get_ind_default_values()
-    ind_inputs = make_indicator_inputs_form(indicators=indicators_default)
-    consequence_default = comp.get_consequence_default()
-    consequence_input = make_consequence_input(consequence_default=consequence_default)
-
     file_input = make_file_name_input()
-    save_button = make_save_button()
+    save_load_buttons = make_save_load_buttons()
 
     # Make layout
     layouts = html.Div(
@@ -155,10 +150,13 @@ def make_layout(comp):
                     ),
                     dbc.Col(
                         [
-                            dbc.Row([file_input]),
-                            dbc.Row([save_button]),
-                            dbc.Row([consequence_input]),
-                            dbc.Row([ind_inputs]),
+                            dbc.Row(
+                                [
+                                    dbc.Col([file_input]),
+                                    dbc.Col([save_load_buttons]),
+                                    dbc.Col(),
+                                ]
+                            )
                         ]
                     ),
                 ]
@@ -264,6 +262,14 @@ def make_component_layout(component, prefix="", sep="-"):
             make_failure_mode_layout(fm, prefix=prefix + "fm" + sep, sep=sep)
         ]
 
+    # Make the consequence layout
+    consequence_default = component.get_consequence_default()
+    consequence_input = make_consequence_input(consequence_default=consequence_default)
+
+    # Make the indicator layout
+    indicators_default = component.get_ind_default_values()
+    ind_inputs = make_indicator_inputs_form(indicators=indicators_default)
+
     # Make the layout
     layout = dbc.InputGroup(
         [
@@ -280,11 +286,17 @@ def make_component_layout(component, prefix="", sep="-"):
             ),
             dbc.Col(
                 [
-                    dbc.Collapse(
-                        dbc.Card(dbc.CardBody(fms_layout)),
-                        id=prefix + "collapse",
-                        is_open=IS_OPEN,
+                    dbc.Row(
+                        [
+                            dbc.Collapse(
+                                dbc.Card(dbc.CardBody(fms_layout)),
+                                id=prefix + "collapse",
+                                is_open=IS_OPEN,
+                            ),
+                        ]
                     ),
+                    dbc.Row(consequence_input),
+                    dbc.Row(ind_inputs),
                 ]
             ),
         ]
@@ -1108,28 +1120,40 @@ def make_file_name_input():
     return layout
 
 
-def make_save_button():
-    layout = dbc.InputGroup(
+def make_save_load_buttons():
+    layout = html.Div(
         [
-            dbc.Col(
-                [
-                    dbc.Button(
-                        "Save Component",
-                        color="link",
-                        id="save-button",
-                        disabled=False,
-                    )
-                ]
+            dbc.Button(
+                "Save Model",
+                color="link",
+                id="save-button",
+                disabled=False,
             ),
-            dbc.Col(
-                [
-                    dbc.Button(
-                        "Load Component",
-                        color="link",
-                        id="load-button",
-                        disabled=False,
-                    )
-                ]
+            dbc.Label(
+                "Error",
+                id="save_error-input",
+                hidden=True,
+            ),
+            dbc.Label(
+                "Success",
+                id="save_success-input",
+                hidden=True,
+            ),
+            dbc.Button(
+                "Load Model",
+                color="link",
+                id="load-button",
+                disabled=False,
+            ),
+            dbc.Label(
+                "Error",
+                id="load_error-input",
+                hidden=True,
+            ),
+            dbc.Label(
+                "Success",
+                id="load_success-input",
+                hidden=True,
             ),
         ]
     )
