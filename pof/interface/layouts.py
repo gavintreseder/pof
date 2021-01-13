@@ -148,17 +148,7 @@ def make_layout(comp):
                     dbc.Col(
                         [inputs],
                     ),
-                    dbc.Col(
-                        [
-                            dbc.Row(
-                                [
-                                    dbc.Col([file_input]),
-                                    dbc.Col([save_load_buttons]),
-                                    dbc.Col(),
-                                ]
-                            )
-                        ]
-                    ),
+                    dbc.Col([dbc.Row([file_input]), dbc.Row([save_load_buttons])]),
                 ]
             ),
             dbc.Row(
@@ -1099,22 +1089,18 @@ def make_sim_layout():
 
 
 def make_file_name_input():
-    layout = dbc.InputGroup(
+    layout = dbc.InputGroupAddon(
         [
-            dbc.InputGroupAddon(
-                [
-                    "File Name",
-                    dcc.Input(
-                        id="file_name-input",
-                        value=data.get("file_name_default"),
-                        type="text",
-                        # style={"width": 100},
-                        debounce=True,
-                    ),
-                ],
-                addon_type="prepend",
+            "File Name",
+            dcc.Input(
+                id="file_name-input",
+                value=data.get("file_name_default"),
+                type="text",
+                style={"width": 500},
+                debounce=True,
             ),
-        ]
+        ],
+        addon_type="prepend",
     )
 
     return layout
@@ -1123,37 +1109,47 @@ def make_file_name_input():
 def make_save_load_buttons():
     layout = html.Div(
         [
-            dbc.Button(
-                "Save Model",
-                color="link",
-                id="save-button",
-                disabled=False,
+            dbc.Row(
+                [
+                    dbc.Button(
+                        "Save Model",
+                        color="secondary",
+                        outline=True,
+                        id="save-button",
+                        className="save",
+                    ),
+                    dbc.Label(
+                        "Error",
+                        id="save_error-input",
+                        hidden=True,
+                    ),
+                    dbc.Label(
+                        "Success",
+                        id="save_success-input",
+                        hidden=True,
+                    ),
+                ]
             ),
-            dbc.Label(
-                "Error",
-                id="save_error-input",
-                hidden=True,
-            ),
-            dbc.Label(
-                "Success",
-                id="save_success-input",
-                hidden=True,
-            ),
-            dbc.Button(
-                "Load Model",
-                color="link",
-                id="load-button",
-                disabled=False,
-            ),
-            dbc.Label(
-                "Error",
-                id="load_error-input",
-                hidden=True,
-            ),
-            dbc.Label(
-                "Success",
-                id="load_success-input",
-                hidden=True,
+            dbc.Row(
+                [
+                    dbc.Button(
+                        "Load Model",
+                        color="secondary",
+                        outline=True,
+                        id="load-button",
+                        className="save",
+                    ),
+                    dbc.Label(
+                        "Error",
+                        id="load_error-input",
+                        hidden=True,
+                    ),
+                    dbc.Label(
+                        "Success",
+                        id="load_success-input",
+                        hidden=True,
+                    ),
+                ]
             ),
         ]
     )
