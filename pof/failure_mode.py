@@ -86,7 +86,7 @@ class FailureMode(PofBase):
     PF_CURVES = ["linear", "step"]
     REQUIRED_STATES = ["initiation", "detection", "failure"]
     TIME_VARIABLES = ["pf_interval", "pf_std"]
-    POF_VARIABLES = ["indicators", "tasks", "dists"]
+    POF_VARIABLES = ["indicators", "tasks", "untreated"]  # temp change to untreated
 
     def __init__(
         self,

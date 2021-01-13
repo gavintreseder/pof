@@ -677,7 +677,7 @@ class Component(PofBase):
             df_age_forecast.sort_values("age"),
             left_on="time",
             right_on="age",
-            tolerance=unit_ratio(age_units, self.units),
+            tolerance=unit_ratio(age_units, self.units) * 1.05,
         )
 
         # Calculated population outcomes
