@@ -1,23 +1,17 @@
 from pof.pof_base import PofBase
+from config import config
+
+# cf = config.get("Consequence")
 
 
 class Consequence(PofBase):
-    def __init__(self, risk_cost_total=50000):
+    def __init__(
+        self, name: str = "consequence", cost=None, group=None, *args, **kwargs
+    ):
+        super().__init__(name=name, *args, **kwargs)
 
-        self.risk_cost_total = risk_cost_total
-
-    def _load(self, *args, **kwargs):
-
-        self.risk_cost_total = 50000
-
-    def set_risk_cost_total(self, cost):
-
-        self.risk_cost_total = cost
-
-        return self
-
-    def get_cost(self):
-        return self.risk_cost_total
+        self.cost = cost
+        self.group = group
 
 
 if __name__ == "__main__":

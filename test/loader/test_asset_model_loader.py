@@ -11,9 +11,11 @@ import testconfig  # pylint: disable=unused-import
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.component import Component
 from pof.failure_mode import FailureMode
+from pof.paths import Paths
 
 # TODO move this all to a test file rather than demo
-FILENAME = r".\data\inputs\Asset Model - Demo.xlsx"
+FILEPATH = Paths().model_path
+FILENAME = FILEPATH + r"\Asset Model - Demo.xlsx"
 
 
 class TestAssetModelLoader(unittest.TestCase):
@@ -65,6 +67,11 @@ class TestAssetModelLoader(unittest.TestCase):
             comp.expected_condition()
         except:
             self.fail(msg="Component cannot get expected_condition after being loaded")
+
+        try:
+            comp.expected_risk_cost_df(t_end=100)
+        except:
+            self.fail(msg="Component cannot get expected_risk_cost after being loaded")
 
     # TODO redo test later
     # def test_load_failure_mode_condition_tasks(self):

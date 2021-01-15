@@ -48,9 +48,11 @@ from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
 from pof.units import valid_units
 from config import config
+from statistics import mean
 
 SCALING = cf.scaling
 defaults = config["Layouts"]
+comp_cf = config["Component"]
 data = config["Main"]
 TIME_VARS = [
     "t_end",
@@ -253,12 +255,10 @@ def make_component_layout(component, prefix="", sep="-"):
         ]
 
     # Make the consequence layout
-    consequence_default = component.get_consequence_default()
-    consequence_input = make_consequence_input(consequence_default=consequence_default)
+    consequence_input = make_consequence_input(component, prefix=prefix)
 
     # Make the indicator layout
-    indicators_default = component.get_ind_default_values()
-    ind_inputs = make_indicator_inputs_form(indicators=indicators_default)
+    ind_inputs = make_indicator_inputs_form(component, prefix=prefix)
 
     # Make the layout
     layout = dbc.InputGroup(
@@ -938,16 +938,25 @@ def make_sim_sens_progress():
 
 
 def make_sim_inputs(update_list_y, y_value_default):
-    form = dbc.FormGroup(
+    form = dbc.InputGroup(
         [
             dbc.Row(
                 [
-                    "y-axis options",
-                    dcc.Dropdown(
-                        id="ms_var_y-dropdown",
-                        options=update_list_y,
-                        value=y_value_default,
-                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis options",
+                                    dcc.Dropdown(
+                                        id="ms_var_y-dropdown",
+                                        options=update_list_y,
+                                        value=y_value_default,
+                                        style={"width": 500},
+                                    ),
+                                ]
+                            )
+                        ]
+                    )
                 ]
             )
         ]
@@ -959,26 +968,46 @@ def make_sim_inputs(update_list_y, y_value_default):
 def make_sim_sens_inputs(
     update_list_y, y_value_default, update_list_sens_x, sens_x_default
 ):
-    form = dbc.FormGroup(
+    form = dbc.InputGroup(
         [
             dbc.Row(
                 [
-                    "y-axis options",
-                    dcc.Dropdown(
-                        id="sens_var_y-dropdown",
-                        options=update_list_y,
-                        value=y_value_default,
-                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "y-axis options",
+                                    dcc.Dropdown(
+                                        id="sens_var_y-dropdown",
+                                        options=update_list_y,
+                                        value=y_value_default,
+                                        style={"width": 500},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            ),
+                        ]
+                    )
                 ]
             ),
             dbc.Row(
                 [
-                    "x-axis options",
-                    dcc.Dropdown(
-                        id="sens_var_id-dropdown",
-                        options=update_list_sens_x,
-                        value=sens_x_default,
-                    ),
+                    dbc.Col(
+                        [
+                            dbc.InputGroupAddon(
+                                [
+                                    "x-axis options",
+                                    dcc.Dropdown(
+                                        id="sens_var_id-dropdown",
+                                        options=update_list_sens_x,
+                                        value=sens_x_default,
+                                        style={"width": 500},
+                                    ),
+                                ],
+                                addon_type="prepend",
+                            )
+                        ]
+                    )
                 ]
             ),
             dbc.Row(
@@ -1158,15 +1187,16 @@ def make_save_load_buttons():
 
 
 # *************** Indicator & Consequence Inputs ************
-def make_indicator_inputs_form(indicators):
+def make_indicator_inputs_form(component, prefix=""):
 
     ind_inputs = []
-    for key in indicators.keys():
-        name = str(key).replace("_", " ").capitalize()
+    for ind in component.indicator.values():
+        ind = ind.name
+        name = str(ind).replace("_", " ").capitalize()
         ind_input = dbc.InputGroup(
             [
                 dbc.Col([dbc.InputGroupAddon(name, addon_type="prepend")]),
-                make_param_inputs(indicators, key),
+                make_param_inputs(component, ind, prefix=prefix),
             ],
         )
         ind_inputs = ind_inputs + [ind_input]
@@ -1197,16 +1227,18 @@ def make_indicator_inputs_form(indicators):
     return layout
 
 
-def make_param_inputs(indicators, key):
+def make_param_inputs(component, ind, prefix="", sep="-"):
     param_inputs = []
-    for param, value in indicators[key].items():
+    params = comp_cf.get("indicator_input_fields")
+
+    for param in params:
         param_input = dbc.InputGroup(
             [
                 dbc.InputGroupAddon(param.capitalize(), className="I1"),
                 dbc.Input(
                     type="number",
-                    id=key + "_" + param + "_input",
-                    value=value,
+                    id=prefix + "indicator" + sep + ind + sep + param,
+                    value=getattr(component.indicator[ind], param),
                     debounce=True,
                     style={"width": 100},
                 ),
@@ -1219,7 +1251,11 @@ def make_param_inputs(indicators, key):
     return form
 
 
-def make_consequence_input(consequence_default):
+def make_consequence_input(component, prefix="", sep="-"):
+    vals = []
+    for fm in component.fm.values():
+        vals.append(fm.consequence.cost)
+
     layout = dbc.InputGroup(
         [
             dbc.Button(
@@ -1234,8 +1270,8 @@ def make_consequence_input(consequence_default):
                             [
                                 dbc.Input(
                                     type="number",
-                                    id="consequence_input",
-                                    value=consequence_default,
+                                    id=prefix + "consequence" + sep + "cost",
+                                    value=mean(vals),
                                     debounce=True,
                                     style={"width": 100},
                                 ),

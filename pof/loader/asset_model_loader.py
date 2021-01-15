@@ -119,12 +119,11 @@ class AssetModelLoader:
                 comp_data = json.load(json_file)
 
             self.df = pd.DataFrame.from_dict(comp_data)
-            
+
             return comp_data
 
         except Exception as error:
             logging.error("Error saving file", exc_info=error)
-
 
     def load_pof_object(self):
 
@@ -255,6 +254,9 @@ class AssetModelLoader:
             # Get the Task information
             tasks_data = self._get_task_data(df_fm)
 
+            # Get the Consequence information
+            cons_data = self._get_cons_data(df_fm)
+
             # Get the Distribution information
             dist_data = self._get_dist_data(df_fm)
 
@@ -267,6 +269,7 @@ class AssetModelLoader:
                     conditions=condition_data,
                     tasks=tasks_data,
                     untreated=dist_data,
+                    consequence=cons_data,
                 )
             )
             fms_data.update(
@@ -287,6 +290,18 @@ class AssetModelLoader:
         cond_data = df_cond.to_dict("index")
 
         return cond_data
+
+    def _get_cons_data(self, df_fm):
+
+        df_cons = df_fm["failure_model"].dropna(how="all")
+        df_cons = df_cons["consequence"]
+        df_cons["name"] = df_cons.index
+        try:
+            cons_data = df_cons.iloc[0].to_dict()
+        except IndexError:
+            cons_data = df_cons.to_dict()
+
+        return cons_data
 
     def _get_dist_data(self, df_fm):
 

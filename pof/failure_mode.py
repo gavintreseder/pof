@@ -109,7 +109,7 @@ class FailureMode(PofBase):
         self.dists = PofContainer()
         self.indicators = PofContainer()
         self.conditions = dict()
-        self.consequences = dict()
+        self.consequence = PofContainer()
         self.tasks = PofContainer()
         self.init_states = dict()
         self.states = dict()
@@ -201,9 +201,11 @@ class FailureMode(PofBase):
 
     # ************** Set Functions *****************
 
-    def set_consequence(self, consequence=NotImplemented):
-
-        self.consequence = Consequence()
+    def set_consequence(self, var=None):
+        # self.set_obj("consequence", Consequence, var)
+        self.consequence = Consequence(
+            **var
+        )  # TODO double check if set_obj will set as val not dict
 
     def set_indicators(self, var=None):
 
@@ -842,7 +844,7 @@ class FailureMode(PofBase):
     def expected_risk(self, scaling=1):
         time, count = np.unique(self._t_func_failure, return_counts=True)
         quantity = count / scaling
-        cost = quantity * self.consequence.get_cost()
+        cost = quantity * self.consequence.cost
         risk = {
             "risk": {
                 "active": self.active,
@@ -971,20 +973,16 @@ class FailureMode(PofBase):
     def update_task_group(self, data):
         """ Update the details of any task that is part of the task group"""
         # TODO replace with task group manager
-
+        logging.info(data.items())
         for task_group_name, details in data.items():
             for task in self.tasks.values():
                 if task.task_group_name == task_group_name:
                     task.update_from_dict(details)
 
-    def update_consequence(self, value):
+    def update_consequence(self, data):
         """ Update the consequence of any failure mode """
-        self.consequence.set_risk_cost_total(cost=value)
 
-    def get_consequence_default(self):
-        val = self.consequence.get_cost()
-
-        return val
+        self.consequence = Consequence(cost=data["consequence"]["cost"])
 
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
         """ Return a list of dash ids for values that can be changed"""

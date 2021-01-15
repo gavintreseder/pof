@@ -11,7 +11,6 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
-from statistics import mean
 import json
 
 # Change the system path if an individual file is being run
@@ -936,7 +935,7 @@ class Component(PofBase):
                 self.update_task_group(detail)
 
             elif attr == "consequence":
-                self.update_consequence(detail)
+                self.update_consequence(data)
 
             else:
                 super().update_from_dict({attr: detail})
@@ -948,22 +947,16 @@ class Component(PofBase):
         for fm in self.fm.values():
             fm.update_task_group(data)
 
-    def update_consequence(self, value):
+    def update_consequence(self, data):
         """ Update the consequence of any failure mode """
-
+        # TODO replace with consequence group manager
         for fm in self.fm.values():
-            fm.update_consequence(value)
-
-    def get_consequence_default(self):
-        """ Return the current value of consequence on failure mode """
-        val = []
-        for fm in self.fm.values():
-            val.append(fm.get_consequence_default())
-
-        return mean(val)
+            fm.update_consequence(data)
 
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
-        """ Return a list of dash ids for values that can be changed"""
+        """Return a list of dash ids for values that can be changed
+        Prefix is ""pole as currently nothing passed for prefix
+        """
 
         if active is None or (self.active == active):
             # Component
@@ -984,24 +977,16 @@ class Component(PofBase):
             ind_ids = []
             for ind in self.indicator.keys():
                 for param in cf.get("indicator_input_fields"):
-                    ind_ids.append(ind + "_" + param + "_input")
+                    ind_ids.append(prefix + "indicator" + sep + ind + sep + param)
 
-            dash_ids = comp_ids + fm_ids + ind_ids
+            # Consequence
+            cons_ids = [prefix + "consequence" + sep + "cost"]
+
+            dash_ids = comp_ids + fm_ids + ind_ids + cons_ids
         else:
             dash_ids = []
 
         return dash_ids
-
-    def get_ind_default_values(self):
-        """ Returns a dictionary of default indicator values for the Indicator input fields """
-        d_ind = {}
-
-        for ind in self.indicator.values():
-            d_ind[ind.name] = {
-                param: getattr(ind, param) for param in cf.get("indicator_input_fields")
-            }
-
-        return d_ind
 
     def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
         """ Get the ids for all objects that should be updated"""

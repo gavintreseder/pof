@@ -77,12 +77,13 @@ app.layout = make_layout(comp)
 )
 def load_file(click_load, file_name_new):
     """ Load the data of the user input file """
-    data_set = None
+    data_set = comp
     error_hide = True
     success_hide = True
 
     if click_load:
         file_path_new = paths.model_path + os.sep + file_name_new
+        logging.info(file_path_new)
 
         if os.path.exists(file_path_new):
             aml_new = AssetModelLoader(file_path_new)
@@ -94,11 +95,7 @@ def load_file(click_load, file_name_new):
             success_hide = False
 
         else:
-            data_set = comp
             error_hide = False
-
-    else:
-        data_set = comp
 
     return make_component_layout(data_set), error_hide, success_hide
 
@@ -184,11 +181,10 @@ param_inputs = [
     Input(
         "model_units-dropdown", "value"
     ),  # TODO Change the layout name so this updates normally
-    Input("consequence_input", "value"),
     Input("input_units-dropdown", "value"),
     param_inputs,
 )
-def update_parameter(model_units, cons, input_units, *args):
+def update_parameter(model_units, input_units, *args):
     """Update a the pof object whenever an input is changes""",
 
     # Check the parameters that changed
@@ -205,14 +201,11 @@ def update_parameter(model_units, cons, input_units, *args):
             comp.units = model_units
         elif dash_id == "input_units-dropdown":
             pass
-        elif dash_id == "consequence_input":
-            comp.update_from_dict({"consequence": value})
 
         else:
             # Scale the value if req
             var = dash_id.split("-")[-1]
             value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
-
             # update the model
             comp.update(dash_id, value)
 

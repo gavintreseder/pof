@@ -49,3 +49,5 @@ gamma = 10
 [FleetDataLoader]
 
 [PoleFleetDataLoader]
+
+[Consequence]
