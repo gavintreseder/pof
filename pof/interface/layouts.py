@@ -279,14 +279,20 @@ def make_component_layout(component, prefix="", sep="-"):
                     dbc.Row(
                         [
                             dbc.Collapse(
-                                dbc.Card(dbc.CardBody(fms_layout)),
+                                dbc.Card(
+                                    dbc.CardBody(
+                                        [
+                                            dbc.Row(fms_layout), 
+                                            dbc.Row(consequence_input),
+                                            dbc.Row(ind_inputs)
+                                        ]
+                                    )
+                                ),
                                 id=prefix + "collapse",
                                 is_open=IS_OPEN,
                             ),
                         ]
-                    ),
-                    dbc.Row(consequence_input),
-                    dbc.Row(ind_inputs),
+                    )
                 ]
             ),
         ]
