@@ -13,8 +13,7 @@ from pof.component import Component
 from pof.failure_mode import FailureMode
 from pof.paths import Paths
 
-# TODO move this all to a test file rather than demo
-FILEPATH = Paths().model_path
+FILEPATH = Paths().test_path
 FILENAME = FILEPATH + r"\Asset Model - Demo.xlsx"
 
 

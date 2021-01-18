@@ -18,10 +18,13 @@ class Paths:
 
         self.root_path = str(Path(dirname(realpath(__file__))).parents[1])
         self.pof_path = self.root_path + r"\pof"
+        self.demo_path = self.pof_path + r"\data\inputs"
         self.input_path = self.root_path + r"\inputs"
+        self.test_path = self.input_path + r"\test_inputs"
         self.csv_path = self.input_path + r"\csvs"
         self.model_path = self.input_path + r"\model"
         self.output_path = self.root_path + r"\outputs"
+
 
 if __name__ == "__main__":
     paths = Paths()

@@ -51,7 +51,7 @@ sfd.load()
 sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
 
 # Asset Model Data
-file_path = paths.model_path + os.sep
+file_path = paths.demo_path + os.sep
 FILE_NAME = data.get("file_name_default")
 
 aml = AssetModelLoader(file_path + FILE_NAME)
@@ -82,7 +82,10 @@ def load_file(click_load, file_name_new):
     success_hide = True
 
     if click_load:
-        file_path_new = paths.model_path + os.sep + file_name_new
+        if file_name_new == "Asset Model - Pole - Timber.xlsx":
+            file_path_new = paths.demo_path + os.sep + file_name_new
+        else:
+            file_path_new = paths.model_path + os.sep + file_name_new
         logging.info(file_path_new)
 
         if os.path.exists(file_path_new):

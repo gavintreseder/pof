@@ -282,9 +282,9 @@ def make_component_layout(component, prefix="", sep="-"):
                                 dbc.Card(
                                     dbc.CardBody(
                                         [
-                                            dbc.Row(fms_layout), 
+                                            dbc.Row(fms_layout),
                                             dbc.Row(consequence_input),
-                                            dbc.Row(ind_inputs)
+                                            dbc.Row(ind_inputs),
                                         ]
                                     )
                                 ),
