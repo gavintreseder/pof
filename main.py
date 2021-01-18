@@ -77,6 +77,10 @@ app.layout = make_layout(comp)
 )
 def load_file(click_load, file_name_new):
     """ Load the data of the user input file """
+
+    # TODO change hide to just set the text to be something, i.e. error_msg = "" when things are ok, error_msg = 'there's a mistake'
+    # Think about what happens if you want different error messages long term?
+
     data_set = comp
     error_hide = True
     success_hide = True

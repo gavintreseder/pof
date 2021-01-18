@@ -961,6 +961,16 @@ class FailureMode(PofBase):
 
         plt.show()
 
+    def _scale_units(self, new_units, current_units):
+        """ Simple fix - Trigger an update to init dist when units are updated """
+
+        untreated = copy.copy(self.dists.get("untreated", None))
+
+        super()._scale_units(new_units, current_units)
+
+        if untreated != self.untreated:
+            self._set_init()
+
     def update_from_dict(self, data):
         """Simple fix"""
 
