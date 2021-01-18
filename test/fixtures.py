@@ -308,7 +308,7 @@ complete['failure_mode']['update'] = dict(
     #dists={'untreated':complete['distribution'][1]}, #TODO this was previously 'distribution_0'
     conditions={'condition_indicator_0':complete['condition_indicator'][1]},
     indicators={'condition_indicator_0':complete['condition_indicator'][1]},
-    # consequence=complete['consequence'][1], # TODO fix this
+    consequence=complete['consequence'][1],
     tasks={'inspection_0':complete['inspection'][1]},
 )
 #complete['failure_mode']['update'].update('name')

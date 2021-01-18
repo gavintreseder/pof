@@ -5,7 +5,7 @@ replace_sep_with = "."
 
 [Layouts]
 y_value_default = "cost_cumulative"
-axis_lock = true
+axis_lock = false
 collapse_open = false
 
 [Main]
