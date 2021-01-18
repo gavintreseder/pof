@@ -293,6 +293,14 @@ state_data = dict(
     ),
 )
 
+# ********************** consequence data *****************************
+consequence_data = dict(
+    name='consequence',
+    cost=10,
+    group=None,
+    units='years'
+)
+
 # *********************** failure mode data ********************************** 
 
 failure_mode_data = dict(
@@ -310,7 +318,8 @@ failure_mode_data = dict(
             on_condition_replacement=replacement_data['instant'],
             on_failure_replacement=replacement_data['on_failure'],
         ),
-        states=state_data['new']
+        states=state_data['new'],
+        consequence=consequence_data
     ),
     random=dict(
         name='random',
@@ -324,7 +333,8 @@ failure_mode_data = dict(
             on_condition_replacement=replacement_data['instant'],
             on_failure_replacement=replacement_data['on_failure'],
         ),
-        states=state_data['new']
+        states=state_data['new'],
+        consequence=consequence_data
     ),
     slow_aging=dict(
         name='slow_aging',
@@ -340,7 +350,8 @@ failure_mode_data = dict(
             on_condition_replacement=replacement_data['on_condition'],
             on_failure_replacement=replacement_data['on_failure'],
         ),
-        states=state_data['new']
+        states=state_data['new'],
+        consequence=consequence_data
     ),
     fast_aging=dict(
         name='fast_aging',
@@ -357,7 +368,8 @@ failure_mode_data = dict(
             on_condition_replacement=replacement_data['on_condition'],
             on_failure_replacement=replacement_data['on_failure'],
         ),
-        states=state_data['new']
+        states=state_data['new'],
+        consequence=consequence_data
     )
 )
 

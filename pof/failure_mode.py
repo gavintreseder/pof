@@ -203,9 +203,10 @@ class FailureMode(PofBase):
 
     def set_consequence(self, var=None):
         # self.set_obj("consequence", Consequence, var)
-        self.consequence = Consequence(
-            **var
-        )  # TODO double check if set_obj will set as val not dict
+        if var is not None:
+            self.consequence = Consequence(
+                **var
+            )  # TODO double check if set_obj will set as val not dict
 
     def set_indicators(self, var=None):
 

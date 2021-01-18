@@ -1,8 +1,6 @@
 from pof.pof_base import PofBase
 from config import config
 
-# cf = config.get("Consequence")
-
 
 class Consequence(PofBase):
     def __init__(

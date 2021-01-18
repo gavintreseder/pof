@@ -33,6 +33,7 @@ complete = {
     'condition_task':{},
     'scheduled_task':{},
     'inspection':{},
+    'consequence': {},
     'failure_mode':{},
     'component':{},
 }
@@ -246,6 +247,25 @@ complete['inspection'][1] = dict(
 
 complete['inspection']['update'] = copy.deepcopy(complete['inspection'][1])
 
+# *********************** consequence data **********************************
+
+complete['consequence'][0] = dict(
+    name='consequence_0',
+    cost=10,
+    group=None,
+    units="years"
+)
+
+
+complete['consequence'][1] = dict(
+    name='consequence_1',
+    cost=20,
+    group=None,
+    units="years"
+)
+
+complete['consequence']['update'] = copy.deepcopy(complete['consequence'][1])
+
 # *********************** state data **********************************
 
 state_data = copy.deepcopy(demo.state_data)
@@ -268,6 +288,7 @@ complete['failure_mode'][0]=dict(
     untreated=complete['distribution'][0],
     conditions=complete['condition_indicator'][0],
     indicators=complete['condition_indicator'][0],
+    consequence=complete['consequence'][0],
     tasks=complete['inspection'][0],
 )
 
@@ -278,6 +299,7 @@ complete['failure_mode'][1]=dict(
     untreated=complete['distribution'][1],
     conditions=complete['condition_indicator'][1],
     indicators=complete['condition_indicator'][1],
+    consequence=complete['consequence'][1],
     tasks=complete['inspection'][1],
 )
 
@@ -286,6 +308,7 @@ complete['failure_mode']['update'] = dict(
     #dists={'untreated':complete['distribution'][1]}, #TODO this was previously 'distribution_0'
     conditions={'condition_indicator_0':complete['condition_indicator'][1]},
     indicators={'condition_indicator_0':complete['condition_indicator'][1]},
+    # consequence=complete['consequence'][1], # TODO fix this
     tasks={'inspection_0':complete['inspection'][1]},
 )
 #complete['failure_mode']['update'].update('name')

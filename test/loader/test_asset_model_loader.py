@@ -14,7 +14,8 @@ from pof.failure_mode import FailureMode
 from pof.paths import Paths
 
 FILEPATH = Paths().test_path
-FILENAME = FILEPATH + r"\Asset Model - Demo.xlsx"
+FILENAME_EXCEL = FILEPATH + r"\Asset Model - Demo.xlsx"
+FILENAME_JSON = FILEPATH + r"\Asset Model - Demo.json"
 
 
 class TestAssetModelLoader(unittest.TestCase):
@@ -28,49 +29,85 @@ class TestAssetModelLoader(unittest.TestCase):
     def test_load_failure_mode_loads_and_works_correctly(self):
         """ Load an Asset model and then check a FailureMode can be created from the data and that the object works correctly"""
         aml = AssetModelLoader()
-        data = aml.load(FILENAME)
+        data_excel = aml.load(FILENAME_EXCEL)
+        data_json = aml.load(FILENAME_JSON)
 
-        fm = FailureMode.load(data["pole"]["fm"]["lightning"])
+        fm_excel = FailureMode.load(data_excel["pole"]["fm"]["lightning"])
         self.assertIsNotNone(
-            fm, msg="FailureMode cannot be loaded with data from AssetModelLoader"
+            fm_excel,
+            msg="FailureMode cannot be loaded with excel data from AssetModelLoader",
+        )
+        fm_json = FailureMode.load(data_json["pole"]["fm"]["lightning"])
+        self.assertIsNotNone(
+            fm_json,
+            msg="FailureMode cannot be loaded with excel data from AssetModelLoader",
         )
 
         try:
-            fm.sim_timeline(200)
+            fm_excel.sim_timeline(200)
         except:
-            self.fail(msg="FailureMode cannot sim_timline after being loaded")
+            self.fail(msg="FailureMode cannot sim_timline after excel loaded")
+        try:
+            fm_json.sim_timeline(200)
+        except:
+            self.fail(msg="FailureMode cannot sim_timline after json loaded")
 
         try:
-            fm.mc_timeline(t_end=10, n_iterations=10)
+            fm_excel.mc_timeline(t_end=10, n_iterations=10)
         except:
-            self.fail(msg="FailureMode cannot sim_timline after being loaded")
+            self.fail(msg="FailureMode cannot sim_timline after excel loaded")
+        try:
+            fm_json.mc_timeline(t_end=10, n_iterations=10)
+        except:
+            self.fail(msg="FailureMode cannot sim_timline after json loaded")
 
     def test_load_component_loads_and_works_correctly(self):
         aml = AssetModelLoader()
-        data = aml.load(FILENAME)
+        data_excel = aml.load(FILENAME_EXCEL)
+        data_json = aml.load(FILENAME_JSON)
 
-        comp = Component.load(data["pole"])
-        self.assertIsNotNone(comp, msg="Component cannot be loaded with data")
-
-        try:
-            comp.sim_timeline(200)
-        except:
-            self.fail(msg="Component cannot sim_timline after being loaded")
-
-        try:
-            comp.mc_timeline(t_end=100, n_iterations=10)
-        except:
-            self.fail(msg="Component cannot mc_timline after being loaded")
+        comp_excel = Component.load(data_excel["pole"])
+        self.assertIsNotNone(
+            comp_excel, msg="Component cannot be loaded with excel data"
+        )
+        comp_json = Component.load(data_json["pole"])
+        self.assertIsNotNone(comp_json, msg="Component cannot be loaded with json data")
 
         try:
-            comp.expected_condition()
+            comp_excel.sim_timeline(200)
         except:
-            self.fail(msg="Component cannot get expected_condition after being loaded")
+            self.fail(msg="Component cannot sim_timline after excel loaded")
+        try:
+            comp_json.sim_timeline(200)
+        except:
+            self.fail(msg="Component cannot sim_timline after json loaded")
 
         try:
-            comp.expected_risk_cost_df(t_end=100)
+            comp_excel.mc_timeline(t_end=100, n_iterations=10)
         except:
-            self.fail(msg="Component cannot get expected_risk_cost after being loaded")
+            self.fail(msg="Component cannot mc_timline after excel loaded")
+        try:
+            comp_json.mc_timeline(t_end=100, n_iterations=10)
+        except:
+            self.fail(msg="Component cannot mc_timline after json loaded")
+
+        try:
+            comp_excel.expected_condition()
+        except:
+            self.fail(msg="Component cannot get expected_condition after excel loaded")
+        try:
+            comp_json.expected_condition()
+        except:
+            self.fail(msg="Component cannot get expected_condition after json loaded")
+
+        try:
+            comp_excel.expected_risk_cost_df(t_end=100)
+        except:
+            self.fail(msg="Component cannot get expected_risk_cost after excel loaded")
+        try:
+            comp_json.expected_risk_cost_df(t_end=100)
+        except:
+            self.fail(msg="Component cannot get expected_risk_cost after json loaded")
 
     # TODO redo test later
     # def test_load_failure_mode_condition_tasks(self):
@@ -99,30 +136,45 @@ class TestAssetModelLoader(unittest.TestCase):
     def test_load_lightning_problem(self):
 
         aml = AssetModelLoader()
-        data = aml.load(FILENAME)
+        data_excel = aml.load(FILENAME_EXCEL)
+        data_json = aml.load(FILENAME_JSON)
 
-        comp = Component.load(data["pole"])
+        comp_excel = Component.load(data_excel["pole"])
+        comp_json = Component.load(data_json["pole"])
 
         # TODO lightning add a test to make sure the timeline handles before and after correclty
-        fm = comp.fm["termites"]
+        fm_excel = comp_excel.fm["termites"]
+        fm_json = comp_json.fm["termites"]
 
-        fm.sim_timeline(200)
+        fm_excel.sim_timeline(200)
+        fm_json.sim_timeline(200)
 
     def test_mc_timeline_active_False(self):
 
         # Arrange
         aml = AssetModelLoader()
-        data = aml.load(FILENAME)
-        comp = Component.load(data["pole"])
+        data_excel = aml.load(FILENAME_EXCEL)
+        comp_excel = Component.load(data_excel["pole"])
+        data_json = aml.load(FILENAME_JSON)
+        comp_json = Component.load(data_json["pole"])
 
-        for fm in comp.fm.values():
+        for fm in comp_excel.fm.values():
             for task in fm.tasks.values():
                 task.update_from_dict({"active": False})
 
-                comp.mc_timeline(t_start=0, t_end=50, n_iterations=10)
+                comp_excel.mc_timeline(t_start=0, t_end=50, n_iterations=10)
 
             fm.update_from_dict({"active": False})
-            comp.mc_timeline(t_start=0, t_end=50, n_iterations=10)
+            comp_excel.mc_timeline(t_start=0, t_end=50, n_iterations=10)
+
+        for fm in comp_json.fm.values():
+            for task in fm.tasks.values():
+                task.update_from_dict({"active": False})
+
+                comp_json.mc_timeline(t_start=0, t_end=50, n_iterations=10)
+
+            fm.update_from_dict({"active": False})
+            comp_json.mc_timeline(t_start=0, t_end=50, n_iterations=10)
 
         # Assert
 

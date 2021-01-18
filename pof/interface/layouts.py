@@ -1260,7 +1260,7 @@ def make_param_inputs(component, ind, prefix="", sep="-"):
 def make_consequence_input(component, prefix="", sep="-"):
     vals = []
     for fm in component.fm.values():
-        vals.append(fm.consequence.cost)
+        vals.append(getattr(fm.consequence, "cost"))
 
     layout = dbc.InputGroup(
         [
