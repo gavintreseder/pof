@@ -136,7 +136,7 @@ def update_condition_fig(
 
         cmap = px.colors.qualitative.Safe
         idx = 1
-        time = df['time']
+        time = df["time"]
         for cond_name, cond in ecl.items():
             # Format the y_axis titles
             y_title = "".join(
@@ -343,6 +343,15 @@ def make_pop_table_fig(df):
 
 
 def make_table_fig(df):
+    """
+    Produces a dash table to summarise key statistics by failure mode
+    """
+    # Format the decimal places for float columns
+    int_cols = list(df)
+    int_cols.remove("fm")
+    df.loc[:, int_cols] = df.loc[:, int_cols].astype(float).round(2)
+    df.fillna("-", inplace=True)
+
     fig = go.Figure(
         data=[
             go.Table(
