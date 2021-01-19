@@ -45,7 +45,7 @@ class PofBase:
 
         self.name = name
         self.units = units
-        self.graph_units = units  # TODO temp fix
+        # self.graph_units = units  # TODO temp fix
 
         # Dash feature
         self.up_to_date = True
