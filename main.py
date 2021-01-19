@@ -333,6 +333,7 @@ def update_figures(
 
 @app.callback(
     Output("sensitivity-fig", "figure"),
+    Input("sim_state", "children"),
     Input("sim_sens_active-check", "checked"),
     Input("n_sens_iterations-input", "value"),
     Input("sens_var_id-dropdown", "value"),
@@ -347,6 +348,7 @@ def update_figures(
     State("input_units-dropdown", "value"),
 )
 def update_sensitivity(
+    __,
     active,
     n_iterations,
     var_id,

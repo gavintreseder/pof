@@ -876,7 +876,7 @@ class Component(PofBase):
             df=self.df_sens, column="source", var=var_name
         )  # Sens ordered here as x var is needed
 
-        df, units = scale_units(df, units, self.units)
+        df, units = scale_units(df, input_units=units, model_units=self.units)
 
         return make_sensitivity_fig(
             df=df,

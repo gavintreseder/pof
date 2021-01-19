@@ -984,7 +984,6 @@ class FailureMode(PofBase):
     def update_task_group(self, data):
         """ Update the details of any task that is part of the task group"""
         # TODO replace with task group manager
-        logging.info(data.items())
         for task_group_name, details in data.items():
             for task in self.tasks.values():
                 if task.task_group_name == task_group_name:
