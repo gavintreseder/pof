@@ -669,14 +669,22 @@ class Component(PofBase):
         df_erc["time"] = df_erc["time"].astype(float)
         df_age_forecast["age"] = df_age_forecast["age"].astype(float)
 
-        # Merge the population details
+        # Duplicate time so the closest age can be used
+        df_age_forecast["time"] = df_age_forecast["age"]
 
-        df = pd.merge_asof(
+        df_erc = pd.merge_asof(
+            df_erc.sort_values("time"),
+            df_age_forecast.sort_values("age")[["age", "time"]],
+            on="time",
+            tolerance=unit_ratio(age_units, self.units),
+        )
+
+        # Merge the population details
+        df = pd.merge(
             df_erc.sort_values("time"),
             df_age_forecast.sort_values("age"),
             left_on="time",
             right_on="age",
-            tolerance=unit_ratio(age_units, self.units) * 1.05,
         )
 
         # Calculated population outcomes
