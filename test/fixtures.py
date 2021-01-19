@@ -313,13 +313,6 @@ complete['failure_mode']['update'] = dict(
 )
 #complete['failure_mode']['update'].update('name')
 
-fm = complete['conseuqence'][1]
-
-fm = {
-    termites - <<>>
-    fungal <>
-}
-
 # *********************** component data **********************************
 
 component_data = copy.deepcopy(demo.component_data)
