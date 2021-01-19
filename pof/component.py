@@ -665,6 +665,7 @@ class Component(PofBase):
         df_age_forecast, __ = scale_units(df_age_forecast, self.units, age_units)
 
         # Convert to floats for merging
+        # TODO deep copy not needed anymore
         df_erc = copy.deepcopy(self.df_erc)
         df_erc["time"] = df_erc["time"].astype(float)
         df_age_forecast["age"] = df_age_forecast["age"].astype(float)
