@@ -63,9 +63,11 @@ comp_data = aml.load(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xls
 comp = Component.from_dict(comp_data["pole"])
 comp.fleet_data = sfd  # TODO fix by creating asset class
 
+# Instantiate global variables
 pof_sim = copy.copy(comp)
 sens_sim = copy.copy(comp)
 collapse_ids = comp.get_objects()
+collapse_ids.append("sim_params")
 sim_triggers = comp.get_dash_ids(numericalOnly=False)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
@@ -117,10 +119,13 @@ def load_file(click_load, file_name_model):
     else:
         error_hide = False
 
+    # Redefine global variables
     pof_sim = copy.copy(comp)
     sens_sim = copy.copy(comp)
 
     collapse_ids = comp.get_objects()
+    collapse_ids.append("sim_params")
+
     sim_triggers = comp.get_dash_ids(numericalOnly=False)
     param_inputs = [
         Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")

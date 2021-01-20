@@ -596,7 +596,9 @@ def make_condition_trigger_layout(
             [
                 dbc.InputGroupAddon(
                     [
-                        dbc.Checkbox(id=cond_prefix + "active", checked=True),
+                        dbc.Checkbox(
+                            id=cond_prefix + "active", checked=True, disabled=True
+                        ),
                     ],
                     addon_type="prepend",
                 ),
@@ -675,7 +677,9 @@ def make_state_impact_layout(state_impacts, prefix="", sep="-"):
                     dbc.InputGroupAddon(
                         [
                             dbc.Checkbox(
-                                id=prefix + state + sep + "active", checked=True
+                                id=prefix + state + sep + "active",
+                                checked=True,
+                                disabled=True,
                             ),
                             dbc.Label(state_updated.capitalize(), className="mr-2"),
                         ],
@@ -710,7 +714,7 @@ def make_condition_impact_layout(impacts, prefix="", sep="-"):
         condition_form = dbc.InputGroup(
             [
                 dbc.InputGroupAddon(
-                    dbc.Checkbox(id=prefix + "active", checked=True),
+                    dbc.Checkbox(id=prefix + "active", checked=True, disabled=True),
                     addon_type="prepend",
                 ),
                 dbc.InputGroupAddon(condition, addon_type="prepend"),
@@ -849,7 +853,7 @@ def make_input_component(update_list_unit, unit_default):
                                     "t_end",
                                     dcc.Input(
                                         id="t_end-input",
-                                        value=200,
+                                        value=100,  # TODO move this to config.toml
                                         type="number",
                                         style={"width": 100},
                                     ),
@@ -1077,13 +1081,13 @@ def make_sim_sens_inputs(
     return form
 
 
-def make_sim_layout(component, prefix="", sep="-"):
+def make_sim_layout(component):
     layout = dbc.InputGroup(
         [
             dbc.Button(
                 "Sim metadata",
                 color="link",
-                id=prefix + component.name + sep + "sim_params-collapse-button",
+                id="sim_params-collapse-button",
             ),
             dbc.Collapse(
                 dbc.Card(
@@ -1115,7 +1119,7 @@ def make_sim_layout(component, prefix="", sep="-"):
                         )
                     ]
                 ),
-                id=prefix + component.name + sep + "sim_params-collapse",
+                id="sim_params-collapse",
             ),
         ]
     )

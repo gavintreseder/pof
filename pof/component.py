@@ -1029,7 +1029,6 @@ class Component(PofBase):
         for fms in self.fm.values():
             objects = objects + fms.get_objects(prefix=prefix + "fm" + sep)
 
-        objects.append(prefix + "sim_params")
         objects.append(prefix + "indicator")
         objects.append(prefix + "consequence")
 
