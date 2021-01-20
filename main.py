@@ -57,7 +57,12 @@ global collapse_ids
 global sim_triggers
 global param_inputs
 
-comp = Component.demo()
+# comp = Component.demo() # TODO make this comp.demo() work - not file
+aml = AssetModelLoader(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
+comp_data = aml.load(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
+comp = Component.from_dict(comp_data["pole"])
+comp.fleet_data = sfd  # TODO fix by creating asset class
+
 pof_sim = copy.copy(comp)
 sens_sim = copy.copy(comp)
 collapse_ids = comp.get_objects()
