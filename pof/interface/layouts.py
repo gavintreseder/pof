@@ -135,7 +135,7 @@ def make_layout(comp):
     )
 
     mcl = make_component_layout(comp)
-    sim = make_sim_layout()
+    sim = make_sim_layout(comp)
 
     file_input = make_file_name_input()
     save_load_buttons = make_save_load_buttons()
@@ -1077,13 +1077,13 @@ def make_sim_sens_inputs(
     return form
 
 
-def make_sim_layout():
+def make_sim_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.Button(
                 "Sim metadata",
                 color="link",
-                id="sim_params-collapse-button",
+                id=prefix + component.name + sep + "sim_params-collapse-button",
             ),
             dbc.Collapse(
                 dbc.Card(
@@ -1115,7 +1115,7 @@ def make_sim_layout():
                         )
                     ]
                 ),
-                id="sim_params-collapse",
+                id=prefix + component.name + sep + "sim_params-collapse",
             ),
         ]
     )
@@ -1212,7 +1212,7 @@ def make_indicator_inputs_form(component, prefix=""):
             dbc.Button(
                 "Indicator inputs",
                 color="link",
-                id="indicator_inputs-collapse-button",
+                id=prefix + "indicator-collapse-button",
             ),
             dbc.Collapse(
                 dbc.Card(
@@ -1224,7 +1224,7 @@ def make_indicator_inputs_form(component, prefix=""):
                         )
                     ]
                 ),
-                id="indicator_inputs-collapse",
+                id=prefix + "indicator-collapse",
                 is_open=IS_OPEN,
             ),
         ]
@@ -1267,7 +1267,7 @@ def make_consequence_input(component, prefix="", sep="-"):
             dbc.Button(
                 "Consequence input",
                 color="link",
-                id="consequence_input-collapse-button",
+                id=prefix + "consequence-collapse-button",
             ),
             dbc.Collapse(
                 dbc.Card(
@@ -1285,7 +1285,7 @@ def make_consequence_input(component, prefix="", sep="-"):
                         )
                     ]
                 ),
-                id="consequence_input-collapse",
+                id=prefix + "consequence-collapse",
                 is_open=IS_OPEN,
             ),
         ]

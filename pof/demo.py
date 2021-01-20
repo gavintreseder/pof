@@ -375,8 +375,8 @@ failure_mode_data = dict(
 
 component_data = dict(
 
-    comp=dict(
-        name = 'comp',
+    pole=dict(
+        name = "pole",
         fm = dict(
             early_life = failure_mode_data['early_life'],
             random = failure_mode_data['random'],

@@ -50,18 +50,22 @@ sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
 sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
 
-# Asset Model Data
-file_path = paths.demo_path + os.sep
-FILE_NAME = data.get("file_name_default")
+global comp
+global pof_sim
+global sens_sim
+global collapse_ids
+global sim_triggers
+global param_inputs
 
-aml = AssetModelLoader(file_path + FILE_NAME)
-comp_data = aml.load(filename=file_path + FILE_NAME)
-comp = Component.from_dict(comp_data["pole"])  # TODO hardcoded for poles
-comp.fleet_data = sfd  # TODO fix by creating asset class
-
-# Globals
+comp = Component.demo()
 pof_sim = copy.copy(comp)
 sens_sim = copy.copy(comp)
+collapse_ids = comp.get_objects()
+sim_triggers = comp.get_dash_ids(numericalOnly=False)
+param_inputs = [
+    Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
+    for dash_id in sim_triggers
+]
 
 # Layout
 var_to_scale = cf.scaling
@@ -75,36 +79,50 @@ app.layout = make_layout(comp)
     Input("load-button", "n_clicks"),
     State("file_name-input", "value"),
 )
-def load_file(click_load, file_name_new):
+def load_file(click_load, file_name_model):
     """ Load the data of the user input file """
 
     # TODO change hide to just set the text to be something, i.e. error_msg = "" when things are ok, error_msg = 'there's a mistake'
     # Think about what happens if you want different error messages long term?
 
-    data_set = comp
+    global comp
+    global pof_sim
+    global sens_sim
+    global collapse_ids
+    global sim_triggers
+    global param_inputs
+
     error_hide = True
     success_hide = True
 
-    if click_load:
-        if file_name_new == "Asset Model - Pole - Timber.xlsx":
-            file_path_new = paths.demo_path + os.sep + file_name_new
-        else:
-            file_path_new = paths.model_path + os.sep + file_name_new
-        logging.info(file_path_new)
+    # Asset Model Data
+    if file_name_model == "Asset Model - Pole - Timber.xlsx":
+        file_path_model = paths.demo_path + os.sep + file_name_model
+    else:
+        file_path_model = paths.model_path + os.sep + file_name_model
+    logging.info(file_path_model)
 
-        if os.path.exists(file_path_new):
-            aml_new = AssetModelLoader(file_path_new)
-            comp_data_new = aml_new.load(file_path_new)
-            comp_new = Component.from_dict(comp_data_new["pole"])
-            comp_new.fleet_data = sfd  # TODO fix by creating asset class
+    if os.path.exists(file_path_model):
+        aml = AssetModelLoader(file_path_model)
+        comp_data = aml.load(file_path_model)
+        comp = Component.from_dict(comp_data["pole"])
+        comp.fleet_data = sfd  # TODO fix by creating asset class
 
-            data_set = comp_new
-            success_hide = False
+        success_hide = False
+    else:
+        error_hide = False
 
-        else:
-            error_hide = False
+    pof_sim = copy.copy(comp)
+    sens_sim = copy.copy(comp)
 
-    return make_component_layout(data_set), error_hide, success_hide
+    collapse_ids = comp.get_objects()
+    sim_triggers = comp.get_dash_ids(numericalOnly=False)
+    param_inputs = [
+        Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
+        for dash_id in sim_triggers
+    ]
+
+    return make_component_layout(comp), error_hide, success_hide
 
 
 @app.callback(
@@ -115,6 +133,8 @@ def load_file(click_load, file_name_new):
 )
 def save_file(click_save, file_name_new):
     """ Save the data of the user input file """
+    global comp
+
     error_hide = True
     success_hide = True
 
@@ -140,10 +160,6 @@ def save_file(click_save, file_name_new):
 # ========================================================
 
 # Get the dash ids for all the objects that have a collapse button
-collapse_ids = comp.get_objects()
-collapse_ids.append("sim_params")
-collapse_ids.append("indicator_inputs")
-collapse_ids.append("consequence_input")
 
 
 @app.callback(
@@ -169,12 +185,6 @@ def toggle_collapses(*args):
     return is_open
 
 
-sim_triggers = comp.get_dash_ids(numericalOnly=False)
-param_inputs = [
-    Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
-    for dash_id in sim_triggers
-]
-
 # ========================================================
 # UPDATE --> Simulate --> Figures
 #        --> Simulate --> Figures
@@ -193,6 +203,7 @@ param_inputs = [
 )
 def update_parameter(model_units, input_units, *args):
     """Update a the pof object whenever an input is changes""",
+    global comp
 
     # Check the parameters that changed
     ctx = dash.callback_context
@@ -231,6 +242,7 @@ def update_parameter(model_units, input_units, *args):
 )
 def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
+    global comp
     global pof_sim
     global sfd
 
@@ -364,6 +376,7 @@ def update_sensitivity(
 ):
     """ Trigger a sensitivity analysis of the target variable"""
     # Copy from the main model
+    global comp
     global sens_sim
     sens_sim.cancel_sim()
 

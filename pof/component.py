@@ -1029,6 +1029,10 @@ class Component(PofBase):
         for fms in self.fm.values():
             objects = objects + fms.get_objects(prefix=prefix + "fm" + sep)
 
+        objects.append(prefix + "sim_params")
+        objects.append(prefix + "indicator")
+        objects.append(prefix + "consequence")
+
         return objects
 
     # ****************** Demonstration parameters ******************
@@ -1037,7 +1041,7 @@ class Component(PofBase):
     def demo(cls):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        return cls.load(demo.component_data["comp"])
+        return cls.load(demo.component_data["pole"])
 
 
 def sort_df(df=None, column=None, var=None):
