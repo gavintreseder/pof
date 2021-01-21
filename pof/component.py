@@ -170,7 +170,7 @@ class Component(PofBase):
         self.expected_risk_cost_df(t_end=t_end)
         self.calc_pof_df(t_end=t_end)
         # self.calc_df_task_forecast()
-        self.calc_df_cond()
+        self.calc_df_cond(t_start=t_start, t_end=t_end)
 
         return NotImplemented
 
@@ -703,7 +703,7 @@ class Component(PofBase):
 
         return self.df_task
 
-    def calc_df_cond(self):
+    def calc_df_cond(self, t_start=0, t_end=None):
 
         # TODO fix this so that it isn't being repeated
 
@@ -717,7 +717,8 @@ class Component(PofBase):
             i = i + 1
 
             # TODO temp fix that won't work for t_start
-            df["time"] = df.index
+            time = np.arange(t_start, t_end+1, 1).tolist()
+            df["time"] = np.append(time, time[::-1])
 
         self.df_cond = df
 
@@ -775,7 +776,9 @@ class Component(PofBase):
         # Add the cohort data if it is supplied
         if df_cohort is not None:
             df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
-            df.loc["total", "ff_pop_annual_avg"] = df["ff_pop_annual_avg"].sum()
+            df.loc["total", "ff_pop_annual_avg"] = df[
+                "ff_pop_annual_avg"
+            ].sum()  # mean &
             df.loc["total", "total"] = df_cohort["assets"].sum()
 
         # Format for display

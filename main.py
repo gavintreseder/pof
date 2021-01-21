@@ -273,7 +273,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
         pof_sim.calc_pof_df(t_end=t_end)
         pof_sim.calc_df_task_forecast(sfd.df_age_forecast)
         # pof_sim.calc_summary(sfd.df_age)
-        pof_sim.calc_df_cond()
+        pof_sim.calc_df_cond(t_end=t_end)
 
         if not pof_sim.up_to_date:
             return dash.no_update, "Update cancelled"
