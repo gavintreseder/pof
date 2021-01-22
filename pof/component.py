@@ -717,7 +717,7 @@ class Component(PofBase):
             i = i + 1
 
             # TODO temp fix that won't work for t_start
-            time = np.arange(t_start, t_end+1, 1).tolist()
+            time = np.arange(t_start, t_end + 1, 1).tolist()
             df["time"] = np.append(time, time[::-1])
 
         self.df_cond = df
@@ -749,10 +749,27 @@ class Component(PofBase):
                     f_ages = [_cf, _ff]
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
-                        summary[fm.name][f_name + "_pop_annual_avg"] = (
+
+                        # Mean failures
+                        mean_failured = (
+                            df_cohort.reindex(age).mul(count, axis=0).mean()[0]
+                            / self._sim_counter
+                        )
+
+                        # Total failures
+                        total_failed = (
                             df_cohort.reindex(age).mul(count, axis=0).sum()[0]
                             / self._sim_counter
                         )
+
+                        lower, upper = self.calc_confidence_interval(
+                            df_cohort=df_cohort, total_failed=total_failed
+                        )
+
+                        summary[fm.name]["mean " + f_name] = mean_failured
+                        summary[fm.name][f_name + " pop annual avg"] = total_failed
+                        summary[fm.name]["interval lower " + f_name] = lower
+                        summary[fm.name]["interval upper " + f_name] = upper
 
         df = pd.DataFrame.from_dict(summary).T
 
@@ -775,10 +792,12 @@ class Component(PofBase):
 
         # Add the cohort data if it is supplied
         if df_cohort is not None:
-            df.loc["total", "cf_pop_annual_avg"] = df["cf_pop_annual_avg"].sum()
-            df.loc["total", "ff_pop_annual_avg"] = df[
-                "ff_pop_annual_avg"
-            ].sum()  # mean &
+            df.loc["total", "cf pop annual avg"] = df["cf pop annual avg"].sum()
+            df.loc["total", "ff pop annual avg"] = df["ff pop annual avg"].sum()
+            df.loc["total", "interval lower cf"] = df["interval lower cf"].sum()
+            df.loc["total", "interval upper cf"] = df["interval upper cf"].sum()
+            df.loc["total", "interval lower ff"] = df["interval lower ff"].sum()
+            df.loc["total", "interval upper ff"] = df["interval upper ff"].sum()
             df.loc["total", "total"] = df_cohort["assets"].sum()
 
         # Format for display
@@ -789,8 +808,14 @@ class Component(PofBase):
             "cf",
             "ff",
             "sim",
-            "cf_pop_annual_avg",
-            "ff_pop_annual_avg",
+            "mean cf",
+            "mean ff",
+            "cf pop annual avg",
+            "interval lower cf",
+            "interval upper cf",
+            "ff pop annual avg",
+            "interval lower ff",
+            "interval upper ff",
             "total",
         ]
         df = df.reset_index().reindex(columns=col_order)
@@ -801,6 +826,23 @@ class Component(PofBase):
         df.rename(columns=rename_cols, inplace=True)
 
         return df
+
+    def calc_confidence_interval(self, df_cohort=None, total_failed=None):
+        """ Calculate the upper and lower bounds for a given confidence interval """
+
+        # Calculate confidence interval
+        population_total = df_cohort.sum()[0] / self._sim_counter
+
+        p_failed = total_failed / population_total  # p_fm
+
+        se_failed = np.sqrt(p_failed * (1 - p_failed) / population_total)
+
+        z_score = 1.282  # TODO currently set to work for 80% confidence
+
+        lower_bound = (p_failed - z_score * se_failed) * population_total
+        upper_bound = (p_failed + z_score * se_failed) * population_total
+
+        return lower_bound, upper_bound
 
     # ***************** Figures *****************
 
