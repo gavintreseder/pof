@@ -7,13 +7,17 @@
 import copy
 import unittest
 from unittest.mock import Mock, patch
+import os
 
-
-import fixtures
 from test_pof_base import TestPofBaseCommon
+from pof.paths import Paths
 import testconfig  # pylint: disable=unused-import
 from pof.component import Component
 from config import config
+from pof.interface.figures import calc_y_max
+from pof.data.asset_data import SimpleFleet
+import fixtures
+from pof.units import scale_units
 
 cf = config["Component"]
 
@@ -25,6 +29,8 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
+
+        file_path = Paths().test_path + r"\fixtures.py"
 
         # TestPofBase Setup
         self._class = Component
@@ -214,7 +220,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
             comp.mc_timeline(t_end=t_end, n_iterations=10)
             df = comp.expected_risk_cost_df()
             risk = df.loc[df["task"] == "risk"]["cost"].sum()
-            max_risk = comp.fm["random"].consequence.risk_cost_total
+            max_risk = comp.fm["random"].consequence.cost
 
             # Assert
             self.assertLessEqual(risk, max_risk)
@@ -230,7 +236,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         comp = Component.demo()
 
         # Act
-        actual = comp.expected_sensitivity()
+        actual = comp.expected_sensitivity(var_id=sens_var, lower=1, upper=10)
         # Assert
 
     def test_expected_risk_cost_df(self):  # integration test
@@ -334,6 +340,70 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
     def test_replace(self):
         NotImplemented
+
+    # ************ Test summary methods *************
+
+    def test_calc_confidence_interval(self):
+        comp = Component.demo()
+        comp.mc_timeline(t_end=100)
+
+        # Arrange
+        total_failed = 10
+
+        # Forecast years
+        START_YEAR = 2015
+        END_YEAR = 2024
+        CURRENT_YEAR = 2020
+
+        paths = Paths()
+
+        # Population Data
+        file_path = paths.input_path + os.sep
+        FILE_NAME = r"population_summary.csv"
+
+        sfd = SimpleFleet(file_path + FILE_NAME)
+        sfd.load()
+        sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
+
+        df_cohort = sfd.df_age
+
+        # Act
+        lower_bound, upper_bound = comp.calc_confidence_interval(
+            df_cohort=df_cohort, total_failed=total_failed
+        )
+
+        # Assert
+        self.assertAlmostEqual(total_failed - lower_bound, upper_bound - total_failed)
+
+    # ************* Test charts *********************
+
+    def test_calc_y_max(self):
+        comp = Component.demo()
+
+        comp.mp_timeline(t_end=200, n_iterations=10)
+
+        comp.expected_risk_cost_df(t_end=200)
+
+        prev_ms_cost = comp.plot_ms(y_axis="cost", keep_axis=True, prev=None)
+        prev_ms_cumulative = comp.plot_ms(
+            y_axis="cost_cumulative", keep_axis=True, prev=None
+        )
+
+        y_max_ms_cost = calc_y_max(keep_axis=True, method="max", prev=prev_ms_cost, test=True)
+        y_max_ms_cumulative = calc_y_max(
+            keep_axis=True, method="sum", prev=prev_ms_cumulative, test=True
+        )
+
+        df = comp.df_erc
+
+        y_max_ms_cost_df = df["cost"].max() * 1.05
+
+        y_max_ms_cumulative_df = (
+            df.groupby("time")["cost_cumulative"].sum().max() * 1.05
+        )
+
+        self.assertEqual(y_max_ms_cost, y_max_ms_cost_df)
+        self.assertEqual(y_max_ms_cumulative, y_max_ms_cumulative_df)
 
 
 if __name__ == "__main__":

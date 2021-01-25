@@ -393,19 +393,30 @@ def update_visibility(curr, prev=None):
     return curr
 
 
-def calc_y_max(keep_axis, method, prev):
+def calc_y_max(keep_axis, method, prev, test=False):
     """ Determines the y_max value of the previous chart """
+
     scale = 1.05
     y_max = None
     if keep_axis:
         if prev is not None:
+            # Data stored differently in test/notebooks TODO this could be better
+            if test:
+                range_prev = prev["layout"].yaxis.range
+            else:
+                range_prev = prev["layout"].get("yaxis").get("range")
+
             # If the y_limit already exists use last one, otherwise calculate a new y_max
-            if prev["layout"].get("yaxis").get("range") is not None:
+            if range_prev is not None:
                 y_max = prev["layout"].get("yaxis").get("range")[1]
             else:
                 y_vals = []
                 for trace in prev["data"]:
-                    y_vals.append(max(trace.get("y")))
+                    # Data stored differently in test/notebooks
+                    if test:
+                        y_vals.append(max(trace.y))
+                    else:
+                        y_vals.append(max(trace.get("y")))
 
                 if method == "sum":  # If area chart
                     y_max = sum(y_vals) * scale
