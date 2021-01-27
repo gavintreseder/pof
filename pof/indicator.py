@@ -359,16 +359,32 @@ class Indicator(PofBase):
         mean = ec.mean(axis=0)
         sigma = ec.std(axis=0)
 
+        # Create a dataframe with mean & sigma
+        df_mean_sigma = pd.DataFrame(
+            data={"mean": mean, "sigma": sigma},
+            columns=["mean", "sigma"],
+        )
+
+        # Filter out rows when sigma = 0
+        mean_filtered = df_mean_sigma[df_mean_sigma["sigma"] != 0]["mean"]
+        sigma_filtered = df_mean_sigma[df_mean_sigma["sigma"] != 0]["sigma"]
+
         # TODO maybe add np.sqr(len(ec)) to make it stderr
 
         # Calculate bounds
-        upper = ss.norm.ppf((1 - (1 - conf) / 2), loc=mean, scale=sigma)
-        lower = ss.norm.ppf(((1 - conf) / 2), loc=mean, scale=sigma)
+        df_mean_sigma.loc[df_mean_sigma["sigma"] != 0, "upper"] = ss.norm.ppf(
+            (1 - (1 - conf) / 2), loc=mean_filtered, scale=sigma_filtered
+        )
+        df_mean_sigma.loc[df_mean_sigma["sigma"] != 0, "lower"] = ss.norm.ppf(
+            ((1 - conf) / 2), loc=mean_filtered, scale=sigma_filtered
+        )
 
-        # Adjust upper and lower to the mean if there is not variance
-        no_variance = pd.isna(sigma) | (sigma == 0)
-        upper[no_variance] = mean[no_variance]
-        lower[no_variance] = mean[no_variance]
+        # Adjust upper and lower to the mean if there is not variance (sigma was 0)
+        df_mean_sigma.loc[df_mean_sigma["sigma"] == 0, "upper"] = df_mean_sigma["mean"]
+        df_mean_sigma.loc[df_mean_sigma["sigma"] == 0, "lower"] = df_mean_sigma["mean"]
+
+        upper = df_mean_sigma["upper"]
+        lower = df_mean_sigma["lower"]
 
         if self.decreasing:
             upper[upper > self._perfect] = self._perfect
