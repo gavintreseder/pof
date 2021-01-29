@@ -389,7 +389,9 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
             y_axis="cost_cumulative", keep_axis=True, prev=None
         )
 
-        y_max_ms_cost = calc_y_max(keep_axis=True, method="max", prev=prev_ms_cost, test=True)
+        y_max_ms_cost = calc_y_max(
+            keep_axis=True, method="max", prev=prev_ms_cost, test=True
+        )
         y_max_ms_cumulative = calc_y_max(
             keep_axis=True, method="sum", prev=prev_ms_cumulative, test=True
         )

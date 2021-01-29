@@ -751,7 +751,7 @@ class Component(PofBase):
                         age, count = np.unique(f_age, return_counts=True)
 
                         # Mean failures
-                        mean_failured = (
+                        mean_failed = (
                             df_cohort.reindex(age).mul(count, axis=0).mean()[0]
                             / self._sim_counter
                         )
@@ -762,11 +762,13 @@ class Component(PofBase):
                             / self._sim_counter
                         )
 
-                        lower, upper = self.calc_confidence_interval(
-                            df_cohort=df_cohort, total_failed=total_failed
+                        lower, upper = calc_confidence_interval(
+                            sim_counter=self._sim_counter,
+                            df_cohort=df_cohort,
+                            total_failed=total_failed,
                         )
 
-                        summary[fm.name]["mean " + f_name] = mean_failured
+                        summary[fm.name]["mean " + f_name] = mean_failed
                         summary[fm.name][f_name + " pop annual avg"] = total_failed
                         summary[fm.name]["interval lower " + f_name] = lower
                         summary[fm.name]["interval upper " + f_name] = upper
@@ -826,23 +828,6 @@ class Component(PofBase):
         df.rename(columns=rename_cols, inplace=True)
 
         return df
-
-    def calc_confidence_interval(self, df_cohort=None, total_failed=None):
-        """ Calculate the upper and lower bounds for a given confidence interval """
-
-        # Calculate confidence interval
-        population_total = df_cohort.sum()[0] / self._sim_counter
-
-        p_failed = total_failed / population_total  # p_fm
-
-        se_failed = np.sqrt(p_failed * (1 - p_failed) / population_total)
-
-        z_score = 1.282  # TODO currently set to work for 80% confidence
-
-        lower_bound = (p_failed - z_score * se_failed) * population_total
-        upper_bound = (p_failed + z_score * se_failed) * population_total
-
-        return lower_bound, upper_bound
 
     # ***************** Figures *****************
 
@@ -1139,6 +1124,24 @@ def sort_df(df=None, column=None, var=None):
     ordered_df = df.sort_values(by=columns)
 
     return ordered_df
+
+
+def calc_confidence_interval(sim_counter=None, df_cohort=None, total_failed=None):
+    """ Calculate the upper and lower bounds for a given confidence interval """
+
+    # Calculate confidence interval
+    population_total = df_cohort.sum()[0] / sim_counter
+
+    p_failed = total_failed / population_total  # p_fm
+
+    se_failed = np.sqrt(p_failed * (1 - p_failed) / population_total)
+
+    z_score = 1.282  # TODO currently set to work for 80% confidence ss.norm. to get the z score
+
+    lower_bound = (p_failed - z_score * se_failed) * population_total
+    upper_bound = (p_failed + z_score * se_failed) * population_total
+
+    return lower_bound, upper_bound
 
 
 if __name__ == "__main__":

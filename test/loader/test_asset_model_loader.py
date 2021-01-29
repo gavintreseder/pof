@@ -14,6 +14,7 @@ from pof.failure_mode import FailureMode
 from pof.paths import Paths
 
 FILEPATH = Paths().test_path
+FILE_NAME_MODEL = Paths().demo_path + r"\Asset Model - Pole - Timber.xlsx"
 FILENAME_EXCEL = FILEPATH + r"\Asset Model - Demo.xlsx"
 FILENAME_JSON = FILEPATH + r"\Asset Model - Demo.json"
 
@@ -108,6 +109,30 @@ class TestAssetModelLoader(unittest.TestCase):
             comp_json.expected_risk_cost_df(t_end=100)
         except:
             self.fail(msg="Component cannot get expected_risk_cost after json loaded")
+
+    def test_failure_mode_indicator(self):
+        """ This is a test to investigate the ind & fm issue"""
+
+        aml = AssetModelLoader()
+        data = aml.load(FILE_NAME_MODEL)
+        comp = Component.load(data["pole"])
+
+        failure_modes_on = ["termites", "fungal decay | internal"]
+
+        for fm in comp.fm.values():
+            if fm.name not in failure_modes_on:
+                fm.active = False
+            else:
+                fm.active = True
+
+               if fm.name == "termites":
+                    fm.init_states["detection"] = True
+                    fm.init_states["initiation"] = True
+                    fm.tasks["inspection_groundline"].t_delay = 0
+
+        comp.mc_timeline(t_end=100, n_iterations=100)
+
+        self.assertEqual(failure_modes_on=1)
 
     # TODO redo test later
     # def test_load_failure_mode_condition_tasks(self):

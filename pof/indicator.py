@@ -786,10 +786,6 @@ class PoleSafetyFactor(Indicator):
         return self._timeline[None][t_delay:]
 
     def sim_failure_timeline(self, t_delay=0, *args, **kwargs):
-        # TODO why is it failing when its not failed, and why only for 1 failure mode
-        # Put a debug block on and figure out what timeline looks like at this point in time and why 3 is < 0.5
-        # Turn off pole saver rod and initiate fungal decay straight away
-        # Look at termites vs fungal
         if self.decreasing == True:
             tl_f = self.get_timeline()[t_delay:] <= self.threshold_failure
         else:
