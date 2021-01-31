@@ -488,7 +488,6 @@ class FailureMode(PofBase):
                 if updates["initiation"]:
                     t_initiate = t_start
                 else:
-                    # TODO make this conditionalsf
                     t_initiate = min(
                         t_end + 1, t_start + int(round(self.dists["init"].sample()[0]))
                     )
@@ -503,43 +502,25 @@ class FailureMode(PofBase):
             # Check for condition changes
             for cond_name in self._cond_to_update():
                 if "initiation" in updates or cond_name in updates:
-                    logging.debug(
-                        f"condition {cond_name}, start {t_start}, initiate {t_initiate}, end {t_end}"
+                    self.indicators[cond_name].sim_timeline(
+                        t_start=t_start,
+                        t_end=t_end,
+                        t_init=t_initiate,
+                        pf_interval=self.get_pf_interval(cond_name),
+                        pf_std=self.get_pf_std(cond_name),
+                        cause=self._name,
                     )
-                    # self.conditions[condition_name].set_condition(self.timeline[condition_name][t_start])
-                    # #TODO this should be set earlier using a a better method
-                    # Set t_start and t_stop based
-                    if cond_name in self.conditions:
-                        self.timeline[cond_name][t_start:] = self.indicators[
-                            cond_name
-                        ].sim_timeline(
-                            t_delay=t_start,
-                            t_start=t_start - t_initiate,
-                            t_stop=t_end - t_initiate,
-                            pf_interval=self.get_pf_interval(cond_name),
-                            pf_std=self.get_pf_std(cond_name),
-                            name=self._name,
-                        )
-                    else:
-                        self.timeline[cond_name][t_start:] = self.indicators[
-                            cond_name
-                        ].sim_timeline(
-                            t_delay=t_start,
-                            t_start=t_start - t_end,
-                            t_stop=0,
-                            name=self._name,
-                        )
 
             # Check for failure changes
-            if bool(
+            update_failure = bool(
                 set(updates).intersection(set(["initiation", "detection", "failure"]))
-            ):
+            )
+            if update_failure:
                 self.timeline["failure"][t_start:] = updates.get("failure", False)
                 for cond_name in self._cond_to_update():
-                    tl_f = self.indicators[cond_name].sim_failure_timeline(
-                        t_delay=t_start,
-                        t_start=t_start - t_initiate,
-                        t_stop=t_end - t_initiate,
+                    tl_f = self.indicators[cond_name].is_failed(
+                        t_start=t_start,
+                        t_end=t_end,
                     )
                     self.timeline["failure"][t_start:] = (
                         self.timeline["failure"][t_start:]
@@ -569,6 +550,10 @@ class FailureMode(PofBase):
                     )
 
         return self.timeline
+
+    def get_timeline(self, t_start=None, t_end=None):
+
+        raise NotImplementedError()
 
     def renew(self, t_renew):
         """

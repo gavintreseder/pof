@@ -197,9 +197,7 @@ class Task(PofBase):
 
     # ************* sim timeline ********************
 
-    def sim_timeline(
-        self, t_end, timeline=None, t_start=0, t_delay=NotImplemented, indicators=None
-    ):
+    def sim_timeline(self, t_end, timeline=None, t_start=0, indicators=None):
         """ The common interface for all sim_timeline tasks """
 
         if self.active:
@@ -207,7 +205,6 @@ class Task(PofBase):
                 t_start=t_start,
                 t_end=t_end,
                 timeline=timeline,
-                t_delay=t_delay,  # Not used
                 indicators=indicators,  # Only used for condition
             )
 
@@ -432,7 +429,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
             n_tiles = math.ceil(max((t_end - t_delay), 0) / t_interval + 1)
             tile = np.linspace(t_interval - 1, 0, t_interval)
 
-
         schedule = np.tile(
             tile,
             n_tiles,
@@ -470,9 +466,7 @@ class ConditionTask(Task):
         self.trigger = "condition"
         self.task_completion = task_completion
 
-    def _sim_timeline(
-        self, t_end, timeline, t_start=0, t_delay=NotImplemented, indicators=None
-    ):
+    def _sim_timeline(self, t_end, timeline, t_start=0, indicators=None):
         """
         If state and any condition triggers are met return the timeline met
         """

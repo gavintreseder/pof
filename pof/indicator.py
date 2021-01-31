@@ -7,6 +7,7 @@
 import collections
 import copy
 import logging
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -39,13 +40,16 @@ cf = config["Indicator"]
 # TODO check trigger for failure (sf could be 0 for 2 years before registering as a failure)
 
 
+# TODO make sure pf_interval can only be positive
+
+
 class PfCurve:
     """
     Descriptor for PF Curve
     """
 
-    def __init__(self, valid_pf_curves=None):
-        self.valid_pf_curves = valid_pf_curves
+    # def __init__(self, valid_pf_curves=None):
+    #     self.valid_pf_curves = valid_pf_curves
 
     def __get__(self, obj):
         self.value
@@ -60,6 +64,8 @@ class PfCurve:
 class Indicator(PofBase):
 
     """
+
+    The indicator class is framed so that False is the ideal state and everything is changed from there
 
     Methods
 
@@ -112,7 +118,7 @@ class Indicator(PofBase):
             detection=self.threshold_detection, failure=self.threshold_failure
         )
 
-        self._profile: dict()
+        self._profile = dict()  # TODO del
         self._timeline: dict()
         self._timelines: dict()
         self.reset()
@@ -162,7 +168,6 @@ class Indicator(PofBase):
 
     def sim_failure_timeline(self, *args, **kwargs):
         logging.debug("Non overloaded function called")
-
         NotImplemented
 
     def restore(self, *args, **kwargs):
@@ -173,17 +178,16 @@ class Indicator(PofBase):
         logging.debug("Non overloaded function called")
         NotImplemented
 
-    def reset(self, name=NotImplemented):
+    def reset(self, cause=NotImplemented):
 
-        self._profile = dict()
         self._timeline = dict()
         self._timelines = dict()
 
     def reset_for_next_sim(self):
-        None
+        NotImplemented
 
     def reset_to_perfect(self):
-        None
+        NotImplemented
 
     @property
     def pf_curve(self):
@@ -241,7 +245,7 @@ class Indicator(PofBase):
             else:
                 self.decreasing = False
 
-            self.upper = abs(self._perfect - self._failed)
+            self.max_loss = abs(self._perfect - self._failed)
 
     @property
     def initial(self):
@@ -422,6 +426,272 @@ class Indicator(PofBase):
     def save_timeline(self, idx=None):
         self._timelines[idx] = copy.deepcopy(self._timeline)
 
+    def is_failed(
+        self, t_start: int = None, t_end: int = None, cause: str = None
+    ) -> List:
+        """
+        Determines if an indicator has failed between a time range from a cause
+
+        Args:
+            t_start: Optional; The time to start checking the failure
+            t_end: Optional; The time to stop checking the failure
+            cause: Optional; Consider the failure based on the impact of this cause only
+
+        Returns:
+            A list of boolean
+        """
+
+        timeline = self.get_timeline(cause)[t_start]
+
+        # Check for failure
+        if self.decreasing == True:
+            failed = timeline <= self.threshold_failure
+        else:
+            failed = timeline >= self.threshold_failure
+
+        return failed
+
+
+class CondIndicator:
+
+    """
+
+    The condition indicator is structured around a concept of condition loss
+
+    Three causes are added during simulations:
+        'permanent' - condition loss which cannot be repaired
+
+    Args:
+        perfect: the condition at perfect health
+        failed: the worst condition possible
+        initial: the condition at the start of the simulation
+
+
+    """
+
+    def sim_timeline(
+        self,
+        t_start: int,
+        t_end: int,
+        t_init: int = None,
+        pf_interval: int = None,
+        pf_std: int = None,
+        cause: str = None,
+    ) -> List:
+        """Gets the existing timeline and updates it so that the condition at t_start is propogated until t_init
+
+        Args:
+            t_start: the time the simulation starts
+            t_end: the time the simulation ends
+            t_init: the time condition loss starts
+
+        Returns:
+            A list of conditions over the time period
+        """
+
+        # initation occurs at t_start is no t_init is provided
+        if t_init is None:
+            t_init = t_start
+
+        # Create timeline if it doesn't exist #TODO delete this and make sure timeline always dict
+        length = t_end - t_start + 1
+        if self._timeline is None:
+            self._timeline = {
+                "initial": np.full(length, self._initial),
+                "permanent": np.full(length, self._permanent),
+            }
+
+        # if cause not in self._timeline:
+        #     self._timeline[cause] = np.full(length, 0)
+
+        timeline = self.get_timeline(cause)
+        profile = self._sim_profile(pf_interval=pf_interval, pf_std=pf_std)
+
+        t_failed = t_init + len(profile)
+
+        # Update the timeline
+        timeline[t_start:t_init] = timeline[t_start]
+        timeline[t_init:t_end] = profile[t_end - t_init]
+        timeline[t_failed:] = timeline[t_failed]
+
+        self._timeline[cause] = timeline
+
+        return timeline
+
+    def _sim_profile(self, pf_interval=None, pf_std=None):
+        """
+        Simulates a condition profile based on the pf_interval and its uncertainity
+
+        Args:
+            pf_interval
+            pf_std
+
+        """
+
+        # Use the condition parameters if unique parameters aren't provided TODO maybe remove
+        if pf_interval is None:
+            pf_interval = self._pf_interval
+
+        if pf_std is None:
+            pf_std = self.pf_std
+
+        # Adjust the pf_interval based on the expected variance in pf_std
+        if pf_std is not None and pf_std != 0:
+            pf_interval = int(pf_interval + round(ss.norm.rvs(loc=0, scale=pf_std)))
+
+        profile = self._calc_profile(pf_interval)
+
+        return profile
+
+    def _calc_profile(self, pf_interval=None):
+
+        # TODO add the other profile types
+        # TODO add functools lru cache
+        """
+        Linear: μ(t) = b + a × t
+        Exponential: μ(t) = b × exp(a × t)
+        Power: μ(t) = b × t a
+        Logarithm: μ(t) = a × ln(t) + b
+        Lloyd-Lipow: μ(t) = a − (b/t)
+
+
+        Args:
+            pf_interval:
+            pf_std:
+
+        Returns:
+
+        """
+
+        x = np.arange(0, pf_interval + 1, 1)
+
+        if self._pf_curve == "linear":
+            # Prevent zero division error
+            if pf_interval <= 0:
+                m = 0
+            else:
+                m = (self._failed - self._perfect) / pf_interval
+
+            b = self._perfect
+            y = m * x + b
+
+        elif self._pf_curve == "step":
+            y = np.append(np.full(pf_interval, self._perfect), (np.array(self._failed)))
+
+        elif self._pf_curve == "exponential":
+            raise NotImplementedError
+        elif self._pf_curve == "exp":
+            raise NotImplementedError
+
+        return y
+
+    def is_failed(
+        self, t_start: int = None, t_end: int = None, cause: str = None
+    ) -> List:
+        """
+        Determines if an indicator has failed between a time range from a cause
+
+        Args:
+            t_start: Optional; The time to start checking the failure
+            t_end: Optional; The time to stop checking the failure
+            cause: Optional; Consider the failure based on the impact of this cause only
+
+        Returns:
+            A list of boolean
+        """
+
+        timeline = self.get_timeline(cause)[t_start:t_end]
+
+        # Check for failure
+        if self.decreasing == True:
+            failed = timeline <= self.threshold_failure
+        else:
+            failed = timeline >= self.threshold_failure
+
+        return failed
+
+    def reset_any(
+        self, t_reset, target=0, method="reset", axis="time", permanent=False
+    ):
+        """
+        # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
+        """
+
+        # Error with time reset, different method required.
+
+        if method == "reduction_factor":
+            accumulated = self.get_accumulated() * (1 - target)
+
+        elif method == "reverse":
+
+            accumulated = self.get_accumulated() - target
+
+        elif method == "set":
+            accumulated = target
+
+        # Calculate the accumulated condition TODO not working
+        if axis == "time":
+
+            NotImplemented
+
+        elif axis == "condition":
+
+            """if self.decreasing:
+                accumulated = min(max(self._failed, accumulated), self._perfect)
+            else:
+                accumulated = max(min(self._failed, accumulated), self._perfect)"""
+
+            self._reset_accumulated(accumulated, permanent=permanent)
+
+    def get_timeline(self, cause=None):
+        # maybe add t_start?
+        """ Returns the timeline for a name if it is in the key or if no key is passed and None is not a key, it aggregates all timelines"""
+        if cause in self._timeline:
+            timeline = self._timeline[cause]
+        elif cause is None:
+            timeline = self.agg_timeline()
+        else:
+            raise KeyError(
+                "Name - %s - is not in %s %s timeline"
+                % (name, self.__class__.__name__, self.name)
+            )
+
+        return timeline
+
+    def agg_timeline(self, cause=None):
+        """Aggregates all causes of condition loss and"""
+        accumulated = np.array(list(self._accumulated.values())).sum(axis=0)
+
+        if self.decreasing:
+            timeline = self._perfect - accumulated
+            timeline[timeline < self._failed] = self._failed
+        else:
+            timeline = self._perfect + accumulated
+            timeline[timeline > self._failed] = self._failed
+
+        return timeline
+
+    def agg_timelines(self):
+        """
+        Takes a dictionary of timelines and returns the aggregated timelines
+        """
+        agg_timeline = []
+        for timeline in self._timelines.values():
+            if self.decreasing:
+                etl = self._perfect - (
+                    self._perfect - np.array(list(timeline.values()))
+                ).sum(axis=0)
+                etl[etl < self._failed] = self._failed
+            else:
+                etl = self._perfect + (
+                    np.array(list(timeline.values())) - self._perfect
+                ).sum(axis=0)
+                etl[etl > self._failed] = self._failed
+
+            agg_timeline.append(etl)
+
+        return np.stack(agg_timeline)
+
 
 class ConditionIndicator(Indicator):
 
@@ -431,8 +701,6 @@ class ConditionIndicator(Indicator):
     def __init__(self, name: str = "ConditionIndicator", **kwargs):
         super().__init__(name=name, **kwargs)
 
-        self.pf_curve_params = NotImplemented  # TODO for complex condition types
-
         # Current accumulation
         self._accumulated = dict()
         self._set_accumulated(accumulated=abs(self._perfect - self._initial))
@@ -441,15 +709,15 @@ class ConditionIndicator(Indicator):
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=100):
         for i in range(n_iterations):
-            self.sim_timeline(t_start=t_start, t_stop=t_end)
+            self.sim_timeline(t_start=t_start, t_end=t_end)
             self.save_timeline()
             self.reset_for_next_sim()
 
     def sim_timeline(
         self,
-        t_stop=None,
-        t_delay=0,
+        t_end=None,
         t_start=0,
+        t_init=0,
         pf_interval=None,
         pf_std=0,
         name=None,
@@ -459,9 +727,14 @@ class ConditionIndicator(Indicator):
         """
         # TODO make the t_delay more elegeant and remove duplication from failure_mode
 
+        # simple update to
+        t_delay = t_start
+        t_start = t_start - t_init
+        t_stop = t_end - t_init
+
         if name not in self._timeline:
             self._timeline[name] = self._sim_timeline(
-                t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
+                t_start=t_start, t_end=t_end, pf_interval=pf_interval, name=name
             )
 
         else:
@@ -470,7 +743,7 @@ class ConditionIndicator(Indicator):
 
             self._timeline[name][t_delay:] = self._sim_timeline(
                 t_start=t_start,
-                t_stop=t_stop,
+                t_end=t_end,
                 pf_interval=pf_interval,
                 pf_std=pf_std,
                 name=name,
@@ -479,7 +752,7 @@ class ConditionIndicator(Indicator):
         return self._timeline[name][t_delay:]
 
     def _sim_timeline(
-        self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
+        self, t_end=None, t_start=0, pf_interval=None, pf_std=None, name=None
     ):
         """
         Returns the timeline that considers all the accumulated degradation
@@ -502,7 +775,7 @@ class ConditionIndicator(Indicator):
 
         # Get the timeline
         timeline = self._acc_timeline(
-            t_start=t_start, t_stop=t_stop, pf_interval=pf_interval
+            t_start=t_start, t_end=t_end, pf_interval=pf_interval
         )  # , name=name
 
         return timeline
@@ -553,7 +826,7 @@ class ConditionIndicator(Indicator):
 
         self._profile[pf_interval] = y
 
-    def _acc_timeline(self, t_start=0, t_stop=None, pf_interval=None, name=None):
+    def _acc_timeline(self, t_start=0, t_end=None, pf_interval=None, name=None):
         # TODO this probably needs a delay?
         """
         Returns the timeli
@@ -561,18 +834,18 @@ class ConditionIndicator(Indicator):
 
         # Validate times
         t_max = pf_interval  # len(self._profile[pf_interval]) - 1
-        if t_stop is None:
-            t_stop = t_max
+        if t_end is None:
+            t_end = t_max
 
-        if t_start > t_stop:
-            t_start = t_stop
+        if t_start > t_end:
+            t_start = t_end
 
-        if t_stop < -1:  # TODO rewrite this
-            t_start = t_start - t_stop
-            t_stop = -1
+        if t_end < -1:  # TODO rewrite this
+            t_start = t_start - t_end
+            t_end = -1
 
         profile = self._profile[pf_interval][
-            max(0, min(t_start, t_max)) : min(t_stop, t_max) + 1
+            max(0, min(t_start, t_max)) : min(t_end, t_max) + 1
         ]
 
         # Adjust for the accumulated condition
@@ -593,7 +866,7 @@ class ConditionIndicator(Indicator):
             )  # Changed from profile[0]
 
         # Fill the end with the failed condition
-        n_after_failure = t_stop - t_start - len(profile) + 1
+        n_after_failure = t_end - t_start - len(profile) + 1
         if n_after_failure > 0:
             profile = np.append(profile, np.full(max(0, n_after_failure), self._failed))
 
@@ -601,7 +874,7 @@ class ConditionIndicator(Indicator):
 
     def sim_failure_timeline(
         self,
-        t_stop=None,
+        t_end=None,
         t_delay=0,
         t_start=0,
         pf_interval=None,
@@ -627,7 +900,7 @@ class ConditionIndicator(Indicator):
         """
         Return the condition at time t
         """
-        self.sim_timeline(t_stop=t, name=name)
+        self.sim_timeline(t_end=t, name=name)
 
         return self._timeline[name][t]
 
@@ -729,7 +1002,9 @@ class ConditionIndicator(Indicator):
     def reset_to_perfect(self):
         self._reset_accumulated()
 
-    def reset_any(self, target=0, method="reset", axis="time", permanent=False):
+    def reset_any(
+        self, t_reset, target=0, method="reset", axis="time", permanent=False
+    ):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
