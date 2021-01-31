@@ -39,6 +39,24 @@ cf = config["Indicator"]
 # TODO check trigger for failure (sf could be 0 for 2 years before registering as a failure)
 
 
+class PfCurve:
+    """
+    Descriptor for PF Curve
+    """
+
+    def __init__(self, valid_pf_curves=None):
+        self.valid_pf_curves = valid_pf_curves
+
+    def __get__(self, obj):
+        self.value
+
+    def __set__(self, obj, value):
+        if value in self.valid_pf_curves:
+            self.value = value
+        else:
+            raise ValueError("pf_curve must be from: %s" % (self.valid_pf_curves))
+
+
 class Indicator(PofBase):
 
     """
