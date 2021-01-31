@@ -182,12 +182,12 @@ class Task(PofBase):
         if impacts is None:
             impacts = dict()
         else:
-            for impact in ["condition", "state", "time"]:
+            for impact in ["condition", "state", "time", "system"]:
                 if impact not in impacts:
                     impacts[impact] = dict()
 
             if "system" not in impacts:
-                impacts["system"] = []
+                impacts["system"] = None
 
             # Recast any ints to bools TODO make more robust
             for state in impacts["state"]:
@@ -304,6 +304,7 @@ class Task(PofBase):
             return dict()
 
     def system_impact(self):
+
         return self.impacts["system"]
 
     def record(self, t_complete):
@@ -431,7 +432,6 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
         else:
             n_tiles = math.ceil(max((t_end - t_delay), 0) / t_interval + 1)
             tile = np.linspace(t_interval - 1, 0, t_interval)
-
 
         schedule = np.tile(
             tile,

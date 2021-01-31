@@ -125,7 +125,7 @@ class TestAssetModelLoader(unittest.TestCase):
             else:
                 fm.active = True
 
-               if fm.name == "termites":
+                if fm.name == "termites":
                     fm.init_states["detection"] = True
                     fm.init_states["initiation"] = True
                     fm.tasks["inspection_groundline"].t_delay = 0

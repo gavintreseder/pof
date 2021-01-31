@@ -806,8 +806,8 @@ class PoleSafetyFactor(Indicator):
         elif method == "actual":
             sf = self._safety_factor(
                 agd=self.component.indicator["external_diameter"].perfect,
-                czd=self.component.indicator["external_diameter"],
-                wt=self.component.indicator["wall_thickness"],
+                czd=self.component.indicator["external_diameter"].get_timeline(),
+                wt=self.component.indicator["wall_thickness"].get_timeline(),
                 pole_load=self.component.info["pole_load"],
                 pole_strength=self.component.info["pole_strength"],
             )
@@ -837,7 +837,7 @@ class PoleSafetyFactor(Indicator):
 
         # Supress divide by zero error and fill na with zero
         with np.errstate(divide="ignore", invalid="ignore"):
-            sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (agd ** 3 * czd)
+            sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (czd * agd ** 3)
             sf[np.isnan(sf)] = 0
 
         return sf
@@ -845,9 +845,6 @@ class PoleSafetyFactor(Indicator):
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
-
-
-# class ActualSafetyFactor(PoleSafetyFactor):
 
 
 if __name__ == "__main__":

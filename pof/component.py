@@ -274,15 +274,20 @@ class Component(PofBase):
         # TODO add task impacts
 
         for fm_name, task_names in fm_tasks.items():
-            system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
+            system_impacts = self.fm[fm_name].complete_tasks(t_next, task_names)
 
-            if bool(system_impact) and cf.get("allow_system_impact"):
+            if "component" in system_impacts and cf.get("allow_system_impact"):
                 logging.debug(
                     "Component %s reset by FailureMode %s", self._name, fm_name
                 )
                 self.renew(t_renew=t_next + 1)
 
                 break
+
+            # Ghetto fix TODO
+            if "indicator" in system_impacts:
+                for fm in self.fm.values():
+                    fm.update_timeline(t_next + 1)
 
     def renew(
         self,
@@ -291,10 +296,6 @@ class Component(PofBase):
         """
         Renew the component because a task has triggered an as-new change or failure
         """
-
-        # Reset the indicators
-        for ind in self.indicator.values():
-            ind.reset_to_perfect()
 
         # Fail
         if config.get("FailureMode").get("remain_failed"):
@@ -307,6 +308,10 @@ class Component(PofBase):
         else:
             for fm in self.fm.values():
                 fm.renew(t_renew)
+
+            # Reset the indicators
+            for ind in self.indicator.values():
+                ind.reset_to_perfect()
 
     def increment_counter(self):
         self._sim_counter += 1
@@ -533,9 +538,16 @@ class Component(PofBase):
         return {fm.name: fm.expected_risk_cost() for fm in self.fm.values()}
 
     def expected_condition(self, conf=0.95):
-        return {
-            ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
-        }
+        """ Returns the expected condition for all indicators associated with active failure modes"""
+        expected = {}
+
+        for fm in self.fm.values():
+            if fm.active:
+                for ind_name in fm._cond_to_update():
+                    if ind_name not in expected:
+                        expected[ind_name] = fm.ind[ind_name].expected_condition(conf)
+
+        return expected
 
     # **************** Interface ********************
 
@@ -788,7 +800,7 @@ class Component(PofBase):
         # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
         df["sim"] = df.loc[mask_failures, "cf"] / (
-            df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"]
+            df.loc[mask_failures, ["cf", "ff", "is"]].sum()
         )
         df["sim"].fillna("")
 

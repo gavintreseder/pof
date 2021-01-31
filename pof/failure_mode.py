@@ -372,17 +372,8 @@ class FailureMode(PofBase):
         """ Executes the tasks and returns the system impact """
 
         system_impacts = []
-        if self.active:
-            # Record any risk events
-            if self.timeline["failure"][t_now]:
-                # TODO adjust this by the length of time it was failed for when multiple failures are possible
-                t_failure = np.flatnonzero(
-                    np.diff(
-                        np.r_[~self.timeline["failure"][0], self.timeline["failure"]]
-                    )
-                )[-1]
-                self._t_func_failure.append(t_failure)
 
+        if self.active:
             for task_name in task_names:
                 logging.debug("Time %s - Tasks %s", t_now, task_names)
 
@@ -396,13 +387,17 @@ class FailureMode(PofBase):
 
                 # Check if a system impact is triggered
                 system_impact = self.tasks[task_name].system_impact()
+                system_impacts.append(system_impact)
+                # TODO ghetto fix
+                # ind_impacts.append(list(self.tasks[task_name].impacts["condition"]))
 
-                if bool(system_impact):
+                if "component" == system_impact:
                     self.renew(t_now + 1)
-                    system_impacts.append(system_impact)
 
-                    if not self.timeline["failure"][t_now]:
-                        self._t_cond_failure.append(t_now + 1)
+                    if self.timeline["failure"][t_now]:
+                        self._t_func_failure.append(t_now)
+                    else:
+                        self._t_cond_failure.append(t_now)
 
                 else:
                     # Update timeline
@@ -477,7 +472,7 @@ class FailureMode(PofBase):
             t_end = self.timeline["time"][-1]
 
         # Initiation -> Condition -> time_tasks -> detection -> tasks
-        if t_start < t_end:
+        if t_start < t_end and self.active:
 
             if "time" in updates:
                 self.timeline["time"] = np.linspace(
@@ -531,19 +526,18 @@ class FailureMode(PofBase):
                         )
 
             # Check for failure changes
-            if bool(
-                set(updates).intersection(set(["initiation", "detection", "failure"]))
-            ):
+            if "failure" in updates:
                 self.timeline["failure"][t_start:] = updates.get("failure", False)
-                for cond_name in self._cond_to_update():
-                    tl_f = self.indicators[cond_name].sim_failure_timeline(
-                        t_delay=t_start,
-                        t_start=t_start - t_initiate,
-                        t_stop=t_end - t_initiate,
-                    )
-                    self.timeline["failure"][t_start:] = (
-                        self.timeline["failure"][t_start:]
-                    ) | (tl_f)
+
+            for cond_name in self._cond_to_update():
+                tl_f = self.indicators[cond_name].sim_failure_timeline(
+                    t_delay=t_start,
+                    t_start=t_start - t_initiate,
+                    t_stop=t_end - t_initiate,
+                )
+                self.timeline["failure"][t_start:] = (
+                    self.timeline["failure"][t_start:]
+                ) | (tl_f)
 
             # Update time based tasks
             for task_name, task in self.tasks.items():

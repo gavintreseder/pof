@@ -149,7 +149,7 @@ complete['task'][0] = dict(
             detection= False,
             failure = False,
         ),
-        system='failure_mode'
+        system='component'
     ),
 )
 
@@ -186,7 +186,7 @@ complete['task'][1] = dict(
             detection= False,
             failure = False
         ),
-        system = 'component',
+        system = 'failure_mode',
     ),
 )
 
