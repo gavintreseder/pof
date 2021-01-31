@@ -508,7 +508,7 @@ class FailureMode(PofBase):
                         t_init=t_initiate,
                         pf_interval=self.get_pf_interval(cond_name),
                         pf_std=self.get_pf_std(cond_name),
-                        cause=self._name,
+                        name=self._name,  # TODO change to cause
                     )
 
             # Check for failure changes

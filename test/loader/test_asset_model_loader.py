@@ -125,14 +125,12 @@ class TestAssetModelLoader(unittest.TestCase):
             else:
                 fm.active = True
 
-               if fm.name == "termites":
+                if fm.name == "termites":
                     fm.init_states["detection"] = True
                     fm.init_states["initiation"] = True
                     fm.tasks["inspection_groundline"].t_delay = 0
 
         comp.mc_timeline(t_end=100, n_iterations=100)
-
-        self.assertEqual(failure_modes_on=1)
 
     # TODO redo test later
     # def test_load_failure_mode_condition_tasks(self):
