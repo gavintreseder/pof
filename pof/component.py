@@ -777,7 +777,9 @@ class Component(PofBase):
                         )
 
                         summary[fm.name][f_name + " pop annual avg"] = total_failed
-                        summary[fm.name]["conf interval " + f_name + " (+/-)"] = lower
+                        summary[fm.name]["conf interval " + f_name + " (+/-)"] = (
+                            total_failed - lower
+                        )
 
         df = pd.DataFrame.from_dict(summary).T
 
@@ -1128,14 +1130,15 @@ def sort_df(df=None, column=None, var=None):
 def calc_confidence_interval(sim_counter=None, df_cohort=None, total_failed=None):
     """ Calculate the upper and lower bounds for a given confidence interval """
 
+    conf_interval = cf.get("forecast_confidence_interval")
+    z_score = 1.282  # TODO currently set to work for 80% confidence ss.norm. to get the z score
+
     # Calculate confidence interval
     population_total = df_cohort.sum()[0] / sim_counter
 
-    p_failed = total_failed / population_total  # p_fm
+    p_failed = total_failed / population_total
 
     se_failed = np.sqrt(p_failed * (1 - p_failed) / population_total)
-
-    z_score = 1.282  # TODO currently set to work for 80% confidence ss.norm. to get the z score
 
     lower_bound = (p_failed - z_score * se_failed) * population_total
     upper_bound = (p_failed + z_score * se_failed) * population_total
