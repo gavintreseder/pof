@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 import json
+import scipy.stats as ss
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -1131,7 +1132,8 @@ def calc_confidence_interval(sim_counter=None, df_cohort=None, total_failed=None
     """ Calculate the upper and lower bounds for a given confidence interval """
 
     conf_interval = cf.get("forecast_confidence_interval")
-    z_score = 1.282  # TODO currently set to work for 80% confidence ss.norm. to get the z score
+    # Interval is 0.8 (80% confidence) - need to include both tails, so ppf(0.9)
+    z_score = ss.norm.ppf(1 - (1 - conf_interval) / 2)
 
     # Calculate confidence interval
     population_total = df_cohort.sum()[0] / sim_counter
