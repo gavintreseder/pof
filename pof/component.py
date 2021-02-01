@@ -545,7 +545,7 @@ class Component(PofBase):
             if fm.active:
                 for ind_name in fm._cond_to_update():
                     if ind_name not in expected:
-                        expected[ind_name] = fm.ind[ind_name].expected_condition(conf)
+                        expected[ind_name] = fm.indicators[ind_name].expected_condition(conf)
 
         return expected
 
@@ -799,10 +799,9 @@ class Component(PofBase):
 
         # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df["sim"] = df.loc[mask_failures, "cf"] / (
-            df.loc[mask_failures, ["cf", "ff", "is"]].sum()
-        )
-        df["sim"].fillna("")
+        df["prevented"] = df.loc[mask_failures, "cf"] / df.loc[mask_failures, ["cf", "ff"]].sum(axis=1)
+        
+        df["prevented"].fillna("")
 
         # Add the cohort data if it is supplied
         if df_cohort is not None:
@@ -821,7 +820,7 @@ class Component(PofBase):
             "is",
             "cf",
             "ff",
-            "sim",
+            "prevented",
             "mean cf",
             "mean ff",
             "cf pop annual avg",
@@ -834,7 +833,7 @@ class Component(PofBase):
         ]
         df = df.reset_index().reindex(columns=col_order)
 
-        percent_col = ["ie", "sim"]
+        percent_col = ["ie", "prevented"]
         df[percent_col] = df[percent_col].mul(100)
         rename_cols = {col: col + " (%)" for col in percent_col}
         df.rename(columns=rename_cols, inplace=True)
