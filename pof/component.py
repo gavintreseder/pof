@@ -545,7 +545,9 @@ class Component(PofBase):
             if fm.active:
                 for ind_name in fm._cond_to_update():
                     if ind_name not in expected:
-                        expected[ind_name] = fm.indicators[ind_name].expected_condition(conf)
+                        expected[ind_name] = fm.indicators[ind_name].expected_condition(
+                            conf
+                        )
 
         return expected
 
@@ -762,12 +764,6 @@ class Component(PofBase):
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
 
-                        # Mean failures
-                        mean_failed = (
-                            df_cohort.reindex(age).mul(count, axis=0).mean()[0]
-                            / self._sim_counter
-                        )
-
                         # Total failures
                         total_failed = (
                             df_cohort.reindex(age).mul(count, axis=0).sum()[0]
@@ -780,10 +776,8 @@ class Component(PofBase):
                             total_failed=total_failed,
                         )
 
-                        summary[fm.name]["mean " + f_name] = mean_failed
                         summary[fm.name][f_name + " pop annual avg"] = total_failed
-                        summary[fm.name]["interval lower " + f_name] = lower
-                        summary[fm.name]["interval upper " + f_name] = upper
+                        summary[fm.name]["conf interval " + f_name + " (+/-)"] = lower
 
         df = pd.DataFrame.from_dict(summary).T
 
@@ -799,18 +793,16 @@ class Component(PofBase):
 
         # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df["prevented"] = df.loc[mask_failures, "cf"] / df.loc[mask_failures, ["cf", "ff"]].sum(axis=1)
-        
+        df["prevented"] = df.loc[mask_failures, "cf"] / df.loc[
+            mask_failures, ["cf", "ff"]
+        ].sum(axis=1)
+
         df["prevented"].fillna("")
 
         # Add the cohort data if it is supplied
         if df_cohort is not None:
             df.loc["total", "cf pop annual avg"] = df["cf pop annual avg"].sum()
             df.loc["total", "ff pop annual avg"] = df["ff pop annual avg"].sum()
-            df.loc["total", "interval lower cf"] = df["interval lower cf"].sum()
-            df.loc["total", "interval upper cf"] = df["interval upper cf"].sum()
-            df.loc["total", "interval lower ff"] = df["interval lower ff"].sum()
-            df.loc["total", "interval upper ff"] = df["interval upper ff"].sum()
             df.loc["total", "total"] = df_cohort["assets"].sum()
 
         # Format for display
@@ -821,14 +813,10 @@ class Component(PofBase):
             "cf",
             "ff",
             "prevented",
-            "mean cf",
-            "mean ff",
             "cf pop annual avg",
-            "interval lower cf",
-            "interval upper cf",
+            "conf interval cf (+/-)",
             "ff pop annual avg",
-            "interval lower ff",
-            "interval upper ff",
+            "conf interval ff (+/-)",
             "total",
         ]
         df = df.reset_index().reindex(columns=col_order)
