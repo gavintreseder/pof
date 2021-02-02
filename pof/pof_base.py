@@ -489,11 +489,11 @@ class PofBase:
         data_req = self.get_attr(data_req={})
 
         # Add the comp key
-        data_req_pole = {}
-        data_req_pole["pole"] = data_req  # TODO Hardcoded to match filter in main.py
+        data_req_sys = {}
+        data_req_sys["overhead_network"] = data_req  # TODO Hardcoded to match filter in main.py
 
         # Unpack
-        data_req_unpacked = self.unpack_container(data_req_pole)
+        data_req_unpacked = self.unpack_container(data_req_sys)
 
         return data_req_unpacked
 

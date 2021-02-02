@@ -8,11 +8,10 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from config import config
-from pof import Component
-from pof.units import valid_units
+from pof.system import System
 from pof.loader.asset_model_loader import AssetModelLoader
-from pof.interface.dashlogger import DashLogger
-from pof.interface.layouts import make_layout, cf, scale_input, make_component_layout
+
+from pof.interface.layouts import make_layout, cf, scale_input, make_system_layout
 
 # TODO fix the need to import cf
 
@@ -35,6 +34,9 @@ server = app.server
 # Load the data sets.
 # ========================================================
 
+# Default file path
+file_name_initial = data.get("file_name_default")
+
 # Forecast years
 START_YEAR = 2015
 END_YEAR = 2024
@@ -50,25 +52,26 @@ sfd = SimpleFleet(file_path + FILE_NAME)
 sfd.load()
 sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
 
-global comp
+global system
 global pof_sim
 global sens_sim
 global collapse_ids
 global sim_triggers
 global param_inputs
 
-# comp = Component.demo() # TODO make this comp.demo() work - not file
-aml = AssetModelLoader(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
-comp_data = aml.load(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
-comp = Component.from_dict(comp_data["pole"])
-comp.fleet_data = sfd  # TODO fix by creating asset class
+aml = AssetModelLoader(paths.demo_path + os.sep + file_name_initial)
+data_load = aml.load(paths.demo_path + os.sep + file_name_initial)
+system = System.from_dict(
+    data_load["overhead_network"]
+)  # TODO - make this loop through systems
+system.fleet_data = sfd  # TODO fix by creating asset class
 
 # Instantiate global variables
-pof_sim = copy.copy(comp)
-sens_sim = copy.copy(comp)
-collapse_ids = comp.get_objects()
+pof_sim = copy.copy(system)
+sens_sim = copy.copy(system)
+collapse_ids = system.get_objects()
 collapse_ids.append("sim_params")
-sim_triggers = comp.get_dash_ids(numericalOnly=False)
+sim_triggers = system.get_dash_ids(numericalOnly=False)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
     for dash_id in sim_triggers
@@ -76,7 +79,7 @@ param_inputs = [
 
 # Layout
 var_to_scale = cf.scaling
-app.layout = make_layout(comp)
+app.layout = make_layout(system)
 
 
 @app.callback(
@@ -92,7 +95,7 @@ def load_file(click_load, file_name_model):
     # TODO change hide to just set the text to be something, i.e. error_msg = "" when things are ok, error_msg = 'there's a mistake'
     # Think about what happens if you want different error messages long term?
 
-    global comp
+    global system
     global pof_sim
     global sens_sim
     global collapse_ids
@@ -111,28 +114,28 @@ def load_file(click_load, file_name_model):
 
     if os.path.exists(file_path_model):
         aml = AssetModelLoader(file_path_model)
-        comp_data = aml.load(file_path_model)
-        comp = Component.from_dict(comp_data["pole"])
-        comp.fleet_data = sfd  # TODO fix by creating asset class
+        data_load = aml.load(file_path_model)
+        system = System.from_dict(data_load["overhead_network"])
+        system.fleet_data = sfd  # TODO fix by creating asset class
 
         success_hide = False
     else:
         error_hide = False
 
     # Redefine global variables
-    pof_sim = copy.copy(comp)
-    sens_sim = copy.copy(comp)
+    pof_sim = copy.copy(system)
+    sens_sim = copy.copy(system)
 
-    collapse_ids = comp.get_objects()
+    collapse_ids = system.get_objects()
     collapse_ids.append("sim_params")
 
-    sim_triggers = comp.get_dash_ids(numericalOnly=False)
+    sim_triggers = system.get_dash_ids(numericalOnly=False)
     param_inputs = [
         Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
         for dash_id in sim_triggers
     ]
 
-    return make_component_layout(comp), error_hide, success_hide
+    return make_system_layout(system), error_hide, success_hide
 
 
 @app.callback(
@@ -143,7 +146,7 @@ def load_file(click_load, file_name_model):
 )
 def save_file(click_save, file_name_new):
     """ Save the data of the user input file """
-    global comp
+    global system
 
     error_hide = True
     success_hide = True
@@ -155,7 +158,7 @@ def save_file(click_save, file_name_new):
                 file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
 
             # Save to json
-            comp.save(file_name_new)
+            system.save(file_name_new)
             success_hide = False
 
         except Exception as error:
@@ -213,7 +216,7 @@ def toggle_collapses(*args):
 )
 def update_parameter(model_units, input_units, *args):
     """Update a the pof object whenever an input is changes""",
-    global comp
+    global system
 
     # Check the parameters that changed
     ctx = dash.callback_context
@@ -226,16 +229,18 @@ def update_parameter(model_units, input_units, *args):
         value = ctx.triggered[0]["value"]
 
         if dash_id == "model_units-dropdown":
-            comp.units = model_units
+            system.units = model_units
         elif dash_id == "input_units-dropdown":
             pass
 
         else:
             # Scale the value if req
             var = dash_id.split("-")[-1]
-            value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
+            value = scale_input(
+                pof_obj=system, attr=var, value=value, units=input_units
+            )
             # update the model
-            comp.update(dash_id, value)
+            system.update(dash_id, value)
 
     return f"Update State: {dash_id} - {value}"
 
@@ -252,7 +257,7 @@ def update_parameter(model_units, input_units, *args):
 )
 def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
-    global comp
+    global system
     global pof_sim
     global sfd
 
@@ -260,7 +265,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
 
     # time.sleep(1)
     if active:
-        pof_sim = copy.copy(comp)
+        pof_sim = copy.copy(system)
 
         # Scale t_end # TODO generalise funciton and move
         t_end = int(scale_input(pof_sim, "t_end", t_end, input_units))
@@ -386,7 +391,7 @@ def update_sensitivity(
 ):
     """ Trigger a sensitivity analysis of the target variable"""
     # Copy from the main model
-    global comp
+    global system
     global sens_sim
     sens_sim.cancel_sim()
 
@@ -396,7 +401,7 @@ def update_sensitivity(
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
 
-        sens_sim = copy.deepcopy(comp)
+        sens_sim = copy.deepcopy(system)
 
         # Scale the inputs if needed
         var = var_id.split("-")[-1]

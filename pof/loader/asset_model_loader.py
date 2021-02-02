@@ -65,9 +65,9 @@ class AssetModelLoader:
         """
 
         self.read_xlsx()
-        comp_data = self._get_component_data(self.df)
+        sys_data = self._get_system_data(self.df)
 
-        return comp_data
+        return sys_data
 
     def read_xlsx(self):
         """
@@ -116,11 +116,11 @@ class AssetModelLoader:
         """
         try:
             with open(self.filename) as json_file:
-                comp_data = json.load(json_file)
+                sys_data = json.load(json_file)
 
-            self.df = pd.DataFrame.from_dict(comp_data)
+            self.df = pd.DataFrame.from_dict(sys_data)
 
-            return comp_data
+            return sys_data
 
         except Exception as error:
             logging.error("Error saving file", exc_info=error)
@@ -177,12 +177,39 @@ class AssetModelLoader:
 
     # ********************* excel load methods *****************************
 
-    def _get_component_data(self, df):
+    def _get_system_data(self, df):
+        # Get the System information
+        sys_key = ("asset_model", "system", "name")
+        sys_list = df[sys_key].dropna().tolist()
+
+        # Get the Component information
+        comp_key = ("asset_model", "component", "name")
+        comp_list = df[comp_key].dropna().unique().tolist()
+
+        system_data = dict()
+
+        # Create the keys for the systems and the components on each system
+        for i in range(0, len(sys_list)):
+            if not sys_list[i] in system_data:
+                system_data[sys_list[i]] = dict()
+            system_data[sys_list[i]][comp_list[i]] = dict()
+
+        # Add the component dictionary onto the keys
+        for system in system_data.keys():
+            comps_data = self._get_component_data(
+                self.df, components=system_data[system]
+            )
+
+            sys_data = dict(name=system, comp=comps_data)
+            system_data.update({system: sys_data})
+
+        return system_data
+
+    def _get_component_data(self, df, components=None):
         comps_data = dict()
 
         # Get the Component information
         comp_key = ("asset_model", "component", "name")
-        components = df[comp_key].dropna().unique()
 
         df_comps = df[
             [

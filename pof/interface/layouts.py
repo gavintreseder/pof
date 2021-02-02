@@ -1,6 +1,10 @@
 """
 Generates a layout for the project
 
+    Systems
+        name
+        Component(s)
+
     Components
         name
         Failure Mode(s)
@@ -46,6 +50,7 @@ import dash_bootstrap_components as dbc
 
 from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
+from pof.system import System
 from pof.units import valid_units
 from config import config
 from statistics import mean
@@ -53,6 +58,7 @@ from statistics import mean
 SCALING = cf.scaling
 defaults = config["Layouts"]
 comp_cf = config["Component"]
+sys_cf = config["System"]
 data = config["Main"]
 TIME_VARS = [
     "t_end",
@@ -91,13 +97,13 @@ def scale_input(pof_obj, attr: str, value: float, units: str = None) -> float:
     return value
 
 
-def make_layout(comp):
+def make_layout(system):
     # Dropdown list values
     update_list_sens_x = [
         {"label": option, "value": option}
-        for option in comp.get_update_ids(numericalOnly=True)
+        for option in system.get_update_ids(numericalOnly=True)
     ]
-    sens_x_default = comp.get_update_ids(numericalOnly=True)[0]
+    sens_x_default = system.get_update_ids(numericalOnly=True)[0]
 
     y_values_sens = [
         "cost",
@@ -117,7 +123,7 @@ def make_layout(comp):
     unit_default = "years"
 
     # Generate row data
-    inputs = make_input_component(
+    inputs = make_input_section(
         update_list_unit=update_list_unit, unit_default=unit_default
     )
 
@@ -134,8 +140,8 @@ def make_layout(comp):
         sens_x_default=sens_x_default,
     )
 
-    mcl = make_component_layout(comp)
-    sim = make_sim_layout(comp)
+    msl = make_system_layout(system)
+    sim = make_sim_layout()
 
     file_input = make_file_name_input()
     save_load_buttons = make_save_load_buttons()
@@ -193,7 +199,7 @@ def make_layout(comp):
                     ),
                 ]
             ),
-            html.Div(id="param_layout", children=mcl),
+            html.Div(id="param_layout", children=msl),
             sim,
         ]
     )
@@ -204,8 +210,10 @@ def make_layout(comp):
 # ******************* Validation ******************
 
 
-def make_pof_obf_layout(pof_obj, prefix="", sep="-"):
-    if isinstance(pof_obj, Component):
+def make_pof_obj_layout(pof_obj, prefix="", sep="-"):
+    if isinstance(pof_obj, System):
+        layout = make_system_layout(pof_obj, prefix, sep)
+    elif isinstance(pof_obj, Component):
         layout = make_component_layout(pof_obj, prefix, sep)
     elif isinstance(pof_obj, FailureMode):
         layout = make_failure_mode_layout
@@ -239,6 +247,51 @@ def validate_layout(pof_obj, layout):
         return True
 
 
+# ****************** System **********************
+
+
+def make_system_layout(system, prefix="", sep="-"):
+    """"""
+
+    prefix = prefix + system.name + sep
+
+    # Get the component layout
+    comp_layout = []
+    for comp in system.comp.values():
+        comp_layout = comp_layout + [
+            make_component_layout(comp, prefix=prefix + "comp" + sep, sep=sep)
+        ]
+
+    layout = dbc.InputGroup(
+        [
+            dbc.InputGroupAddon(
+                dbc.Checkbox(
+                    id=prefix + "active", checked=system.active, disabled=True
+                ),
+                addon_type="prepend",
+            ),
+            dbc.Button(
+                system.name,
+                color="link",
+                id=prefix + "collapse-button",
+            ),
+            dbc.Col(
+                [
+                    dbc.Row(
+                        dbc.Collapse(
+                            dbc.Card(dbc.CardBody(dbc.Row(comp_layout))),
+                            id=prefix + "collapse",
+                            is_open=IS_OPEN,
+                        )
+                    )
+                ]
+            ),
+        ]
+    )
+
+    return layout
+
+
 # ******************* Component ******************
 
 
@@ -264,9 +317,7 @@ def make_component_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(
-                    id=prefix + "active", checked=component.active, disabled=True
-                ),
+                dbc.Checkbox(id=prefix + "active", checked=component.active),
                 addon_type="prepend",
             ),
             dbc.Button(
@@ -800,7 +851,7 @@ def make_condition_impact_form(impact, prefix="", sep="-"):
 
 
 # *******************Sim meta data***********************
-def make_input_component(update_list_unit, unit_default):
+def make_input_section(update_list_unit, unit_default):
     form = dbc.FormGroup(
         [
             dbc.Row(
@@ -1081,7 +1132,7 @@ def make_sim_sens_inputs(
     return form
 
 
-def make_sim_layout(component):
+def make_sim_layout():
     layout = dbc.InputGroup(
         [
             dbc.Button(

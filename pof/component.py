@@ -149,15 +149,6 @@ class Component(PofBase):
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
 
-    def save(self, file_name):
-        """ Save a json file with a component """
-
-        # Create the data set
-        data = self.to_dict()
-
-        with open(Paths().model_path + "\\" + file_name, "w") as json_file:
-            json.dump(data, json_file)
-
     # ****************** Set data ******************
     @coerce_arg_type
     def mc(self, t_end: int, t_start: int = 0, n_iterations: int = DEFAULT_ITERATIONS):
@@ -993,9 +984,7 @@ class Component(PofBase):
             fm.update_consequence(data)
 
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
-        """Return a list of dash ids for values that can be changed
-        Prefix is ""pole as currently nothing passed for prefix
-        """
+        """Return a list of dash ids for values that can be changed"""
 
         if active is None or (self.active == active):
             # Component
@@ -1051,7 +1040,6 @@ class Component(PofBase):
 
     def get_objects(self, prefix="", sep="-"):
 
-        prefix = prefix
         objects = [prefix + self.name]
 
         prefix = prefix + self.name + sep
