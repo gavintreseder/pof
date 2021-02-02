@@ -12,7 +12,7 @@ import os
 from test_pof_base import TestPofBaseCommon
 from pof.paths import Paths
 import testconfig  # pylint: disable=unused-import
-from pof.component import Component
+from pof.component import Component, calc_confidence_interval
 from config import config
 from pof.interface.figures import calc_y_max
 from pof.data.asset_data import SimpleFleet
@@ -368,7 +368,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         df_cohort = sfd.df_age
 
         # Act
-        lower_bound, upper_bound = comp.calc_confidence_interval(
+        lower_bound, upper_bound = calc_confidence_interval(
             df_cohort=df_cohort, total_failed=total_failed
         )
 

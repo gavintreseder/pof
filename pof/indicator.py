@@ -452,6 +452,7 @@ class Indicator(PofBase):
         return failed
 
 
+# TODO exeriment only
 class CondIndicator:
 
     """
