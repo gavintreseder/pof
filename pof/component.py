@@ -287,7 +287,7 @@ class Component(PofBase):
             # Ghetto fix TODO
             if "indicator" in system_impacts:
                 for fm in self.fm.values():
-                    fm.update_timeline(t_next + 1)
+                    fm.update_timeline(t_next + 1, updates={'failure':False})
 
     def renew(
         self,

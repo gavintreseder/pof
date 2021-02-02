@@ -497,6 +497,7 @@ class FailureMode(PofBase):
 
             # Check for condition changes
             for cond_name in self._cond_to_update():
+                # TODO this needs to be changed so conditions are updated when an indicator has a system impact
                 if "initiation" in updates or cond_name in updates:
                     logging.debug(
                         f"condition {cond_name}, start {t_start}, initiate {t_initiate}, end {t_end}"
