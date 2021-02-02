@@ -37,7 +37,7 @@ class System(PofBase):
     """
 
     TIME_VARIABLES = {}
-    POF_VARIABLES = ["component"]
+    POF_VARIABLES = ["comp"]
 
     def __init__(
         self,

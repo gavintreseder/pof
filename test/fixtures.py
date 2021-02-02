@@ -36,6 +36,7 @@ complete = {
     'consequence': {},
     'failure_mode':{},
     'component':{},
+    'system':{}
 }
 
 update = copy.deepcopy(complete)
@@ -335,6 +336,24 @@ complete['component']['update'] = dict(
     indicator={'condition_indicator_0':complete['condition_indicator']['update']},
 )
 
+# *********************** system data **********************************
+
+system_data = copy.deepcopy(demo.system_data)
+
+complete['system'][0] = dict(
+    name='system_0',
+    comp=complete['component'][0],
+)
+
+complete['system'][1] = dict(
+    name='system_1',
+    comp=complete['component'][1]
+)
+
+complete['system']['update'] = dict(
+    complete['system'][1],
+    comp= {'component_0':complete['component']['update']},
+)
 
 complete = copy.deepcopy(complete)
 
