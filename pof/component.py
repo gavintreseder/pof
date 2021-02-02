@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 import json
+import scipy.stats as ss
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -274,15 +275,20 @@ class Component(PofBase):
         # TODO add task impacts
 
         for fm_name, task_names in fm_tasks.items():
-            system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
+            system_impacts = self.fm[fm_name].complete_tasks(t_next, task_names)
 
-            if bool(system_impact) and cf.get("allow_system_impact"):
+            if "component" in system_impacts and cf.get("allow_system_impact"):
                 logging.debug(
                     "Component %s reset by FailureMode %s", self._name, fm_name
                 )
                 self.renew(t_renew=t_next + 1)
 
                 break
+
+            # Ghetto fix TODO
+            if "indicator" in system_impacts:
+                for fm in self.fm.values():
+                    fm.update_timeline(t_next + 1, updates={'failure':False})
 
     def renew(
         self,
@@ -291,10 +297,6 @@ class Component(PofBase):
         """
         Renew the component because a task has triggered an as-new change or failure
         """
-
-        # Reset the indicators
-        for ind in self.indicator.values():
-            ind.reset_to_perfect()
 
         # Fail
         if config.get("FailureMode").get("remain_failed"):
@@ -307,6 +309,10 @@ class Component(PofBase):
         else:
             for fm in self.fm.values():
                 fm.renew(t_renew)
+
+            # Reset the indicators
+            for ind in self.indicator.values():
+                ind.reset_to_perfect()
 
     def increment_counter(self):
         self._sim_counter += 1
@@ -533,9 +539,18 @@ class Component(PofBase):
         return {fm.name: fm.expected_risk_cost() for fm in self.fm.values()}
 
     def expected_condition(self, conf=0.95):
-        return {
-            ind.name: ind.expected_condition(conf) for ind in self.indicator.values()
-        }
+        """ Returns the expected condition for all indicators associated with active failure modes"""
+        expected = {}
+
+        for fm in self.fm.values():
+            if fm.active:
+                for ind_name in fm._cond_to_update():
+                    if ind_name not in expected:
+                        expected[ind_name] = fm.indicators[ind_name].expected_condition(
+                            conf
+                        )
+
+        return expected
 
     # **************** Interface ********************
 
@@ -682,9 +697,9 @@ class Component(PofBase):
 
         # Merge the population details
         df = pd.merge(
-            df_erc.sort_values("time"),
+            df_erc.sort_values("age"),
             df_age_forecast.sort_values("age"),
-            left_on="time",
+            left_on="age",
             right_on="age",
         )
 
@@ -750,12 +765,6 @@ class Component(PofBase):
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
 
-                        # Mean failures
-                        mean_failed = (
-                            df_cohort.reindex(age).mul(count, axis=0).mean()[0]
-                            / self._sim_counter
-                        )
-
                         # Total failures
                         total_failed = (
                             df_cohort.reindex(age).mul(count, axis=0).sum()[0]
@@ -768,10 +777,10 @@ class Component(PofBase):
                             total_failed=total_failed,
                         )
 
-                        summary[fm.name]["mean " + f_name] = mean_failed
                         summary[fm.name][f_name + " pop annual avg"] = total_failed
-                        summary[fm.name]["interval lower " + f_name] = lower
-                        summary[fm.name]["interval upper " + f_name] = upper
+                        summary[fm.name]["conf interval " + f_name + " (+/-)"] = (
+                            total_failed - lower
+                        )
 
         df = pd.DataFrame.from_dict(summary).T
 
@@ -787,19 +796,16 @@ class Component(PofBase):
 
         # Calculate simulated effectiveness
         mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df["sim"] = df.loc[mask_failures, "cf"] / (
-            df.loc[mask_failures, "cf"] + df.loc[mask_failures, "ff"]
-        )
-        df["sim"].fillna("")
+        df["prevented"] = df.loc[mask_failures, "cf"] / df.loc[
+            mask_failures, ["cf", "ff"]
+        ].sum(axis=1)
+
+        df["prevented"].fillna("")
 
         # Add the cohort data if it is supplied
         if df_cohort is not None:
             df.loc["total", "cf pop annual avg"] = df["cf pop annual avg"].sum()
             df.loc["total", "ff pop annual avg"] = df["ff pop annual avg"].sum()
-            df.loc["total", "interval lower cf"] = df["interval lower cf"].sum()
-            df.loc["total", "interval upper cf"] = df["interval upper cf"].sum()
-            df.loc["total", "interval lower ff"] = df["interval lower ff"].sum()
-            df.loc["total", "interval upper ff"] = df["interval upper ff"].sum()
             df.loc["total", "total"] = df_cohort["assets"].sum()
 
         # Format for display
@@ -809,20 +815,16 @@ class Component(PofBase):
             "is",
             "cf",
             "ff",
-            "sim",
-            "mean cf",
-            "mean ff",
+            "prevented",
             "cf pop annual avg",
-            "interval lower cf",
-            "interval upper cf",
+            "conf interval cf (+/-)",
             "ff pop annual avg",
-            "interval lower ff",
-            "interval upper ff",
+            "conf interval ff (+/-)",
             "total",
         ]
         df = df.reset_index().reindex(columns=col_order)
 
-        percent_col = ["ie", "sim"]
+        percent_col = ["ie", "prevented"]
         df[percent_col] = df[percent_col].mul(100)
         rename_cols = {col: col + " (%)" for col in percent_col}
         df.rename(columns=rename_cols, inplace=True)
@@ -1129,14 +1131,16 @@ def sort_df(df=None, column=None, var=None):
 def calc_confidence_interval(sim_counter=None, df_cohort=None, total_failed=None):
     """ Calculate the upper and lower bounds for a given confidence interval """
 
+    conf_interval = cf.get("forecast_confidence_interval")
+    # Interval is 0.8 (80% confidence) - need to include both tails, so ppf(0.9)
+    z_score = ss.norm.ppf(1 - (1 - conf_interval) / 2)
+
     # Calculate confidence interval
     population_total = df_cohort.sum()[0] / sim_counter
 
-    p_failed = total_failed / population_total  # p_fm
+    p_failed = total_failed / population_total
 
     se_failed = np.sqrt(p_failed * (1 - p_failed) / population_total)
-
-    z_score = 1.282  # TODO currently set to work for 80% confidence ss.norm. to get the z score
 
     lower_bound = (p_failed - z_score * se_failed) * population_total
     upper_bound = (p_failed + z_score * se_failed) * population_total

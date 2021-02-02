@@ -148,13 +148,13 @@ def update_condition_fig(
             # time = np.linspace(
             #     0, length - 1, length, dtype=int
             # )  # TODO take time as a variable
-            x = np.append(time, time[::-1])
+            # x = np.append(time, time[::-1])
             y = df["y" + str(idx)]
 
             # Add the boundary
             fig.add_trace(
                 go.Scatter(
-                    x=x,
+                    x=time,
                     y=y,
                     fill="toself",
                     fillcolor="rgba" + cmap[idx][3:-2] + ",0.2)",
@@ -176,10 +176,12 @@ def update_condition_fig(
                 row=idx,
                 col=1,
             )
-            fig.update_yaxes(title_text=y_title + " Measure", row=idx, automargin=True)
-
-            # if y_max is not None:
-            #     fig.update_yaxes(range=[0, y_max[idx - 1]])  # TODO - fix this (applying to all charts)
+            fig.update_yaxes(  # Not using y_max method as maximum condition (perfect) will always be max
+                title_text=y_title + " Measure",
+                row=idx,
+                automargin=True,
+                range=[0, max(y)],
+            )
 
             idx = idx + 1
 
