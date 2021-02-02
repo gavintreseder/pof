@@ -17,10 +17,14 @@ import pandas as pd
 import scipy.stats as ss
 from collections.abc import Iterable
 from scipy.linalg import circulant
+
+# from matplotlib import pyplot as plt
+
 import matplotlib
 
 matplotlib.use("TkAgg")  # Temporary fix due to matplotlib 3.3.3 issue
 import matplotlib.pyplot as plt
+
 from tqdm.auto import tqdm
 from lifelines import WeibullFitter
 from reliability.Fitters import Fit_Weibull_2P, Fit_Weibull_3P
@@ -468,18 +472,22 @@ class FailureMode(PofBase):
         Takes a timeline and updates tasks that are impacted
         """
 
+        _update_time = "time" in updates
+        _update_initiation = "initiation" in updates
+        _cond_init = []
+
         if t_end is None:
             t_end = self.timeline["time"][-1]
 
         # Initiation -> Condition -> time_tasks -> detection -> tasks
         if t_start < t_end and self.active:
 
-            if "time" in updates:
+            if _update_time:
                 self.timeline["time"] = np.linspace(
                     t_start, t_end, t_end - t_start + 1, dtype=int
                 )
 
-            if "initiation" in updates:
+            if _update_initiation:
                 if updates["initiation"]:
                     t_initiate = t_start
                 else:
@@ -498,7 +506,11 @@ class FailureMode(PofBase):
             # Check for condition changes
             for cond_name in self._cond_to_update():
                 # TODO this needs to be changed so conditions are updated when an indicator has a system impact
-                if "initiation" in updates or cond_name in updates:
+                if (
+                    "initiation" in updates
+                    or "failure" in updates
+                    or cond_name in updates
+                ):
                     logging.debug(
                         f"condition {cond_name}, start {t_start}, initiate {t_initiate}, end {t_end}"
                     )
@@ -954,7 +966,7 @@ class FailureMode(PofBase):
             ax_task.plot(timeline["time"], timeline[task], label=task)
             ax_task.legend()
 
-        plt.show()
+        return fig
 
     def _scale_units(self, new_units, current_units):
         """ Simple fix - Trigger an update to init dist when units are updated """

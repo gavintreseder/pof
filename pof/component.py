@@ -697,9 +697,9 @@ class Component(PofBase):
 
         # Merge the population details
         df = pd.merge(
-            df_erc.sort_values("time"),
+            df_erc.sort_values("age"),
             df_age_forecast.sort_values("age"),
-            left_on="time",
+            left_on="age",
             right_on="age",
         )
 
