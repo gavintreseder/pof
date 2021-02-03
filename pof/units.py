@@ -1,4 +1,3 @@
-
 import copy
 import logging
 
@@ -14,12 +13,18 @@ VALID_UNITS = dict(
 
 valid_units = VALID_UNITS
 
+
 def scale_units(df, input_units: str = None, model_units: str = None):
 
     # TODO change to before / after
 
     # expand to include all cols
-    time_cols = ["time", "age"]
+    time_cols = [
+        "time",
+        "age",
+        "t_interval",
+        "t_delay",
+    ]  # Include t_delay & t_interval for sens chart
     unit_cols = list(set(time_cols) & set(df.columns))
 
     input_factor = VALID_UNITS.get(input_units, None)
@@ -45,6 +50,6 @@ def scale_units(df, input_units: str = None, model_units: str = None):
     return df, units
 
 
-def unit_ratio(left:str, right:str) -> float:
+def unit_ratio(left: str, right: str) -> float:
     """ Returns the ratio between the left units and the right units"""
     return VALID_UNITS.get(left) / VALID_UNITS.get(right)

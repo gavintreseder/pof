@@ -273,7 +273,7 @@ class TestFailureMode(TestPofBaseCommon, unittest.TestCase):
 
             # Act
             with patch.dict("pof.failure_mode.cf", {"remain_failed": remain_failed}):
-                fm.sim_timeline(2000)
+                fm.sim_timeline(t_end)
 
                 # Assert
                 self.assertEqual(len(fm.timeline["time"]), time_sim)

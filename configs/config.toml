@@ -22,6 +22,7 @@ use_default = false
 [Component]
 allow_system_impact = true
 indicator_input_fields = ["perfect", "initial", "failed"] 
+forecast_confidence_interval = 0.8
 
 [FailureMode]
 remain_failed = true

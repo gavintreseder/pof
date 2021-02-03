@@ -118,6 +118,12 @@ class TestAssetModelLoader(unittest.TestCase):
         comp = Component.load(data["pole"])
 
         failure_modes_on = ["termites", "fungal decay | internal"]
+        tasks_on = [
+            "inspection_groundline",
+            "functional_failure",
+            "conditional_failure",
+            "termite_treatment",
+        ]
 
         for fm in comp.fm.values():
             if fm.name not in failure_modes_on:
@@ -125,14 +131,19 @@ class TestAssetModelLoader(unittest.TestCase):
             else:
                 fm.active = True
 
-               if fm.name == "termites":
-                    fm.init_states["detection"] = True
-                    fm.init_states["initiation"] = True
-                    fm.tasks["inspection_groundline"].t_delay = 0
+                for task in fm.tasks.values():
+                    if task.name in tasks_on:
+                        task.active = True
+                    else:
+                        task.active = False
+
+        # Set up the initial states
+        fm = comp.fm["termites"]
+        fm.init_states["detection"] = True
+        fm.init_states["initiation"] = True
+        fm.tasks["inspection_groundline"].t_delay = 0
 
         comp.mc_timeline(t_end=100, n_iterations=100)
-
-        self.assertEqual(failure_modes_on=1)
 
     # TODO redo test later
     # def test_load_failure_mode_condition_tasks(self):

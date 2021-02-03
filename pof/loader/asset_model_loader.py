@@ -377,10 +377,6 @@ class AssetModelLoader:
 
             # TODO revist how system impact is set
             system = df_task["impact_model"]["system"]["level"].iloc[0]
-            if system is None:
-                system = []
-            else:
-                system = [system]
 
             impact_data = dict(
                 state=state,

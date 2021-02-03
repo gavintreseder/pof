@@ -148,13 +148,13 @@ def update_condition_fig(
             # time = np.linspace(
             #     0, length - 1, length, dtype=int
             # )  # TODO take time as a variable
-            x = np.append(time, time[::-1])
+            # x = np.append(time, time[::-1])
             y = df["y" + str(idx)]
 
             # Add the boundary
             fig.add_trace(
                 go.Scatter(
-                    x=x,
+                    x=time,
                     y=y,
                     fill="toself",
                     fillcolor="rgba" + cmap[idx][3:-2] + ",0.2)",
@@ -176,10 +176,12 @@ def update_condition_fig(
                 row=idx,
                 col=1,
             )
-            fig.update_yaxes(title_text=y_title + " Measure", row=idx, automargin=True)
-
-            # if y_max is not None:
-            #     fig.update_yaxes(range=[0, y_max[idx - 1]])  # TODO - fix this (applying to all charts)
+            fig.update_yaxes(  # Not using y_max method as maximum condition (perfect) will always be max
+                title_text=y_title + " Measure",
+                row=idx,
+                automargin=True,
+                range=[0, max(y)],
+            )
 
             idx = idx + 1
 
@@ -205,12 +207,11 @@ def update_condition_fig(
 
 
 def make_sensitivity_fig(
-    df,
+    df_plot,
     var_name="",
     y_axis="",
     keep_axis=False,
     units="unknown",
-    summarise=True,
     prev=None,
 ):
 
@@ -219,22 +220,6 @@ def make_sensitivity_fig(
     title_var = var.replace("_", " ").title()
 
     try:
-
-        # if summarise: #TODO
-
-        # Add direct and indirect
-        df_total = df.groupby(by=[var]).sum()
-        df_direct = df_total - df.loc[df["source"] == "risk"].groupby(by=[var]).sum()
-        summary = {
-            "total": df_total,
-            "direct": df_direct,
-            # "risk": df.loc[df["source"] == "risk"],
-        }
-
-        df_plot = pd.concat(summary, names=["source"]).reset_index()
-        df_plot["active"] = df_plot["active"].astype(bool)
-        df_plot = df_plot.append(df)
-        # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
 
         # Add line dashes
         df_plot[" "] = "  "

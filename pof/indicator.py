@@ -118,6 +118,7 @@ class Indicator(PofBase):
             detection=self.threshold_detection, failure=self.threshold_failure
         )
 
+        self._profile = dict()  # TODO del
         self._timeline: dict()
         self._timelines: dict()
         self.reset()
@@ -425,7 +426,33 @@ class Indicator(PofBase):
     def save_timeline(self, idx=None):
         self._timelines[idx] = copy.deepcopy(self._timeline)
 
+    def is_failed(
+        self, t_start: int = None, t_end: int = None, cause: str = None
+    ) -> List:
+        """
+        Determines if an indicator has failed between a time range from a cause
 
+        Args:
+            t_start: Optional; The time to start checking the failure
+            t_end: Optional; The time to stop checking the failure
+            cause: Optional; Consider the failure based on the impact of this cause only
+
+        Returns:
+            A list of boolean
+        """
+
+        timeline = self.get_timeline(cause)[t_start]
+
+        # Check for failure
+        if self.decreasing == True:
+            failed = timeline <= self.threshold_failure
+        else:
+            failed = timeline >= self.threshold_failure
+
+        return failed
+
+
+# TODO exeriment only
 class CondIndicator:
 
     """
@@ -674,6 +701,8 @@ class ConditionIndicator(Indicator):
 
     def __init__(self, name: str = "ConditionIndicator", **kwargs):
         super().__init__(name=name, **kwargs)
+
+        self.pf_curve_params = NotImplemented  # TODO for complex condition types
 
         # Current accumulation
         self._accumulated = dict()
@@ -971,9 +1000,7 @@ class ConditionIndicator(Indicator):
     def reset_to_perfect(self):
         self._reset_accumulated()
 
-    def reset_any(
-        self, t_reset, target=0, method="reset", axis="time", permanent=False
-    ):
+    def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
@@ -1015,8 +1042,6 @@ class ConditionIndicator(Indicator):
 
 
 # TODO overload get method so the None key isnt' needed for _timeline
-
-
 class PoleSafetyFactor(Indicator):
 
     # Class Variables
@@ -1068,8 +1093,8 @@ class PoleSafetyFactor(Indicator):
         elif method == "actual":
             sf = self._safety_factor(
                 agd=self.component.indicator["external_diameter"].perfect,
-                czd=self.component.indicator["external_diameter"],
-                wt=self.component.indicator["wall_thickness"],
+                czd=self.component.indicator["external_diameter"].get_timeline(),
+                wt=self.component.indicator["wall_thickness"].get_timeline(),
                 pole_load=self.component.info["pole_load"],
                 pole_strength=self.component.info["pole_strength"],
             )
@@ -1099,7 +1124,7 @@ class PoleSafetyFactor(Indicator):
 
         # Supress divide by zero error and fill na with zero
         with np.errstate(divide="ignore", invalid="ignore"):
-            sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (agd ** 3 * czd)
+            sf = margin * (czd ** 4 - (czd - 2 * wt) ** 4) / (czd * agd ** 3)
             sf[np.isnan(sf)] = 0
 
         return sf
@@ -1107,9 +1132,6 @@ class PoleSafetyFactor(Indicator):
     def expected_condition(self, conf=0.5):
         ec = self.agg_timelines()
         return self._expected_condition(ec, conf)
-
-
-# class ActualSafetyFactor(PoleSafetyFactor):
 
 
 if __name__ == "__main__":

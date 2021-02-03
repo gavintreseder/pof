@@ -653,15 +653,16 @@ def make_condition_trigger_layout(
                     ],
                     addon_type="prepend",
                 ),
-                dbc.Label(condition.capitalize(), className="mr-2"),
-                dbc.Form(
+                dbc.FormGroup(
                     [
+                        dbc.Label(condition.capitalize(), className="mr-2"),
                         dbc.Input(
                             type="number",
                             id=cond_prefix + "lower",
                             value=threshold["lower"],
                             min=0,
                             debounce=True,
+                            step="any",
                         ),
                         dbc.Input(
                             type="number",
@@ -669,15 +670,15 @@ def make_condition_trigger_layout(
                             value=threshold["upper"],
                             min=0,
                             debounce=True,
+                            step="any",
                         ),
                     ],
-                    inline=True,
                 ),
             ]
         )
         condition_inputs = condition_inputs + [condition_input]
 
-    layout = dbc.Form(children=condition_inputs)
+    layout = dbc.Form(children=condition_inputs, inline=True, className="mr-3")
 
     return layout
 
