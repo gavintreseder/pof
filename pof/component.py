@@ -561,7 +561,7 @@ class Component(PofBase):
     def sens_progress(self) -> float:
         """ Returns the progress of the sensitivity simulation"""
         return (self.n_sens * self.n_iterations + self.n) / (
-            self.n_iterations * self.n_sens_iterations
+            self.n_iterations * self.n_sens_iterations + self.n
         )
 
     def expected_sensitivity(
@@ -575,7 +575,7 @@ class Component(PofBase):
 
         # Progress bars
         self.n_sens = 0
-        self.n_sens_iterations = int((upper - lower) / step_size + 1)
+        self.n_sens_iterations = int((upper - lower) / step_size + step_size)
 
         var = var_id.split("-")[-1]
 
@@ -712,7 +712,7 @@ class Component(PofBase):
             df.groupby(by=["year", "task", "active"])[["pop_quantity", "pop_cost"]]
             .sum()
             .reset_index()
-        )
+        ).dropna()
 
         self.df_task = sort_df(df=df, column="task")
 
