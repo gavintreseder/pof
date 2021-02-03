@@ -824,7 +824,7 @@ class ConditionIndicator(Indicator):
 
         self._profile[pf_interval] = y
 
-    def _acc_timeline(self, t_start=0, t_end=None, pf_interval=None, name=None):
+    def _acc_timeline(self, t_start=0, t_stop=None, pf_interval=None, name=None):
         # TODO this probably needs a delay?
         """
         Returns the timeli
@@ -832,18 +832,18 @@ class ConditionIndicator(Indicator):
 
         # Validate times
         t_max = pf_interval  # len(self._profile[pf_interval]) - 1
-        if t_end is None:
-            t_end = t_max
+        if t_stop is None:
+            t_stop = t_max
 
-        if t_start > t_end:
-            t_start = t_end
+        if t_start > t_stop:
+            t_start = t_stop
 
-        if t_end < -1:  # TODO rewrite this
-            t_start = t_start - t_end
-            t_end = -1
+        if t_stop < -1:  # TODO rewrite this
+            t_start = t_start - t_stop
+            t_stop = -1
 
         profile = self._profile[pf_interval][
-            max(0, min(t_start, t_max)) : min(t_end, t_max) + 1
+            max(0, min(t_start, t_max)) : min(t_stop, t_max) + 1
         ]
 
         # Adjust for the accumulated condition
@@ -864,7 +864,7 @@ class ConditionIndicator(Indicator):
             )  # Changed from profile[0]
 
         # Fill the end with the failed condition
-        n_after_failure = t_end - t_start - len(profile) + 1
+        n_after_failure = t_stop - t_start - len(profile) + 1
         if n_after_failure > 0:
             profile = np.append(profile, np.full(max(0, n_after_failure), self._failed))
 
@@ -872,7 +872,7 @@ class ConditionIndicator(Indicator):
 
     def sim_failure_timeline(
         self,
-        t_end=None,
+        t_stop=None,
         t_delay=0,
         t_start=0,
         pf_interval=None,
@@ -898,7 +898,7 @@ class ConditionIndicator(Indicator):
         """
         Return the condition at time t
         """
-        self.sim_timeline(t_end=t, name=name)
+        self.sim_timeline(t_stop=t, name=name)
 
         return self._timeline[name][t]
 
@@ -1000,9 +1000,7 @@ class ConditionIndicator(Indicator):
     def reset_to_perfect(self):
         self._reset_accumulated()
 
-    def reset_any(
-        self, t_reset, target=0, method="reset", axis="time", permanent=False
-    ):
+    def reset_any(self, target=0, method="reset", axis="time", permanent=False):
         """
         # TODO make this work for all the renewal processes (as-bad-as-old, as-good-as-new, better-than-old, grp)
         """
@@ -1044,8 +1042,6 @@ class ConditionIndicator(Indicator):
 
 
 # TODO overload get method so the None key isnt' needed for _timeline
-
-
 class PoleSafetyFactor(Indicator):
 
     # Class Variables
