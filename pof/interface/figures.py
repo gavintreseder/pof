@@ -207,12 +207,11 @@ def update_condition_fig(
 
 
 def make_sensitivity_fig(
-    df,
+    df_plot,
     var_name="",
     y_axis="",
     keep_axis=False,
     units="unknown",
-    summarise=True,
     prev=None,
 ):
 
@@ -221,22 +220,6 @@ def make_sensitivity_fig(
     title_var = var.replace("_", " ").title()
 
     try:
-
-        # if summarise: #TODO
-
-        # Add direct and indirect
-        df_total = df.groupby(by=[var]).sum()
-        df_direct = df_total - df.loc[df["source"] == "risk"].groupby(by=[var]).sum()
-        summary = {
-            "total": df_total,
-            "direct": df_direct,
-            # "risk": df.loc[df["source"] == "risk"],
-        }
-
-        df_plot = pd.concat(summary, names=["source"]).reset_index()
-        df_plot["active"] = df_plot["active"].astype(bool)
-        df_plot = df_plot.append(df)
-        # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
 
         # Add line dashes
         df_plot[" "] = "  "

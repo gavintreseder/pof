@@ -904,20 +904,47 @@ class Component(PofBase):
     ):
         """ Returns a sensitivity figure if df_sens has aleady been calculated"""
         var_name = var_id.split("-")[-1]
+
+        df_plot = self.sens_summary(var_name=var_name)
+
         df = sort_df(
-            df=self.df_sens, column="source", var=var_name
+            df=df_plot, column="source", var=var_name
         )  # Sens ordered here as x var is needed
 
         df, units = scale_units(df, input_units=units, model_units=self.units)
 
         return make_sensitivity_fig(
-            df=df,
+            df_plot=df,
             var_name=var_name,
             y_axis=y_axis,
             keep_axis=keep_axis,
             units=units,
             prev=prev,
         )
+
+    def sens_summary(self, var_name="", summarise=True):
+        """ Add direct and total to df_sens for the var_id and return the df to plot """
+        # if summarise: #TODO
+
+        df = self.df_sens
+
+        # Add direct and indirect
+        df_total = df.groupby(by=[var_name]).sum()
+        df_direct = (
+            df_total - df.loc[df["source"] == "risk"].groupby(by=[var_name]).sum()
+        )
+        summary = {
+            "total": df_total,
+            "direct": df_direct,
+            # "risk": df.loc[df["source"] == "risk"],
+        }
+
+        df_plot = pd.concat(summary, names=["source"]).reset_index()
+        df_plot["active"] = df_plot["active"].astype(bool)
+        df_plot = df_plot.append(df)
+        # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
+
+        return df_plot
 
     def plot_pop_table(self):
 

@@ -12,7 +12,7 @@ import os
 from test_pof_base import TestPofBaseCommon
 from pof.paths import Paths
 import testconfig  # pylint: disable=unused-import
-from pof.component import Component, calc_confidence_interval
+from pof.component import Component, calc_confidence_interval, sort_df
 from config import config
 from pof.interface.figures import calc_y_max
 from pof.data.asset_data import SimpleFleet
@@ -369,11 +369,50 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
         # Act
         lower_bound, upper_bound = calc_confidence_interval(
-            df_cohort=df_cohort, total_failed=total_failed
+            sim_counter=10, df_cohort=df_cohort, total_failed=total_failed
         )
 
         # Assert
         self.assertAlmostEqual(total_failed - lower_bound, upper_bound - total_failed)
+
+    def test_sort_df(self):
+        # Arrange
+        t_end = 100
+        comp = Component.demo()
+        comp.mc_timeline(t_end=t_end)
+
+        df_task = comp.expected_risk_cost_df(t_start=0, t_end=t_end)
+        df_sens = comp.expected_sensitivity(
+            var_id="pole-task_group_name-groundline-t_interval", lower=0, upper=10
+        )
+        df_source = comp.sens_summary(var_name="t_interval")
+
+        # Act
+        df_sorted_task = sort_df(df=df_task, column="task")
+        df_sorted_source = sort_df(
+            df=df_source,
+            column="source",
+            var="t_interval",
+        )
+
+        # Assert - should be sorted by time then task
+        time_vals_task = df_sorted_task["time"].unique()
+        task_vals = df_sorted_task["task"].unique()
+
+        for i in range(0, len(time_vals_task) - 1):
+            self.assertGreater(time_vals_task[i + 1], time_vals_task[i])
+
+        self.assertEqual(task_vals[0], "risk")
+
+        time_vals_source = df_sorted_source["t_interval"].unique()
+        source_vals = df_sorted_source["source"].unique()
+
+        for i in range(0, len(time_vals_source) - 1):
+            self.assertGreater(time_vals_source[i + 1], time_vals_source[i])
+
+        self.assertEqual(source_vals[0], "total")
+        self.assertEqual(source_vals[1], "risk")
+        self.assertEqual(source_vals[2], "direct")
 
     # ************* Test charts *********************
 
