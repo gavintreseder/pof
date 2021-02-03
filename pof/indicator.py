@@ -702,6 +702,8 @@ class ConditionIndicator(Indicator):
     def __init__(self, name: str = "ConditionIndicator", **kwargs):
         super().__init__(name=name, **kwargs)
 
+        self.pf_curve_params = NotImplemented  # TODO for complex condition types
+
         # Current accumulation
         self._accumulated = dict()
         self._set_accumulated(accumulated=abs(self._perfect - self._initial))
@@ -710,15 +712,15 @@ class ConditionIndicator(Indicator):
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=100):
         for i in range(n_iterations):
-            self.sim_timeline(t_start=t_start, t_end=t_end)
+            self.sim_timeline(t_start=t_start, t_stop=t_end)
             self.save_timeline()
             self.reset_for_next_sim()
 
     def sim_timeline(
         self,
-        t_end=None,
+        t_stop=None,
+        t_delay=0,
         t_start=0,
-        t_init=0,
         pf_interval=None,
         pf_std=0,
         name=None,
@@ -728,14 +730,9 @@ class ConditionIndicator(Indicator):
         """
         # TODO make the t_delay more elegeant and remove duplication from failure_mode
 
-        # simple update to
-        t_delay = t_start
-        t_start = t_start - t_init
-        t_stop = t_end - t_init
-
         if name not in self._timeline:
             self._timeline[name] = self._sim_timeline(
-                t_start=t_start, t_end=t_end, pf_interval=pf_interval, name=name
+                t_start=t_start, t_stop=t_stop, pf_interval=pf_interval, name=name
             )
 
         else:
@@ -744,7 +741,7 @@ class ConditionIndicator(Indicator):
 
             self._timeline[name][t_delay:] = self._sim_timeline(
                 t_start=t_start,
-                t_end=t_end,
+                t_stop=t_stop,
                 pf_interval=pf_interval,
                 pf_std=pf_std,
                 name=name,
@@ -753,7 +750,7 @@ class ConditionIndicator(Indicator):
         return self._timeline[name][t_delay:]
 
     def _sim_timeline(
-        self, t_end=None, t_start=0, pf_interval=None, pf_std=None, name=None
+        self, t_stop=None, t_start=0, pf_interval=None, pf_std=None, name=None
     ):
         """
         Returns the timeline that considers all the accumulated degradation
@@ -776,7 +773,7 @@ class ConditionIndicator(Indicator):
 
         # Get the timeline
         timeline = self._acc_timeline(
-            t_start=t_start, t_end=t_end, pf_interval=pf_interval
+            t_start=t_start, t_stop=t_stop, pf_interval=pf_interval
         )  # , name=name
 
         return timeline
