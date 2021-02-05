@@ -49,6 +49,7 @@ from pof import Component, FailureMode, Task
 from pof.units import valid_units
 from config import config
 from statistics import mean
+from datetime import datetime
 
 SCALING = cf.scaling
 defaults = config["Layouts"]
@@ -1159,12 +1160,12 @@ def make_save_load_buttons():
                         className="save",
                     ),
                     dbc.Label(
-                        "Error",
+                        "Error " + str(datetime.now()),
                         id="save_error-input",
                         hidden=True,
                     ),
                     dbc.Label(
-                        "Success",
+                        "Success " + str(datetime.now()),
                         id="save_success-input",
                         hidden=True,
                     ),
@@ -1180,12 +1181,12 @@ def make_save_load_buttons():
                         className="save",
                     ),
                     dbc.Label(
-                        "Error",
+                        "Error " + str(datetime.now()),
                         id="load_error-input",
                         hidden=True,
                     ),
                     dbc.Label(
-                        "Success",
+                        "Success " + str(datetime.now()),
                         id="load_success-input",
                         hidden=True,
                     ),
