@@ -116,6 +116,7 @@ def make_layout(comp):
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
     unit_default = "years"
+    unit_default_model = "months"
 
     # Generate row data
     inputs = make_input_component(
