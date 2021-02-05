@@ -120,7 +120,7 @@ def make_layout(comp):
 
     # Generate row data
     inputs = make_input_component(
-        update_list_unit=update_list_unit, unit_default=unit_default
+        update_list_unit=update_list_unit, unit_default=unit_default, unit_default_model=unit_default_model
     )
 
     sim_progress = make_sim_progress()
@@ -803,7 +803,7 @@ def make_condition_impact_form(impact, prefix="", sep="-"):
 
 
 # *******************Sim meta data***********************
-def make_input_component(update_list_unit, unit_default):
+def make_input_component(update_list_unit, unit_default, unit_default_model):
     form = dbc.FormGroup(
         [
             dbc.Row(
@@ -827,7 +827,7 @@ def make_input_component(update_list_unit, unit_default):
                             dcc.Dropdown(
                                 id="model_units-dropdown",
                                 options=update_list_unit,
-                                value=unit_default,
+                                value=unit_default_model,
                             ),
                         ]
                     ),
