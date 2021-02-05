@@ -12,7 +12,14 @@ from pof import Component
 from pof.units import valid_units
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
-from pof.interface.layouts import make_layout, cf, scale_input, make_component_layout
+from pof.interface.layouts import (
+    make_layout,
+    cf,
+    scale_input,
+    make_component_layout,
+    make_save_button,
+    make_load_button,
+)
 
 # TODO fix the need to import cf
 
@@ -81,6 +88,7 @@ app.layout = make_layout(comp)
 
 @app.callback(
     Output("param_layout", "children"),
+    Output("load_button", "children"),
     Output("load_error-input", "hidden"),
     Output("load_success-input", "hidden"),
     Input("load-button", "n_clicks"),
@@ -132,10 +140,16 @@ def load_file(click_load, file_name_model):
         for dash_id in sim_triggers
     ]
 
-    return make_component_layout(comp), error_hide, success_hide
+    return (
+        make_component_layout(comp),
+        make_load_button(),
+        error_hide,
+        success_hide,
+    )
 
 
 @app.callback(
+    Output("save_button", "children"),
     Output("save_error-input", "hidden"),
     Output("save_success-input", "hidden"),
     Input("save-button", "n_clicks"),
@@ -162,7 +176,7 @@ def save_file(click_save, file_name_new):
             logging.error("Error saving file", exc_info=error)
             error_hide = False
 
-    return error_hide, success_hide
+    return (make_save_button(), error_hide, success_hide)
 
 
 # ========================================================

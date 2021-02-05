@@ -120,7 +120,9 @@ def make_layout(comp):
 
     # Generate row data
     inputs = make_input_component(
-        update_list_unit=update_list_unit, unit_default=unit_default, unit_default_model=unit_default_model
+        update_list_unit=update_list_unit,
+        unit_default=unit_default,
+        unit_default_model=unit_default_model,
     )
 
     sim_progress = make_sim_progress()
@@ -140,7 +142,8 @@ def make_layout(comp):
     sim = make_sim_layout(comp)
 
     file_input = make_file_name_input()
-    save_load_buttons = make_save_load_buttons()
+    save_button = make_save_button()
+    load_button = make_load_button()
 
     # Make layout
     layouts = html.Div(
@@ -152,7 +155,15 @@ def make_layout(comp):
                     dbc.Col(
                         [inputs],
                     ),
-                    dbc.Col([dbc.Row([file_input]), dbc.Row([save_load_buttons])]),
+                    dbc.Col([
+                        dbc.Row([file_input]), 
+                        dbc.Row([
+                            html.Div(id="save_button", children=save_button)
+                        ]),
+                        dbc.Row([
+                            html.Div(id="load_button", children=load_button)
+                        ]),
+                    ])
                 ]
             ),
             dbc.Row(
@@ -426,6 +437,7 @@ def make_cond_form_inputs(condition, prefix="", sep="-"):  # Not used
                         min=0,
                         debounce=True,
                         style={"width": 100},
+                        step="any",
                     ),
                 ],
                 className="mr-3",
@@ -504,6 +516,7 @@ def make_task_form(task, prefix="", sep="-"):  # TODO make this better
                         min=0,
                         debounce=True,
                         style={"width": 100},
+                        step="any",
                     ),
                 ],
             )
@@ -524,6 +537,7 @@ def make_task_form(task, prefix="", sep="-"):  # TODO make this better
                             max=100,
                             debounce=True,
                             style={"width": 100},
+                            step="any",
                         ),
                         dbc.InputGroupAddon("%", addon_type="append"),
                     ],
@@ -1148,50 +1162,50 @@ def make_file_name_input():
     return layout
 
 
-def make_save_load_buttons():
+def make_save_button():
     layout = html.Div(
         [
-            dbc.Row(
-                [
-                    dbc.Button(
-                        "Save Model",
-                        color="secondary",
-                        outline=True,
-                        id="save-button",
-                        className="save",
-                    ),
-                    dbc.Label(
-                        "Error " + str(datetime.now()),
-                        id="save_error-input",
-                        hidden=True,
-                    ),
-                    dbc.Label(
-                        "Success " + str(datetime.now()),
-                        id="save_success-input",
-                        hidden=True,
-                    ),
-                ]
+            dbc.Button(
+                "Save Model",
+                color="secondary",
+                outline=True,
+                id="save-button",
+                className="save",
             ),
-            dbc.Row(
-                [
-                    dbc.Button(
-                        "Load Model",
-                        color="secondary",
-                        outline=True,
-                        id="load-button",
-                        className="save",
-                    ),
-                    dbc.Label(
-                        "Error " + str(datetime.now()),
-                        id="load_error-input",
-                        hidden=True,
-                    ),
-                    dbc.Label(
-                        "Success " + str(datetime.now()),
-                        id="load_success-input",
-                        hidden=True,
-                    ),
-                ]
+            dbc.Label(
+                "Error " + str(datetime.now()),
+                id="save_error-input",
+                hidden=True,
+            ),
+            dbc.Label(
+                "Success " + str(datetime.now()),
+                id="save_success-input",
+                hidden=True,
+            ),
+        ]
+    )
+
+    return layout
+
+def make_load_button():
+    layout = html.Div(
+        [
+            dbc.Button(
+                "Load Model",
+                color="secondary",
+                outline=True,
+                id="load-button",
+                className="save",
+            ),
+            dbc.Label(
+                "Error " + str(datetime.now()),
+                id="load_error-input",
+                hidden=True,
+            ),
+            dbc.Label(
+                "Success " + str(datetime.now()),
+                id="load_success-input",
+                hidden=True,
             ),
         ]
     )
