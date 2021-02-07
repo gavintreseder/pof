@@ -296,7 +296,7 @@ def make_task_forecast_fig(df, y_axis="pop_quantity", keep_axis=False, prev=None
     try:
         color_map = get_color_map(df=df, column="task")
 
-        df = df[df["active"]]
+        df = df[df["active"]]  # .groupby(["task", "year"]).sum()
 
         fig = px.line(
             df,
