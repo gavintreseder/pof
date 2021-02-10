@@ -145,33 +145,36 @@ def save_load_file(click_load, click_save, file_name_input):
     logging.info(file_path_output + file_name_output)
 
     # Load the file
-    if os.path.exists(file_path_output + file_name_output):
-        aml = AssetModelLoader(file_path_output + file_name_output)
-        comp_data = aml.load(file_path_output + file_name_output)
-        comp = Component.from_dict(comp_data["pole"])
+    if click_load or click_save:
+        if os.path.exists(file_path_output + file_name_output):
+            aml = AssetModelLoader(file_path_output + file_name_output)
+            comp_data = aml.load(file_path_output + file_name_output)
+            comp = Component.from_dict(comp_data["pole"])
 
-        comp.units = cf.get(
-            "file_units_default"
-        )  # Set the units to be file units initially
+            comp.units = cf.get(
+                "file_units_default"
+            )  # Set the units to be file units initially
 
-        comp.fleet_data = sfd  # TODO fix by creating asset class
+            comp.fleet_data = sfd  # TODO fix by creating asset class
 
-        load_success_hide = False
-    else:
-        load_error_hide = False
+            load_success_hide = False
+        else:
+            load_error_hide = False
 
-    # Redefine global variables
-    pof_sim = copy.copy(comp)
-    sens_sim = copy.copy(comp)
+        # Redefine global variables
+        pof_sim = copy.copy(comp)
+        sens_sim = copy.copy(comp)
 
-    collapse_ids = comp.get_objects()
-    collapse_ids.append("sim_params")
+        collapse_ids = comp.get_objects()
+        collapse_ids.append("sim_params")
 
-    sim_triggers = comp.get_dash_ids(numericalOnly=False)
-    param_inputs = [
-        Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
-        for dash_id in sim_triggers
-    ]
+        sim_triggers = comp.get_dash_ids(numericalOnly=False)
+        param_inputs = [
+            Input(dash_id, "checked")
+            if "active" in dash_id
+            else Input(dash_id, "value")
+            for dash_id in sim_triggers
+        ]
 
     return (
         make_component_layout(comp),
@@ -225,13 +228,10 @@ def toggle_collapses(*args):
 
 @app.callback(
     Output("update_state", "children"),
-    Input(
-        "model_units-dropdown", "value"
-    ),  # TODO Change the layout name so this updates normally
     Input("input_units-dropdown", "value"),
     param_inputs,
 )
-def update_parameter(model_units, input_units, *args):
+def update_parameter(input_units, *args):
     """Update a the pof object whenever an input is changes""",
     global comp
 
@@ -245,21 +245,25 @@ def update_parameter(model_units, input_units, *args):
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         value = ctx.triggered[0]["value"]
 
-        if dash_id == "model_units-dropdown":
-            comp.units = model_units
-        elif dash_id == "input_units-dropdown":
-            pass
-
-        else:
-            # Scale the value if req
-            var = dash_id.split("-")[-1]
-            value = scale_input(
-                attr=var, value=value, units_before=comp.units, units_after=input_units
-            )
-            # update the model
-            comp.update(dash_id, value)
+        # Scale the value if req
+        var = dash_id.split("-")[-1]
+        value = scale_input(
+            attr=var, value=value, units_before=comp.units, units_after=input_units
+        )
+        # update the model
+        comp.update(dash_id, value)
 
     return f"Update State: {dash_id} - {value}"
+
+
+@app.callback(
+    Output("model_units-dropdown", "disabled"),
+    Input("model_units-dropdown", "value"),
+)
+def update_model_units(units):
+    comp.units = units
+
+    return False
 
 
 @app.callback(
