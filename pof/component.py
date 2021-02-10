@@ -150,8 +150,11 @@ class Component(PofBase):
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
 
-    def save(self, file_name):
+    def save(self, file_name, file_units=None):
         """ Save a json file with a component """
+
+        # Scale the units back to file_units
+        self.units = file_units
 
         # Create the data set
         data = self.to_dict()

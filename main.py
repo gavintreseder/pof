@@ -14,19 +14,16 @@ from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import (
     make_layout,
-    cf,
     scale_input,
     make_component_layout,
     make_save_button,
     make_load_button,
 )
 
-# TODO fix the need to import cf
-
 from pof.data.asset_data import SimpleFleet
 from pof.paths import Paths
 
-data = config["Main"]
+cf = config["Main"]
 
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.INFO)
@@ -64,10 +61,10 @@ global collapse_ids
 global sim_triggers
 global param_inputs
 
-# comp = Component.demo() # TODO make this comp.demo() work - not file
 aml = AssetModelLoader(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
 comp_data = aml.load(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
 comp = Component.from_dict(comp_data["pole"])
+comp.units = cf.get("file_units_default")  # Set the units to be file units initially
 comp.fleet_data = sfd  # TODO fix by creating asset class
 
 # Instantiate global variables
@@ -82,7 +79,6 @@ param_inputs = [
 ]
 
 # Layout
-var_to_scale = cf.scaling
 app.layout = make_layout(comp)
 
 
@@ -91,10 +87,15 @@ app.layout = make_layout(comp)
     Output("load_button", "children"),
     Output("load_error-input", "hidden"),
     Output("load_success-input", "hidden"),
+    Output("save_button", "children"),
+    Output("save_error-input", "hidden"),
+    Output("save_success-input", "hidden"),
+    Output("file_name-input", "value"),
     Input("load-button", "n_clicks"),
+    Input("save-button", "n_clicks"),
     State("file_name-input", "value"),
 )
-def load_file(click_load, file_name_model):
+def save_load_file(click_load, click_save, file_name_input):
     """ Load the data of the user input file """
 
     # TODO change hide to just set the text to be something, i.e. error_msg = "" when things are ok, error_msg = 'there's a mistake'
@@ -107,25 +108,57 @@ def load_file(click_load, file_name_model):
     global sim_triggers
     global param_inputs
 
-    error_hide = True
-    success_hide = True
+    load_error_hide = True
+    load_success_hide = True
+    save_error_hide = True
+    save_success_hide = True
 
-    # Asset Model Data
-    if file_name_model == "Asset Model - Pole - Timber.xlsx":
-        file_path_model = paths.demo_path + os.sep + file_name_model
-    else:
-        file_path_model = paths.model_path + os.sep + file_name_model
-    logging.info(file_path_model)
+    # Save function
+    if click_save:
+        try:
+            # If file_name_new ends in xlsx, replace with json
+            if file_name_input[-4:] == "xlsx":
+                file_name_json = file_name_input[: len(file_name_input) - 4] + "json"
+            else:
+                file_name_json = file_name_input
 
-    if os.path.exists(file_path_model):
-        aml = AssetModelLoader(file_path_model)
-        comp_data = aml.load(file_path_model)
+            # Save to json
+            comp.save(file_name_json, file_units=cf.get("file_units_default"))
+            save_success_hide = False
+
+        except Exception as error:
+            logging.error("Error saving file", exc_info=error)
+            save_error_hide = False
+
+    # Define the path of the file to load
+    if click_save:  # If the save function has been called, the file name is now a json
+        file_name_output = file_name_json
+        file_path_output = paths.model_path + os.sep
+    else:  # Otherwise the file name is as input
+        file_name_output = file_name_input
+        if file_name_input == cf.get(
+            "file_name_default"
+        ):  # The default file is in the pof path
+            file_path_output = paths.demo_path + os.sep
+        else:  # All other files are saved in the model path
+            file_path_output = paths.model_path + os.sep
+    logging.info(file_path_output + file_name_output)
+
+    # Load the file
+    if os.path.exists(file_path_output + file_name_output):
+        aml = AssetModelLoader(file_path_output + file_name_output)
+        comp_data = aml.load(file_path_output + file_name_output)
         comp = Component.from_dict(comp_data["pole"])
+
+        comp.units = cf.get(
+            "file_units_default"
+        )  # Set the units to be file units initially
+
         comp.fleet_data = sfd  # TODO fix by creating asset class
 
-        success_hide = False
+        load_success_hide = False
     else:
-        error_hide = False
+        load_error_hide = False
 
     # Redefine global variables
     pof_sim = copy.copy(comp)
@@ -143,40 +176,13 @@ def load_file(click_load, file_name_model):
     return (
         make_component_layout(comp),
         make_load_button(),
-        error_hide,
-        success_hide,
+        load_error_hide,
+        load_success_hide,
+        make_save_button(),
+        save_error_hide,
+        save_success_hide,
+        file_name_output,
     )
-
-
-@app.callback(
-    Output("save_button", "children"),
-    Output("save_error-input", "hidden"),
-    Output("save_success-input", "hidden"),
-    Input("save-button", "n_clicks"),
-    State("file_name-input", "value"),
-)
-def save_file(click_save, file_name_new):
-    """ Save the data of the user input file """
-    global comp
-
-    error_hide = True
-    success_hide = True
-
-    if click_save:
-        try:
-            # If file_name_new ends in xlsx, replace with json
-            if file_name_new[-4:] == "xlsx":
-                file_name_new = file_name_new[: len(file_name_new) - 4] + "json"
-
-            # Save to json
-            comp.save(file_name_new)
-            success_hide = False
-
-        except Exception as error:
-            logging.error("Error saving file", exc_info=error)
-            error_hide = False
-
-    return (make_save_button(), error_hide, success_hide)
 
 
 # ========================================================
@@ -247,7 +253,9 @@ def update_parameter(model_units, input_units, *args):
         else:
             # Scale the value if req
             var = dash_id.split("-")[-1]
-            value = scale_input(pof_obj=comp, attr=var, value=value, units=input_units)
+            value = scale_input(
+                attr=var, value=value, units_before=comp.units, units_after=input_units
+            )
             # update the model
             comp.update(dash_id, value)
 
@@ -277,7 +285,11 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
         pof_sim = copy.copy(comp)
 
         # Scale t_end # TODO generalise funciton and move
-        t_end = int(scale_input(pof_sim, "t_end", t_end, input_units))
+        t_end = int(
+            scale_input(
+                "t_end", t_end, units_before=pof_sim.units, units_after=input_units
+            )
+        )
 
         # Complete the simulations
         pof_sim.mp_timeline(t_end=t_end, n_iterations=n_iterations)
@@ -414,10 +426,20 @@ def update_sensitivity(
 
         # Scale the inputs if needed
         var = var_id.split("-")[-1]
-        lower = scale_input(sens_sim, var, lower, input_units)
-        upper = scale_input(sens_sim, var, upper, input_units)
-        step_size = scale_input(sens_sim, var, step_size, input_units)
-        t_end = int(scale_input(sens_sim, "t_end", t_end, input_units))
+        lower = scale_input(
+            var, lower, units_before=sens_sim.units, units_after=input_units
+        )
+        upper = scale_input(
+            var, upper, units_before=sens_sim.units, units_after=input_units
+        )
+        step_size = scale_input(
+            var, step_size, units_before=sens_sim.units, units_after=input_units
+        )
+        t_end = int(
+            scale_input(
+                "t_end", t_end, units_before=sens_sim.units, units_after=input_units
+            )
+        )
 
         sens_sim.expected_sensitivity(
             var_id=var_id,

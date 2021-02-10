@@ -44,17 +44,16 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-from pof.interface.cfg import Config as cf
 from pof import Component, FailureMode, Task
 from pof.units import valid_units
 from config import config
 from statistics import mean
 from datetime import datetime
 
-SCALING = cf.scaling
-defaults = config["Layouts"]
+layouts_cf = config["Layouts"]
 comp_cf = config["Component"]
-data = config["Main"]
+main_cf = config["Main"]
+
 TIME_VARS = [
     "t_end",
     "pf_interval",
@@ -65,25 +64,26 @@ TIME_VARS = [
     "beta",
     "gamma",
 ]
-
-SCALING = {"p_effective": 100}
-IS_OPEN = defaults.get("collapse_open")
+SCALING = config["Scaling"]
+IS_OPEN = layouts_cf.get("collapse_open")
 
 
 # *************** Main ******************************
 
 
-def scale_input(pof_obj, attr: str, value: float, units: str = None) -> float:
+def scale_input(
+    attr: str, value: float, units_before: str = None, units_after: str = None
+) -> float:
 
     # TODO combine this with update and set methods
     if attr in SCALING:
         value = value / SCALING.get(attr, 1)
 
-    if units is not None:
-        if pof_obj.units is not None:
+    if units_after is not None:
+        if units_before is not None:
 
             if attr in TIME_VARS:
-                ratio = valid_units.get(units) / valid_units.get(pof_obj.units)
+                ratio = valid_units.get(units_after) / valid_units.get(units_before)
                 value = value * ratio
 
         else:
@@ -112,11 +112,11 @@ def make_layout(comp):
     ]
     y_values_ms = ["cost", "cost_cumulative"]
     update_list_y_ms = [{"label": option, "value": option} for option in y_values_ms]
-    y_value_default = defaults.get("y_value_default")
+    y_value_default = layouts_cf.get("y_value_default")
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
-    unit_default = "years"
-    unit_default_model = "months"
+    unit_default = main_cf.get("input_units_default")
+    unit_default_model = main_cf.get("model_units_default")
 
     # Generate row data
     inputs = make_input_component(
@@ -155,15 +155,13 @@ def make_layout(comp):
                     dbc.Col(
                         [inputs],
                     ),
-                    dbc.Col([
-                        dbc.Row([file_input]), 
-                        dbc.Row([
-                            html.Div(id="save_button", children=save_button)
-                        ]),
-                        dbc.Row([
-                            html.Div(id="load_button", children=load_button)
-                        ]),
-                    ])
+                    dbc.Col(
+                        [
+                            dbc.Row([file_input]),
+                            dbc.Row([html.Div(id="save_button", children=save_button)]),
+                            dbc.Row([html.Div(id="load_button", children=load_button)]),
+                        ]
+                    ),
                 ]
             ),
             dbc.Row(
@@ -532,7 +530,7 @@ def make_task_form(task, prefix="", sep="-"):  # TODO make this better
                         dbc.Input(
                             type="number",
                             id=prefix + "p_effective",
-                            value=task.p_effective * SCALING["p_effective"],
+                            value=task.p_effective * SCALING.get("p_effective"),
                             min=0,
                             max=100,
                             debounce=True,
@@ -826,7 +824,7 @@ def make_input_component(update_list_unit, unit_default, unit_default_model):
                         [
                             dbc.Checkbox(
                                 id="axis_lock-checkbox",
-                                checked=defaults.get("axis_lock"),
+                                checked=layouts_cf.get("axis_lock"),
                             ),
                             "Axis Lock",
                         ]
@@ -1150,7 +1148,7 @@ def make_file_name_input():
             "File Name",
             dcc.Input(
                 id="file_name-input",
-                value=data.get("file_name_default"),
+                value=main_cf.get("file_name_default"),
                 type="text",
                 style={"width": 500},
                 debounce=True,
@@ -1186,6 +1184,7 @@ def make_save_button():
     )
 
     return layout
+
 
 def make_load_button():
     layout = html.Div(

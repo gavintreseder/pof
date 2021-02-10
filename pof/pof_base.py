@@ -129,9 +129,10 @@ class PofBase:
     @units.setter
     def units(self, value):  # TODO - Make this dependant on csv
         """ Takes a unit and updates any time values to reflect the new units"""
+        # TODO how to handle if they load None - file_units may not be years
 
         # Check if the uploaded unit is valid
-        if value.lower() in valid_units:  # TODO how to handle if they load None
+        if value.lower() in valid_units:
 
             # Check if units is defined, if not set it to None
             current_units = getattr(self, "_units", None)
@@ -511,6 +512,7 @@ class PofBase:
 
     def unpack_container(self, data_req):
         """ Unpack the PofContainer and PofBase objects to create a dict """
+        # TODO This modifies the data set, it should make a copy and modify that
 
         # Loop through all the items to keep
         for attr, val in data_req.items():
