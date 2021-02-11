@@ -448,52 +448,54 @@ class Component(PofBase):
 
     def expected_risk_cost_df(self, t_start=0, t_end=None, comp_name=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
-        erc = self.expected_risk_cost()
 
-        if t_end == None:
-            t_end = t_start
-            for timeline in erc.values():
-                for task in timeline.values():
-                    if isinstance(task, bool):
-                        continue
-                    else:
-                        t_end = max(max(task["time"], default=t_start), t_end)
+        if self.active:
+            erc = self.expected_risk_cost()
 
-        df = pd.DataFrame().from_dict(erc, orient="index")
-        df.index.name = "failure_mode"
-        df = df.reset_index().melt(id_vars="failure_mode", var_name="task")
-        df = pd.concat(
-            [df.drop(columns=["value"]), df["value"].apply(pd.Series)], axis=1
-        )[
-            [
-                "failure_mode",
-                "task",
-                "active",
-                "time",
-                "quantity",
-                "cost",
-            ]
-        ].dropna()
+            if t_end == None:
+                t_end = t_start
+                for timeline in erc.values():
+                    for task in timeline.values():
+                        if isinstance(task, bool):
+                            continue
+                        else:
+                            t_end = max(max(task["time"], default=t_start), t_end)
 
-        fill_cols = ["cost", "quantity"]  # time not needed
-        df_filled = df.apply(fill_blanks, axis=1, args=(t_start, t_end, fill_cols))
-        df = df_filled.explode("time")
+            df = pd.DataFrame().from_dict(erc, orient="index")
+            df.index.name = "failure_mode"
+            df = df.reset_index().melt(id_vars="failure_mode", var_name="task")
+            df = pd.concat(
+                [df.drop(columns=["value"]), df["value"].apply(pd.Series)], axis=1
+            )[
+                [
+                    "failure_mode",
+                    "task",
+                    "active",
+                    "time",
+                    "quantity",
+                    "cost",
+                ]
+            ].dropna()
 
-        for col in fill_cols:
-            df[col] = df_filled.explode(col)[col]
-            df[col + "_cumulative"] = df.groupby(by=["failure_mode", "task"])[
-                col
-            ].transform(pd.Series.cumsum)
-            df[col + "_annual"] = df[col] / self.expected_life()
+            fill_cols = ["cost", "quantity"]  # time not needed
+            df_filled = df.apply(fill_blanks, axis=1, args=(t_start, t_end, fill_cols))
+            df = df_filled.explode("time")
 
-            # df[col + "_lifecycle"] = df[col] / df['_annual'] self.expected_life()
+            for col in fill_cols:
+                df[col] = df_filled.explode(col)[col]
+                df[col + "_cumulative"] = df.groupby(by=["failure_mode", "task"])[
+                    col
+                ].transform(pd.Series.cumsum)
+                df[col + "_annual"] = df[col] / self.expected_life()
 
-        df["comp"] = comp_name
+                # df[col + "_lifecycle"] = df[col] / df['_annual'] self.expected_life()
 
-        # Formatting
-        self.df_erc = sort_df(df=df, column="task")
+            df["comp"] = comp_name
 
-        return self.df_erc
+            # Formatting
+            self.df_erc = sort_df(df=df, column="task")
+
+            return self.df_erc
 
     def expected_risk_cost_df_legacy_method(self, t_start=0, t_end=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
@@ -578,52 +580,54 @@ class Component(PofBase):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
         """
-        rc = dict()
-        self.reset()
+        
+        if self.active:
+            rc = dict()
+            self.reset()
 
-        # Progress bars
-        self.n_sens = 0
-        self.n_sens_iterations = int((upper - lower) / step_size + step_size)
+            # Progress bars
+            self.n_sens = 0
+            self.n_sens_iterations = int((upper - lower) / step_size + step_size)
 
-        var = var_id.split("-")[-1]
+            var = var_id.split("-")[-1]
 
-        prefix = ["quantity", "cost"]
-        suffix = ["", "_annual", "_cumulative"]
-        cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
+            prefix = ["quantity", "cost"]
+            suffix = ["", "_annual", "_cumulative"]
+            cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
-        for i in np.arange(lower, upper + step_size, step_size):
-            if not self.up_to_date:
-                return "sim cancelled"
-            try:
-                # Reset component
-                self.reset()
+            for i in np.arange(lower, upper + step_size, step_size):
+                if not self.up_to_date:
+                    return "sim cancelled"
+                try:
+                    # Reset component
+                    self.reset()
 
-                # Update annd simulate a timeline
-                self.update(var_id, i)
-                self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
-                df_rc = self.expected_risk_cost_df()
+                    # Update annd simulate a timeline
+                    self.update(var_id, i)
+                    self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
+                    df_rc = self.expected_risk_cost_df()
 
-                # Summarise outputs
-                df_rc = df_rc.groupby(by=["task", "active"])[cols].max()
-                df_rc[var] = i
+                    # Summarise outputs
+                    df_rc = df_rc.groupby(by=["task", "active"])[cols].max()
+                    df_rc[var] = i
 
-                rc[i] = df_rc
+                    rc[i] = df_rc
 
-                self.n_sens = self.n_sens + 1
+                    self.n_sens = self.n_sens + 1
 
-            except Exception as error:
-                logging.error("Error at %s", exc_info=error)
+                except Exception as error:
+                    logging.error("Error at %s", exc_info=error)
 
-        df_sens = (
-            pd.concat(rc)
-            .reset_index()
-            .drop(["level_0"], axis=1)
-            .rename(columns={"task": "source"})
-        )
+            df_sens = (
+                pd.concat(rc)
+                .reset_index()
+                .drop(["level_0"], axis=1)
+                .rename(columns={"task": "source"})
+            )
 
-        df_sens["comp"] = comp_name
+            df_sens["comp"] = comp_name
 
-        return df_sens
+            return df_sens
 
     # ****************** Reports ****************
 
@@ -639,48 +643,49 @@ class Component(PofBase):
         return df_erc
 
     def calc_pof_df(self, t_end=None, comp_name=None):
-        # TODO this could be way more efficient
-        pof = dict(
-            maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
-            no_maint=pd.DataFrame(self.expected_untreated(t_end=t_end)),
-        )
+        if self.active:
+            # TODO this could be way more efficient
+            pof = dict(
+                maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
+                no_maint=pd.DataFrame(self.expected_untreated(t_end=t_end)),
+            )
 
-        # OLD CODE
-        # df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
-        # df.index.names = ["strategy", "key"]
-        # df = df.rename(columns={"variable": "source"})
+            # OLD CODE
+            # df = pd.concat(pof).rename_axis(["strategy", "time"]).reset_index()
+            # df.index.names = ["strategy", "key"]
+            # df = df.rename(columns={"variable": "source"})
 
-        # df = df.melt(
-        #     id_vars=["time", "strategy", "fm_active"],
-        #     var_name="source",
-        #     value_name="pof",
-        # )
+            # df = df.melt(
+            #     id_vars=["time", "strategy", "fm_active"],
+            #     var_name="source",
+            #     value_name="pof",
+            # )
 
-        df = pd.concat(pof).rename_axis(["strategy", "key"]).reset_index()
+            df = pd.concat(pof).rename_axis(["strategy", "key"]).reset_index()
 
-        df_pof = df[df["key"] == "pof"]
-        df_pof = pd.melt(
-            df_pof, id_vars=["strategy"], value_vars=df_pof.columns[2:]
-        ).rename(columns={"variable": "source", "value": "pof"})
-        df_pof = df_pof.explode("pof", ignore_index=True)
+            df_pof = df[df["key"] == "pof"]
+            df_pof = pd.melt(
+                df_pof, id_vars=["strategy"], value_vars=df_pof.columns[2:]
+            ).rename(columns={"variable": "source", "value": "pof"})
+            df_pof = df_pof.explode("pof", ignore_index=True)
 
-        df_active = df[df["key"] == "active"]
-        df_active = pd.melt(
-            df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
-        ).rename(columns={"variable": "source", "value": "active"})
+            df_active = df[df["key"] == "active"]
+            df_active = pd.melt(
+                df_active, id_vars=["strategy"], value_vars=df_active.columns[2:]
+            ).rename(columns={"variable": "source", "value": "active"})
 
-        df_time = df[df["key"] == "time"]
-        df_time = pd.melt(
-            df_time, id_vars=["strategy"], value_vars=df_time.columns[2:]
-        ).rename(columns={"variable": "source", "value": "time"})
-        df_time = df_time.explode("time", ignore_index=True)["time"]
+            df_time = df[df["key"] == "time"]
+            df_time = pd.melt(
+                df_time, id_vars=["strategy"], value_vars=df_time.columns[2:]
+            ).rename(columns={"variable": "source", "value": "time"})
+            df_time = df_time.explode("time", ignore_index=True)["time"]
 
-        df = df_pof.merge(df_active, on=["strategy", "source"])
-        df["time"] = df_time
+            df = df_pof.merge(df_active, on=["strategy", "source"])
+            df["time"] = df_time
 
-        df["comp"] = comp_name
+            df["comp"] = comp_name
 
-        return df
+            return df
 
     def calc_df_task_forecast(self, df_age_forecast, age_units="years", comp_name=None):
         """Create the task plot dataframe
@@ -688,166 +693,170 @@ class Component(PofBase):
         age_units - the units for the age in df_forecast age
         """
 
-        # Scale the units to match the desired outputs
-        df_age_forecast, __ = scale_units(df_age_forecast, self.units, age_units)
+        if self.active:
+            # Scale the units to match the desired outputs
+            df_age_forecast, __ = scale_units(df_age_forecast, self.units, age_units)
 
-        # Convert to floats for merging
-        # TODO deep copy not needed anymore
-        df_erc = copy.deepcopy(self.df_erc)
-        df_erc["time"] = df_erc["time"].astype(float)
-        df_age_forecast["age"] = df_age_forecast["age"].astype(float)
+            # Convert to floats for merging
+            # TODO deep copy not needed anymore
+            df_erc = copy.deepcopy(self.df_erc)
+            df_erc["time"] = df_erc["time"].astype(float)
+            df_age_forecast["age"] = df_age_forecast["age"].astype(float)
 
-        # Duplicate time so the closest age can be used
-        df_age_forecast["time"] = df_age_forecast["age"]
+            # Duplicate time so the closest age can be used
+            df_age_forecast["time"] = df_age_forecast["age"]
 
-        df_erc = pd.merge_asof(
-            df_erc.sort_values("time"),
-            df_age_forecast.sort_values("age")[["age", "time"]],
-            on="time",
-            tolerance=unit_ratio(age_units, self.units),
-        )
+            df_erc = pd.merge_asof(
+                df_erc.sort_values("time"),
+                df_age_forecast.sort_values("age")[["age", "time"]],
+                on="time",
+                tolerance=unit_ratio(age_units, self.units),
+            )
 
-        # Merge the population details
-        df = pd.merge(
-            df_erc.sort_values("age"),
-            df_age_forecast.sort_values("age"),
-            left_on="age",
-            right_on="age",
-        )
+            # Merge the population details
+            df = pd.merge(
+                df_erc.sort_values("age"),
+                df_age_forecast.sort_values("age"),
+                left_on="age",
+                right_on="age",
+            )
 
-        # Calculated population outcomes
-        df["pop_quantity"] = df["assets"] * df["quantity"]
-        df["pop_cost"] = df["pop_quantity"] * df["cost"]
+            # Calculated population outcomes
+            df["pop_quantity"] = df["assets"] * df["quantity"]
+            df["pop_cost"] = df["pop_quantity"] * df["cost"]
 
-        # Regroup into a task forecast
-        df = (
-            df.groupby(by=["year", "task", "active"])[["pop_quantity", "pop_cost"]]
-            .sum()
-            .reset_index()
-        ).dropna()
+            # Regroup into a task forecast
+            df = (
+                df.groupby(by=["year", "task", "active"])[["pop_quantity", "pop_cost"]]
+                .sum()
+                .reset_index()
+            ).dropna()
 
-        df["comp"] = comp_name
+            df["comp"] = comp_name
 
-        df_task = sort_df(df=df, column="task")
+            df_task = sort_df(df=df, column="task")
 
-        return df_task
+            return df_task
 
     def calc_df_cond(self, t_start=0, t_end=None, comp_name=None):
 
-        # TODO fix this so that it isn't being repeated
+        if self.active:
+            # TODO fix this so that it isn't being repeated
 
-        ecl = self.expected_condition()
+            ecl = self.expected_condition()
 
-        df = pd.DataFrame()
-        i = 1
-        for cond_name, cond in ecl.items():
-            data = np.append(cond["upper"], cond["lower"][::-1])
-            df["y" + str(i)] = data
-            i = i + 1
+            df = pd.DataFrame()
+            i = 1
+            for cond_name, cond in ecl.items():
+                data = np.append(cond["upper"], cond["lower"][::-1])
+                df["y" + str(i)] = data
+                i = i + 1
 
-            # TODO temp fix that won't work for t_start
-            time = np.arange(t_start, t_end + 1, 1).tolist()
-            df["time"] = np.append(time, time[::-1])
+                # TODO temp fix that won't work for t_start
+                time = np.arange(t_start, t_end + 1, 1).tolist()
+                df["time"] = np.append(time, time[::-1])
 
-        df["comp"] = comp_name
+            df["comp"] = comp_name
 
-        df_cond = df
+            df_cond = df
 
-        return df_cond
+            return df_cond
 
     def calc_summary(self, df_cohort=None, comp_name=None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
-        # Get the key data from each of the failuremodes
-        summary = {}
 
-        for fm in self.fm.values():
-            if fm.active:
-                insp_effective = fm.inspection_effectiveness()
-                _ff = fm.expected_ff()
-                _cf = fm.expected_cf()
+        if self.active:
+            # Get the key data from each of the failuremodes
+            summary = {}
 
-                summary[fm.name] = {
-                    "fm": fm.name,
-                    "ie": insp_effective,
-                    "is": self._sim_counter - len(_cf) - len(_ff),
-                    "ff": len(_ff),
-                    "cf": len(_cf),
-                }
+            for fm in self.fm.values():
+                if fm.active:
+                    insp_effective = fm.inspection_effectiveness()
+                    _ff = fm.expected_ff()
+                    _cf = fm.expected_cf()
 
-                if df_cohort is not None:
+                    summary[fm.name] = {
+                        "fm": fm.name,
+                        "ie": insp_effective,
+                        "is": self._sim_counter - len(_cf) - len(_ff),
+                        "ff": len(_ff),
+                        "cf": len(_cf),
+                    }
 
-                    f_names = ["cf", "ff"]
-                    f_ages = [_cf, _ff]
-                    for f_name, f_age in zip(f_names, f_ages):
-                        age, count = np.unique(f_age, return_counts=True)
+                    if df_cohort is not None:
 
-                        # Total failures
-                        total_failed = (
-                            df_cohort.reindex(age).mul(count, axis=0).sum()[0]
-                            / self._sim_counter
-                        )
+                        f_names = ["cf", "ff"]
+                        f_ages = [_cf, _ff]
+                        for f_name, f_age in zip(f_names, f_ages):
+                            age, count = np.unique(f_age, return_counts=True)
 
-                        lower, upper = calc_confidence_interval(
-                            sim_counter=self._sim_counter,
-                            df_cohort=df_cohort,
-                            total_failed=total_failed,
-                        )
+                            # Total failures
+                            total_failed = (
+                                df_cohort.reindex(age).mul(count, axis=0).sum()[0]
+                                / self._sim_counter
+                            )
 
-                        summary[fm.name][f_name + " pop annual avg"] = total_failed
-                        summary[fm.name]["conf interval " + f_name + " (+/-)"] = (
-                            total_failed - lower
-                        )
+                            lower, upper = calc_confidence_interval(
+                                sim_counter=self._sim_counter,
+                                df_cohort=df_cohort,
+                                total_failed=total_failed,
+                            )
 
-        df = pd.DataFrame.from_dict(summary).T
+                            summary[fm.name][f_name + " pop annual avg"] = total_failed
+                            summary[fm.name]["conf interval " + f_name + " (+/-)"] = (
+                                total_failed - lower
+                            )
 
-        # Calculate the total row and append to the df
-        total = {
-            "fm": "total",
-            "ie": df["ie"].prod(),
-            "is": self._sim_counter - df[["ff", "cf"]].sum().sum(),
-            "ff": df["ff"].sum(),
-            "cf": df["cf"].sum(),
-        }
-        df = df.append(total, ignore_index=True).set_index("fm")
+            df = pd.DataFrame.from_dict(summary).T
 
-        # Calculate simulated effectiveness
-        mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
-        df["prevented"] = df.loc[mask_failures, "cf"] / df.loc[
-            mask_failures, ["cf", "ff"]
-        ].sum(axis=1)
+            # Calculate the total row and append to the df
+            total = {
+                "fm": "total",
+                "ie": df["ie"].prod(),
+                "is": self._sim_counter - df[["ff", "cf"]].sum().sum(),
+                "ff": df["ff"].sum(),
+                "cf": df["cf"].sum(),
+            }
+            df = df.append(total, ignore_index=True).set_index("fm")
 
-        df["prevented"].fillna("")
+            # Calculate simulated effectiveness
+            mask_failures = (df["cf"] != 0) & (df["cf"] != 0)
+            df["prevented"] = df.loc[mask_failures, "cf"] / df.loc[
+                mask_failures, ["cf", "ff"]
+            ].sum(axis=1)
 
-        # Add the cohort data if it is supplied
-        if df_cohort is not None:
-            df.loc["total", "cf pop annual avg"] = df["cf pop annual avg"].sum()
-            df.loc["total", "ff pop annual avg"] = df["ff pop annual avg"].sum()
-            df.loc["total", "total"] = df_cohort["assets"].sum()
+            df["prevented"].fillna("")
 
-        # Format for display
-        col_order = [
-            "comp",
-            "fm",
-            "ie",
-            "is",
-            "cf",
-            "ff",
-            "prevented",
-            "cf pop annual avg",
-            "conf interval cf (+/-)",
-            "ff pop annual avg",
-            "conf interval ff (+/-)",
-            "total",
-        ]
-        df["comp"] = comp_name
-        df = df.reset_index().reindex(columns=col_order)
+            # Add the cohort data if it is supplied
+            if df_cohort is not None:
+                df.loc["total", "cf pop annual avg"] = df["cf pop annual avg"].sum()
+                df.loc["total", "ff pop annual avg"] = df["ff pop annual avg"].sum()
+                df.loc["total", "total"] = df_cohort["assets"].sum()
 
-        percent_col = ["ie", "prevented"]
-        df[percent_col] = df[percent_col].mul(100)
-        rename_cols = {col: col + " (%)" for col in percent_col}
-        df.rename(columns=rename_cols, inplace=True)
+            # Format for display
+            col_order = [
+                "comp",
+                "fm",
+                "ie",
+                "is",
+                "cf",
+                "ff",
+                "prevented",
+                "cf pop annual avg",
+                "conf interval cf (+/-)",
+                "ff pop annual avg",
+                "conf interval ff (+/-)",
+                "total",
+            ]
+            df["comp"] = comp_name
+            df = df.reset_index().reindex(columns=col_order)
 
-        return df
+            percent_col = ["ie", "prevented"]
+            df[percent_col] = df[percent_col].mul(100)
+            rename_cols = {col: col + " (%)" for col in percent_col}
+            df.rename(columns=rename_cols, inplace=True)
+
+            return df
 
     # ****************** Reset ******************
 
