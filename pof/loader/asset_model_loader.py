@@ -195,7 +195,7 @@ class AssetModelLoader:
             system_data[sys_list[i]][comp_list[i]] = dict()
 
         # Add the component dictionary onto the keys
-        for system in system_data.keys():
+        for system in system_data:
             comps_data = self._get_component_data(
                 self.df, components=system_data[system]
             )
@@ -206,11 +206,10 @@ class AssetModelLoader:
         return system_data
 
     def _get_component_data(self, df, components=None):
-        comps_data = dict()
 
+        comps_data = dict()
         # Get the Component information
         comp_key = ("asset_model", "component", "name")
-
         df_comps = df[
             [
                 "asset_model",
@@ -227,16 +226,16 @@ class AssetModelLoader:
 
             df_comp = df_comps.loc[[comp]]
 
+            comp_data = (
+                df_comp["asset_model"]["component"].dropna(how="all").iloc[0].to_dict()
+            )
+
             # Get the FailureMode information
             fm_data = self._get_failure_mode_data(df_comp)
 
             ind_data = self._get_indicator_data(df_comp)
 
-            comp_data = dict(
-                name=comp,
-                fm=fm_data,
-                indicator=ind_data,
-            )
+            comp_data.update(dict(name=comp, fm=fm_data, indicator=ind_data))
 
             comps_data.update({comp: comp_data})
 

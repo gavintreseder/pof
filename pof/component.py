@@ -28,15 +28,6 @@ from pof.indicator import Indicator
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
-from pof.interface.figures import (
-    make_ms_fig,
-    make_sensitivity_fig,
-    update_pof_fig,
-    update_condition_fig,
-    make_task_forecast_fig,
-    make_pop_table_fig,
-    make_table_fig,
-)
 from pof.data.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.paths import Paths
@@ -76,7 +67,7 @@ class Component(PofBase):
 
         super().__init__(name=name, *args, **kwargs)
 
-        self.fleet_data = "temp fix until creating asset class"
+        # self.fleet_data = "temp fix until creating asset class"
 
         self.active = active
         self.indicator = PofContainer()
@@ -94,41 +85,49 @@ class Component(PofBase):
         self._t_in_service = []
         self.stop_simulation = False
 
-        # Dash Tracking
-        self.up_to_date = True
-        self.n = 0
-        self.n_iterations = 10
-        self.n_sens = 0
-        self.n_sens_iterations = 10
-
-        # Reporting
-        self.df_pof = None
-        self.df_cond = None
-        self.df_erc = None
-        self.df_sens = None
-        self.df_task = None
+        # Timelines
+        self.timeline = dict()
+        self._timelines = dict()
 
     # ****************** Load data ******************
 
-    def load_asset_data(
-        self,
-    ):
+    # def load_asset_data(
+    #     self,
+    # ):
 
-        # TODO Hook up data
-        self.info = dict(
-            pole_load=10,
-            pole_strength=20,
-        )
+    #     # TODO Hook up data
+    #     self.info = dict(
+    #         pole_load=10,
+    #         pole_strength=20,
+    #     )
 
-        # Set perfect indicator values?? TODO
+    #     # Set perfect indicator values?? TODO
 
-        # Set indicators
-        for indicator in self.indicator.values():
+    #     # Set indicators
+    #     for indicator in self.indicator.values():
 
-            # Set perfect
+    #         # Set perfect
 
-            # Set current
-            raise NotImplementedError
+    #         # Set current
+    #         raise NotImplementedError
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        """ Set the pf_curve to a valid str"""
+
+        if isinstance(value, str):
+            if value.to_lower() in ["ok", "true", "yes"]:
+                self._active = True
+            elif value.to_lower() in ["false", "no"]:
+                self._active = False
+            else:
+                raise ValueError("invalid acitve value")
+        else:
+            self._active = bool(value)
 
     def set_indicator(self, indicator_input):
         """Takes a dictionary of Indicator objects or indicator data and sets the component indicators"""
@@ -151,20 +150,20 @@ class Component(PofBase):
                 ind.link_component(self)
 
     # ****************** Set data ******************
-    @coerce_arg_type
-    def mc(self, t_end: int, t_start: int = 0, n_iterations: int = DEFAULT_ITERATIONS):
-        """ Complete MC simulation and calculate all the metrics for the component"""
+    # @coerce_arg_type
+    # def mc(self, t_end: int, t_start: int = 0, n_iterations: int = DEFAULT_ITERATIONS):
+    #     """ Complete MC simulation and calculate all the metrics for the component"""
 
-        # Simulate a timeline
-        self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
+    #     # Simulate a timeline
+    #     self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
 
-        # Produce reports
-        self.expected_risk_cost_df(t_end=t_end)
-        self.calc_pof_df(t_end=t_end)
-        # self.calc_df_task_forecast()
-        self.calc_df_cond(t_start=t_start, t_end=t_end)
+    #     # Produce reports
+    #     self.expected_risk_cost_df(t_end=t_end)
+    #     self.calc_pof_df(t_end=t_end)
+    #     # self.calc_df_task_forecast()
+    #     self.calc_df_cond(t_start=t_start, t_end=t_end)
 
-        return NotImplemented
+    #     return NotImplemented
 
     # ****************** Timeline ******************
 
@@ -175,6 +174,7 @@ class Component(PofBase):
 
     def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times and exit immediately if updated"""
+        # Only used for sensitivity chart
         self.reset()
         self.up_to_date = True
         self.n = 0
@@ -198,13 +198,12 @@ class Component(PofBase):
             else:
                 logging.warning("Error caught during cancel_sim")
 
-    def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
+    def mc_timeline(self, t_end, t_start=0, n_iterations=100):
         """ Simulate the timeline mutliple times"""
         self.reset()
 
         for i in tqdm(range(n_iterations)):
             self.sim_timeline(t_end=t_end, t_start=t_start)
-
             self.save_timeline(i)
             self.increment_counter()
             self.reset_for_next_sim()
@@ -212,48 +211,63 @@ class Component(PofBase):
     def sim_timeline(self, t_end, t_start=0):
         """ Simulates the timelines for all failure modes attached to this component"""
 
-        # Initialise the failure modes
-        self.init_timeline(t_start=t_start, t_end=t_end)
+        if self.active:
+            # Initialise the failure modes
+            timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
-        t_now = t_start
-        self._in_service = True
+            t_now = t_start
+            self._in_service = True
 
-        while t_now < t_end and self._in_service:
+            while t_now < t_end and self._in_service:
 
-            t_next, next_fm_tasks = self.next_tasks(t_now)
+                t_next, next_fm_tasks = self.next_tasks(timeline, t_now)
 
-            self.complete_tasks(t_next, next_fm_tasks)
+                self.complete_tasks(t_next, next_fm_tasks)
 
-            t_now = t_next + 1
+                t_now = t_next + 1
 
-        if self._in_service:
-            self._t_in_service.append(t_now)
+            if self._in_service:
+                self._t_in_service.append(t_now)
+
+        return self.timeline
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline"""
-        for fm in self.fm.values():
-            fm.init_timeline(t_start=t_start, t_end=t_end)
 
-    def next_tasks(self, t_start):
+        timeline = dict()
+
+        if self.active:
+            for fm in self.fm.values():
+                timeline[fm.name] = fm.init_timeline(t_start=t_start, t_end=t_end)
+
+        self.timeline = timeline
+
+        return self.timeline
+
+    def next_tasks(self, timeline=None, t_start=None):
         """
         Returns a dictionary with the failure mode triggered
         """
         # TODO make this more efficent
         # TODO make this work if no tasks returned. Expect an error now
 
+        if timeline is None:
+            timeline = self.timeline
+
         # Get the task schedule for next tasks
         task_schedule = dict()
-        for fm_name, fm in self.fm.items():
+        if self.active:
+            for fm_name, fm in self.fm.items():
 
-            t_next, task_names = fm.next_tasks(t_start=t_start)
+                t_next, task_names = fm.next_tasks(t_start=t_start)
 
-            if t_next in task_schedule:
-                task_schedule[t_next][fm_name] = task_names
-            else:
-                task_schedule[t_next] = dict()
-                task_schedule[t_next][fm_name] = task_names
+                if t_next in task_schedule:
+                    task_schedule[t_next][fm_name] = task_names
+                else:
+                    task_schedule[t_next] = dict()
+                    task_schedule[t_next][fm_name] = task_names
 
-        t_next = min(task_schedule.keys())
+            t_next = min(task_schedule.keys())
 
         return t_next, task_schedule[t_next]
 
@@ -312,6 +326,8 @@ class Component(PofBase):
             fm.increment_counter()
 
     def save_timeline(self, idx):
+        self._timelines[idx] = self.timeline
+
         for fm in self.fm.values():
             fm.save_timeline(idx)
 
@@ -320,7 +336,7 @@ class Component(PofBase):
 
     # ****************** Expected ******************
 
-    def population_table(self):
+    def population_table(self, comp_name=None):
         """ Reports a summary of the in service, FF and CF outcomes over the MC simulation """
         pop_table = {}
         _ff = 0
@@ -335,7 +351,8 @@ class Component(PofBase):
         }
 
         df_pop_summary = pd.DataFrame.from_dict(pop_table).T
-        col_order = ["is", "cf", "ff"]
+        df_pop_summary["comp"] = comp_name
+        col_order = ["comp", "is", "cf", "ff"]
         df = df_pop_summary.reindex(columns=col_order)
 
         return df
@@ -380,11 +397,11 @@ class Component(PofBase):
         # cdf = {fm: 1 - sf for fm, sf in sf.items()}
         cdf = dict()
 
-        for fm in sf:
-            cdf[fm] = dict()
-            cdf[fm]["pof"] = 1 - sf[fm]["pof"]
-            cdf[fm]["active"] = sf[fm]["active"]
-            cdf[fm]["time"] = np.linspace(
+        for fm in self.fm.values():
+            cdf[fm.name] = dict()
+            cdf[fm.name]["pof"] = 1 - sf[fm.name]["pof"]
+            cdf[fm.name]["active"] = sf[fm.name]["active"]
+            cdf[fm.name]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
 
@@ -429,7 +446,7 @@ class Component(PofBase):
 
         return sf
 
-    def expected_risk_cost_df(self, t_start=0, t_end=None):
+    def expected_risk_cost_df(self, t_start=0, t_end=None, comp_name=None):
         """ A wrapper for expected risk cost that returns a dataframe"""
         erc = self.expected_risk_cost()
 
@@ -470,6 +487,8 @@ class Component(PofBase):
             df[col + "_annual"] = df[col] / self.expected_life()
 
             # df[col + "_lifecycle"] = df[col] / df['_annual'] self.expected_life()
+
+        df["comp"] = comp_name
 
         # Formatting
         self.df_erc = sort_df(df=df, column="task")
@@ -545,18 +564,15 @@ class Component(PofBase):
 
     # **************** Interface ********************
 
-    def progress(self) -> float:
-        """ Returns the progress of the primary simulation"""
-        return self.n / self.n_iterations
-
-    def sens_progress(self) -> float:
-        """ Returns the progress of the sensitivity simulation"""
-        return (self.n_sens * self.n_iterations + self.n) / (
-            self.n_iterations * self.n_sens_iterations + self.n
-        )
-
     def expected_sensitivity(
-        self, var_id, lower, upper, step_size=1, n_iterations=100, t_end=100
+        self,
+        var_id,
+        lower,
+        upper,
+        step_size=1,
+        n_iterations=100,
+        t_end=100,
+        comp_name=None,
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
@@ -597,27 +613,31 @@ class Component(PofBase):
             except Exception as error:
                 logging.error("Error at %s", exc_info=error)
 
-        self.df_sens = (
+        df_sens = (
             pd.concat(rc)
             .reset_index()
             .drop(["level_0"], axis=1)
             .rename(columns={"task": "source"})
         )
 
-        return self.df_sens
+        df_sens["comp"] = comp_name
+
+        return df_sens
 
     # ****************** Reports ****************
 
-    def calc_df_erc(self):
+    def calc_df_erc(self, comp_name=None):
         if self.up_to_date:
             if self.df_erc is not None:
                 df_erc = self.df_erc
             else:
-                self.df_erc = self.expected_risk_cost_df()
+                df_erc = self.expected_risk_cost_df(comp_name=comp_name)
 
-        raise NotImplementedError()
+        # raise NotImplementedError()
 
-    def calc_pof_df(self, t_end=None):
+        return df_erc
+
+    def calc_pof_df(self, t_end=None, comp_name=None):
         # TODO this could be way more efficient
         pof = dict(
             maint=pd.DataFrame(self.expected_pof(t_end=t_end)),
@@ -657,11 +677,11 @@ class Component(PofBase):
         df = df_pof.merge(df_active, on=["strategy", "source"])
         df["time"] = df_time
 
-        self.df_pof = df
+        df["comp"] = comp_name
 
-        return self.df_pof
+        return df
 
-    def calc_df_task_forecast(self, df_age_forecast, age_units="years"):
+    def calc_df_task_forecast(self, df_age_forecast, age_units="years", comp_name=None):
         """Create the task plot dataframe
 
         age_units - the units for the age in df_forecast age
@@ -705,11 +725,13 @@ class Component(PofBase):
             .reset_index()
         ).dropna()
 
-        self.df_task = sort_df(df=df, column="task")
+        df["comp"] = comp_name
 
-        return self.df_task
+        df_task = sort_df(df=df, column="task")
 
-    def calc_df_cond(self, t_start=0, t_end=None):
+        return df_task
+
+    def calc_df_cond(self, t_start=0, t_end=None, comp_name=None):
 
         # TODO fix this so that it isn't being repeated
 
@@ -726,11 +748,13 @@ class Component(PofBase):
             time = np.arange(t_start, t_end + 1, 1).tolist()
             df["time"] = np.append(time, time[::-1])
 
-        self.df_cond = df
+        df["comp"] = comp_name
 
-        return self.df_cond
+        df_cond = df
 
-    def calc_summary(self, df_cohort=None):
+        return df_cond
+
+    def calc_summary(self, df_cohort=None, comp_name=None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         # Get the key data from each of the failuremodes
         summary = {}
@@ -801,6 +825,7 @@ class Component(PofBase):
 
         # Format for display
         col_order = [
+            "comp",
             "fm",
             "ie",
             "is",
@@ -813,6 +838,7 @@ class Component(PofBase):
             "conf interval ff (+/-)",
             "total",
         ]
+        df["comp"] = comp_name
         df = df.reset_index().reindex(columns=col_order)
 
         percent_col = ["ie", "prevented"]
@@ -821,135 +847,6 @@ class Component(PofBase):
         df.rename(columns=rename_cols, inplace=True)
 
         return df
-
-    # ***************** Figures *****************
-
-    # TODO change default to first value from const
-
-    def plot_ms(
-        self,
-        y_axis="cost_cumulative",
-        keep_axis=False,
-        units: str = None,
-        prev=None,
-    ):
-        """ Returns a cost figure if df has aleady been calculated"""
-        # TODO Add conversion for units when plotting if units != self.units
-
-        df, units = scale_units(
-            df=self.df_erc, input_units=units, model_units=self.units
-        )
-
-        return make_ms_fig(
-            df=df,
-            y_axis=y_axis,
-            keep_axis=keep_axis,
-            units=units,
-            prev=prev,
-        )
-
-    def plot_pof(self, keep_axis=False, units=None, prev=None):
-        """ Returns a pof figure if df has aleady been calculated"""
-
-        df, units = scale_units(
-            df=self.df_pof, input_units=units, model_units=self.units
-        )
-
-        return update_pof_fig(df=df, keep_axis=keep_axis, units=units, prev=prev)
-
-    def plot_cond(self, keep_axis=False, units=None, prev=None):
-        """ Returns a condition figure if df has aleady been calculated"""
-
-        df, units = scale_units(
-            df=self.df_cond, input_units=units, model_units=self.units
-        )
-
-        return update_condition_fig(
-            df=df,
-            ecl=self.expected_condition(),
-            keep_axis=keep_axis,
-            units=units,
-            prev=prev,
-        )
-
-    def plot_task_forecast(
-        self,
-        keep_axis=False,
-        prev=None,
-    ):
-        """ Return a task figure if df has aleady been calculated """
-
-        return make_task_forecast_fig(
-            df=self.df_task,
-            keep_axis=keep_axis,
-            prev=prev,
-        )
-
-    def plot_sens(
-        self,
-        y_axis="cost_cumulative",
-        keep_axis=False,
-        units=None,
-        var_id="",
-        prev=None,
-    ):
-        """ Returns a sensitivity figure if df_sens has aleady been calculated"""
-        var_name = var_id.split("-")[-1]
-
-        df_plot = self.sens_summary(var_name=var_name)
-
-        df = sort_df(
-            df=df_plot, column="source", var=var_name
-        )  # Sens ordered here as x var is needed
-
-        df, units = scale_units(df, input_units=units, model_units=self.units)
-
-        return make_sensitivity_fig(
-            df_plot=df,
-            var_name=var_name,
-            y_axis=y_axis,
-            keep_axis=keep_axis,
-            units=units,
-            prev=prev,
-        )
-
-    def sens_summary(self, var_name="", summarise=True):
-        """ Add direct and total to df_sens for the var_id and return the df to plot """
-        # if summarise: #TODO
-
-        df = self.df_sens
-
-        # Add direct and indirect
-        df_total = df.groupby(by=[var_name]).sum()
-        df_direct = (
-            df_total - df.loc[df["source"] == "risk"].groupby(by=[var_name]).sum()
-        )
-        summary = {
-            "total": df_total,
-            "direct": df_direct,
-            # "risk": df.loc[df["source"] == "risk"],
-        }
-
-        df_plot = pd.concat(summary, names=["source"]).reset_index()
-        df_plot["active"] = df_plot["active"].astype(bool)
-        df_plot = df_plot.append(df)
-        # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
-
-        return df_plot
-
-    def plot_pop_table(self):
-
-        df = self.population_table()
-        fig = make_pop_table_fig(df)
-
-        return fig
-
-    def plot_summary(self, df_cohort=None):
-
-        df = self.calc_summary(df_cohort=df_cohort)
-        fig = make_table_fig(df)
-
-        return fig
 
     # ****************** Reset ******************
 
@@ -976,12 +873,9 @@ class Component(PofBase):
         self._t_in_service = []
         self.stop_simulation = False
 
-        # Reset stored reports
-        self.df_erc = None
-        self.df_sens = None
-        self.df_pof = None
-        self.df_cond = None
-        self.df_task = None
+        # Reset timelines
+        self.timeline = dict()
+        self._timelines = dict()
 
     # ****************** Interface ******************
 
@@ -1109,11 +1003,11 @@ def sort_df(df=None, column=None, var=None):
     if var is not None:
         columns = [var, column]
     elif "year" in df.columns.tolist():
-        columns = ["year", column]
+        columns = ["comp", "year", column]
     elif "time" in df.columns.tolist():
-        columns = ["time", column]
+        columns = ["comp", "time", column]
     else:
-        columns = [column]
+        columns = ["comp", column]
 
     # Define custom order required
     start_order = ["total", "risk", "direct"]

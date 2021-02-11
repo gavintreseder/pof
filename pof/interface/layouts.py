@@ -122,9 +122,17 @@ def make_layout(system):
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
     unit_default = "years"
 
+    comp_list = [
+        {"label": comp.name, "value": comp.name} for comp in system.comp.values()
+    ]
+    comp_default = "pole"
+
     # Generate row data
     inputs = make_input_section(
-        update_list_unit=update_list_unit, unit_default=unit_default
+        update_list_unit=update_list_unit,
+        unit_default=unit_default,
+        comp_list=comp_list,
+        comp_default=comp_default,
     )
 
     sim_progress = make_sim_progress()
@@ -852,7 +860,7 @@ def make_condition_impact_form(impact, prefix="", sep="-"):
 
 
 # *******************Sim meta data***********************
-def make_input_section(update_list_unit, unit_default):
+def make_input_section(update_list_unit, unit_default, comp_list, comp_default):
     form = dbc.FormGroup(
         [
             dbc.Row(
@@ -915,6 +923,24 @@ def make_input_section(update_list_unit, unit_default):
                         ],
                     ),
                     dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            "Graph Component",
+                            dcc.Dropdown(
+                                id="comp_graph-dropdown",
+                                options=comp_list,
+                                value=comp_default,
+                            ),
+                        ]
+                    ),
                     dbc.Col(),
                     dbc.Col(),
                     dbc.Col(),

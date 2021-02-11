@@ -298,6 +298,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     Input("sim_state", "children"),
     Input("ms_var_y-dropdown", "value"),
     Input("axis_lock-checkbox", "checked"),
+    Input("comp_graph-dropdown", "value"),
     State("input_units-dropdown", "value"),
     State("sim_n_active", "checked"),
     State("cond-fig", "figure"),
@@ -309,6 +310,7 @@ def update_figures(
     __,
     y_axis,
     axis_lock,
+    comp_name,
     input_units,
     active,
     prev_cond_fig,
@@ -327,19 +329,19 @@ def update_figures(
         keep_axis = dash_id == "sim_state" and axis_lock
 
         pof_fig = pof_sim.plot_pof(
-            keep_axis=keep_axis, units=input_units, prev=prev_pof_fig
+            keep_axis=keep_axis, units=input_units, prev=prev_pof_fig, comp_name=comp_name
         )
 
         ms_fig = pof_sim.plot_ms(
-            y_axis=y_axis, keep_axis=keep_axis, units=input_units, prev=prev_ms_fig
+            y_axis=y_axis, keep_axis=keep_axis, units=input_units, prev=prev_ms_fig, comp_name=comp_name
         )
 
         cond_fig = pof_sim.plot_cond(
-            keep_axis=keep_axis, units=input_units, prev=prev_cond_fig
+            keep_axis=keep_axis, units=input_units, prev=prev_cond_fig, comp_name=comp_name
         )
 
         task_forecast_fig = pof_sim.plot_task_forecast(
-            keep_axis=keep_axis, prev=prev_task_fig
+            keep_axis=keep_axis, prev=prev_task_fig, comp_name=comp_name
         )
 
         # pop_table_fig = pof_sim.plot_pop_table()
@@ -370,6 +372,7 @@ def update_figures(
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
     Input("axis_lock-checkbox", "checked"),
+    Input("comp_graph-dropdown", "value"),
     # Input("ms-fig", "figure"),  # TODO change this trigger
     State("sensitivity-fig", "figure"),
     State("input_units-dropdown", "value"),
@@ -385,6 +388,7 @@ def update_sensitivity(
     step_size,
     t_end,
     axis_lock,
+    comp_name,
     prev_sens,
     input_units,
     *args,
@@ -425,6 +429,7 @@ def update_sensitivity(
             keep_axis=keep_axis,
             prev=prev_sens,
             units=input_units,
+            comp_name=comp_name
         )
 
         return sens_fig

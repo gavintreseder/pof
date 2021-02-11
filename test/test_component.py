@@ -18,6 +18,7 @@ from pof.interface.figures import calc_y_max
 from pof.data.asset_data import SimpleFleet
 import fixtures
 from pof.units import scale_units
+from pof.system import System
 
 cf = config["Component"]
 
@@ -375,25 +376,17 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         # Assert
         self.assertAlmostEqual(total_failed - lower_bound, upper_bound - total_failed)
 
-    def test_sort_df(self):
+    def test_sort_df_task(self):
+        ##### TEST 1 - TASK #####
         # Arrange
         t_end = 100
         comp = Component.demo()
         comp.mc_timeline(t_end=t_end)
 
         df_task = comp.expected_risk_cost_df(t_start=0, t_end=t_end)
-        df_sens = comp.expected_sensitivity(
-            var_id="pole-task_group_name-groundline-t_interval", lower=0, upper=10
-        )
-        df_source = comp.sens_summary(var_name="t_interval")
 
         # Act
         df_sorted_task = sort_df(df=df_task, column="task")
-        df_sorted_source = sort_df(
-            df=df_source,
-            column="source",
-            var="t_interval",
-        )
 
         # Assert - should be sorted by time then task
         time_vals_task = df_sorted_task["time"].unique()
@@ -404,6 +397,26 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
         self.assertEqual(task_vals[0], "risk")
 
+    def test_sort_df_sens(self):
+        ##### TEST 2 - SENS #####
+        # Arrange
+        t_end = 100
+        sys = System.demo()
+        sys.mc_timeline(t_end=t_end)
+
+        sys.expected_sensitivity(
+            var_id="pole-task_group_name-groundline-t_interval", lower=0, upper=10
+        )
+        df_source = sys.sens_summary(var_name="t_interval")
+
+        # Act
+        df_sorted_source = sort_df(
+            df=df_source,
+            column="source",
+            var="t_interval",
+        )
+
+        # Assert - should be sorted by time then task
         time_vals_source = df_sorted_source["t_interval"].unique()
         source_vals = df_sorted_source["source"].unique()
 
@@ -417,15 +430,17 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
     # ************* Test charts *********************
 
     def test_calc_y_max(self):
-        comp = Component.demo()
+        sys = System.demo()
 
-        comp.mp_timeline(t_end=200, n_iterations=10)
+        sys.mp_timeline(t_end=200, n_iterations=10)
 
-        comp.expected_risk_cost_df(t_end=200)
+        sys.expected_risk_cost_df(t_end=200)
 
-        prev_ms_cost = comp.plot_ms(y_axis="cost", keep_axis=True, prev=None)
-        prev_ms_cumulative = comp.plot_ms(
-            y_axis="cost_cumulative", keep_axis=True, prev=None
+        prev_ms_cost = sys.plot_ms(
+            y_axis="cost", keep_axis=True, prev=None, comp_name="pole"
+        )
+        prev_ms_cumulative = sys.plot_ms(
+            y_axis="cost_cumulative", keep_axis=True, prev=None, comp_name="pole"
         )
 
         y_max_ms_cost = calc_y_max(
@@ -435,7 +450,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
             keep_axis=True, method="sum", prev=prev_ms_cumulative, test=True
         )
 
-        df = comp.df_erc
+        df = sys.df_erc
 
         y_max_ms_cost_df = df["cost"].max() * 1.05
 
