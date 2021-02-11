@@ -15,7 +15,7 @@ from pof.failure_mode import FailureMode
 from pof.paths import Paths
 
 FILEPATH = Paths().test_path
-FILE_NAME_MODEL = Paths().demo_path + r"\System - Asset Model.xlsx"
+FILE_NAME_MODEL = Paths().demo_path + r"\Asset Model.xlsx"
 FILENAME_EXCEL = FILEPATH + r"\Asset Model - Demo - System.xlsx"
 FILENAME_JSON = FILEPATH + r"\Asset Model - Demo - System.json"
 
@@ -68,10 +68,9 @@ class TestAssetModelLoader(unittest.TestCase):
             self.fail(msg="FailureMode cannot sim_timline after json loaded")
 
     def test_load_component_loads_and_works_correctly(self):
-        aml_excel = AssetModelLoader(FILENAME_EXCEL)
-        data_excel = aml_excel.load(FILENAME_EXCEL)
-        aml_json = AssetModelLoader(FILENAME_JSON)
-        data_json = aml_json.load(FILENAME_JSON)
+        aml = AssetModelLoader()
+        data_excel = aml.load(FILENAME_EXCEL)
+        data_json = aml.load(FILENAME_JSON)
 
         sys_excel = System.load(data_excel["overhead_network"])
         self.assertIsNotNone(sys_excel, msg="System cannot be loaded with excel data")
@@ -121,6 +120,7 @@ class TestAssetModelLoader(unittest.TestCase):
         data = aml.load(FILE_NAME_MODEL)
         sys = System.from_dict(data["overhead_network"])
 
+        components_on = ["pole"]
         failure_modes_on = ["termites", "fungal decay | internal"]
         tasks_on = [
             "inspection_groundline",
@@ -130,6 +130,11 @@ class TestAssetModelLoader(unittest.TestCase):
         ]
 
         for comp in sys.comp.values():
+            if comp.name not in components_on:
+                comp.active = False
+            else:
+                comp.active = True
+
             for fm in comp.fm.values():
                 if fm.name not in failure_modes_on:
                     fm.active = False
@@ -142,11 +147,11 @@ class TestAssetModelLoader(unittest.TestCase):
                         else:
                             task.active = False
 
-            # Set up the initial states
-            fm = comp.fm["termites"]
-            fm.init_states["detection"] = True
-            fm.init_states["initiation"] = True
-            fm.tasks["inspection_groundline"].t_delay = 0
+        # Set up the initial states
+        fm = sys.comp["pole"].fm["termites"]
+        fm.init_states["detection"] = True
+        fm.init_states["initiation"] = True
+        fm.tasks["inspection_groundline"].t_delay = 0
 
         sys.mc_timeline(t_end=100, n_iterations=100)
 

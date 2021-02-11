@@ -106,7 +106,7 @@ def load_file(click_load, file_name_model):
     success_hide = True
 
     # Asset Model Data
-    if file_name_model == "Asset Model - Pole - Timber.xlsx":
+    if file_name_model == "Asset Model.xlsx":
         file_path_model = paths.demo_path + os.sep + file_name_model
     else:
         file_path_model = paths.model_path + os.sep + file_name_model
@@ -329,15 +329,25 @@ def update_figures(
         keep_axis = dash_id == "sim_state" and axis_lock
 
         pof_fig = pof_sim.plot_pof(
-            keep_axis=keep_axis, units=input_units, prev=prev_pof_fig, comp_name=comp_name
+            keep_axis=keep_axis,
+            units=input_units,
+            prev=prev_pof_fig,
+            comp_name=comp_name,
         )
 
         ms_fig = pof_sim.plot_ms(
-            y_axis=y_axis, keep_axis=keep_axis, units=input_units, prev=prev_ms_fig, comp_name=comp_name
+            y_axis=y_axis,
+            keep_axis=keep_axis,
+            units=input_units,
+            prev=prev_ms_fig,
+            comp_name=comp_name,
         )
 
         cond_fig = pof_sim.plot_cond(
-            keep_axis=keep_axis, units=input_units, prev=prev_cond_fig, comp_name=comp_name
+            keep_axis=keep_axis,
+            units=input_units,
+            prev=prev_cond_fig,
+            comp_name=comp_name,
         )
 
         task_forecast_fig = pof_sim.plot_task_forecast(
@@ -429,7 +439,7 @@ def update_sensitivity(
             keep_axis=keep_axis,
             prev=prev_sens,
             units=input_units,
-            comp_name=comp_name
+            comp_name=comp_name,
         )
 
         return sens_fig

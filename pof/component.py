@@ -552,13 +552,14 @@ class Component(PofBase):
         """ Returns the expected condition for all indicators associated with active failure modes"""
         expected = {}
 
-        for fm in self.fm.values():
-            if fm.active:
-                for ind_name in fm._cond_to_update():
-                    if ind_name not in expected:
-                        expected[ind_name] = fm.indicators[ind_name].expected_condition(
-                            conf
-                        )
+        if self.active:
+            for fm in self.fm.values():
+                if fm.active:
+                    for ind_name in fm._cond_to_update():
+                        if ind_name not in expected:
+                            expected[ind_name] = fm.indicators[
+                                ind_name
+                            ].expected_condition(conf)
 
         return expected
 
