@@ -124,7 +124,7 @@ def make_layout(system):
     unit_default_model = main_cf.get("model_units_default")
 
     comp_list = [
-        {"label": comp.name, "value": comp.name} for comp in system.comp.values()
+        {"label": comp.name, "value": comp.name} for comp in system.comp.values() if comp.active
     ]
     comp_default = "pole"
 

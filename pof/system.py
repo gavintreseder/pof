@@ -149,25 +149,29 @@ class System(PofBase):
         self.init_timeline(t_start=t_start, t_end=t_end)
 
         for comp in self.comp.values():
-            comp.sim_timeline(t_start=t_start, t_end=t_end)
+            if comp.active:
+                comp.sim_timeline(t_start=t_start, t_end=t_end)
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline """
         for comp in self.comp.values():
-            comp.init_timeline(t_start=t_start, t_end=t_end)
-            self.n_comp += 1
+            if comp.active:
+                comp.init_timeline(t_start=t_start, t_end=t_end)
+                self.n_comp += 1
 
     def increment_counter(self):
         """ Increment the sim counter by 1 """
         self._sim_counter += 1
 
         for comp in self.comp.values():
-            comp.increment_counter()
+            if comp.active:
+                comp.increment_counter()
 
     def save_timeline(self, idx):
         """ Saves the timeline for each component """
         for comp in self.comp.values():
-            comp.save_timeline(idx)
+            if comp.active:
+                comp.save_timeline(idx)
 
     # ****************** Progress *******************
 
@@ -193,11 +197,12 @@ class System(PofBase):
 
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
-            df = df.append(
-                comp.expected_risk_cost_df(
-                    t_start=t_start, t_end=t_end, comp_name=comp.name
+            if comp.active:
+                df = df.append(
+                    comp.expected_risk_cost_df(
+                        t_start=t_start, t_end=t_end, comp_name=comp.name
+                    )
                 )
-            )
 
         self.df_erc = df
 
@@ -209,7 +214,8 @@ class System(PofBase):
 
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
-            df = df.append(comp.calc_pof_df(t_end=t_end, comp_name=comp.name))
+            if comp.active:
+                df = df.append(comp.calc_pof_df(t_end=t_end, comp_name=comp.name))
 
         self.df_pof = df
 
@@ -221,13 +227,14 @@ class System(PofBase):
 
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
-            df = df.append(
-                comp.calc_df_task_forecast(
-                    df_age_forecast=df_age_forecast,
-                    age_units=age_units,
-                    comp_name=comp.name,
+            if comp.active:
+                df = df.append(
+                    comp.calc_df_task_forecast(
+                        df_age_forecast=df_age_forecast,
+                        age_units=age_units,
+                        comp_name=comp.name,
+                    )
                 )
-            )
 
         self.df_task = df
 
@@ -239,9 +246,10 @@ class System(PofBase):
 
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
-            df = df.append(
-                comp.calc_df_cond(t_start=t_start, t_end=t_end, comp_name=comp.name)
-            )
+            if comp.active:
+                df = df.append(
+                    comp.calc_df_cond(t_start=t_start, t_end=t_end, comp_name=comp.name)
+                )
 
         self.df_cond = df
 
@@ -253,7 +261,8 @@ class System(PofBase):
 
         # Add the key and value for each component
         for comp in self.comp.values():
-            expected[comp.name] = comp.expected_condition()
+            if comp.active:
+                expected[comp.name] = comp.expected_condition()
 
         return expected
 
@@ -275,18 +284,19 @@ class System(PofBase):
 
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
-            df = df.append(
-                comp.expected_sensitivity(
-                    var_id=var_id,
-                    lower=lower,
-                    upper=upper,
-                    step_size=step_size,
-                    n_iterations=n_iterations,
-                    t_end=t_end,
-                    comp_name=comp.name,
+            if comp.active:
+                df = df.append(
+                    comp.expected_sensitivity(
+                        var_id=var_id,
+                        lower=lower,
+                        upper=upper,
+                        step_size=step_size,
+                        n_iterations=n_iterations,
+                        t_end=t_end,
+                        comp_name=comp.name,
+                    )
                 )
-            )
-            self.n_sens = comp.n_sens
+                self.n_sens = comp.n_sens
 
         self.df_sens = df
 
@@ -420,7 +430,10 @@ class System(PofBase):
         df = pd.DataFrame()
 
         for comp in self.comp.values():
-            df = df.append(comp.calc_summary(df_cohort=df_cohort, comp_name=comp.name))
+            if comp.active:
+                df = df.append(
+                    comp.calc_summary(df_cohort=df_cohort, comp_name=comp.name)
+                )
 
         fig = make_table_fig(df)
 
@@ -432,20 +445,23 @@ class System(PofBase):
         """ Reset condition parameters to their initial state """
 
         for comp in self.comp.values():
-            comp.reset_condition()
+            if comp.active:
+                comp.reset_condition()
 
     def reset_for_next_sim(self):
         """ Reset parameters back to the initial state"""
 
         for comp in self.comp.values():
-            comp.reset_for_next_sim()
+            if comp.active:
+                comp.reset_for_next_sim()
 
     def reset(self):
         """ Reset all parameters back to the initial state and reset sim parameters"""
 
         # Reset failure modes
         for comp in self.comp.values():
-            comp.reset()
+            if comp.active:
+                comp.reset()
 
         # Reset counters
         self._sim_counter = 0
@@ -470,7 +486,8 @@ class System(PofBase):
 
         # Add hte comp objects onto "system-"
         for comp in self.comp.values():
-            objects = objects + comp.get_objects(prefix=prefix + "comp" + sep)
+            if comp.active:
+                objects = objects + comp.get_objects(prefix=prefix + "comp" + sep)
 
         return objects
 
@@ -484,12 +501,13 @@ class System(PofBase):
             # Component ids
             comp_ids = []
             for comp in self.comp.values():
-                comp_ids = comp_ids + comp.get_dash_ids(
-                    numericalOnly=numericalOnly,
-                    prefix=prefix + "comp" + sep,
-                    sep=sep,
-                    active=active,
-                )
+                if comp.active:
+                    comp_ids = comp_ids + comp.get_dash_ids(
+                        numericalOnly=numericalOnly,
+                        prefix=prefix + "comp" + sep,
+                        sep=sep,
+                        active=active,
+                    )
 
             dash_ids = sys_ids + comp_ids
         else:
@@ -505,9 +523,10 @@ class System(PofBase):
 
         # Get the component ids
         for comp in self.comp.values():
-            ids_comp = comp.get_update_ids(
-                numericalOnly=numericalOnly, prefix=prefix, sep=sep
-            )
+            if comp.active:
+                ids_comp = comp.get_update_ids(
+                    numericalOnly=numericalOnly, prefix=prefix, sep=sep
+                )
 
         ids = ids_sys + ids_comp
 
