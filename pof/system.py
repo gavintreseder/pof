@@ -49,7 +49,7 @@ class System(PofBase):
 
     """
 
-    TIME_VARIABLES = {}
+    TIME_VARIABLES = []
     POF_VARIABLES = ["comp"]
 
     def __init__(
@@ -131,9 +131,7 @@ class System(PofBase):
                 if not self.up_to_date:
                     break
 
-                self.init_timeline(
-                    t_end=t_end, t_start=t_start
-                )  # instead of sim_timeline
+                self.sim_timeline(t_end=t_end, t_start=t_start)
                 self.save_timeline(self.n_comp)
                 self.increment_counter()
                 self.reset_for_next_sim()
@@ -144,6 +142,14 @@ class System(PofBase):
                 raise error
             else:
                 logging.warning("Error caught during cancel_sim")
+
+    def sim_timeline(self, t_end, t_start=0):
+        """ Simulates the timelines for all components attached to this system """
+
+        self.init_timeline(t_start=t_start, t_end=t_end)
+
+        for comp in self.comp.values():
+            comp.sim_timeline(t_start=t_start, t_end=t_end)
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline """
@@ -507,8 +513,11 @@ class System(PofBase):
 
         return ids
 
-    def save(self, file_name):
+    def save(self, file_name, file_units=None):
         """ Save a json file with a system """
+
+        # Scale the units back to file_units
+        self.units = file_units
 
         # Create the data set
         data = self.to_dict()
