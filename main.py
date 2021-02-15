@@ -17,6 +17,7 @@ from pof.interface.layouts import (
     make_system_layout,
     make_save_button,
     make_load_button,
+    make_sim_sens_inputs,
 )
 
 from pof.data.asset_data import SimpleFleet
@@ -400,6 +401,17 @@ def update_figures(
         forecast_table_fig,
     )
 
+
+@app.callback(
+    Output("sim_sens_input", "children"),
+    Input("comp_graph-dropdown", "value"),
+)
+def update_sens_x_axis(comp_name):
+    """ Trigger an update to the sensitivity x_axis option list """
+
+    sim_sens_input = make_sim_sens_inputs(system, comp_name=comp_name)
+
+    return sim_sens_input
 
 @app.callback(
     Output("sensitivity-fig", "figure"),

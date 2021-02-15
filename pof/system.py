@@ -377,20 +377,15 @@ class System(PofBase):
 
         return dash_ids
 
-    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
+    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-", comp_name=None):
         """ Get the ids for all objects that should be updated"""
-
-        # Get the system ids
-        ids_sys = self.get_dash_ids(numericalOnly=numericalOnly, active=True)
 
         # Get the component ids
         for comp in self.comp.values():
-            if comp.active:
-                ids_comp = comp.get_update_ids(
+            if comp.name == comp_name and comp.active:
+                ids = comp.get_update_ids(
                     numericalOnly=numericalOnly, prefix=prefix, sep=sep
                 )
-
-        ids = ids_sys + ids_comp
 
         return ids
 

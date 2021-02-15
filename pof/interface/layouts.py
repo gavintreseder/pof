@@ -99,22 +99,6 @@ def scale_input(
 
 def make_layout(system):
     # Dropdown list values
-    update_list_sens_x = [
-        {"label": option, "value": option}
-        for option in system.get_update_ids(numericalOnly=True)
-    ]
-    sens_x_default = system.get_update_ids(numericalOnly=True)[0]
-
-    y_values_sens = [
-        "cost",
-        "cost_cumulative",
-        "cost_annual",
-        "quantity",
-        "quantity_cumulative",
-    ]
-    update_list_y_sens = [
-        {"label": option, "value": option} for option in y_values_sens
-    ]
     y_values_ms = ["cost", "cost_cumulative"]
     update_list_y_ms = [{"label": option, "value": option} for option in y_values_ms]
     y_value_default = layouts_cf.get("y_value_default")
@@ -145,12 +129,7 @@ def make_layout(system):
     sim_inputs = make_sim_inputs(
         update_list_y=update_list_y_ms, y_value_default=y_value_default
     )
-    sim_sens_inputs = make_sim_sens_inputs(
-        update_list_y=update_list_y_sens,
-        y_value_default=y_value_default,
-        update_list_sens_x=update_list_sens_x,
-        sens_x_default=sens_x_default,
-    )
+    sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
     msl = make_system_layout(system)
     sim = make_sim_layout()
@@ -213,7 +192,13 @@ def make_layout(system):
                             dbc.Row(
                                 [sim_sens_progress],
                             ),
-                            dbc.Row([sim_sens_inputs]),
+                            dbc.Row(
+                                [
+                                    html.Div(
+                                        id="sim_sens_input", children=sim_sens_inputs
+                                    )
+                                ]
+                            ),
                         ]
                     ),
                 ]
@@ -1069,7 +1054,36 @@ def make_sim_inputs(update_list_y, y_value_default):
     return form
 
 
-def make_sim_sens_inputs(
+def make_sim_sens_inputs(system, comp_name=None):
+
+    update_list_sens_x = [
+        {"label": option, "value": option}
+        for option in system.get_update_ids(numericalOnly=True, comp_name=comp_name)
+    ]
+    sens_x_default = update_list_sens_x[0]["value"]
+
+    y_values_sens = [
+        "cost",
+        "cost_cumulative",
+        "cost_annual",
+        "quantity",
+        "quantity_cumulative",
+    ]
+    update_list_y_sens = [
+        {"label": option, "value": option} for option in y_values_sens
+    ]
+
+    y_value_default = layouts_cf.get("y_value_default")
+
+    return make_sim_sens_inputs_layout(
+        update_list_y=update_list_y_sens,
+        y_value_default=y_value_default,
+        update_list_sens_x=update_list_sens_x,
+        sens_x_default=sens_x_default,
+    )
+
+
+def make_sim_sens_inputs_layout(
     update_list_y, y_value_default, update_list_sens_x, sens_x_default
 ):
     form = dbc.InputGroup(
