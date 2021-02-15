@@ -313,10 +313,14 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
         if not pof_sim.up_to_date:
             return dash.no_update, "Update cancelled"
 
+        sim_n_iterations = pof_sim.progress() / len(
+            [comp.name for comp in pof_sim.comp.values() if comp.active]
+        )
+
     else:
         return dash.no_update, "Not active"
 
-    return f"Sim State: {pof_sim.n_iterations} - {n_iterations}", ""
+    return f"Sim State: {sim_n_iterations} - {n_iterations}", ""
 
 
 @app.callback(
@@ -358,35 +362,32 @@ def update_figures(
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
 
-        pof_fig = pof_sim.plot_pof(
+        pof_fig = pof_sim.comp[comp_name].plot_pof(
             keep_axis=keep_axis,
             units=input_units,
             prev=prev_pof_fig,
-            comp_name=comp_name,
         )
 
-        ms_fig = pof_sim.plot_ms(
+        ms_fig = pof_sim.comp[comp_name].plot_ms(
             y_axis=y_axis,
             keep_axis=keep_axis,
             units=input_units,
             prev=prev_ms_fig,
-            comp_name=comp_name,
         )
 
-        cond_fig = pof_sim.plot_cond(
+        cond_fig = pof_sim.comp[comp_name].plot_cond(
             keep_axis=keep_axis,
             units=input_units,
             prev=prev_cond_fig,
-            comp_name=comp_name,
         )
 
-        task_forecast_fig = pof_sim.plot_task_forecast(
-            keep_axis=keep_axis, prev=prev_task_fig, comp_name=comp_name
+        task_forecast_fig = pof_sim.comp[comp_name].plot_task_forecast(
+            keep_axis=keep_axis, prev=prev_task_fig
         )
 
         # pop_table_fig = pof_sim.plot_pop_table()
 
-        forecast_table_fig = pof_sim.plot_summary(sfd.df_age)
+        forecast_table_fig = pof_sim.comp[comp_name].plot_summary(sfd.df_age)
 
     else:
         raise PreventUpdate
@@ -473,13 +474,12 @@ def update_sensitivity(
             n_iterations=n_iterations,
         )
 
-        sens_fig = sens_sim.plot_sens(
+        sens_fig = sens_sim.comp[comp_name].plot_sens(
             var_id=var_id,
             y_axis=y_axis,
             keep_axis=keep_axis,
             prev=prev_sens,
             units=input_units,
-            comp_name=comp_name,
         )
 
         return sens_fig
@@ -498,7 +498,7 @@ def update_sensitivity(
     Input("progress-interval", "n_intervals"),
 )
 def update_progress(__):
-    if pof_sim.n is None:
+    if pof_sim.sim_progress is None:
         raise Exception("no process started")
     progress = int(pof_sim.progress() * 100)
 
@@ -510,7 +510,7 @@ def update_progress(__):
     [Input("sens_progress-interval", "n_intervals")],
 )
 def update_progress_sens(__):
-    if sens_sim.n is None:
+    if sens_sim.sim_sens_progress is None:
         raise Exception("no process started")
     progress = int(sens_sim.sens_progress() * 100)
 

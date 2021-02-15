@@ -124,9 +124,11 @@ def make_layout(system):
     unit_default_model = main_cf.get("model_units_default")
 
     comp_list = [
-        {"label": comp.name, "value": comp.name} for comp in system.comp.values() if comp.active
+        {"label": comp.name, "value": comp.name}
+        for comp in system.comp.values()
+        if comp.active
     ]
-    comp_default = "pole"
+    comp_default = comp_list[0]["value"]
 
     # Generate row data
     inputs = make_input_section(

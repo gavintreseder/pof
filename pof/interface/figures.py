@@ -333,7 +333,6 @@ def make_table_fig(df):
     """
     # Format the decimal places for float columns
     int_cols = list(df)
-    int_cols.remove("comp")
     int_cols.remove("fm")
     df.loc[:, int_cols] = df.loc[:, int_cols].astype(float).round(2)
     df.fillna("-", inplace=True)

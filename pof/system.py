@@ -74,12 +74,11 @@ class System(PofBase):
 
         # Dash Tracking
         self.up_to_date = True
-        self.n = 0
-        self.n_iterations = 10
-        self.n_sens = 0
-        self.n_sens_iterations = 10
+        self.sim_progress = 0
+        self.sim_sens_progress = 0
 
         self.n_comp = 0
+        self.n_comp_sens = 0
         self.comp_total = 3
 
         # Reporting
@@ -101,8 +100,8 @@ class System(PofBase):
         """ Cancels the simulation """
         self.up_to_date = False
         self.n_comp = 0
-        self.n = 0
-        self.n_sens = 0
+        self.sim_progress = 0
+        self.sim_sens_progress = 0
 
     def mc_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times"""
@@ -121,13 +120,10 @@ class System(PofBase):
         self.up_to_date = True
 
         self.n_comp = 0
-        self.comp_total = len(self.comp)
-
-        self.n = 0
-        self.n_iterations = n_iterations
+        self.comp_total = len([comp.name for comp in self.comp.values() if comp.active])
 
         try:
-            for __ in tqdm(range(self.n_iterations)):
+            for __ in tqdm(range(n_iterations)):
                 if not self.up_to_date:
                     break
 
@@ -136,7 +132,6 @@ class System(PofBase):
                 self.increment_counter()
                 self.reset_for_next_sim()
 
-                self.n += 1
         except Exception as error:
             if self.up_to_date:
                 raise error
@@ -151,6 +146,7 @@ class System(PofBase):
         for comp in self.comp.values():
             if comp.active:
                 comp.sim_timeline(t_start=t_start, t_end=t_end)
+                self.sim_progress = comp.progress()
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline """
@@ -158,6 +154,15 @@ class System(PofBase):
             if comp.active:
                 comp.init_timeline(t_start=t_start, t_end=t_end)
                 self.n_comp += 1
+
+    def next_tasks(self):
+        return NotImplemented
+
+    def complete_tasks(self):
+        return NotImplemented
+
+    def renew(self):
+        return NotImplemented
 
     def increment_counter(self):
         """ Increment the sim counter by 1 """
@@ -177,15 +182,11 @@ class System(PofBase):
 
     def progress(self) -> float:
         """ Returns the progress of the primary simulation """
-        return (self.n_comp * self.n) / (
-            self.comp_total * self.n_iterations * self.n_iterations
-        )
+        return self.sim_progress * self.n_comp / self.comp_total
 
     def sens_progress(self) -> float:
         """ Returns the progress of the sensitivity simulation """
-        return (self.n_comp * self.n_sens) / (
-            self.comp_total * self.n_sens_iterations * self.n_sens_iterations
-        )
+        return self.sim_sens_progress * self.n_comp / self.comp_total
 
     # ****************** Reports ****************
 
@@ -198,11 +199,9 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(
-                    comp.expected_risk_cost_df(
-                        t_start=t_start, t_end=t_end, comp_name=comp.name
-                    )
-                )
+                df = df.append(comp.expected_risk_cost_df(t_start=t_start, t_end=t_end))
+
+                df["comp"] = comp.name
 
         self.df_erc = df
 
@@ -215,7 +214,9 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(comp.calc_pof_df(t_end=t_end, comp_name=comp.name))
+                df = df.append(comp.calc_pof_df(t_end=t_end))
+
+                df["comp"] = comp.name
 
         self.df_pof = df
 
@@ -232,9 +233,10 @@ class System(PofBase):
                     comp.calc_df_task_forecast(
                         df_age_forecast=df_age_forecast,
                         age_units=age_units,
-                        comp_name=comp.name,
                     )
                 )
+
+                df["comp"] = comp.name
 
         self.df_task = df
 
@@ -247,9 +249,9 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(
-                    comp.calc_df_cond(t_start=t_start, t_end=t_end, comp_name=comp.name)
-                )
+                df = df.append(comp.calc_df_cond(t_start=t_start, t_end=t_end))
+
+                df["comp"] = comp.name
 
         self.df_cond = df
 
@@ -277,8 +279,6 @@ class System(PofBase):
     ):
         """ Create df_sens for all components """
 
-        self.n_sens_iterations = n_iterations
-
         # Create the dataframe
         df = pd.DataFrame()
 
@@ -293,151 +293,13 @@ class System(PofBase):
                         step_size=step_size,
                         n_iterations=n_iterations,
                         t_end=t_end,
-                        comp_name=comp.name,
                     )
                 )
-                self.n_sens = comp.n_sens
+                self.sim_sens_progress = comp.sens_progress()
+
+                df["comp"] = comp.name
 
         self.df_sens = df
-
-    # ***************** Figures *****************
-
-    # TODO change default to first value from const
-
-    def plot_ms(
-        self,
-        y_axis="cost_cumulative",
-        keep_axis=False,
-        units: str = None,
-        prev=None,
-        comp_name=None,
-    ):
-        """ Returns a cost figure if df has aleady been calculated"""
-        # TODO Add conversion for units when plotting if units != self.units
-
-        df, units = scale_units(
-            df=self.df_erc, input_units=units, model_units=self.units
-        )
-
-        df = df[df["comp"] == comp_name]
-
-        return make_ms_fig(
-            df=df,
-            y_axis=y_axis,
-            keep_axis=keep_axis,
-            units=units,
-            prev=prev,
-        )
-
-    def plot_pof(self, keep_axis=False, units=None, prev=None, comp_name=None):
-        """ Returns a pof figure if df has aleady been calculated"""
-
-        df, units = scale_units(
-            df=self.df_pof, input_units=units, model_units=self.units
-        )
-
-        df = df[df["comp"] == comp_name]
-
-        return update_pof_fig(df=df, keep_axis=keep_axis, units=units, prev=prev)
-
-    def plot_cond(self, keep_axis=False, units=None, prev=None, comp_name=None):
-        """ Returns a condition figure if df has aleady been calculated"""
-
-        df, units = scale_units(
-            df=self.df_cond, input_units=units, model_units=self.units
-        )
-
-        df = df[df["comp"] == comp_name]
-
-        ecl_all = self.expected_condition()
-        ecl_comp = ecl_all[comp_name]
-
-        return update_condition_fig(
-            df=df,
-            ecl=ecl_comp,
-            keep_axis=keep_axis,
-            units=units,
-            prev=prev,
-        )
-
-    def plot_task_forecast(self, keep_axis=False, prev=None, comp_name=None):
-        """ Return a task figure if df has aleady been calculated """
-
-        df = self.df_task[self.df_task["comp"] == comp_name]
-
-        return make_task_forecast_fig(
-            df=df,
-            keep_axis=keep_axis,
-            prev=prev,
-        )
-
-    def plot_sens(
-        self,
-        y_axis="cost_cumulative",
-        keep_axis=False,
-        units=None,
-        var_id="",
-        prev=None,
-        comp_name=None,
-    ):
-        """ Returns a sensitivity figure if df_sens has aleady been calculated"""
-        var_name = var_id.split("-")[-1]
-
-        df_plot = self.sens_summary(var_name=var_name)
-
-        df = sort_df(
-            df=df_plot, column="source", var=var_name
-        )  # Sens ordered here as x var is needed
-
-        df, units = scale_units(df, input_units=units, model_units=self.units)
-
-        df = df[df["comp"] == comp_name]
-
-        return make_sensitivity_fig(
-            df_plot=df,
-            var_name=var_name,
-            y_axis=y_axis,
-            keep_axis=keep_axis,
-            units=units,
-            prev=prev,
-        )
-
-    def sens_summary(self, var_name="", summarise=True):
-        """ Add direct and total to df_sens for the var_id and return the df to plot """
-        # if summarise: #TODO
-
-        df = self.df_sens
-
-        # Add direct and indirect
-        df_total = df.groupby(by=[var_name]).sum()
-        df_direct = (
-            df_total - df.loc[df["source"] == "risk"].groupby(by=[var_name]).sum()
-        )
-        summary = {
-            "total": df_total,
-            "direct": df_direct,
-            # "risk": df.loc[df["source"] == "risk"],
-        }
-
-        df_plot = pd.concat(summary, names=["source"]).reset_index()
-        df_plot["active"] = df_plot["active"].astype(bool)
-        df_plot = df_plot.append(df)
-        # df_plot = df_plot.append(df.loc[df["source"] != "risk"])
-
-        return df_plot
-
-    def plot_summary(self, df_cohort=None):
-        df = pd.DataFrame()
-
-        for comp in self.comp.values():
-            if comp.active:
-                df = df.append(
-                    comp.calc_summary(df_cohort=df_cohort, comp_name=comp.name)
-                )
-
-        fig = make_table_fig(df)
-
-        return fig
 
     # ****************** Reset ******************
 
