@@ -13,6 +13,7 @@ p_effective = 100
 
 [Main]
 file_name_default = "Asset Model - Pole - Timber.xlsx"
+name = "pole"
 file_units_default = "years"
 model_units_default = "months"
 input_units_default = "years"

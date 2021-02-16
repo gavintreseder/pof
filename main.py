@@ -61,9 +61,9 @@ global collapse_ids
 global sim_triggers
 global param_inputs
 
-aml = AssetModelLoader(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
-comp_data = aml.load(paths.demo_path + os.sep + "Asset Model - Pole - Timber.xlsx")
-comp = Component.from_dict(comp_data["pole"])
+aml = AssetModelLoader(paths.demo_path + os.sep + cf.get("file_name_default"))
+comp_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+comp = Component.from_dict(comp_data[cf.get("name")])
 comp.units = cf.get("file_units_default")  # Set the units to be file units initially
 comp.fleet_data = sfd  # TODO fix by creating asset class
 
@@ -147,9 +147,11 @@ def save_load_file(click_load, click_save, file_name_input):
     # Load the file
     if click_load or click_save:
         if os.path.exists(file_path_output + file_name_output):
-            aml = AssetModelLoader(file_path_output + file_name_output)
-            comp_data = aml.load(file_path_output + file_name_output)
-            comp = Component.from_dict(comp_data["pole"])
+            aml = AssetModelLoader(
+                paths.demo_path + os.sep + cf.get("file_name_default")
+            )
+            comp_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+            comp = Component.from_dict(comp_data[cf.get("name")])
 
             comp.units = cf.get(
                 "file_units_default"
