@@ -6,7 +6,6 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
-import json
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -125,7 +124,9 @@ class System(PofBase):
         try:
             for comp in self.comp.values():
                 if comp.active:
-                    comp.mp_timeline(t_end=t_end, t_start=0, n_iterations=n_iterations)
+                    comp.mp_timeline(
+                        t_end=t_end, t_start=t_start, n_iterations=n_iterations
+                    )
 
                     self.sim_progress = comp.progress()
                     self.n_comp += 1
@@ -398,32 +399,21 @@ class System(PofBase):
 
         return dash_ids
 
-    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-", comp_name=None):
+    def get_update_ids(
+        self, numericalOnly: bool = True, prefix="", sep="-", filter_ids: dict = None
+    ):
         """ Get the ids for all objects that should be updated"""
 
         prefix = prefix + self.name + sep
 
         # Get the component ids
         for comp in self.comp.values():
-            if comp.name == comp_name and comp.active:
+            if comp.name == filter_ids["comp"] and comp.active:
                 ids = comp.get_update_ids(
                     numericalOnly=numericalOnly, prefix=prefix + "comp" + sep, sep=sep
                 )
 
         return ids
-
-    def save(self, file_name, file_units=None):
-        """ Save a json file with a system """
-
-        # Scale the units back to file_units
-        self.units = file_units
-
-        # Create the data set
-        data = self.to_dict()
-
-        # Save to json
-        with open(Paths().model_path + "\\" + file_name, "w") as json_file:
-            json.dump(data, json_file)
 
     # ****************** Demonstration parameters ******************
 

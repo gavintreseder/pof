@@ -107,7 +107,7 @@ def make_layout(system):
     unit_default = cf_main.get("input_units_default")
     unit_default_model = cf_main.get("model_units_default")
 
-    if cf_main.get("system"):
+    if getattr(system, "comp") is not None:
         comp_list = [
             {"label": comp.name, "value": comp.name}
             for comp in system.comp.values()
@@ -135,7 +135,7 @@ def make_layout(system):
     )
     sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
-    if cf_main.get("system"):
+    if getattr(system, "comp") is not None:
         make_chart_layout = make_system_layout(system)
     else:
         make_chart_layout = make_component_layout(system)
@@ -1062,17 +1062,20 @@ def make_sim_inputs(update_list_y, y_value_default):
     return form
 
 
-def make_sim_sens_inputs(system, comp_name=None):
+def make_sim_sens_inputs(pof_obj, comp_name: str = None):
+    """ create the x and y drop down list for sens, x list dependant on comp selected to chart """
 
-    if cf_main.get("system"):
+    if getattr(pof_obj, "comp") is not None:
         update_list_sens_x = [
             {"label": option, "value": option}
-            for option in system.get_update_ids(numericalOnly=True, comp_name=comp_name)
-        ]
+            for option in pof_obj.get_update_ids(
+                numericalOnly=True, filter_ids={"comp": comp_name}
+            )
+        ]  # TODO make this better - comp_name
     else:
         update_list_sens_x = [
             {"label": option, "value": option}
-            for option in system.get_update_ids(numericalOnly=True)
+            for option in pof_obj.get_update_ids(numericalOnly=True)
         ]
     sens_x_default = update_list_sens_x[0]["value"]
 

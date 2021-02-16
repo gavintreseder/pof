@@ -1092,7 +1092,9 @@ class Component(PofBase):
 
         return dash_ids
 
-    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
+    def get_update_ids(
+        self, numericalOnly: bool = True, prefix="", sep="-", filter_ids: dict = None
+    ):
         """ Get the ids for all objects that should be updated"""
         # TODO remove this once task groups added to the interface
         # TODO fix encapsulation

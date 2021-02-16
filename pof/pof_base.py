@@ -16,6 +16,8 @@ import pandas as pd
 import scipy.stats as ss
 import plotly.express as px
 import plotly.graph_objects as go
+import json
+from pof.paths import Paths
 
 if __package__ is None or __package__ == "":
     import sys
@@ -484,6 +486,19 @@ class PofBase:
 
     def mc_timeline(self, t_start=None, t_end=None, n_iterations=None):
         raise NotImplementedError()
+
+    def save(self, file_name, file_units=None):
+        """ Save a json file with a system """
+
+        # Scale the units back to file_units
+        self.units = file_units
+
+        # Create the data set
+        data = self.to_dict()
+
+        # Save to json
+        with open(Paths().model_path + "\\" + file_name, "w") as json_file:
+            json.dump(data, json_file)
 
     def to_dict(self):
         """ Create a dict of the comp object to save to a json file """
