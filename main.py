@@ -313,14 +313,13 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
         if not pof_sim.up_to_date:
             return dash.no_update, "Update cancelled"
 
-        sim_n_iterations = pof_sim.progress() / len(
-            [comp.name for comp in pof_sim.comp.values() if comp.active]
-        )
-
     else:
         return dash.no_update, "Not active"
 
-    return f"Sim State: {sim_n_iterations} - {n_iterations}", ""
+    return (
+        f"Sim State: {pof_sim.total_iterations()} - {n_iterations * pof_sim.n_comp}",
+        "",
+    )
 
 
 @app.callback(
@@ -412,8 +411,9 @@ def update_sens_x_axis(comp_name):
 
     return sim_sens_input
 
+
 @app.callback(
-    Output("sensitivity-fig", "figure"),
+    Output("sim_state_sens", "children"),
     Input("sim_state", "children"),
     Input("sim_sens_active-check", "checked"),
     Input("n_sens_iterations-input", "value"),
@@ -423,10 +423,6 @@ def update_sens_x_axis(comp_name):
     Input("sens_upper-input", "value"),
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
-    Input("axis_lock-checkbox", "checked"),
-    Input("comp_graph-dropdown", "value"),
-    # Input("ms-fig", "figure"),  # TODO change this trigger
-    State("sensitivity-fig", "figure"),
     State("input_units-dropdown", "value"),
 )
 def update_sensitivity(
@@ -439,9 +435,6 @@ def update_sensitivity(
     upper,
     step_size,
     t_end,
-    axis_lock,
-    comp_name,
-    prev_sens,
     input_units,
     *args,
 ):
@@ -452,10 +445,6 @@ def update_sensitivity(
     sens_sim.cancel_sim()
 
     if active:
-
-        ctx = dash.callback_context
-        dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        keep_axis = dash_id == "sim_state" and axis_lock
 
         sens_sim = copy.deepcopy(system)
 
@@ -485,6 +474,55 @@ def update_sensitivity(
             n_iterations=n_iterations,
         )
 
+    else:
+        raise PreventUpdate
+
+    return (
+        f"Sim State: {sens_sim.total_sens_iterations()} - {n_iterations * sens_sim.n_comp}",
+        "",
+    )
+
+
+@app.callback(
+    Output("sensitivity-fig", "figure"),
+    Input("sim_state_sens", "children"),
+    Input("sim_sens_active-check", "checked"),
+    Input("n_sens_iterations-input", "value"),
+    Input("sens_var_id-dropdown", "value"),
+    Input("sens_var_y-dropdown", "value"),
+    Input("sens_lower-input", "value"),
+    Input("sens_upper-input", "value"),
+    Input("sens_step_size-input", "value"),
+    Input("t_end-input", "value"),
+    Input("axis_lock-checkbox", "checked"),
+    Input("comp_graph-dropdown", "value"),
+    # Input("ms-fig", "figure"),  # TODO change this trigger
+    State("sensitivity-fig", "figure"),
+    State("input_units-dropdown", "value"),
+)
+def update_sensitivity_fig(
+    __,
+    active,
+    n_iterations,
+    var_id,
+    y_axis,
+    lower,
+    upper,
+    step_size,
+    t_end,
+    axis_lock,
+    comp_name,
+    prev_sens,
+    input_units,
+    *args,
+):
+    """ Plot the sensitivity chart """
+    global sens_sim
+
+    if active:
+        ctx = dash.callback_context
+        dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        keep_axis = dash_id == "sim_state_sens" and axis_lock
         sens_fig = sens_sim.comp[comp_name].plot_sens(
             var_id=var_id,
             y_axis=y_axis,
@@ -493,9 +531,10 @@ def update_sensitivity(
             units=input_units,
         )
 
-        return sens_fig
     else:
         raise PreventUpdate
+
+    return sens_fig
 
 
 # ==============================================

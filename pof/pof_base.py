@@ -156,7 +156,8 @@ class PofBase:
 
         # Update the variables on this instance
         for var in self.TIME_VARIABLES:
-            setattr(self, var, getattr(self, var) * ratio)
+            if getattr(self, var) is not None:
+                setattr(self, var, getattr(self, var) * ratio)
 
         # Update the variables on the child instance
         for var_name in self.POF_VARIABLES:

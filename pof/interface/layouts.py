@@ -1048,7 +1048,7 @@ def make_sim_inputs(update_list_y, y_value_default):
                                         id="ms_var_y-dropdown",
                                         options=update_list_y,
                                         value=y_value_default,
-                                        style={"width": 500},
+                                        style={"width": 750},
                                     ),
                                 ]
                             )
@@ -1113,7 +1113,7 @@ def make_sim_sens_inputs_layout(
                                         id="sens_var_y-dropdown",
                                         options=update_list_y,
                                         value=y_value_default,
-                                        style={"width": 500},
+                                        style={"width": 750},
                                     ),
                                 ],
                                 addon_type="prepend",
@@ -1133,7 +1133,7 @@ def make_sim_sens_inputs_layout(
                                         id="sens_var_id-dropdown",
                                         options=update_list_sens_x,
                                         value=sens_x_default,
-                                        style={"width": 500},
+                                        style={"width": 750},
                                     ),
                                 ],
                                 addon_type="prepend",
@@ -1225,6 +1225,10 @@ def make_sim_layout():
                                         html.P(
                                             children="Sim State",
                                             id="sim_state",
+                                        ),
+                                        html.P(
+                                            children="Sim State Sens",
+                                            id="sim_state_sens",
                                         ),
                                         html.P(
                                             id="sim_state_err",

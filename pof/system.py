@@ -37,6 +37,7 @@ DEFAULT_ITERATIONS = 10
 cf = config.get("System")
 cf_main = config.get("Main")
 
+
 class System(PofBase):
     """
     Parameters:
@@ -69,7 +70,7 @@ class System(PofBase):
         self.set_component(comp)
 
         # Simulation traking
-        self._sim_counter = 0
+        # self._sim_counter = 0
         self.stop_simulation = False
 
         # Dash Tracking
@@ -107,12 +108,11 @@ class System(PofBase):
         """ Simulate the timeline mutliple times"""
         self.reset()
 
-        for i in tqdm(range(n_iterations)):
-            self.init_timeline(t_end=t_end, t_start=t_start)
+        for comp in self.comp.values():
+            if comp.active:
+                comp.mc_timeline(t_end=t_end, t_start=t_start)
 
-            self.save_timeline(i)
-            self.increment_counter()
-            self.reset_for_next_sim()
+                self.n_comp += 1
 
     def mp_timeline(self, t_end, t_start=0, n_iterations=DEFAULT_ITERATIONS):
         """ Simulate the timeline mutliple times and exit immediately if updated"""
@@ -123,60 +123,57 @@ class System(PofBase):
         self.comp_total = len([comp.name for comp in self.comp.values() if comp.active])
 
         try:
-            for __ in tqdm(range(n_iterations)):
-                if not self.up_to_date:
-                    break
+            for comp in self.comp.values():
+                if comp.active:
+                    comp.mp_timeline(t_end=t_end, t_start=0, n_iterations=n_iterations)
 
-                self.sim_timeline(t_end=t_end, t_start=t_start)
-                self.save_timeline(self.n_comp)
-                self.increment_counter()
-                self.reset_for_next_sim()
-
+                    self.sim_progress = comp.progress()
+                    self.n_comp += 1
         except Exception as error:
             if self.up_to_date:
                 raise error
             else:
                 logging.warning("Error caught during cancel_sim")
 
-    def sim_timeline(self, t_end, t_start=0):
-        """ Simulates the timelines for all components attached to this system """
+    # def sim_timeline(self, t_end, t_start=0):
+    #     """ Simulates the timelines for all components attached to this system """
 
-        self.init_timeline(t_start=t_start, t_end=t_end)
+    #     self.init_timeline(t_start=t_start, t_end=t_end)
 
-        for comp in self.comp.values():
-            if comp.active:
-                comp.sim_timeline(t_start=t_start, t_end=t_end)
-                self.sim_progress = comp.progress()
+    #     for comp in self.comp.values():
+    #         if comp.active:
+    #             comp.sim_timeline(t_start=t_start, t_end=t_end)
+    #             self.sim_progress = comp.progress()
 
-    def init_timeline(self, t_end, t_start=0):
-        """ Initialise the timeline """
-        for comp in self.comp.values():
-            if comp.active:
-                comp.init_timeline(t_start=t_start, t_end=t_end)
-                self.n_comp += 1
+    # def init_timeline(self, t_end, t_start=0):
+    #     """ Initialise the timeline """
+    #     for comp in self.comp.values():
+    #         if comp.active:
+    #             comp.init_timeline(t_start=t_start, t_end=t_end)
+    #             self.n_comp += 1
 
-    def next_tasks(self):
-        return NotImplemented
+    # def next_tasks(self):
+    #     return NotImplemented
 
-    def complete_tasks(self):
-        return NotImplemented
+    # def complete_tasks(self):
+    #     return NotImplemented
 
-    def renew(self):
-        return NotImplemented
+    # def renew(self):
+    #     return NotImplemented
 
-    def increment_counter(self):
-        """ Increment the sim counter by 1 """
-        self._sim_counter += 1
+    # def increment_counter(self):
+    #     """ Increment the sim counter by 1 """
+    #     self._sim_counter += 1
 
-        for comp in self.comp.values():
-            if comp.active:
-                comp.increment_counter()
+    #     for comp in self.comp.values():
+    #         if comp.active:
+    #             comp.increment_counter()
 
-    def save_timeline(self, idx):
-        """ Saves the timeline for each component """
-        for comp in self.comp.values():
-            if comp.active:
-                comp.save_timeline(idx)
+    # def save_timeline(self, idx):
+    #     """ Saves the timeline for each component """
+    #     for comp in self.comp.values():
+    #         if comp.active:
+    #             comp.save_timeline(idx)
 
     # ****************** Progress *******************
 
@@ -187,6 +184,26 @@ class System(PofBase):
     def sens_progress(self) -> float:
         """ Returns the progress of the sensitivity simulation """
         return self.sim_sens_progress * self.n_comp / self.comp_total
+
+    def total_iterations(self) -> float:
+        """ Returns the total simulations run """
+        total_iterations = 0
+
+        for comp in self.comp.values():
+            if comp.active:
+                total_iterations += comp.n
+
+        return total_iterations
+
+    def total_sens_iterations(self) -> float:
+        """ Returns the total simulations run for sens """
+        total_iterations = 0
+
+        for comp in self.comp.values():
+            if comp.active:
+                total_iterations += comp.n_sens
+
+        return total_iterations
 
     # ****************** Reports ****************
 
@@ -281,6 +298,8 @@ class System(PofBase):
 
         # Create the dataframe
         df = pd.DataFrame()
+        self.n_comp = 0
+        self.comp_total = len([comp.name for comp in self.comp.values() if comp.active])
 
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
@@ -296,6 +315,8 @@ class System(PofBase):
                     )
                 )
                 self.sim_sens_progress = comp.sens_progress()
+
+                self.n_comp += 1
 
                 df["comp"] = comp.name
 
@@ -326,7 +347,7 @@ class System(PofBase):
                 comp.reset()
 
         # Reset counters
-        self._sim_counter = 0
+        # self._sim_counter = 0
         # self._t_in_service = []
         self.stop_simulation = False
 
@@ -380,11 +401,13 @@ class System(PofBase):
     def get_update_ids(self, numericalOnly=bool, prefix="", sep="-", comp_name=None):
         """ Get the ids for all objects that should be updated"""
 
+        prefix = prefix + self.name + sep
+
         # Get the component ids
         for comp in self.comp.values():
             if comp.name == comp_name and comp.active:
                 ids = comp.get_update_ids(
-                    numericalOnly=numericalOnly, prefix=prefix, sep=sep
+                    numericalOnly=numericalOnly, prefix=prefix + "comp" + sep, sep=sep
                 )
 
         return ids

@@ -1097,7 +1097,7 @@ class Component(PofBase):
         # TODO remove this once task groups added to the interface
         # TODO fix encapsulation
 
-        ids = self.get_dash_ids(numericalOnly=numericalOnly, active=True)
+        ids = self.get_dash_ids(numericalOnly=numericalOnly, active=True, prefix=prefix)
 
         update_ids = dict()
         for fm in self.fm.values():
@@ -1105,11 +1105,11 @@ class Component(PofBase):
                 if task.task_group_name not in update_ids:
                     update_ids[
                         task.task_group_name + "t_interval"
-                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
+                    ] = f"{prefix}{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
 
                     update_ids[
                         task.task_group_name
-                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
+                    ] = f"{prefix}{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
 
         ids = list(update_ids.values()) + ids
         return ids
@@ -1134,7 +1134,7 @@ class Component(PofBase):
     def demo(cls):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        return cls.load(demo.component_data[cf_main.get("name")])
+        return cls.load(demo.component_data["pole"])
 
 
 def sort_df(df=None, column=None, var=None):

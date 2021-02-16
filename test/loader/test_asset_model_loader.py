@@ -78,11 +78,11 @@ class TestAssetModelLoader(unittest.TestCase):
         self.assertIsNotNone(sys_json, msg="System cannot be loaded with json data")
 
         try:
-            sys_excel.init_timeline(200)
+            sys_excel.mp_timeline(200)
         except:
             self.fail(msg="System cannot sim_timline after excel loaded")
         try:
-            sys_json.init_timeline(200)
+            sys_json.mp_timeline(200)
         except:
             self.fail(msg="System cannot sim_timline after json loaded")
 

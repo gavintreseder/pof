@@ -49,9 +49,9 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
     def test_init_timeline(self):
         t_end = 200
         sys = System.demo()
-        sys.init_timeline(t_end)
 
         for comp in sys.comp.values():
+            comp.init_timeline(t_end)
             for fm in comp.fm.values():
                 t_fm_timeline_end = fm.timeline["time"][-1]
 
@@ -61,13 +61,13 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
 
     def test_sim_timeline_active_all(self):
         sys = System.demo()
-        sys.sim_timeline(200)
+        sys.mp_timeline(200)
 
     def test_sim_timeline_active_one(self):
         sys = System.demo()
 
         sys.comp["pole"].fm[list(sys.comp["pole"].fm)[0]].active = False
-        sys.sim_timeline(200)
+        sys.mp_timeline(200)
 
     def test_mp_timeline(self):
         sys = System.demo()
@@ -157,7 +157,7 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
         sys.mc_timeline(5)
         sys.reset()
 
-        self.assertEqual(sys._sim_counter, 0)
+        self.assertEqual(sys.df_erc, None)
         for comp in sys.comp.values():
             self.assertEqual(comp.indicator["slow_degrading"].get_accumulated(), 0)
 
