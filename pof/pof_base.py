@@ -30,6 +30,7 @@ from pof.units import valid_units
 from pof.pof_container import PofContainer
 
 cf = config["PofBase"]
+cf_main = config["Main"]
 
 
 class PofBase:
@@ -491,9 +492,7 @@ class PofBase:
 
         # Add the comp key
         data_req_sys = {}
-        data_req_sys[
-            "overhead_network"
-        ] = data_req  # TODO Hardcoded to match filter in main.py
+        data_req_sys[cf_main.get("name")] = data_req
 
         # Unpack
         data_req_unpacked = self.unpack_container(data_req_sys)

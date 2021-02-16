@@ -35,7 +35,7 @@ from pof.paths import Paths
 DEFAULT_ITERATIONS = 10
 
 cf = config.get("System")
-
+cf_main = config.get("Main")
 
 class System(PofBase):
     """
@@ -408,7 +408,7 @@ class System(PofBase):
     def demo(cls):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        return cls.load(demo.system_data["overhead_network"])
+        return cls.load(demo.system_data[cf_main.get("name")])
 
 
 if __name__ == "__main__":

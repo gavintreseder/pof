@@ -64,11 +64,9 @@ global collapse_ids
 global sim_triggers
 global param_inputs
 
-aml = AssetModelLoader(paths.demo_path + os.sep + file_name_initial)
-data_load = aml.load(paths.demo_path + os.sep + file_name_initial)
-system = System.from_dict(
-    data_load["overhead_network"]
-)  # TODO - make this loop through systems
+aml = AssetModelLoader(paths.demo_path + os.sep + cf.get("file_name_default"))
+sys_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+system = System.from_dict(sys_data[cf.get("name")])
 system.units = cf.get("file_units_default")  # Set the units to be file units initially
 system.fleet_data = sfd  # TODO fix by creating asset class
 
@@ -152,11 +150,12 @@ def save_load_file(click_load, click_save, file_name_input):
     # Load the file
     if click_load or click_save:
         if os.path.exists(file_path_output + file_name_output):
-            aml = AssetModelLoader(paths.demo_path + os.sep + file_name_initial)
-            data_load = aml.load(paths.demo_path + os.sep + file_name_initial)
-            system = System.from_dict(
-                data_load["overhead_network"]
-            )  # TODO - make this loop through systems
+            aml = AssetModelLoader(
+                paths.demo_path + os.sep + cf.get("file_name_default")
+            )
+            sys_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+            system = System.from_dict(sys_data[cf.get("name")])
+
             system.units = cf.get(
                 "file_units_default"
             )  # Set the units to be file units initially

@@ -47,6 +47,7 @@ DEFAULT_ITERATIONS = 10
 
 
 cf = config.get("Component")
+cf_main = config.get("Main")
 
 
 class Component(PofBase):
@@ -1133,7 +1134,7 @@ class Component(PofBase):
     def demo(cls):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        return cls.load(demo.component_data["pole"])
+        return cls.load(demo.component_data[cf_main.get("name")])
 
 
 def sort_df(df=None, column=None, var=None):
