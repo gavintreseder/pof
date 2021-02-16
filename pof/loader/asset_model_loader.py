@@ -13,6 +13,7 @@ import json
 from config import config
 
 cf = config["AssetModelLoader"]
+cf_main = config["Main"]
 
 
 class AssetModelLoader:
@@ -65,9 +66,12 @@ class AssetModelLoader:
         """
 
         self.read_xlsx()
-        sys_data = self._get_system_data(self.df)
+        if cf_main.get("system"):
+            data = self._get_system_data(self.df)
+        else:
+            data = self._get_component_data(self.df)
 
-        return sys_data
+        return data
 
     def read_xlsx(self):
         """
@@ -208,8 +212,12 @@ class AssetModelLoader:
     def _get_component_data(self, df, components=None):
 
         comps_data = dict()
+
         # Get the Component information
         comp_key = ("asset_model", "component", "name")
+        if components == None:
+            components = df[comp_key].dropna().unique()
+
         df_comps = df[
             [
                 "asset_model",

@@ -55,10 +55,10 @@ from config import config
 from statistics import mean
 from datetime import datetime
 
-layouts_cf = config["Layouts"]
-comp_cf = config["Component"]
-sys_cf = config["System"]
-main_cf = config["Main"]
+cf_layouts = config["Layouts"]
+cf_comp = config["Component"]
+cf_sys = config["System"]
+cf_main = config["Main"]
 TIME_VARS = [
     "t_end",
     "pf_interval",
@@ -70,7 +70,7 @@ TIME_VARS = [
     "gamma",
 ]
 SCALING = config["Scaling"]
-IS_OPEN = layouts_cf.get("collapse_open")
+IS_OPEN = cf_layouts.get("collapse_open")
 
 
 # *************** Main ******************************
@@ -101,17 +101,21 @@ def make_layout(system):
     # Dropdown list values
     y_values_ms = ["cost", "cost_cumulative"]
     update_list_y_ms = [{"label": option, "value": option} for option in y_values_ms]
-    y_value_default = layouts_cf.get("y_value_default")
+    y_value_default = cf_layouts.get("y_value_default")
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
-    unit_default = main_cf.get("input_units_default")
-    unit_default_model = main_cf.get("model_units_default")
+    unit_default = cf_main.get("input_units_default")
+    unit_default_model = cf_main.get("model_units_default")
 
-    comp_list = [
-        {"label": comp.name, "value": comp.name}
-        for comp in system.comp.values()
-        if comp.active
-    ]
+    if cf_main.get("system"):
+        comp_list = [
+            {"label": comp.name, "value": comp.name}
+            for comp in system.comp.values()
+            if comp.active
+        ]
+    else:
+        comp_list = [{"label": cf_main.get("name"), "value": cf_main.get("name")}]
+
     comp_default = comp_list[0]["value"]
 
     # Generate row data
@@ -131,7 +135,11 @@ def make_layout(system):
     )
     sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
-    msl = make_system_layout(system)
+    if cf_main.get("system"):
+        make_chart_layout = make_system_layout(system)
+    else:
+        make_chart_layout = make_component_layout(system)
+
     sim = make_sim_layout()
 
     file_input = make_file_name_input()
@@ -203,7 +211,7 @@ def make_layout(system):
                     ),
                 ]
             ),
-            html.Div(id="param_layout", children=msl),
+            html.Div(id="param_layout", children=make_chart_layout),
             sim,
         ]
     )
@@ -870,7 +878,7 @@ def make_input_section(
                         [
                             dbc.Checkbox(
                                 id="axis_lock-checkbox",
-                                checked=layouts_cf.get("axis_lock"),
+                                checked=cf_layouts.get("axis_lock"),
                             ),
                             "Axis Lock",
                         ]
@@ -1056,10 +1064,16 @@ def make_sim_inputs(update_list_y, y_value_default):
 
 def make_sim_sens_inputs(system, comp_name=None):
 
-    update_list_sens_x = [
-        {"label": option, "value": option}
-        for option in system.get_update_ids(numericalOnly=True, comp_name=comp_name)
-    ]
+    if cf_main.get("system"):
+        update_list_sens_x = [
+            {"label": option, "value": option}
+            for option in system.get_update_ids(numericalOnly=True, comp_name=comp_name)
+        ]
+    else:
+        update_list_sens_x = [
+            {"label": option, "value": option}
+            for option in system.get_update_ids(numericalOnly=True)
+        ]
     sens_x_default = update_list_sens_x[0]["value"]
 
     y_values_sens = [
@@ -1073,7 +1087,7 @@ def make_sim_sens_inputs(system, comp_name=None):
         {"label": option, "value": option} for option in y_values_sens
     ]
 
-    y_value_default = layouts_cf.get("y_value_default")
+    y_value_default = cf_layouts.get("y_value_default")
 
     return make_sim_sens_inputs_layout(
         update_list_y=update_list_y_sens,
@@ -1241,7 +1255,7 @@ def make_file_name_input():
             "File Name",
             dcc.Input(
                 id="file_name-input",
-                value=main_cf.get("file_name_default"),
+                value=cf_main.get("file_name_default"),
                 type="text",
                 style={"width": 500},
                 debounce=True,
@@ -1348,7 +1362,7 @@ def make_indicator_inputs_form(component, prefix=""):
 
 def make_param_inputs(component, ind, prefix="", sep="-"):
     param_inputs = []
-    params = comp_cf.get("indicator_input_fields")
+    params = cf_comp.get("indicator_input_fields")
 
     for param in params:
         param_input = dbc.InputGroup(

@@ -12,8 +12,17 @@ collapse_open = false
 p_effective = 100
 
 [Main]
+
+# FOR A COMPONENT
+#file_name_default = "Asset Model.xlsx"
+#name = "pole"
+#system = false
+
+# FOR A SYSTEM
 file_name_default = "Asset Model.xlsx"
 name = "overhead_network"
+system = true
+
 file_units_default = "years"
 model_units_default = "months"
 input_units_default = "years"
