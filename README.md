@@ -99,7 +99,7 @@ Install the dependencies that are required to develop this module
 >>> pip install poetry
 >>> poetry install
 
-In some instances notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raise ModuleNotFoundError then this is the likely cause
+In some instances notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raises ModuleNotFoundError then this is the likely cause
 
 >>> ipython kernel install --user --name=.venv
 
@@ -121,17 +121,11 @@ To execute the tests:
 
 ## Dash
 
-# Heroku
 
-Login to heroku
->>> heroku login -i
-
-Access the pof-engine
->>> heroku git:remote -a pof-engine
 #### Open 
 
 # Dev notes
-#### Poetry 
+## Poetry 
 Poetry is a package manager for python projects https://python-poetry.org/docs/
 
 It can be installed on the entire system using:
@@ -144,6 +138,14 @@ Adding new packages
 
 Creating the requirements.txt
 >>> poetry export --output requirements.txt --without-hashes
+
+## Heroku
+
+Login to heroku
+>>> heroku login -i
+
+Access the pof-engine
+>>> heroku git:remote -a pof-engine
 # Gotchas
 Special Gotchas of your projects (Problems you faced, unique elements of your project)
 

@@ -398,7 +398,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
             if math.ceil(value) != value:
                 logging.warning(
-                    "t_interval will be scaled to the nearest integer - %s", value
+                    "t_interval will be scaled to the nearest integer during simulations - %s", value
                 )
 
     @property
@@ -415,7 +415,7 @@ class ScheduledTask(Task):  # TODO currenlty set up as emergency replacement
 
             if math.ceil(value) != value:
                 logging.warning(
-                    "t_interval will be scaled to the nearest integer - %s", value
+                    "t_delay will be scaled to the nearest integer during simulations - %s", value
                 )
 
     def _sim_timeline(self, t_end, t_start=0, *args, **kwargs):

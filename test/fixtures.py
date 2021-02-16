@@ -17,7 +17,6 @@ Use copy.deepcopy to ensure tests do not change the same underlying data
 """
 
 import copy
-
 import testconfig  # pylint: disable=unused-import
 import pof.demo as demo
 

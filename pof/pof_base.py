@@ -23,6 +23,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from pof.decorators import coerce_arg_type
 from pof.pof_container import PofContainer
 from pof.helper import str_to_dict, valid_signature, get_signature
 from config import config
@@ -122,6 +123,16 @@ class PofBase:
     @classmethod
     def demo(cls):
         return cls("Not Implemented")
+
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    @coerce_arg_type
+    def active(self, value:bool):
+        self.active = value
 
     @property
     def units(self):
