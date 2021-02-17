@@ -405,7 +405,9 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         sys.mc_timeline(t_end=t_end)
 
         sys.expected_sensitivity(
-            var_id="pole-task_group_name-groundline-t_interval", lower=0, upper=10
+            var_id="overhead_network-comp-pole-task_group_name-groundline-t_interval",
+            lower=0,
+            upper=10,
         )
         df_source = sys.sens_summary(var_name="t_interval")
 
@@ -436,11 +438,11 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
         sys.expected_risk_cost_df(t_end=200)
 
-        prev_ms_cost = sys.plot_ms(
-            y_axis="cost", keep_axis=True, prev=None, comp_name="pole"
+        prev_ms_cost = sys.comp["pole"].plot_ms(
+            y_axis="cost", keep_axis=True, prev=None
         )
-        prev_ms_cumulative = sys.plot_ms(
-            y_axis="cost_cumulative", keep_axis=True, prev=None, comp_name="pole"
+        prev_ms_cumulative = sys.comp["pole"].plot_ms(
+            y_axis="cost_cumulative", keep_axis=True, prev=None
         )
 
         y_max_ms_cost = calc_y_max(
