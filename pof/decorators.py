@@ -219,4 +219,4 @@ if __name__ == "__main__":
 
     doctest.testmod(optionflags=doctest.ELLIPSIS)  # extraglobs={"dist": Distribution()}
 
-    print("Validators - Ok")
+    print("Decorators - Ok")
