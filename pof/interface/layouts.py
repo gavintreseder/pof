@@ -1,6 +1,10 @@
 """
 Generates a layout for the project
 
+    Systems
+        name
+        Component(s)
+
     Components
         name
         Failure Mode(s)
@@ -45,15 +49,17 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 from pof import Component, FailureMode, Task
+from pof.system import System
 from pof.units import valid_units
 from config import config
 from statistics import mean
 from datetime import datetime
+from pof.helper import get_signature
 
-layouts_cf = config["Layouts"]
-comp_cf = config["Component"]
-main_cf = config["Main"]
-
+cf_layouts = config["Layouts"]
+cf_comp = config["Component"]
+cf_sys = config["System"]
+cf_main = config["Main"]
 TIME_VARS = [
     "t_end",
     "pf_interval",
@@ -65,7 +71,7 @@ TIME_VARS = [
     "gamma",
 ]
 SCALING = config["Scaling"]
-IS_OPEN = layouts_cf.get("collapse_open")
+IS_OPEN = cf_layouts.get("collapse_open")
 
 
 # *************** Main ******************************
@@ -92,37 +98,34 @@ def scale_input(
     return value
 
 
-def make_layout(comp):
+def make_layout(system):
     # Dropdown list values
-    update_list_sens_x = [
-        {"label": option, "value": option}
-        for option in comp.get_update_ids(numericalOnly=True)
-    ]
-    sens_x_default = comp.get_update_ids(numericalOnly=True)[0]
-
-    y_values_sens = [
-        "cost",
-        "cost_cumulative",
-        "cost_annual",
-        "quantity",
-        "quantity_cumulative",
-    ]
-    update_list_y_sens = [
-        {"label": option, "value": option} for option in y_values_sens
-    ]
     y_values_ms = ["cost", "cost_cumulative"]
     update_list_y_ms = [{"label": option, "value": option} for option in y_values_ms]
-    y_value_default = layouts_cf.get("y_value_default")
+    y_value_default = cf_layouts.get("y_value_default")
 
     update_list_unit = [{"label": option, "value": option} for option in valid_units]
-    unit_default = main_cf.get("input_units_default")
-    unit_default_model = main_cf.get("model_units_default")
+    unit_default = cf_main.get("input_units_default")
+    unit_default_model = cf_main.get("model_units_default")
+
+    if "comp" in list(get_signature(system.__class__)):
+        comp_list = [
+            {"label": comp.name, "value": comp.name}
+            for comp in system.comp.values()
+            if comp.active
+        ]
+    else:
+        comp_list = [{"label": cf_main.get("name"), "value": cf_main.get("name")}]
+
+    comp_default = comp_list[0]["value"]
 
     # Generate row data
-    inputs = make_input_component(
+    inputs = make_input_section(
         update_list_unit=update_list_unit,
         unit_default=unit_default,
         unit_default_model=unit_default_model,
+        comp_list=comp_list,
+        comp_default=comp_default,
     )
 
     sim_progress = make_sim_progress()
@@ -131,15 +134,14 @@ def make_layout(comp):
     sim_inputs = make_sim_inputs(
         update_list_y=update_list_y_ms, y_value_default=y_value_default
     )
-    sim_sens_inputs = make_sim_sens_inputs(
-        update_list_y=update_list_y_sens,
-        y_value_default=y_value_default,
-        update_list_sens_x=update_list_sens_x,
-        sens_x_default=sens_x_default,
-    )
+    sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
-    mcl = make_component_layout(comp)
-    sim = make_sim_layout(comp)
+    if "comp" in list(get_signature(system.__class__)):
+        make_chart_layout = make_system_layout(system)
+    else:
+        make_chart_layout = make_component_layout(system)
+
+    sim = make_sim_layout()
 
     file_input = make_file_name_input()
     save_button = make_save_button()
@@ -199,12 +201,18 @@ def make_layout(comp):
                             dbc.Row(
                                 [sim_sens_progress],
                             ),
-                            dbc.Row([sim_sens_inputs]),
+                            dbc.Row(
+                                [
+                                    html.Div(
+                                        id="sim_sens_input", children=sim_sens_inputs
+                                    )
+                                ]
+                            ),
                         ]
                     ),
                 ]
             ),
-            html.Div(id="param_layout", children=mcl),
+            html.Div(id="param_layout", children=make_chart_layout),
             sim,
         ]
     )
@@ -215,8 +223,10 @@ def make_layout(comp):
 # ******************* Validation ******************
 
 
-def make_pof_obf_layout(pof_obj, prefix="", sep="-"):
-    if isinstance(pof_obj, Component):
+def make_pof_obj_layout(pof_obj, prefix="", sep="-"):
+    if isinstance(pof_obj, System):
+        layout = make_system_layout(pof_obj, prefix, sep)
+    elif isinstance(pof_obj, Component):
         layout = make_component_layout(pof_obj, prefix, sep)
     elif isinstance(pof_obj, FailureMode):
         layout = make_failure_mode_layout
@@ -250,6 +260,51 @@ def validate_layout(pof_obj, layout):
         return True
 
 
+# ****************** System **********************
+
+
+def make_system_layout(system, prefix="", sep="-"):
+    """"""
+
+    prefix = prefix + system.name + sep
+
+    # Get the component layout
+    comp_layout = []
+    for comp in system.comp.values():
+        comp_layout = comp_layout + [
+            make_component_layout(comp, prefix=prefix + "comp" + sep, sep=sep)
+        ]
+
+    layout = dbc.InputGroup(
+        [
+            dbc.InputGroupAddon(
+                dbc.Checkbox(
+                    id=prefix + "active", checked=system.active, disabled=True
+                ),
+                addon_type="prepend",
+            ),
+            dbc.Button(
+                system.name,
+                color="link",
+                id=prefix + "collapse-button",
+            ),
+            dbc.Col(
+                [
+                    dbc.Row(
+                        dbc.Collapse(
+                            dbc.Card(dbc.CardBody(dbc.Row(comp_layout))),
+                            id=prefix + "collapse",
+                            is_open=IS_OPEN,
+                        )
+                    )
+                ]
+            ),
+        ]
+    )
+
+    return layout
+
+
 # ******************* Component ******************
 
 
@@ -275,9 +330,7 @@ def make_component_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(
-                    id=prefix + "active", checked=component.active, disabled=True
-                ),
+                dbc.Checkbox(id=prefix + "active", checked=component.active),
                 addon_type="prepend",
             ),
             dbc.Button(
@@ -815,7 +868,9 @@ def make_condition_impact_form(impact, prefix="", sep="-"):
 
 
 # *******************Sim meta data***********************
-def make_input_component(update_list_unit, unit_default, unit_default_model):
+def make_input_section(
+    update_list_unit, unit_default, unit_default_model, comp_list, comp_default
+):
     form = dbc.FormGroup(
         [
             dbc.Row(
@@ -824,7 +879,7 @@ def make_input_component(update_list_unit, unit_default, unit_default_model):
                         [
                             dbc.Checkbox(
                                 id="axis_lock-checkbox",
-                                checked=layouts_cf.get("axis_lock"),
+                                checked=cf_layouts.get("axis_lock"),
                             ),
                             "Axis Lock",
                         ]
@@ -878,6 +933,24 @@ def make_input_component(update_list_unit, unit_default, unit_default_model):
                         ],
                     ),
                     dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                    dbc.Col(),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            "Graph Component",
+                            dcc.Dropdown(
+                                id="comp_graph-dropdown",
+                                options=comp_list,
+                                value=comp_default,
+                            ),
+                        ]
+                    ),
                     dbc.Col(),
                     dbc.Col(),
                     dbc.Col(),
@@ -976,7 +1049,7 @@ def make_sim_inputs(update_list_y, y_value_default):
                                         id="ms_var_y-dropdown",
                                         options=update_list_y,
                                         value=y_value_default,
-                                        style={"width": 500},
+                                        style={"width": 750},
                                     ),
                                 ]
                             )
@@ -990,7 +1063,45 @@ def make_sim_inputs(update_list_y, y_value_default):
     return form
 
 
-def make_sim_sens_inputs(
+def make_sim_sens_inputs(pof_obj, comp_name: str = None):
+    """ create the x and y drop down list for sens, x list dependant on comp selected to chart """
+
+    if "comp" in list(get_signature(pof_obj.__class__)):
+        update_list_sens_x = [
+            {"label": option, "value": option}
+            for option in pof_obj.get_update_ids(
+                numericalOnly=True, filter_ids={"comp": comp_name}
+            )
+        ]  # TODO make this better - comp_name
+    else:
+        update_list_sens_x = [
+            {"label": option, "value": option}
+            for option in pof_obj.get_update_ids(numericalOnly=True)
+        ]
+    sens_x_default = update_list_sens_x[0]["value"]
+
+    y_values_sens = [
+        "cost",
+        "cost_cumulative",
+        "cost_annual",
+        "quantity",
+        "quantity_cumulative",
+    ]
+    update_list_y_sens = [
+        {"label": option, "value": option} for option in y_values_sens
+    ]
+
+    y_value_default = cf_layouts.get("y_value_default")
+
+    return make_sim_sens_inputs_layout(
+        update_list_y=update_list_y_sens,
+        y_value_default=y_value_default,
+        update_list_sens_x=update_list_sens_x,
+        sens_x_default=sens_x_default,
+    )
+
+
+def make_sim_sens_inputs_layout(
     update_list_y, y_value_default, update_list_sens_x, sens_x_default
 ):
     form = dbc.InputGroup(
@@ -1006,7 +1117,7 @@ def make_sim_sens_inputs(
                                         id="sens_var_y-dropdown",
                                         options=update_list_y,
                                         value=y_value_default,
-                                        style={"width": 500},
+                                        style={"width": 750},
                                     ),
                                 ],
                                 addon_type="prepend",
@@ -1026,7 +1137,7 @@ def make_sim_sens_inputs(
                                         id="sens_var_id-dropdown",
                                         options=update_list_sens_x,
                                         value=sens_x_default,
-                                        style={"width": 500},
+                                        style={"width": 750},
                                     ),
                                 ],
                                 addon_type="prepend",
@@ -1096,7 +1207,7 @@ def make_sim_sens_inputs(
     return form
 
 
-def make_sim_layout(component):
+def make_sim_layout():
     layout = dbc.InputGroup(
         [
             dbc.Button(
@@ -1118,6 +1229,10 @@ def make_sim_layout(component):
                                         html.P(
                                             children="Sim State",
                                             id="sim_state",
+                                        ),
+                                        html.P(
+                                            children="Sim State Sens",
+                                            id="sim_state_sens",
                                         ),
                                         html.P(
                                             id="sim_state_err",
@@ -1148,7 +1263,7 @@ def make_file_name_input():
             "File Name",
             dcc.Input(
                 id="file_name-input",
-                value=main_cf.get("file_name_default"),
+                value=cf_main.get("file_name_default"),
                 type="text",
                 style={"width": 500},
                 debounce=True,
@@ -1255,7 +1370,7 @@ def make_indicator_inputs_form(component, prefix=""):
 
 def make_param_inputs(component, ind, prefix="", sep="-"):
     param_inputs = []
-    params = comp_cf.get("indicator_input_fields")
+    params = cf_comp.get("indicator_input_fields")
 
     for param in params:
         param_input = dbc.InputGroup(

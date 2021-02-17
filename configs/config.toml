@@ -12,8 +12,16 @@ collapse_open = false
 p_effective = 100
 
 [Main]
-file_name_default = "Asset Model - Pole - Timber.xlsx"
-name = "pole"
+file_name_default = "Asset Model.xlsx"
+
+# FOR A COMPONENT
+#name = "pole"
+#system = false
+
+# FOR A SYSTEM
+name = "overhead_network"
+system = true
+
 file_units_default = "years"
 model_units_default = "months"
 input_units_default = "years"
@@ -23,6 +31,8 @@ on_error_use_default = true
 handle_invalid_data = true
 handle_update_error = true
 use_default = false
+
+[System]
 
 [Component]
 allow_system_impact = true

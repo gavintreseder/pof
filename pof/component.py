@@ -77,7 +77,7 @@ class Component(PofBase):
 
         super().__init__(name=name, *args, **kwargs)
 
-        self.fleet_data = "temp fix until creating asset class"
+        # self.fleet_data = "temp fix until creating asset class"
 
         self.active = active
         self.indicator = PofContainer()
@@ -95,11 +95,15 @@ class Component(PofBase):
         self._t_in_service = []
         self.stop_simulation = False
 
+        # Timelines
+        self.timeline = dict()
+        self._timelines = dict()
+
         # Dash Tracking
         self.up_to_date = True
         self.n = 0
-        self.n_iterations = 10
         self.n_sens = 0
+        self.n_iterations = 10
         self.n_sens_iterations = 10
 
         # Reporting
@@ -111,25 +115,43 @@ class Component(PofBase):
 
     # ****************** Load data ******************
 
-    def load_asset_data(
-        self,
-    ):
+    # def load_asset_data(
+    #     self,
+    # ):
 
-        # TODO Hook up data
-        self.info = dict(
-            pole_load=10,
-            pole_strength=20,
-        )
+    #     # TODO Hook up data
+    #     self.info = dict(
+    #         pole_load=10,
+    #         pole_strength=20,
+    #     )
 
-        # Set perfect indicator values?? TODO
+    #     # Set perfect indicator values?? TODO
 
-        # Set indicators
-        for indicator in self.indicator.values():
+    #     # Set indicators
+    #     for indicator in self.indicator.values():
 
-            # Set perfect
+    #         # Set perfect
 
-            # Set current
-            raise NotImplementedError
+    #         # Set current
+    #         raise NotImplementedError
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        """ Set the pf_curve to a valid str"""
+
+        if isinstance(value, str):
+            if value.to_lower() in ["ok", "true", "yes"]:
+                self._active = True
+            elif value.to_lower() in ["false", "no"]:
+                self._active = False
+            else:
+                raise ValueError("invalid acitve value")
+        else:
+            self._active = bool(value)
 
     def set_indicator(self, indicator_input):
         """Takes a dictionary of Indicator objects or indicator data and sets the component indicators"""
@@ -151,33 +173,21 @@ class Component(PofBase):
             if ind.__class__.__name__ == "PoleSafetyFactor":
                 ind.link_component(self)
 
-    def save(self, file_name, file_units=None):
-        """ Save a json file with a component """
-
-        # Scale the units back to file_units
-        self.units = file_units
-
-        # Create the data set
-        data = self.to_dict()
-
-        with open(Paths().model_path + "\\" + file_name, "w") as json_file:
-            json.dump(data, json_file)
-
     # ****************** Set data ******************
-    @coerce_arg_type
-    def mc(self, t_end: int, t_start: int = 0, n_iterations: int = DEFAULT_ITERATIONS):
-        """ Complete MC simulation and calculate all the metrics for the component"""
+    # @coerce_arg_type
+    # def mc(self, t_end: int, t_start: int = 0, n_iterations: int = DEFAULT_ITERATIONS):
+    #     """ Complete MC simulation and calculate all the metrics for the component"""
 
-        # Simulate a timeline
-        self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
+    #     # Simulate a timeline
+    #     self.mp_timeline(t_end=t_end, t_start=t_start, n_iterations=n_iterations)
 
-        # Produce reports
-        self.expected_risk_cost_df(t_end=t_end)
-        self.calc_pof_df(t_end=t_end)
-        # self.calc_df_task_forecast()
-        self.calc_df_cond(t_start=t_start, t_end=t_end)
+    #     # Produce reports
+    #     self.expected_risk_cost_df(t_end=t_end)
+    #     self.calc_pof_df(t_end=t_end)
+    #     # self.calc_df_task_forecast()
+    #     self.calc_df_cond(t_start=t_start, t_end=t_end)
 
-        return NotImplemented
+    #     return NotImplemented
 
     # ****************** Timeline ******************
 
@@ -217,7 +227,6 @@ class Component(PofBase):
 
         for i in tqdm(range(n_iterations)):
             self.sim_timeline(t_end=t_end, t_start=t_start)
-
             self.save_timeline(i)
             self.increment_counter()
             self.reset_for_next_sim()
@@ -226,14 +235,14 @@ class Component(PofBase):
         """ Simulates the timelines for all failure modes attached to this component"""
 
         # Initialise the failure modes
-        self.init_timeline(t_start=t_start, t_end=t_end)
+        timeline = self.init_timeline(t_start=t_start, t_end=t_end)
 
         t_now = t_start
         self._in_service = True
 
         while t_now < t_end and self._in_service:
 
-            t_next, next_fm_tasks = self.next_tasks(t_now)
+            t_next, next_fm_tasks = self.next_tasks(timeline, t_now)
 
             self.complete_tasks(t_next, next_fm_tasks)
 
@@ -242,17 +251,29 @@ class Component(PofBase):
         if self._in_service:
             self._t_in_service.append(t_now)
 
+        return self.timeline
+
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline"""
+
+        timeline = dict()
+
         for fm in self.fm.values():
             fm.init_timeline(t_start=t_start, t_end=t_end)
 
-    def next_tasks(self, t_start):
+        self.timeline = timeline
+
+        return self.timeline
+
+    def next_tasks(self, timeline=None, t_start=None):
         """
         Returns a dictionary with the failure mode triggered
         """
         # TODO make this more efficent
         # TODO make this work if no tasks returned. Expect an error now
+
+        if timeline is None:
+            timeline = self.timeline
 
         # Get the task schedule for next tasks
         task_schedule = dict()
@@ -325,11 +346,25 @@ class Component(PofBase):
             fm.increment_counter()
 
     def save_timeline(self, idx):
+        self._timelines[idx] = self.timeline
+
         for fm in self.fm.values():
             fm.save_timeline(idx)
 
         for ind in self.indicator.values():
             ind.save_timeline(idx)
+
+    # ****************** Progress *******************
+
+    def progress(self) -> float:
+        """ Returns the progress of the primary simulation """
+        return self.n / self.n_iterations
+
+    def sens_progress(self) -> float:
+        """ Returns the progress of the sensitivity simulation """
+        return (self.n_sens * self.n_iterations + self.n) / (
+            self.n_iterations * self.n_sens_iterations + self.n
+        )
 
     # ****************** Expected ******************
 
@@ -393,11 +428,11 @@ class Component(PofBase):
         # cdf = {fm: 1 - sf for fm, sf in sf.items()}
         cdf = dict()
 
-        for fm in sf:
-            cdf[fm] = dict()
-            cdf[fm]["pof"] = 1 - sf[fm]["pof"]
-            cdf[fm]["active"] = sf[fm]["active"]
-            cdf[fm]["time"] = np.linspace(
+        for fm in self.fm.values():
+            cdf[fm.name] = dict()
+            cdf[fm.name]["pof"] = 1 - sf[fm.name]["pof"]
+            cdf[fm.name]["active"] = sf[fm.name]["active"]
+            cdf[fm.name]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
 
@@ -558,18 +593,14 @@ class Component(PofBase):
 
     # **************** Interface ********************
 
-    def progress(self) -> float:
-        """ Returns the progress of the primary simulation"""
-        return self.n / self.n_iterations
-
-    def sens_progress(self) -> float:
-        """ Returns the progress of the sensitivity simulation"""
-        return (self.n_sens * self.n_iterations + self.n) / (
-            self.n_iterations * self.n_sens_iterations + self.n
-        )
-
     def expected_sensitivity(
-        self, var_id, lower, upper, step_size=1, n_iterations=100, t_end=100
+        self,
+        var_id,
+        lower,
+        upper,
+        step_size=1,
+        n_iterations=100,
+        t_end=100,
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
@@ -676,7 +707,6 @@ class Component(PofBase):
 
     def calc_df_task_forecast(self, df_age_forecast, age_units="years"):
         """Create the task plot dataframe
-
         age_units - the units for the age in df_forecast age
         """
 
@@ -950,12 +980,12 @@ class Component(PofBase):
 
         return df_plot
 
-    def plot_pop_table(self):
+    # def plot_pop_table(self):
 
-        df = self.population_table()
-        fig = make_pop_table_fig(df)
+    #     df = self.population_table()
+    #     fig = make_pop_table_fig(df)
 
-        return fig
+    #     return fig
 
     def plot_summary(self, df_cohort=None):
 
@@ -988,6 +1018,10 @@ class Component(PofBase):
         self._sim_counter = 0
         self._t_in_service = []
         self.stop_simulation = False
+
+        # Reset timelines
+        self.timeline = dict()
+        self._timelines = dict()
 
         # Reset stored reports
         self.df_erc = None
@@ -1026,9 +1060,7 @@ class Component(PofBase):
             fm.update_consequence(data)
 
     def get_dash_ids(self, numericalOnly: bool, prefix="", sep="-", active=None):
-        """Return a list of dash ids for values that can be changed
-        Prefix is ""pole as currently nothing passed for prefix
-        """
+        """Return a list of dash ids for values that can be changed"""
 
         if active is None or (self.active == active):
             # Component
@@ -1060,12 +1092,14 @@ class Component(PofBase):
 
         return dash_ids
 
-    def get_update_ids(self, numericalOnly=bool, prefix="", sep="-"):
+    def get_update_ids(
+        self, numericalOnly: bool = True, prefix="", sep="-", filter_ids: dict = None
+    ):
         """ Get the ids for all objects that should be updated"""
         # TODO remove this once task groups added to the interface
         # TODO fix encapsulation
 
-        ids = self.get_dash_ids(numericalOnly=numericalOnly, active=True)
+        ids = self.get_dash_ids(numericalOnly=numericalOnly, active=True, prefix=prefix)
 
         update_ids = dict()
         for fm in self.fm.values():
@@ -1073,18 +1107,17 @@ class Component(PofBase):
                 if task.task_group_name not in update_ids:
                     update_ids[
                         task.task_group_name + "t_interval"
-                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
+                    ] = f"{prefix}{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_interval"
 
                     update_ids[
                         task.task_group_name
-                    ] = f"{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
+                    ] = f"{prefix}{self.name}{sep}task_group_name{sep}{task.task_group_name}{sep}t_delay"
 
         ids = list(update_ids.values()) + ids
         return ids
 
     def get_objects(self, prefix="", sep="-"):
 
-        prefix = prefix
         objects = [prefix + self.name]
 
         prefix = prefix + self.name + sep
@@ -1103,7 +1136,7 @@ class Component(PofBase):
     def demo(cls):
         """ Loads a demonstration data set if no parameters have been set already"""
 
-        return cls.load(demo.component_data[cf_main.get("name")])
+        return cls.load(demo.component_data["pole"])
 
 
 def sort_df(df=None, column=None, var=None):

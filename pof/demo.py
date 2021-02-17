@@ -390,6 +390,15 @@ component_data = dict(
     )
 )
 
+system_data = dict(
+
+    overhead_network=dict(
+        name="overhead_network",
+        comp=component_data
+    )
+
+)
+
 if __name__ == "__main__":
 
     print("Demo - Ok")
