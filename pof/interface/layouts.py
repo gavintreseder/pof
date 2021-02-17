@@ -54,6 +54,7 @@ from pof.units import valid_units
 from config import config
 from statistics import mean
 from datetime import datetime
+from pof.helper import get_signature
 
 cf_layouts = config["Layouts"]
 cf_comp = config["Component"]
@@ -107,7 +108,7 @@ def make_layout(system):
     unit_default = cf_main.get("input_units_default")
     unit_default_model = cf_main.get("model_units_default")
 
-    if getattr(system, "comp") is not None:
+    if "comp" in list(get_signature(system.__class__)):
         comp_list = [
             {"label": comp.name, "value": comp.name}
             for comp in system.comp.values()
@@ -135,7 +136,7 @@ def make_layout(system):
     )
     sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
-    if getattr(system, "comp") is not None:
+    if "comp" in list(get_signature(system.__class__)):
         make_chart_layout = make_system_layout(system)
     else:
         make_chart_layout = make_component_layout(system)
@@ -1065,7 +1066,7 @@ def make_sim_inputs(update_list_y, y_value_default):
 def make_sim_sens_inputs(pof_obj, comp_name: str = None):
     """ create the x and y drop down list for sens, x list dependant on comp selected to chart """
 
-    if getattr(pof_obj, "comp") is not None:
+    if "comp" in list(get_signature(pof_obj.__class__)):
         update_list_sens_x = [
             {"label": option, "value": option}
             for option in pof_obj.get_update_ids(
