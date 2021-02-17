@@ -108,25 +108,14 @@ def make_layout(system):
     unit_default = cf_main.get("input_units_default")
     unit_default_model = cf_main.get("model_units_default")
 
-    if "comp" in list(get_signature(system.__class__)):
-        comp_list = [
-            {"label": comp.name, "value": comp.name}
-            for comp in system.comp.values()
-            if comp.active
-        ]
-    else:
-        comp_list = [{"label": cf_main.get("name"), "value": cf_main.get("name")}]
-
-    comp_default = comp_list[0]["value"]
-
     # Generate row data
     inputs = make_input_section(
         update_list_unit=update_list_unit,
         unit_default=unit_default,
         unit_default_model=unit_default_model,
-        comp_list=comp_list,
-        comp_default=comp_default,
     )
+
+    graph_fitler = make_graph_filter(system)
 
     sim_progress = make_sim_progress()
     sim_sens_progress = make_sim_sens_progress()
@@ -134,6 +123,9 @@ def make_layout(system):
     sim_inputs = make_sim_inputs(
         update_list_y=update_list_y_ms, y_value_default=y_value_default
     )
+
+    comp_default = [comp.name for comp in system.comp.values() if comp.active][0]
+
     sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
     if "comp" in list(get_signature(system.__class__)):
@@ -166,6 +158,7 @@ def make_layout(system):
                     ),
                 ]
             ),
+            dbc.Row([html.Div(id="graph_filter", children=graph_fitler)]),
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="pof-fig")),
@@ -868,9 +861,7 @@ def make_condition_impact_form(impact, prefix="", sep="-"):
 
 
 # *******************Sim meta data***********************
-def make_input_section(
-    update_list_unit, unit_default, unit_default_model, comp_list, comp_default
-):
+def make_input_section(update_list_unit, unit_default, unit_default_model):
     form = dbc.FormGroup(
         [
             dbc.Row(
@@ -939,24 +930,41 @@ def make_input_section(
                     dbc.Col(),
                 ]
             ),
-            dbc.Row(
+        ]
+    )
+
+    return form
+
+
+def make_graph_filter(system):
+
+    if "comp" in list(get_signature(system.__class__)):
+        comp_list = [
+            {"label": comp.name, "value": comp.name}
+            for comp in system.comp.values()
+            if comp.active
+        ]
+    else:
+        comp_list = [{"label": cf_main.get("name"), "value": cf_main.get("name")}]
+
+    comp_default = comp_list[0]["value"]
+
+    form = dbc.FormGroup(
+        [
+            dbc.Col(
                 [
-                    dbc.Col(
-                        [
-                            "Graph Component",
-                            dcc.Dropdown(
-                                id="comp_graph-dropdown",
-                                options=comp_list,
-                                value=comp_default,
-                            ),
-                        ]
+                    "Graph Component",
+                    dcc.Dropdown(
+                        id="comp_graph-dropdown",
+                        options=comp_list,
+                        value=comp_default,
                     ),
-                    dbc.Col(),
-                    dbc.Col(),
-                    dbc.Col(),
-                    dbc.Col(),
                 ]
             ),
+            dbc.Col(),
+            dbc.Col(),
+            dbc.Col(),
+            dbc.Col(),
         ]
     )
 

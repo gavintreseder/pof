@@ -18,6 +18,7 @@ from pof.interface.layouts import (
     make_save_button,
     make_load_button,
     make_sim_sens_inputs,
+    make_graph_filter,
 )
 
 from pof.data.asset_data import SimpleFleet
@@ -274,6 +275,7 @@ def update_model_units(units):
 @app.callback(
     Output("sim_state", "children"),
     Output("sim_state_err", "children"),
+    Output("graph_filter", "children"),
     Input("update_state", "children"),
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
@@ -319,6 +321,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     return (
         f"Sim State: {pof_sim.total_iterations()} - {n_iterations * pof_sim.n_comp}",
         "",
+        make_graph_filter(system),
     )
 
 
@@ -476,7 +479,7 @@ def update_sensitivity(
         raise PreventUpdate
 
     return (
-        f"Sim State: {sens_sim.total_sens_iterations()} - {n_iterations * sens_sim.n_comp}",
+        f"Sim State Sens: {sens_sim.total_sens_iterations()} - {n_iterations * sens_sim.n_comp}",
         "",
     )
 
@@ -485,13 +488,8 @@ def update_sensitivity(
     Output("sensitivity-fig", "figure"),
     Input("sim_state_sens", "children"),
     Input("sim_sens_active-check", "checked"),
-    Input("n_sens_iterations-input", "value"),
     Input("sens_var_id-dropdown", "value"),
     Input("sens_var_y-dropdown", "value"),
-    Input("sens_lower-input", "value"),
-    Input("sens_upper-input", "value"),
-    Input("sens_step_size-input", "value"),
-    Input("t_end-input", "value"),
     Input("axis_lock-checkbox", "checked"),
     Input("comp_graph-dropdown", "value"),
     # Input("ms-fig", "figure"),  # TODO change this trigger
@@ -501,13 +499,8 @@ def update_sensitivity(
 def update_sensitivity_fig(
     __,
     active,
-    n_iterations,
     var_id,
     y_axis,
-    lower,
-    upper,
-    step_size,
-    t_end,
     axis_lock,
     comp_name,
     prev_sens,

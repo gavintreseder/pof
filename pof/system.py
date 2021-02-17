@@ -130,6 +130,8 @@ class System(PofBase):
 
                     self.sim_progress = comp.progress()
                     self.n_comp += 1
+
+                    self.reset_for_next_sim()
         except Exception as error:
             if self.up_to_date:
                 raise error
@@ -385,13 +387,12 @@ class System(PofBase):
             # Component ids
             comp_ids = []
             for comp in self.comp.values():
-                if comp.active:
-                    comp_ids = comp_ids + comp.get_dash_ids(
-                        numericalOnly=numericalOnly,
-                        prefix=prefix + "comp" + sep,
-                        sep=sep,
-                        active=active,
-                    )
+                comp_ids = comp_ids + comp.get_dash_ids(
+                    numericalOnly=numericalOnly,
+                    prefix=prefix + "comp" + sep,
+                    sep=sep,
+                    active=active,
+                )
 
             dash_ids = sys_ids + comp_ids
         else:
