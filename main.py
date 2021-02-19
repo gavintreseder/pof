@@ -319,7 +319,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
         return dash.no_update, "Not active"
 
     return (
-        f"Sim State: {pof_sim.total_iterations()} - {n_iterations * pof_sim.n_comp}",
+        f"Sim State: {pof_sim.n} - {n_iterations}",
         "",
         make_graph_filter(system),
     )
@@ -479,7 +479,7 @@ def update_sensitivity(
         raise PreventUpdate
 
     return (
-        f"Sim State Sens: {sens_sim.total_sens_iterations()} - {n_iterations * sens_sim.n_comp}",
+        f"Sim State Sens: {sens_sim.n_sens} - {n_iterations}",
         "",
     )
 
@@ -539,7 +539,7 @@ def update_sensitivity_fig(
     Input("progress-interval", "n_intervals"),
 )
 def update_progress(__):
-    if pof_sim.sim_progress is None:
+    if pof_sim.n is None:
         raise Exception("no process started")
     progress = int(pof_sim.progress() * 100)
 
@@ -551,7 +551,7 @@ def update_progress(__):
     [Input("sens_progress-interval", "n_intervals")],
 )
 def update_progress_sens(__):
-    if sens_sim.sim_sens_progress is None:
+    if sens_sim.n_sens is None:
         raise Exception("no process started")
     progress = int(sens_sim.sens_progress() * 100)
 

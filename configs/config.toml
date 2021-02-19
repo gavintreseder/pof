@@ -33,11 +33,13 @@ handle_update_error = true
 use_default = false
 
 [System]
+allow_system_impact = true
 
 [Component]
 allow_system_impact = true
 indicator_input_fields = ["perfect", "initial", "failed"] 
 forecast_confidence_interval = 0.8
+remain_failed = true
 
 [FailureMode]
 remain_failed = true
