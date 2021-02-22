@@ -221,7 +221,7 @@ class System(PofBase):
 
     def progress(self) -> float:
         """ Returns the progress of the primary simulation """
-        return self.n * self.n_iterations
+        return self.n / self.n_iterations
 
     def sens_progress(self) -> float:
         """ Returns the progress of the sensitivity simulation """
@@ -240,11 +240,14 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(comp.expected_risk_cost_df(t_start=t_start, t_end=t_end))
+                df_comp = comp.expected_risk_cost_df(t_start=t_start, t_end=t_end)
+                df_comp["comp"] = comp.name
 
-                df["comp"] = comp.name
+                df = df.append(df_comp)
 
         self.df_erc = df
+
+        return self.df_erc
 
     def calc_pof_df(self, t_end=None):
         """ Create df_pof for all components """
@@ -255,9 +258,10 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(comp.calc_pof_df(t_end=t_end))
+                df_comp = comp.calc_pof_df(t_end=t_end)
+                df_comp["comp"] = comp.name
 
-                df["comp"] = comp.name
+                df = df.append(df_comp)
 
         self.df_pof = df
 
@@ -270,14 +274,13 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(
-                    comp.calc_df_task_forecast(
-                        df_age_forecast=df_age_forecast,
-                        age_units=age_units,
-                    )
+                df_comp = comp.calc_df_task_forecast(
+                    df_age_forecast=df_age_forecast,
+                    age_units=age_units,
                 )
+                df_comp["comp"] = comp.name
 
-                df["comp"] = comp.name
+                df = df.append(df_comp)
 
         self.df_task = df
 
@@ -290,9 +293,10 @@ class System(PofBase):
         # Append the values for each component to the dataframe
         for comp in self.comp.values():
             if comp.active:
-                df = df.append(comp.calc_df_cond(t_start=t_start, t_end=t_end))
+                df_comp = comp.calc_df_cond(t_start=t_start, t_end=t_end)
+                df_comp["comp"] = comp.name
 
-                df["comp"] = comp.name
+                df = df.append(df_comp)
 
         self.df_cond = df
 
@@ -318,31 +322,58 @@ class System(PofBase):
         n_iterations=100,
         t_end=100,
     ):
-        """ Create df_sens for all components """
+        """
+        Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
+        """
+        rc = dict()
+        self.reset()
 
-        # Create the dataframe
-        df = pd.DataFrame()
-        self.n_comp = 0
-        self.comp_total = len([comp.name for comp in self.comp.values() if comp.active])
+        # Progress bars
+        self.n_sens = 0
+        self.n_sens_iterations = int((upper - lower) / step_size + step_size)
 
-        # Append the values for each component to the dataframe
-        for comp in self.comp.values():
-            if comp.active:
-                df = df.append(
-                    comp.expected_sensitivity(
-                        var_id=var_id,
-                        lower=lower,
-                        upper=upper,
-                        step_size=step_size,
-                        n_iterations=n_iterations,
-                        t_end=t_end,
-                    )
-                )
+        var = var_id.split("-")[-1]
+
+        prefix = ["quantity", "cost"]
+        suffix = ["", "_annual", "_cumulative"]
+        cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
+
+        for i in np.arange(lower, upper + step_size, step_size):
+            if not self.up_to_date:
+                return "sim cancelled"
+            try:
+                # Reset component
+                self.reset()
+
+                # Update annd simulate a timeline
+                self.update(var_id, i)
+                self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
+                df_rc = self.expected_risk_cost_df()
+
+                # Summarise outputs
+                df_rc = df_rc.groupby(by=["comp", "task", "active"])[cols].max()
+                df_rc[var] = i
+
+                rc[i] = df_rc
+
                 self.n_sens = self.n_sens + 1
 
-                df["comp"] = comp.name
+            except Exception as error:
+                logging.error("Error at %s", exc_info=error)
+
+        df = (
+            pd.concat(rc)
+            .reset_index()
+            .drop(["level_0"], axis=1)
+            .rename(columns={"task": "source"})
+        )
 
         self.df_sens = df
+
+        # Set df_sens for each component
+        for comp in self.comp.values():
+            if comp.active:
+                comp.df_sens = df[df["comp"] == comp.name]
 
     # ****************** Reset ******************
 

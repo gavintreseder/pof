@@ -299,7 +299,9 @@ class Component(PofBase):
                 system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
                 system_impacts = system_impacts + system_impact
 
-                if ("system" in system_impacts or "component" in system_impacts) and cf.get("allow_system_impact"):
+                if (
+                    "system" in system_impacts or "component" in system_impacts
+                ) and cf.get("allow_system_impact"):
                     logging.debug(
                         "Component %s reset by FailureMode %s", self._name, fm_name
                     )
