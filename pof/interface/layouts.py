@@ -115,7 +115,7 @@ def make_layout(system):
         unit_default_model=unit_default_model,
     )
 
-    graph_fitler = make_graph_filter(system)
+    graph_filter = make_graph_filter(system)
 
     sim_progress = make_sim_progress()
     sim_sens_progress = make_sim_sens_progress()
@@ -158,7 +158,7 @@ def make_layout(system):
                     ),
                 ]
             ),
-            dbc.Row([html.Div(id="graph_filter", children=graph_fitler)]),
+            dbc.Row([html.Div(id="graph_filter", children=graph_filter)]),
             dbc.Row(
                 [
                     dbc.Col(dcc.Graph(id="pof-fig")),
@@ -323,7 +323,9 @@ def make_component_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(id=prefix + "active", checked=component.active),
+                dbc.Checkbox(
+                    id=prefix + "active", checked=component.active, disabled=True
+                ),
                 addon_type="prepend",
             ),
             dbc.Button(
