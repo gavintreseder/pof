@@ -330,7 +330,7 @@ class System(PofBase):
 
         # Progress bars
         self.n_sens = 0
-        self.n_sens_iterations = int((upper - lower) / step_size + step_size)
+        self.n_sens_iterations = len(np.arange(lower, upper + step_size, step_size))
 
         var = var_id.split("-")[-1]
 

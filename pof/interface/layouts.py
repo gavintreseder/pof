@@ -896,6 +896,7 @@ def make_input_section(update_list_unit, unit_default, unit_default_model):
                                 id="input_units-dropdown",
                                 options=update_list_unit,
                                 value=unit_default,
+                                disabled=True,  # TODO hookup input_units dropdown
                             ),
                         ]
                     ),

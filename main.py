@@ -44,19 +44,14 @@ server = app.server
 file_name_initial = cf.get("file_name_default")
 
 # Forecast years
-START_YEAR = 2015
-END_YEAR = 2024
-CURRENT_YEAR = 2020
-
 paths = Paths()
 
 # Population Data
 file_path = paths.input_path + os.sep
-FILE_NAME = r"population_summary.csv"
 
-sfd = SimpleFleet(file_path + FILE_NAME)
+sfd = SimpleFleet(file_path + cf.get("pop_file_name"))
 sfd.load()
-sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
+sfd.calc_age_forecast(cf.get("START_YEAR"), cf.get("END_YEAR"), cf.get("CURRENT_YEAR"))
 
 global system
 global pof_sim
@@ -233,7 +228,7 @@ def toggle_collapses(*args):
 
 @app.callback(
     Output("update_state", "children"),
-    Input("input_units-dropdown", "value"),
+    # Input("input_units-dropdown", "value") TODO hook up input units
     param_inputs,
 )
 def update_parameter(input_units, *args):

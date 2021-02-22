@@ -13,6 +13,10 @@ p_effective = 100
 
 [Main]
 file_name_default = "Asset Model.xlsx"
+START_YEAR = 2015
+END_YEAR = 2024
+CURRENT_YEAR = 2021
+pop_file_name = "population_summary.csv"
 
 # FOR A COMPONENT
 #name = "pole"
