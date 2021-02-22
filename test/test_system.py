@@ -8,6 +8,7 @@ from pof.paths import Paths
 from config import config
 from pof.system import System
 import fixtures
+from pof.loader.asset_model_loader import AssetModelLoader
 
 cf = config["System"]
 
@@ -35,22 +36,22 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
         self.assertIsNotNone(System)
 
     def test_class_instantiate(self):
-        sys = System()
-        self.assertIsNotNone(sys)
+        system = System()
+        self.assertIsNotNone(system)
 
     ## *************** Test demo ***********************
 
     def test_demo(self):
-        sys = System.demo()
-        self.assertIsNotNone(sys)
+        system = System.demo()
+        self.assertIsNotNone(system)
 
     # *************** Test init_timeline ***********************
 
     def test_init_timeline(self):
         t_end = 200
-        sys = System.demo()
+        system = System.demo()
 
-        for comp in sys.comp.values():
+        for comp in system.comp.values():
             comp.init_timeline(t_end)
             for fm in comp.fm.values():
                 t_fm_timeline_end = fm.timeline["time"][-1]
@@ -60,24 +61,24 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
     # *************** Test sim_timeline ***********************
 
     def test_sim_timeline_active_all(self):
-        sys = System.demo()
-        sys.mp_timeline(200)
+        system = System.demo()
+        system.mp_timeline(200)
 
     def test_sim_timeline_active_one(self):
-        sys = System.demo()
+        system = System.demo()
 
-        sys.comp["pole"].fm[list(sys.comp["pole"].fm)[0]].active = False
-        sys.mp_timeline(200)
+        system.comp["pole"].fm[list(system.comp["pole"].fm)[0]].active = False
+        system.mp_timeline(200)
 
     def test_mp_timeline(self):
-        sys = System.demo()
+        system = System.demo()
 
-        sys.mp_timeline(t_end=100)
+        system.mp_timeline(t_end=100)
 
     def test_mc_timeline(self):
-        sys = System.demo()
+        system = System.demo()
 
-        sys.mc_timeline(t_end=100)
+        system.mc_timeline(t_end=100)
 
     # cancel sim
     # increment counter
@@ -86,6 +87,21 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
     # progress
     # sens progress
 
+    def test_sys_next_tasks(self):
+
+        FILEPATH = Paths().model_path
+        FILE_NAME_MODEL = Paths().demo_path + r"\Asset Model.xlsx"
+
+        aml = AssetModelLoader()
+        data = aml.load(FILE_NAME_MODEL)
+        system = System.load(data["overhead_network"])
+
+        # TODO lightning add a test to make sure the timeline handles before and after correclty
+        # fm_excel = sys_excel.comp["pole"].fm["termites"]
+        # fm_json = sys_json.comp["pole"].fm["termites"]
+
+        system.mp_timeline(200)
+
     # ************ Test expected methods *****************
 
     def test_expected_risk_cost_df(self):  # integration test
@@ -93,11 +109,11 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
         # Arrange
         t_end = 50
         n_iterations = 10
-        sys = System.demo()
+        system = System.demo()
 
         # Act
-        sys.mc_timeline(t_end=t_end, n_iterations=n_iterations)
-        actual = sys.expected_risk_cost_df()
+        system.mc_timeline(t_end=t_end, n_iterations=n_iterations)
+        actual = system.expected_risk_cost_df()
 
         # Assert
         # TODO make asserts
@@ -109,20 +125,20 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
     def test_expected_condition_with_timelines(self):
         # TODO make it work when mc_timeline hs nto been called
 
-        sys = System.demo()
-        sys.mc_timeline(10)
-        sys.expected_condition()
+        system = System.demo()
+        system.mc_timeline(10)
+        system.expected_condition()
 
     def test_expected_sensitivity(self):
 
         # Arrange
         t_end = 50
         n_iterations = 2
-        sens_var = ""
-        sys = System.demo()
+        sens_var = "overhead_network-comp-pole-task_group_name-groundline-t_interval"
+        system = System.demo()
 
         # Act
-        actual = sys.expected_sensitivity(var_id=sens_var, lower=1, upper=10)
+        actual = system.expected_sensitivity(var_id=sens_var, lower=1, upper=10)
         # Assert
 
     # ************ Test reset methods *****************
@@ -137,28 +153,28 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
         t_end = 10
         accumulated = abs(perfect - initial)
 
-        sys = System.demo()
-        for comp in sys.comp.values():
+        system = System.demo()
+        for comp in system.comp.values():
             comp.indicator["slow_degrading"].initial = initial
 
         # Act
-        sys.mc_timeline(t_end)
-        sys.reset_for_next_sim()
+        system.mc_timeline(t_end)
+        system.reset_for_next_sim()
 
         # Assert
-        for comp in sys.comp.values():
+        for comp in system.comp.values():
             self.assertEqual(
                 comp.indicator["slow_degrading"].get_accumulated(), accumulated
             )
 
     def test_reset(self):
 
-        sys = System.demo()
-        sys.mc_timeline(5)
-        sys.reset()
+        system = System.demo()
+        system.mc_timeline(5)
+        system.reset()
 
-        self.assertEqual(sys.df_erc, None)
-        for comp in sys.comp.values():
+        self.assertEqual(system.df_erc, None)
+        for comp in system.comp.values():
             self.assertEqual(comp.indicator["slow_degrading"].get_accumulated(), 0)
 
     # get_objects

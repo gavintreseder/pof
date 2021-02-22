@@ -118,7 +118,7 @@ class TestAssetModelLoader(unittest.TestCase):
 
         aml = AssetModelLoader(FILE_NAME_MODEL)
         data = aml.load(FILE_NAME_MODEL)
-        sys = System.from_dict(data["overhead_network"])
+        system = System.from_dict(data["overhead_network"])
 
         components_on = ["pole"]
         failure_modes_on = ["termites", "fungal decay | internal"]
@@ -129,7 +129,7 @@ class TestAssetModelLoader(unittest.TestCase):
             "termite_treatment",
         ]
 
-        for comp in sys.comp.values():
+        for comp in system.comp.values():
             if comp.name not in components_on:
                 comp.active = False
             else:
@@ -148,12 +148,12 @@ class TestAssetModelLoader(unittest.TestCase):
                             task.active = False
 
         # Set up the initial states
-        fm = sys.comp["pole"].fm["termites"]
+        fm = system.comp["pole"].fm["termites"]
         fm.init_states["detection"] = True
         fm.init_states["initiation"] = True
         fm.tasks["inspection_groundline"].t_delay = 0
 
-        sys.mc_timeline(t_end=100, n_iterations=100)
+        system.mc_timeline(t_end=100, n_iterations=100)
 
     # TODO redo test later
     # def test_load_failure_mode_condition_tasks(self):
