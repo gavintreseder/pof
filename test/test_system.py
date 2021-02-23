@@ -251,8 +251,28 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
 
         self.assertEqual(system._sim_counter, 1)
 
-    # progress
-    # sens progress
+    # *************** Test progress ***********************
+    def test_progress(self):
+        system = System.demo()
+
+        system.mp_timeline(200)
+
+        progress = system.progress()
+
+        self.assertEqual(progress, 1)
+
+    def test_sens_progress(self):
+        system = System.demo()
+
+        system.expected_sensitivity(
+            lower=0,
+            upper=10,
+            var_id="overhead_network-comp-pole-task_group_name-groundline-t_interval",
+        )
+
+        sens_progress = system.sens_progress()
+
+        self.assertEqual(sens_progress, 1)
 
     def test_save_load(self):
         system = System.demo()
