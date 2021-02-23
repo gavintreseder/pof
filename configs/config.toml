@@ -13,6 +13,10 @@ p_effective = 100
 
 [Main]
 file_name_default = "Asset Model.xlsx"
+START_YEAR = 2015
+END_YEAR = 2024
+CURRENT_YEAR = 2021
+pop_file_name = "population_summary.csv"
 
 # FOR A COMPONENT
 #name = "pole"
@@ -33,11 +37,13 @@ handle_update_error = true
 use_default = false
 
 [System]
+allow_system_impact = true
 
 [Component]
 allow_system_impact = true
 indicator_input_fields = ["perfect", "initial", "failed"] 
 forecast_confidence_interval = 0.8
+remain_failed = true
 
 [FailureMode]
 remain_failed = true

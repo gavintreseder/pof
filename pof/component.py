@@ -95,10 +95,6 @@ class Component(PofBase):
         self._t_in_service = []
         self.stop_simulation = False
 
-        # Timelines
-        self.timeline = dict()
-        self._timelines = dict()
-
         # Dash Tracking
         self.up_to_date = True
         self.n = 0
@@ -242,7 +238,7 @@ class Component(PofBase):
 
         while t_now < t_end and self._in_service:
 
-            t_next, next_fm_tasks = self.next_tasks(timeline, t_now)
+            t_next, next_fm_tasks = self.next_tasks(t_now)
 
             self.complete_tasks(t_next, next_fm_tasks)
 
@@ -251,7 +247,7 @@ class Component(PofBase):
         if self._in_service:
             self._t_in_service.append(t_now)
 
-        return self.timeline
+        return timeline
 
     def init_timeline(self, t_end, t_start=0):
         """ Initialise the timeline"""
@@ -261,33 +257,29 @@ class Component(PofBase):
         for fm in self.fm.values():
             fm.init_timeline(t_start=t_start, t_end=t_end)
 
-        self.timeline = timeline
+        return timeline
 
-        return self.timeline
-
-    def next_tasks(self, timeline=None, t_start=None):
+    def next_tasks(self, t_start=None):
         """
         Returns a dictionary with the failure mode triggered
         """
         # TODO make this more efficent
         # TODO make this work if no tasks returned. Expect an error now
 
-        if timeline is None:
-            timeline = self.timeline
-
         # Get the task schedule for next tasks
         task_schedule = dict()
-        for fm_name, fm in self.fm.items():
+        if self.active:
+            for fm_name, fm in self.fm.items():
 
-            t_next, task_names = fm.next_tasks(t_start=t_start)
+                t_next, task_names = fm.next_tasks(t_start=t_start)
 
-            if t_next in task_schedule:
-                task_schedule[t_next][fm_name] = task_names
-            else:
-                task_schedule[t_next] = dict()
-                task_schedule[t_next][fm_name] = task_names
+                if t_next in task_schedule:
+                    task_schedule[t_next][fm_name] = task_names
+                else:
+                    task_schedule[t_next] = dict()
+                    task_schedule[t_next][fm_name] = task_names
 
-        t_next = min(task_schedule.keys())
+            t_next = min(task_schedule.keys())
 
         return t_next, task_schedule[t_next]
 
@@ -299,21 +291,30 @@ class Component(PofBase):
         # TODO check value?
         # TODO add task impacts
 
-        for fm_name, task_names in fm_tasks.items():
-            system_impacts = self.fm[fm_name].complete_tasks(t_next, task_names)
+        system_impacts = []
 
-            if "component" in system_impacts and cf.get("allow_system_impact"):
-                logging.debug(
-                    "Component %s reset by FailureMode %s", self._name, fm_name
-                )
-                self.renew(t_renew=t_next + 1)
+        if self.active:
 
-                break
+            for fm_name, task_names in fm_tasks.items():
+                system_impact = self.fm[fm_name].complete_tasks(t_next, task_names)
+                system_impacts = system_impacts + system_impact
 
-            # Ghetto fix TODO
-            if "indicator" in system_impacts:
-                for fm in self.fm.values():
-                    fm.update_timeline(t_next + 1, updates={"failure": False})
+                if (
+                    "system" in system_impacts or "component" in system_impacts
+                ) and cf.get("allow_system_impact"):
+                    logging.debug(
+                        "Component %s reset by FailureMode %s", self._name, fm_name
+                    )
+                    self.renew(t_renew=t_next + 1)
+
+                    break
+
+                # Ghetto fix TODO
+                if "indicator" in system_impacts:
+                    for fm in self.fm.values():
+                        fm.update_timeline(t_next + 1, updates={"failure": False})
+
+        return system_impacts
 
     def renew(
         self,
@@ -339,6 +340,14 @@ class Component(PofBase):
             for ind in self.indicator.values():
                 ind.reset_to_perfect()
 
+    def fail(self, t_fail):
+        """ Cut the timeline short and prevent any more tasks from triggering"""
+
+        self.in_service = False
+
+        for fm in self.fm.values():
+            fm.fail(t_fail)
+
     def increment_counter(self):
         self._sim_counter += 1
 
@@ -346,8 +355,6 @@ class Component(PofBase):
             fm.increment_counter()
 
     def save_timeline(self, idx):
-        self._timelines[idx] = self.timeline
-
         for fm in self.fm.values():
             fm.save_timeline(idx)
 
@@ -1018,10 +1025,6 @@ class Component(PofBase):
         self._sim_counter = 0
         self._t_in_service = []
         self.stop_simulation = False
-
-        # Reset timelines
-        self.timeline = dict()
-        self._timelines = dict()
 
         # Reset stored reports
         self.df_erc = None

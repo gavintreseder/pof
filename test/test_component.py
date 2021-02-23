@@ -18,7 +18,7 @@ from pof.interface.figures import calc_y_max
 from pof.data.asset_data import SimpleFleet
 import fixtures
 from pof.units import scale_units
-from pof.system import System
+from pof.component import Component
 
 cf = config["Component"]
 
@@ -401,15 +401,15 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         ##### TEST 2 - SENS #####
         # Arrange
         t_end = 100
-        sys = System.demo()
-        sys.mc_timeline(t_end=t_end)
+        comp = Component.demo()
+        comp.mc_timeline(t_end=t_end)
 
-        sys.expected_sensitivity(
+        comp.expected_sensitivity(
             var_id="overhead_network-comp-pole-task_group_name-groundline-t_interval",
             lower=0,
             upper=10,
         )
-        df_source = sys.sens_summary(var_name="t_interval")
+        df_source = comp.sens_summary(var_name="t_interval")
 
         # Act
         df_sorted_source = sort_df(
@@ -432,16 +432,14 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
     # ************* Test charts *********************
 
     def test_calc_y_max(self):
-        sys = System.demo()
+        comp = Component.demo()
 
-        sys.mp_timeline(t_end=200, n_iterations=10)
+        comp.mp_timeline(t_end=200, n_iterations=10)
 
-        sys.expected_risk_cost_df(t_end=200)
+        comp.expected_risk_cost_df(t_end=200)
 
-        prev_ms_cost = sys.comp["pole"].plot_ms(
-            y_axis="cost", keep_axis=True, prev=None
-        )
-        prev_ms_cumulative = sys.comp["pole"].plot_ms(
+        prev_ms_cost = comp.plot_ms(y_axis="cost", keep_axis=True, prev=None)
+        prev_ms_cumulative = comp.plot_ms(
             y_axis="cost_cumulative", keep_axis=True, prev=None
         )
 
@@ -452,7 +450,7 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
             keep_axis=True, method="sum", prev=prev_ms_cumulative, test=True
         )
 
-        df = sys.df_erc
+        df = comp.df_erc
 
         y_max_ms_cost_df = df["cost"].max() * 1.05
 

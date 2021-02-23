@@ -124,14 +124,14 @@ def make_layout(system):
         update_list_y=update_list_y_ms, y_value_default=y_value_default
     )
 
-    comp_default = [comp.name for comp in system.comp.values() if comp.active][0]
-
-    sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
-
     if "comp" in list(get_signature(system.__class__)):
         make_chart_layout = make_system_layout(system)
+        comp_default = [comp.name for comp in system.comp.values() if comp.active][0]
     else:
         make_chart_layout = make_component_layout(system)
+        comp_default = cf_main.get("name")
+
+    sim_sens_inputs = make_sim_sens_inputs(system, comp_name=comp_default)
 
     sim = make_sim_layout()
 
@@ -898,6 +898,7 @@ def make_input_section(update_list_unit, unit_default, unit_default_model):
                                 id="input_units-dropdown",
                                 options=update_list_unit,
                                 value=unit_default,
+                                disabled=True,  # TODO hookup input_units dropdown
                             ),
                         ]
                     ),
