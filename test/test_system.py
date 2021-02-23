@@ -50,6 +50,7 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
     def test_init_timeline(self):
         t_end = 200
         system = System.demo()
+        system.init_timeline(t_end)
 
         for comp in system.comp.values():
             comp.init_timeline(t_end)
@@ -58,17 +59,169 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
 
                 self.assertEqual(t_end, t_fm_timeline_end)
 
+    # *************** Test next_tasks ***********************
+    def test_next_tasks(self):
+
+        # TODO
+        NotImplemented
+
+    def test_next_tasks_one_comp_one_fm_one_task(self):
+
+        t_now = None
+        test_next_task = dict(
+            pole=(
+                5,
+                dict(
+                    early_life=(20, ["inspection"]),
+                    slow_aging=(5, ["inspection"]),
+                    fast_aging=(10, ["inspection", "cm"]),
+                    random=(15, ["inspection"]),
+                ),
+            )
+        )
+
+        system = System.demo()
+
+        expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
+
+        for comp_name, comp in system.comp.items():
+            comp.next_tasks = Mock(return_value=test_next_task[comp_name])
+            for fm_name, fm in comp.fm.items():
+                fm.next_tasks = Mock(return_value=test_next_task[comp_name][1][fm_name])
+
+        t_next, next_task = system.next_tasks(t_now)
+
+        self.assertEqual(next_task, expected)
+        self.assertEqual(t_next, 5)
+
+    def test_next_tasks_many_comp_many_fm_many_task(self):
+        """ Mock next tasks """
+
+        #         # TODO new method
+        # # Three different task intervals for each of the failure_modes
+        # param_next_task = [(5, 5, 5), (5, 5, 5), (10, 5, 5), (10, 10, 5)]
+
+        # for e_l, s_a, f_a, rand in param_next_task:
+        #     NotImplemented
+        times = dict(
+            early_life=[5, 5, 5, 5],
+            slow_aging=[5, 5, 5],
+            fast_aging=[10, 5, 5],
+            random=[10, 10, 5],
+        )
+
+        for i in range(3):
+            t_now = None
+            test_next_task = dict(
+                pole=(
+                    5,
+                    dict(
+                        early_life=(times["early_life"][i], ["inspection"]),
+                        slow_aging=(times["slow_aging"][i], ["inspection"]),
+                        fast_aging=(times["fast_aging"][i], ["inspection", "cm"]),
+                        random=(times["random"][i], ["inspection"]),
+                    ),
+                ),
+                other=(
+                    10,
+                    dict(
+                        early_life=(times["early_life"][i], ["inspection"]),
+                        slow_aging=(times["slow_aging"][i], ["inspection"]),
+                        fast_aging=(times["fast_aging"][i], ["inspection", "cm"]),
+                        random=(times["random"][i], ["inspection"]),
+                    ),
+                ),
+            )
+
+            expected = {k: v[1] for k, v in test_next_task.items() if v[0] == 5}
+
+            system = System.demo()
+
+            for comp_name, comp in system.comp.items():
+                comp.next_tasks = Mock(return_value=test_next_task[comp_name])
+                for fm_name, fm in comp.fm.items():
+                    fm.next_tasks = Mock(
+                        return_value=test_next_task[comp_name][1][fm_name]
+                    )
+
+            t_next, next_task = system.next_tasks(t_now)
+
+            self.assertEqual(next_task, expected)
+            self.assertEqual(t_next, 5)
+
+    # *************** Test complete_tasks ***********************
+
+    def test_complete_tasks_ine_comp_one_fm_one_task(self):
+        comp_next_tasks = dict(
+            pole=dict(
+                slow_aging=["inspection"],
+            )
+        )
+
+        t_now = 5
+        system = System.demo()
+        system.init_timeline(200)
+        system.complete_tasks(t_now, comp_next_tasks)
+
+        for comp_name, comp in system.comp.items():
+            for fm_name, fm in comp.fm.items():
+                for task_name, task in fm.tasks.items():
+
+                    if comp_name in list(comp_next_tasks):
+                        if fm_name in list(comp_next_tasks[comp_name]):
+                            if task_name in comp_next_tasks[comp_name][fm_name]:
+                                self.assertEqual([t_now], task.t_completion)
+                            else:
+                                self.assertEqual([], task.t_completion)
+                        else:
+                            self.assertEqual([], task.t_completion)
+
+    def test_complete_tasks_two_comp_two_fm_two_task(self):
+
+        # Arrange
+        comp_next_tasks = dict(
+            pole=dict(
+                slow_aging=["inspection", "on_condition_replacement"],
+                fast_aging=["inspection", "on_condition_replacement"],
+            ),
+            other=dict(
+                slow_aging=["inspection", "on_condition_repair"],
+                fast_aging=["inspection", "on_condition_repair"],
+            ),
+        )
+        t_now = 5
+        system = System.demo()
+
+        # Act
+        with patch.dict("pof.component.cf", {"allow_system_impact": False}):
+            system.init_timeline(200)
+            system.complete_tasks(t_now, comp_next_tasks)
+
+            # Assert
+            for comp_name, comp in system.comp.items():
+                for fm_name, fm in comp.fm.items():
+                    for task_name, task in fm.tasks.items():
+                        if comp_name in list(comp_next_tasks):
+
+                            if fm_name in list(comp_next_tasks[comp_name]):
+                                if task_name in comp_next_tasks[comp_name][fm_name]:
+                                    self.assertEqual([t_now], task.t_completion)
+                                else:
+                                    self.assertEqual([], task.t_completion)
+                            else:
+                                self.assertEqual([], task.t_completion)
+
     # *************** Test sim_timeline ***********************
 
     def test_sim_timeline_active_all(self):
         system = System.demo()
-        system.mp_timeline(200)
+        system.sim_timeline(200)
 
     def test_sim_timeline_active_one(self):
         system = System.demo()
 
         system.comp["pole"].fm[list(system.comp["pole"].fm)[0]].active = False
-        system.mp_timeline(200)
+        system.sim_timeline(200)
 
     def test_mp_timeline(self):
         system = System.demo()
@@ -80,16 +233,44 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
 
         system.mc_timeline(t_end=100)
 
-    # cancel sim
-    # increment counter
-    # save timeline
+    def cancel_sim(self):
+        system = System.demo()
+
+        system.mc_timeline(t_end=200)
+
+        system.cancel_sim()
+
+        self.assertEqual(system.up_to_date, False)
+        self.assertEqual(system.n, 0)
+        self.assertEqual(system.n_sens, 0)
+
+    def test_increment_counter(self):
+        system = System.demo()
+
+        system.increment_counter()
+
+        self.assertEqual(system._sim_counter, 1)
 
     # progress
     # sens progress
 
+    def test_save_load(self):
+        system = System.demo()
+
+        file_name = "Test.json"
+
+        system.save(file_name=file_name, file_units="years")
+
+        FILE_NAME_MODEL = Paths().model_path + os.sep + file_name
+
+        aml = AssetModelLoader()
+        data = aml.load(FILE_NAME_MODEL)
+        system = System.load(data["overhead_network"])
+
+        system.mp_timeline(t_end=100)
+
     def test_sys_next_tasks(self):
 
-        FILEPATH = Paths().model_path
         FILE_NAME_MODEL = Paths().demo_path + r"\Asset Model.xlsx"
 
         aml = AssetModelLoader()
@@ -180,9 +361,6 @@ class TestSystem(TestPofBaseCommon, unittest.TestCase):
     # get_objects
     # get_dash_ids
     # get_update_ids
-
-    def test_save(self):
-        NotImplemented
 
 
 if __name__ == "__main__":

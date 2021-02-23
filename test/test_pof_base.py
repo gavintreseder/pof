@@ -704,6 +704,15 @@ class TestPofBase(TestPofBaseCommon, unittest.TestCase):
             with self.assertRaises(error):
                 pof_base.update_from_dict(test_data)
 
+    # *********** Test save ******************
+
+    def test_save(self):
+        instance = self._class.from_dict(self._data_complete[0])
+
+        file_name = "Test.json"
+
+        instance.save(file_name=file_name, file_units="years")
+
 
 if __name__ == "__main__":
     unittest.main()

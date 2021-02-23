@@ -158,7 +158,7 @@ class System(PofBase):
             if comp.active:
                 comp.init_timeline(t_start=t_start, t_end=t_end)
 
-    def next_tasks(self, t_start=None):
+    def next_tasks(self, t_start=0):
         """
         Returns a dictionary with the component triggered
         """
@@ -174,8 +174,8 @@ class System(PofBase):
                     task_schedule[t_next][comp_name] = task_names
 
                 t_next = min(task_schedule.keys())
-                if t_next < t_start:
-                    break
+                # if t_next < t_start:
+                #     break
 
         return t_next, task_schedule[t_next]
 
