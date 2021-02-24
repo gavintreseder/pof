@@ -395,7 +395,7 @@ class FailureMode(PofBase):
                 # TODO ghetto fix
                 # ind_impacts.append(list(self.tasks[task_name].impacts["condition"]))
 
-                if "component" == system_impact:
+                if system_impact in ["component", "system"]:
                     self.renew(t_now + 1)
 
                     if self.timeline["failure"][t_now]:
