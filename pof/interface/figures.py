@@ -227,7 +227,8 @@ def make_sensitivity_fig(
 
         # Add the colours
         color_map = get_color_map(df=df_plot, column="source")
-        df_plot = df_plot.loc[df_plot["active"]]
+        if "active" in df_plot:
+            df_plot = df_plot.loc[df_plot["active"]]
 
         # Adjust the labels
 

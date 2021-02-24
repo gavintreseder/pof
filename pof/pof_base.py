@@ -128,11 +128,13 @@ class PofBase:
     def active(self) -> bool:
         return self._active
 
-    
     @active.setter
     @coerce_arg_type
     def active(self, value: bool):
-        self._active = value
+        if value is None:
+            self._active = True
+        else:
+            self._active = value
 
     @property
     def units(self):

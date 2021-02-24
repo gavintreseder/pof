@@ -10,7 +10,7 @@ from typing import Dict
 
 import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
+from tqdm.notebook import tqdm
 import json
 import scipy.stats as ss
 
@@ -194,7 +194,7 @@ class Component(PofBase):
         self.n_iterations = n_iterations
 
         try:
-            for __ in tqdm(range(self.n_iterations)):
+            for __ in tqdm(range(self.n_iterations), desc="Simulation", leave=False):
                 if not self.up_to_date:
                     break
 
@@ -215,7 +215,7 @@ class Component(PofBase):
         """ Simulate the timeline mutliple times"""
         self.reset()
 
-        for i in tqdm(range(n_iterations)):
+        for i in tqdm(range(n_iterations), desc="Simulation", leave=False):
             self.sim_timeline(t_end=t_end, t_start=t_start)
 
             self.save_timeline(i)
@@ -587,7 +587,7 @@ class Component(PofBase):
         suffix = ["", "_annual", "_cumulative"]
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
-        for i in np.arange(lower, upper + step_size, step_size):
+        for i in tqdm(np.arange(lower, upper + step_size, step_size), desc=var_id):
             if not self.up_to_date:
                 return "sim cancelled"
             try:
@@ -618,6 +618,48 @@ class Component(PofBase):
         )
 
         return self.df_sens
+
+    def sensitivty_chain(
+        self, sens_vars: dict, n_iterations: int = 100, t_end: int = 100
+    ):
+        """Recursively solve the sensitivity for the all the vars being tested"""
+
+        # Create copy so original isn't changed
+        sens_vars = copy.deepcopy(sens_vars)
+
+        if not sens_vars:  # Calculate the sensitivity
+
+            # Format
+            prefix = ["quantity", "cost"]
+            suffix = ["", "_annual", "_cumulative"]
+            cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
+
+            # Simulate
+            self.reset()
+            self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
+
+            # Report
+            df_sens = self.expected_risk_cost_df()
+            df_sens = df_sens.groupby(by=["task", "active"])[cols].max().reset_index()
+
+        else:  # Recurisvely call the same function
+            results = dict()
+
+            var_id = next(iter(sens_vars))
+            sens_range = sens_vars.pop(var_id)
+
+            for update_val in tqdm(sens_range, desc=var_id):
+
+                self.update(var_id, update_val)
+
+                results[update_val] = self.sensitivty_chain(
+                    sens_vars, t_end=t_end, n_iterations=n_iterations
+                )
+                results[update_val][var_id] = update_val
+
+            df_sens = pd.concat(results, ignore_index=True)
+
+        return df_sens
 
     # ****************** Reports ****************
 
