@@ -162,6 +162,7 @@ class System(PofBase):
         """
         Returns a dictionary with the component triggered
         """
+        logging.info(self.units)
         task_schedule = dict()
         for comp_name, comp in self.comp.items():
             if comp.active:

@@ -228,7 +228,7 @@ def toggle_collapses(*args):
 
 @app.callback(
     Output("update_state", "children"),
-    # Input("input_units-dropdown", "value") TODO hook up input units
+    Input("input_units-dropdown", "value"),
     param_inputs,
 )
 def update_parameter(input_units, *args):
