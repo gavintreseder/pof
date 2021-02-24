@@ -323,9 +323,7 @@ def make_component_layout(component, prefix="", sep="-"):
     layout = dbc.InputGroup(
         [
             dbc.InputGroupAddon(
-                dbc.Checkbox(
-                    id=prefix + "active", checked=component.active, disabled=True
-                ),
+                dbc.Checkbox(id=prefix + "active", checked=component.active),
                 addon_type="prepend",
             ),
             dbc.Button(
@@ -898,7 +896,6 @@ def make_input_section(update_list_unit, unit_default, unit_default_model):
                                 id="input_units-dropdown",
                                 options=update_list_unit,
                                 value=unit_default,
-                                disabled=True,  # TODO hookup input_units dropdown
                             ),
                         ]
                     ),
