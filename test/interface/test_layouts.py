@@ -3,7 +3,9 @@ from unittest.mock import MagicMock, Mock, patch
 
 import testconfig  # pylint: disable=unused-import
 from pof import Component, FailureMode
+from pof.system import System
 from pof.interface.layouts import (
+    make_system_layout,
     make_component_layout,
     make_failure_mode_layout,
     validate_layout,
@@ -11,6 +13,17 @@ from pof.interface.layouts import (
 
 
 class TestLayout(unittest.TestCase):
+    def test_make_system_layout(self):
+        # Arrang
+        system = System.demo()
+
+        # Act
+        layout = make_system_layout(system)
+        valid = validate_layout(system, layout)
+
+        # Assert
+        self.assertTrue(valid)
+
     def test_make_component_layout(self):
         # Arrange
         comp = Component.demo()

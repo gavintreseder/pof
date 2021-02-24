@@ -18,6 +18,7 @@ from pof.interface.figures import calc_y_max
 from pof.data.asset_data import SimpleFleet
 import fixtures
 from pof.units import scale_units
+from pof.component import Component
 
 cf = config["Component"]
 
@@ -375,25 +376,17 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
         # Assert
         self.assertAlmostEqual(total_failed - lower_bound, upper_bound - total_failed)
 
-    def test_sort_df(self):
+    def test_sort_df_task(self):
+        ##### TEST 1 - TASK #####
         # Arrange
         t_end = 100
         comp = Component.demo()
         comp.mc_timeline(t_end=t_end)
 
         df_task = comp.expected_risk_cost_df(t_start=0, t_end=t_end)
-        df_sens = comp.expected_sensitivity(
-            var_id="pole-task_group_name-groundline-t_interval", lower=0, upper=10
-        )
-        df_source = comp.sens_summary(var_name="t_interval")
 
         # Act
         df_sorted_task = sort_df(df=df_task, column="task")
-        df_sorted_source = sort_df(
-            df=df_source,
-            column="source",
-            var="t_interval",
-        )
 
         # Assert - should be sorted by time then task
         time_vals_task = df_sorted_task["time"].unique()
@@ -404,6 +397,28 @@ class TestComponent(TestPofBaseCommon, unittest.TestCase):
 
         self.assertEqual(task_vals[0], "risk")
 
+    def test_sort_df_sens(self):
+        ##### TEST 2 - SENS #####
+        # Arrange
+        t_end = 100
+        comp = Component.demo()
+        comp.mc_timeline(t_end=t_end)
+
+        comp.expected_sensitivity(
+            var_id="overhead_network-comp-pole-task_group_name-groundline-t_interval",
+            lower=0,
+            upper=10,
+        )
+        df_source = comp.sens_summary(var_name="t_interval")
+
+        # Act
+        df_sorted_source = sort_df(
+            df=df_source,
+            column="source",
+            var="t_interval",
+        )
+
+        # Assert - should be sorted by time then task
         time_vals_source = df_sorted_source["t_interval"].unique()
         source_vals = df_sorted_source["source"].unique()
 

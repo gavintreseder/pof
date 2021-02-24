@@ -215,7 +215,7 @@ replacement_data =dict(
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
-            system='component',
+            system='system',
         ),
     ),
     on_condition = dict(
@@ -241,7 +241,7 @@ replacement_data =dict(
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
-            system='component',
+            system='system',
         ),
     ),
     on_failure = dict(
@@ -263,7 +263,7 @@ replacement_data =dict(
                 ),
             ),
             state=dict(initiation=False, detection=False, failure=False,),
-            system='component',
+            system='system',
         ),
     ),
 )
@@ -386,8 +386,17 @@ component_data = dict(
         indicator = dict(
             slow_degrading =condition_data['slow_degrading'],
             fast_degrading=condition_data['fast_degrading']
-        )
+        ),
     )
+)
+
+system_data = dict(
+
+    overhead_network=dict(
+        name="overhead_network",
+        comp=component_data
+    )
+
 )
 
 if __name__ == "__main__":

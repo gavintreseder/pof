@@ -8,16 +8,17 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from config import config
-from pof import Component
-from pof.units import valid_units
+from pof.system import System
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.interface.dashlogger import DashLogger
 from pof.interface.layouts import (
     make_layout,
     scale_input,
-    make_component_layout,
+    make_system_layout,
     make_save_button,
     make_load_button,
+    make_sim_sens_inputs,
+    make_graph_filter,
 )
 
 from pof.data.asset_data import SimpleFleet
@@ -39,22 +40,20 @@ server = app.server
 # Load the data sets.
 # ========================================================
 
-# Forecast years
-START_YEAR = 2015
-END_YEAR = 2024
-CURRENT_YEAR = 2020
+# Default file path
+file_name_initial = cf.get("file_name_default")
 
+# Forecast years
 paths = Paths()
 
 # Population Data
 file_path = paths.input_path + os.sep
-FILE_NAME = r"population_summary.csv"
 
-sfd = SimpleFleet(file_path + FILE_NAME)
+sfd = SimpleFleet(file_path + cf.get("pop_file_name"))
 sfd.load()
-sfd.calc_age_forecast(START_YEAR, END_YEAR, CURRENT_YEAR)
+sfd.calc_age_forecast(cf.get("START_YEAR"), cf.get("END_YEAR"), cf.get("CURRENT_YEAR"))
 
-global comp
+global system
 global pof_sim
 global sens_sim
 global collapse_ids
@@ -62,24 +61,24 @@ global sim_triggers
 global param_inputs
 
 aml = AssetModelLoader(paths.demo_path + os.sep + cf.get("file_name_default"))
-comp_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
-comp = Component.from_dict(comp_data[cf.get("name")])
-comp.units = cf.get("file_units_default")  # Set the units to be file units initially
-comp.fleet_data = sfd  # TODO fix by creating asset class
+sys_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+system = System.from_dict(sys_data[cf.get("name")])
+system.units = cf.get("file_units_default")  # Set the units to be file units initially
+system.fleet_data = sfd  # TODO fix by creating asset class
 
 # Instantiate global variables
-pof_sim = copy.copy(comp)
-sens_sim = copy.copy(comp)
-collapse_ids = comp.get_objects()
+pof_sim = copy.copy(system)
+sens_sim = copy.copy(system)
+collapse_ids = system.get_objects()
 collapse_ids.append("sim_params")
-sim_triggers = comp.get_dash_ids(numericalOnly=False)
+sim_triggers = system.get_dash_ids(numericalOnly=False)
 param_inputs = [
     Input(dash_id, "checked") if "active" in dash_id else Input(dash_id, "value")
     for dash_id in sim_triggers
 ]
 
 # Layout
-app.layout = make_layout(comp)
+app.layout = make_layout(system)
 
 
 @app.callback(
@@ -101,7 +100,7 @@ def save_load_file(click_load, click_save, file_name_input):
     # TODO change hide to just set the text to be something, i.e. error_msg = "" when things are ok, error_msg = 'there's a mistake'
     # Think about what happens if you want different error messages long term?
 
-    global comp
+    global system
     global pof_sim
     global sens_sim
     global collapse_ids
@@ -123,7 +122,7 @@ def save_load_file(click_load, click_save, file_name_input):
                 file_name_json = file_name_input
 
             # Save to json
-            comp.save(file_name_json, file_units=cf.get("file_units_default"))
+            system.save(file_name_json, file_units=cf.get("file_units_default"))
             save_success_hide = False
 
         except Exception as error:
@@ -150,27 +149,26 @@ def save_load_file(click_load, click_save, file_name_input):
             aml = AssetModelLoader(
                 paths.demo_path + os.sep + cf.get("file_name_default")
             )
-            comp_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
-            comp = Component.from_dict(comp_data[cf.get("name")])
+            sys_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+            system = System.from_dict(sys_data[cf.get("name")])
 
-            comp.units = cf.get(
+            system.units = cf.get(
                 "file_units_default"
             )  # Set the units to be file units initially
-
-            comp.fleet_data = sfd  # TODO fix by creating asset class
+            system.fleet_data = sfd  # TODO fix by creating asset class
 
             load_success_hide = False
         else:
             load_error_hide = False
 
         # Redefine global variables
-        pof_sim = copy.copy(comp)
-        sens_sim = copy.copy(comp)
+        pof_sim = copy.copy(system)
+        sens_sim = copy.copy(system)
 
-        collapse_ids = comp.get_objects()
+        collapse_ids = system.get_objects()
         collapse_ids.append("sim_params")
 
-        sim_triggers = comp.get_dash_ids(numericalOnly=False)
+        sim_triggers = system.get_dash_ids(numericalOnly=False)
         param_inputs = [
             Input(dash_id, "checked")
             if "active" in dash_id
@@ -179,7 +177,7 @@ def save_load_file(click_load, click_save, file_name_input):
         ]
 
     return (
-        make_component_layout(comp),
+        make_system_layout(system),
         make_load_button(),
         load_error_hide,
         load_success_hide,
@@ -230,12 +228,12 @@ def toggle_collapses(*args):
 
 @app.callback(
     Output("update_state", "children"),
-    Input("input_units-dropdown", "value"),
+    # Input("input_units-dropdown", "value") TODO hook up input units
     param_inputs,
 )
 def update_parameter(input_units, *args):
     """Update a the pof object whenever an input is changes""",
-    global comp
+    global system
 
     # Check the parameters that changed
     ctx = dash.callback_context
@@ -250,10 +248,10 @@ def update_parameter(input_units, *args):
         # Scale the value if req
         var = dash_id.split("-")[-1]
         value = scale_input(
-            attr=var, value=value, units_before=comp.units, units_after=input_units
+            attr=var, value=value, units_before=system.units, units_after=input_units
         )
         # update the model
-        comp.update(dash_id, value)
+        system.update(dash_id, value)
 
     return f"Update State: {dash_id} - {value}"
 
@@ -263,7 +261,8 @@ def update_parameter(input_units, *args):
     Input("model_units-dropdown", "value"),
 )
 def update_model_units(units):
-    comp.units = units
+    global system
+    system.units = units
 
     return False
 
@@ -271,6 +270,7 @@ def update_model_units(units):
 @app.callback(
     Output("sim_state", "children"),
     Output("sim_state_err", "children"),
+    Output("graph_filter", "children"),
     Input("update_state", "children"),
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
@@ -280,7 +280,7 @@ def update_model_units(units):
 )
 def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
-    global comp
+    global system
     global pof_sim
     global sfd
 
@@ -288,7 +288,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
 
     # time.sleep(1)
     if active:
-        pof_sim = copy.copy(comp)
+        pof_sim = copy.copy(system)
 
         # Scale t_end # TODO generalise funciton and move
         t_end = int(
@@ -313,7 +313,11 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     else:
         return dash.no_update, "Not active"
 
-    return f"Sim State: {pof_sim.n_iterations} - {n_iterations}", ""
+    return (
+        f"Sim State: {pof_sim.n} - {n_iterations}",
+        "",
+        make_graph_filter(system),
+    )
 
 
 @app.callback(
@@ -325,6 +329,7 @@ def update_simulation(__, active, t_end, n_iterations, ___, input_units):
     Input("sim_state", "children"),
     Input("ms_var_y-dropdown", "value"),
     Input("axis_lock-checkbox", "checked"),
+    Input("comp_graph-dropdown", "value"),
     State("input_units-dropdown", "value"),
     State("sim_n_active", "checked"),
     State("cond-fig", "figure"),
@@ -336,6 +341,7 @@ def update_figures(
     __,
     y_axis,
     axis_lock,
+    comp_name,
     input_units,
     active,
     prev_cond_fig,
@@ -353,25 +359,32 @@ def update_figures(
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
 
-        pof_fig = pof_sim.plot_pof(
-            keep_axis=keep_axis, units=input_units, prev=prev_pof_fig
+        pof_fig = pof_sim.comp[comp_name].plot_pof(
+            keep_axis=keep_axis,
+            units=input_units,
+            prev=prev_pof_fig,
         )
 
-        ms_fig = pof_sim.plot_ms(
-            y_axis=y_axis, keep_axis=keep_axis, units=input_units, prev=prev_ms_fig
+        ms_fig = pof_sim.comp[comp_name].plot_ms(
+            y_axis=y_axis,
+            keep_axis=keep_axis,
+            units=input_units,
+            prev=prev_ms_fig,
         )
 
-        cond_fig = pof_sim.plot_cond(
-            keep_axis=keep_axis, units=input_units, prev=prev_cond_fig
+        cond_fig = pof_sim.comp[comp_name].plot_cond(
+            keep_axis=keep_axis,
+            units=input_units,
+            prev=prev_cond_fig,
         )
 
-        task_forecast_fig = pof_sim.plot_task_forecast(
+        task_forecast_fig = pof_sim.comp[comp_name].plot_task_forecast(
             keep_axis=keep_axis, prev=prev_task_fig
         )
 
         # pop_table_fig = pof_sim.plot_pop_table()
 
-        forecast_table_fig = pof_sim.plot_summary(sfd.df_age)
+        forecast_table_fig = pof_sim.comp[comp_name].plot_summary(sfd.df_age)
 
     else:
         raise PreventUpdate
@@ -386,19 +399,27 @@ def update_figures(
 
 
 @app.callback(
-    Output("sensitivity-fig", "figure"),
+    Output("sim_sens_input", "children"),
+    Input("comp_graph-dropdown", "value"),
+)
+def update_sens_x_axis(comp_name):
+    """ Trigger an update to the sensitivity x_axis option list """
+
+    sim_sens_input = make_sim_sens_inputs(system, comp_name=comp_name)
+
+    return sim_sens_input
+
+
+@app.callback(
+    Output("sim_state_sens", "children"),
     Input("sim_state", "children"),
     Input("sim_sens_active-check", "checked"),
     Input("n_sens_iterations-input", "value"),
     Input("sens_var_id-dropdown", "value"),
-    Input("sens_var_y-dropdown", "value"),
     Input("sens_lower-input", "value"),
     Input("sens_upper-input", "value"),
     Input("sens_step_size-input", "value"),
     Input("t_end-input", "value"),
-    Input("axis_lock-checkbox", "checked"),
-    # Input("ms-fig", "figure"),  # TODO change this trigger
-    State("sensitivity-fig", "figure"),
     State("input_units-dropdown", "value"),
 )
 def update_sensitivity(
@@ -406,29 +427,22 @@ def update_sensitivity(
     active,
     n_iterations,
     var_id,
-    y_axis,
     lower,
     upper,
     step_size,
     t_end,
-    axis_lock,
-    prev_sens,
     input_units,
     *args,
 ):
     """ Trigger a sensitivity analysis of the target variable"""
     # Copy from the main model
-    global comp
+    global system
     global sens_sim
     sens_sim.cancel_sim()
 
     if active:
 
-        ctx = dash.callback_context
-        dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        keep_axis = dash_id == "sim_state" and axis_lock
-
-        sens_sim = copy.deepcopy(comp)
+        sens_sim = copy.deepcopy(system)
 
         # Scale the inputs if needed
         var = var_id.split("-")[-1]
@@ -456,7 +470,46 @@ def update_sensitivity(
             n_iterations=n_iterations,
         )
 
-        sens_fig = sens_sim.plot_sens(
+    else:
+        raise PreventUpdate
+
+    return (
+        f"Sim State Sens: {sens_sim.n_sens} - {n_iterations}",
+        "",
+    )
+
+
+@app.callback(
+    Output("sensitivity-fig", "figure"),
+    Input("sim_state_sens", "children"),
+    Input("sim_sens_active-check", "checked"),
+    Input("sens_var_id-dropdown", "value"),
+    Input("sens_var_y-dropdown", "value"),
+    Input("axis_lock-checkbox", "checked"),
+    Input("comp_graph-dropdown", "value"),
+    # Input("ms-fig", "figure"),  # TODO change this trigger
+    State("sensitivity-fig", "figure"),
+    State("input_units-dropdown", "value"),
+)
+def update_sensitivity_fig(
+    __,
+    active,
+    var_id,
+    y_axis,
+    axis_lock,
+    comp_name,
+    prev_sens,
+    input_units,
+    *args,
+):
+    """ Plot the sensitivity chart """
+    global sens_sim
+
+    if active:
+        ctx = dash.callback_context
+        dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        keep_axis = dash_id == "sim_state_sens" and axis_lock
+        sens_fig = sens_sim.comp[comp_name].plot_sens(
             var_id=var_id,
             y_axis=y_axis,
             keep_axis=keep_axis,
@@ -464,9 +517,10 @@ def update_sensitivity(
             units=input_units,
         )
 
-        return sens_fig
     else:
         raise PreventUpdate
+
+    return sens_fig
 
 
 # ==============================================
@@ -492,7 +546,7 @@ def update_progress(__):
     [Input("sens_progress-interval", "n_intervals")],
 )
 def update_progress_sens(__):
-    if sens_sim.n is None:
+    if sens_sim.n_sens is None:
         raise Exception("no process started")
     progress = int(sens_sim.sens_progress() * 100)
 
