@@ -1230,7 +1230,11 @@ def make_sim_layout():
                             [
                                 html.Div(
                                     children="Update State:",
-                                    id="update_state",
+                                    id="update_state_inputs",
+                                ),
+                                html.Div(
+                                    children="Update State:",
+                                    id="update_state_model",
                                 ),
                                 html.Div(
                                     [

@@ -227,7 +227,7 @@ def toggle_collapses(*args):
 
 
 @app.callback(
-    Output("update_state", "children"),
+    Output("update_state_inputs", "children"),
     Input("input_units-dropdown", "value"),
     param_inputs,
 )
@@ -257,28 +257,38 @@ def update_parameter(input_units, *args):
 
 
 @app.callback(
-    Output("model_units-dropdown", "disabled"),
+    Output("update_state_model", "children"),
     Input("model_units-dropdown", "value"),
 )
 def update_model_units(units):
     global system
     system.units = units
 
-    return False
+    # Check the parameters that changed
+    ctx = dash.callback_context
+    dash_id = None
+    value = None
+
+    if ctx.triggered:
+        dash_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
+        value = dash.callback_context.triggered[0]["value"]
+
+    return f"Update State - Model: {dash_id} - {value}"
 
 
 @app.callback(
     Output("sim_state", "children"),
     Output("sim_state_err", "children"),
     Output("graph_filter", "children"),
-    Input("update_state", "children"),
+    Input("update_state_inputs", "children"),
+    Input("update_state_model", "children"),
     Input("sim_n_active", "checked"),
     Input("t_end-input", "value"),
     Input("n_iterations-input", "value"),
     Input("param_layout", "children"),
     State("input_units-dropdown", "value"),
 )
-def update_simulation(__, active, t_end, n_iterations, ___, input_units):
+def update_simulation(__, ___, active, t_end, n_iterations, ____, input_units):
     """ Triger a simulation whenever an update is completed or the number of iterations change"""
     global system
     global pof_sim

@@ -435,11 +435,11 @@ class Component(PofBase):
         # cdf = {fm: 1 - sf for fm, sf in sf.items()}
         cdf = dict()
 
-        for fm in self.fm.values():
-            cdf[fm.name] = dict()
-            cdf[fm.name]["pof"] = 1 - sf[fm.name]["pof"]
-            cdf[fm.name]["active"] = sf[fm.name]["active"]
-            cdf[fm.name]["time"] = np.linspace(
+        for fm in sf:
+            cdf[fm] = dict()
+            cdf[fm]["pof"] = 1 - sf[fm]["pof"]
+            cdf[fm]["active"] = sf[fm]["active"]
+            cdf[fm]["time"] = np.linspace(
                 t_start, t_end, t_end - t_start + 1, dtype=int
             )
 
