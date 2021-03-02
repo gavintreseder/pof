@@ -328,7 +328,7 @@ def make_pop_table_fig(df):
     return fig
 
 
-def make_table_fig(df):
+def make_table_fig(df, title = "Forecast Summary"):
     """
     Produces a dash table to summarise key statistics by failure mode
     """
@@ -350,7 +350,7 @@ def make_table_fig(df):
         ]
     )
 
-    fig.update_layout(title="Forecast Summary")
+    fig.update_layout(title=title)
 
     return fig
 

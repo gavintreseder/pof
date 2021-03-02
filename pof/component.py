@@ -827,7 +827,7 @@ class Component(PofBase):
 
         return self.df_cond
 
-    def calc_summary(self, df_cohort=None, cohort_units = None):
+    def calc_summary(self, df_cohort=None, cohort_units=None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         # Get the key data from each of the failuremodes
         summary = {}
@@ -852,10 +852,10 @@ class Component(PofBase):
                     f_ages = [_cf, _ff]
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
-                        
+
                         # Scale age based on the units
-                        #TODO this will need to be fixed so its works ith units in all direction *UR as int * UR
-                        age = (age*unit_ratio(self.units, cohort_units)).astype(int)
+                        # TODO this will need to be fixed so its works ith units in all direction *UR as int * UR
+                        age = (age * unit_ratio(self.units, cohort_units)).astype(int)
 
                         # Total failures
                         total_failed = (
@@ -898,7 +898,6 @@ class Component(PofBase):
         if df_cohort is not None:
             df.loc["total", "cf pop annual avg"] = df["cf pop annual avg"].sum()
             df.loc["total", "ff pop annual avg"] = df["ff pop annual avg"].sum()
-            df.loc["total", "total"] = df_cohort["assets"].sum()
 
         # Format for display
         col_order = [
@@ -911,8 +910,7 @@ class Component(PofBase):
             "cf pop annual avg",
             "conf interval cf (+/-)",
             "ff pop annual avg",
-            "conf interval ff (+/-)",
-            "total",
+            "conf interval ff (+/-)"
         ]
         df = df.reset_index().reindex(columns=col_order)
 
@@ -1047,9 +1045,16 @@ class Component(PofBase):
 
     def plot_summary(self, df_cohort=None, cohort_units=None):
 
-        #TODO move calc step earlier to alight with simulate, report, plot philosophy
+        # TODO move calc step earlier to alight with simulate, report, plot philosophy
         df = self.calc_summary(df_cohort=df_cohort, cohort_units=cohort_units)
-        fig = make_table_fig(df)
+
+        # Formatting
+        title = "Forecast Summary"
+        if df_cohort is not None:
+            population = df_cohort["assets"].sum()
+            title += f" (Population: {population})"
+
+        fig = make_table_fig(df, title=title)
 
         return fig
 
