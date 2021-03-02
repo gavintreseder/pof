@@ -1045,10 +1045,10 @@ class Component(PofBase):
 
     #     return fig
 
-    def plot_summary(self, df_cohort=None):
+    def plot_summary(self, df_cohort=None, cohort_units=None):
 
         #TODO move calc step earlier to alight with simulate, report, plot philosophy
-        df = self.calc_summary(df_cohort=df_cohort)
+        df = self.calc_summary(df_cohort=df_cohort, cohort_units=cohort_units)
         fig = make_table_fig(df)
 
         return fig
