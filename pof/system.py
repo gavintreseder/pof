@@ -19,15 +19,6 @@ from pof.component import Component, sort_df
 from pof.pof_base import PofBase
 from pof.pof_container import PofContainer
 import pof.demo as demo
-from pof.interface.figures import (
-    make_ms_fig,
-    make_sensitivity_fig,
-    update_pof_fig,
-    update_condition_fig,
-    make_task_forecast_fig,
-    make_pop_table_fig,
-    make_table_fig,
-)
 from pof.units import scale_units, unit_ratio
 from pof.paths import Paths
 
@@ -162,7 +153,7 @@ class System(PofBase):
         """
         Returns a dictionary with the component triggered
         """
-        logging.info(self.units)
+        # logging.info(self.units)
         task_schedule = dict()
         for comp_name, comp in self.comp.items():
             if comp.active:
