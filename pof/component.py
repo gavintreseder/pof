@@ -619,8 +619,6 @@ class Component(PofBase):
         self.n_sens = 0
         self.n_sens_iterations = int((upper - lower) / step_size + step_size)
 
-        var = var_id.split("-")[-1]
-
         prefix = ["quantity", "cost"]
         suffix = ["", "_annual", "_cumulative"]
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
@@ -633,7 +631,14 @@ class Component(PofBase):
                 self.reset()
 
                 # Update annd simulate a timeline
-                self.update(var_id, i)
+                if isinstance(var_id, list):
+                    var = var_id
+                    for v_id in var_id:
+                        self.update(v_id)
+                else:
+                    var = var_id.split("-")[-1]
+                    self.update(var_id, i)
+
                 self.mp_timeline(t_end=t_end, n_iterations=n_iterations)
                 df_rc = self.expected_risk_cost_df()
 
@@ -822,7 +827,7 @@ class Component(PofBase):
 
         return self.df_cond
 
-    def calc_summary(self, df_cohort=None):
+    def calc_summary(self, df_cohort=None, cohort_units = None):
         """ Reports a summary for each of the failure modes and the expected outcomes over the MC simulation"""
         # Get the key data from each of the failuremodes
         summary = {}
@@ -847,6 +852,10 @@ class Component(PofBase):
                     f_ages = [_cf, _ff]
                     for f_name, f_age in zip(f_names, f_ages):
                         age, count = np.unique(f_age, return_counts=True)
+                        
+                        # Scale age based on the units
+                        #TODO this will need to be fixed so its works ith units in all direction *UR as int * UR
+                        age = (age*unit_ratio(self.units, cohort_units)).astype(int)
 
                         # Total failures
                         total_failed = (
@@ -1038,6 +1047,7 @@ class Component(PofBase):
 
     def plot_summary(self, df_cohort=None):
 
+        #TODO move calc step earlier to alight with simulate, report, plot philosophy
         df = self.calc_summary(df_cohort=df_cohort)
         fig = make_table_fig(df)
 

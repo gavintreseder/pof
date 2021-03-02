@@ -52,4 +52,10 @@ def scale_units(df, input_units: str = None, model_units: str = None):
 
 def unit_ratio(left: str, right: str) -> float:
     """ Returns the ratio between the left units and the right units"""
-    return VALID_UNITS.get(left) / VALID_UNITS.get(right)
+
+    if left is None or right is None:
+        ratio = 1
+    else:
+        ratio = VALID_UNITS.get(left) / VALID_UNITS.get(right)
+
+    return ratio

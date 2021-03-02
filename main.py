@@ -24,7 +24,9 @@ from pof.interface.layouts import (
 from pof.data.asset_data import SimpleFleet
 from pof.paths import Paths
 
+# Load the config
 cf = config["Main"]
+FILE_UNITS = cf.get("file_units_default")
 
 # Turn off logging level to speed up implementation
 logging.getLogger().setLevel(logging.INFO)
@@ -353,38 +355,41 @@ def update_figures(
     global pof_sim
     global sfd
 
+    # Temp solution to plot a single component, rather than the systems
+    comp = pof_sim.comp[comp_name]
+
     if active:
 
         ctx = dash.callback_context
         dash_id = ctx.triggered[0]["prop_id"].split(".")[0]
         keep_axis = dash_id == "sim_state" and axis_lock
 
-        pof_fig = pof_sim.comp[comp_name].plot_pof(
+        pof_fig = comp.plot_pof(
             keep_axis=keep_axis,
             units=input_units,
             prev=prev_pof_fig,
         )
 
-        ms_fig = pof_sim.comp[comp_name].plot_ms(
+        ms_fig = comp.plot_ms(
             y_axis=y_axis,
             keep_axis=keep_axis,
             units=input_units,
             prev=prev_ms_fig,
         )
 
-        cond_fig = pof_sim.comp[comp_name].plot_cond(
+        cond_fig = comp.plot_cond(
             keep_axis=keep_axis,
             units=input_units,
             prev=prev_cond_fig,
         )
 
-        task_forecast_fig = pof_sim.comp[comp_name].plot_task_forecast(
+        task_forecast_fig = comp.plot_task_forecast(
             keep_axis=keep_axis, prev=prev_task_fig
         )
 
         # pop_table_fig = pof_sim.plot_pop_table()
 
-        forecast_table_fig = pof_sim.comp[comp_name].plot_summary(sfd.df_age)
+        forecast_table_fig = comp.plot_summary(sfd.df_age, cohort_units=FILE_UNITS)
 
     else:
         raise PreventUpdate
