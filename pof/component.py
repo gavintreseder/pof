@@ -45,7 +45,6 @@ from pof.decorators import coerce_arg_type
 
 DEFAULT_ITERATIONS = 10
 
-
 cf = config.get("Component")
 cf_main = config.get("Main")
 
@@ -513,6 +512,7 @@ class Component(PofBase):
             ]
         ].dropna()
 
+        # Fill in the missing dates for plotting purposes
         fill_cols = ["cost", "quantity"]  # time not needed
         df_filled = df.apply(fill_blanks, axis=1, args=(t_start, t_end, fill_cols))
         df = df_filled.explode("time")
@@ -665,7 +665,16 @@ class Component(PofBase):
     def sensitivty_chain(
         self, sens_vars: dict, n_iterations: int = 100, t_end: int = 100
     ):
-        """Recursively solve the sensitivity for the all the vars being tested"""
+        """Recursively solve the sensitivity for the all the vars being tested
+        
+        Args:
+            sens_vars: the variable id and values that will be adjusged
+            n_iterations: the number of iterations that are completed per simulation
+            t_end: the length of the time the each iteration is simulated
+
+        Returns:
+            df_sens: A dataframe of expected risk costs by failure mode and task for each combination of sens_vars
+        """
 
         # Create copy so original isn't changed
         sens_vars = copy.deepcopy(sens_vars)
