@@ -608,6 +608,7 @@ class Component(PofBase):
         step_size=1,
         n_iterations=100,
         t_end=100,
+        rolling_window=None
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
@@ -1259,6 +1260,8 @@ def sort_df(df=None, column=None, var=None):
     ordered_df = df.sort_values(by=columns)
 
     return ordered_df
+
+
 
 
 def calc_confidence_interval(sim_counter=None, df_cohort=None, total_failed=None):

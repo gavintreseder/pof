@@ -257,7 +257,7 @@ class PofBase:
                 )
         except (KeyError, AttributeError, ValueError) as error:
             if config["PofBase"]["handle_update_error"]:
-                logging.warning("Update Failed. {error}")
+                logging.warning(f"Update Failed. {error}")
             else:
                 raise error
 

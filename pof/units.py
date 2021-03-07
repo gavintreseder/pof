@@ -14,8 +14,10 @@ VALID_UNITS = dict(
 valid_units = VALID_UNITS
 
 
-def scale_units(df, input_units: str = None, model_units: str = None):
-
+def scale_units(
+    df, input_units: str = None, model_units: str = None, on_index: bool = True
+):
+    """ scales all the unit-like columns in df including the index"""
     # TODO change to before / after
 
     # expand to include all cols
@@ -44,8 +46,9 @@ def scale_units(df, input_units: str = None, model_units: str = None):
         df.loc[:, unit_cols] = df[unit_cols] * ratio
 
         # Scale the index
-        if df.index.name in time_cols:
-            df.index *= ratio
+        if on_index:
+            if df.index.name in time_cols:
+                df.index *= ratio
 
     return df, units
 
@@ -59,3 +62,8 @@ def unit_ratio(left: str, right: str) -> float:
         ratio = VALID_UNITS.get(left) / VALID_UNITS.get(right)
 
     return ratio
+
+
+def scale_units_val(value: float, left: str, right: str):
+    """ scales a unit """
+    return value * unit_ratio(left, right)
