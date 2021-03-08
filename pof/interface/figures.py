@@ -328,7 +328,7 @@ def make_pop_table_fig(df):
     return fig
 
 
-def make_table_fig(df, title = "Forecast Summary"):
+def make_table_fig(df, title="Forecast Summary"):
     """
     Produces a dash table to summarise key statistics by failure mode
     """
@@ -351,6 +351,44 @@ def make_table_fig(df, title = "Forecast Summary"):
     )
 
     fig.update_layout(title=title)
+
+    return fig
+
+
+def make_contour_plot(df, x_axis, y_axis, z_axis, title='Contour of'):
+    """ Create a contour plot """
+
+    df_plot = df.reset_index()
+
+    # Arrange the data for plotly
+    z = df_plot.groupby(by=[x_axis])[z_axis].apply(lambda x: x.values.tolist()).tolist()
+    x = df_plot[x_axis].unique()
+    y = df_plot[y_axis].unique()
+
+    # Generate the figure
+    fig = go.Figure(
+        data=go.Contour(x=x, y=y, z=z)#, contours_coloring="lines"),
+    )
+
+    fig.update_layout(
+        title=title,
+        xaxis={'title':x_axis},
+        yaxis={'title':y_axis},
+        legend={'title':z_axis}
+    )
+    return fig
+
+
+def make_value_lost_fig(
+    df,
+    x_axis: str,
+    y_axis: str,
+    legend: str,
+    title: str = "Value Lost by Sub Populations",
+):
+    """ Takes a df of costs by subpopulation and returns a line chart for each sub population"""
+
+    fig = px.line(df, x=x_axis, y=y_axis, color=legend, title=title)
 
     return fig
 

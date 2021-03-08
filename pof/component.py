@@ -187,6 +187,7 @@ class Component(PofBase):
     # ****************** Timeline ******************
 
     def cancel_sim(self):
+        """ Pass a poison pill to end a simulation early and reset progress  """
         self.up_to_date = False
         self.n = 0
         self.n_sens = 0
