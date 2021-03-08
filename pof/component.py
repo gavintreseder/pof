@@ -525,7 +525,7 @@ class Component(PofBase):
             ].transform(pd.Series.cumsum)
             df[col + "_annual"] = df[col] / self.expected_life()
 
-            # df[col + "_lifecycle"] = df[col] / df['_annual'] self.expected_life()
+            df[col + "_lifecycle"] = df[col + "_cumulative"] / self.expected_life()
 
         # Formatting
         self.df_erc = sort_df(df=df, column="task")
@@ -609,7 +609,7 @@ class Component(PofBase):
         step_size=1,
         n_iterations=100,
         t_end=100,
-        rolling_window=None
+        rolling_window=None,
     ):
         """
         Returns dataframe of sensitivity data for a given variable name using a given lower, upper and step_size.
@@ -622,7 +622,7 @@ class Component(PofBase):
         self.n_sens_iterations = int((upper - lower) / step_size + step_size)
 
         prefix = ["quantity", "cost"]
-        suffix = ["", "_annual", "_cumulative"]
+        suffix = ["", "_annual", "_cumulative", "_lifecycle"]
         cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
         for i in tqdm(np.arange(lower, upper + step_size, step_size), desc=var_id):
@@ -668,7 +668,7 @@ class Component(PofBase):
         self, sens_vars: dict, n_iterations: int = 100, t_end: int = 100
     ):
         """Recursively solve the sensitivity for the all the vars being tested
-        
+
         Args:
             sens_vars: the variable id and values that will be adjusged
             n_iterations: the number of iterations that are completed per simulation
@@ -685,7 +685,7 @@ class Component(PofBase):
 
             # Format
             prefix = ["quantity", "cost"]
-            suffix = ["", "_annual", "_cumulative"]
+            suffix = ["", "_annual", "_cumulative", '_lifecycle']
             cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
             # Simulate
@@ -921,7 +921,7 @@ class Component(PofBase):
             "cf pop annual avg",
             "conf interval cf (+/-)",
             "ff pop annual avg",
-            "conf interval ff (+/-)"
+            "conf interval ff (+/-)",
         ]
         df = df.reset_index().reindex(columns=col_order)
 
@@ -1261,8 +1261,6 @@ def sort_df(df=None, column=None, var=None):
     ordered_df = df.sort_values(by=columns)
 
     return ordered_df
-
-
 
 
 def calc_confidence_interval(sim_counter=None, df_cohort=None, total_failed=None):
