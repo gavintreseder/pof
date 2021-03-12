@@ -221,6 +221,16 @@ def make_sensitivity_fig(
 
     try:
 
+        if 'direct' not in df_plot['source']:
+            df_direct = df_plot.loc[~df_plot['source'].isin(['risk', 'total', 'direct'])].groupby(by=var).sum()
+            df_direct['source']='direct'
+            df_plot = df_plot.append(df_direct)
+
+        if 'total' not in df_plot['source']:
+            df_total = df_plot.loc[~df_plot['source'].isin(['total', 'direct'])].groupby(by=var).sum()
+            df_total['source']='direct'
+            df_plot = df_plot.append(df_direct)
+
         # Add line dashes
         df_plot[" "] = "  "
         df_plot.loc[df_plot["source"].isin(["risk", "direct", "total"]), " "] = "   "
