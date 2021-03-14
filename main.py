@@ -49,9 +49,7 @@ file_name_initial = cf.get("file_name_default")
 paths = Paths()
 
 # Population Data
-file_path = paths.input_path + os.sep
-
-sfd = SimpleFleet(file_path + cf.get("pop_file_name"))
+sfd = SimpleFleet(paths.input_path + os.sep + cf.get("pop_file_name"))
 sfd.load()
 sfd.calc_age_forecast(cf.get("START_YEAR"), cf.get("END_YEAR"), cf.get("CURRENT_YEAR"))
 

@@ -221,15 +221,23 @@ def make_sensitivity_fig(
 
     try:
 
-        if 'direct' not in df_plot['source']:
-            df_direct = df_plot.loc[~df_plot['source'].isin(['risk', 'total', 'direct'])].groupby(by=var).sum()
-            df_direct['source']='direct'
-            df_plot = df_plot.append(df_direct)
+        if "direct" not in df_plot["source"].values:
+            df_direct = (
+                df_plot.loc[~df_plot["source"].isin(["risk", "total", "direct"])]
+                .groupby(by=var)
+                .sum()
+            )
+            df_direct["source"] = "direct"
+            df_plot = df_plot.append(df_direct.reset_index())
 
-        if 'total' not in df_plot['source']:
-            df_total = df_plot.loc[~df_plot['source'].isin(['total', 'direct'])].groupby(by=var).sum()
-            df_total['source']='direct'
-            df_plot = df_plot.append(df_direct)
+        if "total" not in df_plot["source"].values:
+            df_total = (
+                df_plot.loc[~df_plot["source"].isin(["total", "direct"])]
+                .groupby(by=var)
+                .sum()
+            )
+            df_total["source"] = "total"
+            df_plot = df_plot.append(df_total.reset_index())
 
         # Add line dashes
         df_plot[" "] = "  "
@@ -238,7 +246,8 @@ def make_sensitivity_fig(
         # Add the colours
         color_map = get_color_map(df=df_plot, column="source")
         if "active" in df_plot:
-            df_plot = df_plot.loc[df_plot["active"]]
+            df_plot["active"] = df_plot["active"].astype(bool)
+            df_plot = df_plot.loc[df_plot["active"]].dropna()
 
         # Adjust the labels
 
@@ -365,7 +374,7 @@ def make_table_fig(df, title="Forecast Summary"):
     return fig
 
 
-def make_contour_plot(df, x_axis, y_axis, z_axis, title='Contour of'):
+def make_contour_plot(df, x_axis, y_axis, z_axis, title="Contour of"):
     """ Create a contour plot """
 
     df_plot = df.reset_index()
@@ -376,15 +385,13 @@ def make_contour_plot(df, x_axis, y_axis, z_axis, title='Contour of'):
     y = df_plot[y_axis].unique()
 
     # Generate the figure
-    fig = go.Figure(
-        data=go.Contour(x=x, y=y, z=z)#, contours_coloring="lines"),
-    )
+    fig = go.Figure(data=go.Contour(x=x, y=y, z=z))  # , contours_coloring="lines"),
 
     fig.update_layout(
         title=title,
-        xaxis={'title':x_axis},
-        yaxis={'title':y_axis},
-        legend={'title':z_axis}
+        xaxis={"title": x_axis},
+        yaxis={"title": y_axis},
+        legend={"title": z_axis},
     )
     return fig
 
@@ -398,7 +405,17 @@ def make_value_lost_fig(
 ):
     """ Takes a df of costs by subpopulation and returns a line chart for each sub population"""
 
-    fig = px.line(df, x=x_axis, y=y_axis, color=legend, title=title)
+    labels = {y_axis: y_axis.replace("_", " ").title()}
+
+    fig = px.line(
+        df,
+        x=x_axis,
+        y=y_axis,
+        color=legend,
+        title=title,
+        labels=labels,
+        color_discrete_sequence=px.colors.qualitative.Alphabet,
+    )
 
     return fig
 
