@@ -15,13 +15,13 @@ class Paths:
     def __init__(self):
 
         self.root_path = os.path.dirname(os.getcwd()) + os.sep
-        self.pof_path = self.root_path + r"\pof" + os.sep
-        self.demo_path = self.pof_path + r"\data\inputs" + os.sep
-        self.input_path = self.root_path + r"\inputs" + os.sep
-        self.test_path = self.input_path + r"\test_inputs" + os.sep
-        self.csv_path = self.input_path + r"\csvs" + os.sep
-        self.model_path = self.input_path + r"\model" + os.sep
-        self.output_path = self.root_path + r"\outputs" + os.sep
+        self.pof_path = self.root_path + "pof" + os.sep
+        self.demo_path = self.pof_path + "data" + os.sep + "inputs" + os.sep
+        self.input_path = self.root_path + "inputs" + os.sep
+        self.test_path = self.input_path + "test_inputs" + os.sep
+        self.csv_path = self.input_path + "csvs" + os.sep
+        self.model_path = self.input_path + "model" + os.sep
+        self.output_path = self.root_path + "outputs" + os.sep
 
 
 if __name__ == "__main__":
