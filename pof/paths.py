@@ -1,6 +1,4 @@
 import os
-from os.path import dirname, realpath
-from pathlib import Path
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -16,14 +14,14 @@ class Paths:
 
     def __init__(self):
 
-        self.root_path = str(Path(dirname(realpath(__file__))).parents[1])
-        self.pof_path = self.root_path + r"\pof"
-        self.demo_path = self.pof_path + r"\data\inputs"
-        self.input_path = self.root_path + r"\inputs"
-        self.test_path = self.input_path + r"\test_inputs"
-        self.csv_path = self.input_path + r"\csvs"
-        self.model_path = self.input_path + r"\model"
-        self.output_path = self.root_path + r"\outputs"
+        self.root_path = os.path.dirname(os.getcwd()) + os.sep
+        self.pof_path = self.root_path + r"\pof" + os.sep
+        self.demo_path = self.pof_path + r"\data\inputs" + os.sep
+        self.input_path = self.root_path + r"\inputs" + os.sep
+        self.test_path = self.input_path + r"\test_inputs" + os.sep
+        self.csv_path = self.input_path + r"\csvs" + os.sep
+        self.model_path = self.input_path + r"\model" + os.sep
+        self.output_path = self.root_path + r"\outputs" + os.sep
 
 
 if __name__ == "__main__":

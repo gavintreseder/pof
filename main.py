@@ -49,7 +49,7 @@ file_name_initial = cf.get("file_name_default")
 paths = Paths()
 
 # Population Data
-sfd = SimpleFleet(paths.input_path + os.sep + cf.get("pop_file_name"))
+sfd = SimpleFleet(paths.input_path + cf.get("pop_file_name"))
 sfd.load()
 sfd.calc_age_forecast(cf.get("START_YEAR"), cf.get("END_YEAR"), cf.get("CURRENT_YEAR"))
 
@@ -60,8 +60,8 @@ global collapse_ids
 global sim_triggers
 global param_inputs
 
-aml = AssetModelLoader(paths.demo_path + os.sep + cf.get("file_name_default"))
-sys_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+aml = AssetModelLoader(paths.demo_path + cf.get("file_name_default"))
+sys_data = aml.load(paths.demo_path + cf.get("file_name_default"))
 system = System.from_dict(sys_data[cf.get("name")])
 system.units = cf.get("file_units_default")  # Set the units to be file units initially
 system.fleet_data = sfd  # TODO fix by creating asset class
@@ -132,24 +132,24 @@ def save_load_file(click_load, click_save, file_name_input):
     # Define the path of the file to load
     if click_save:  # If the save function has been called, the file name is now a json
         file_name_output = file_name_json
-        file_path_output = paths.model_path + os.sep
+        file_path_output = paths.model_path
     else:  # Otherwise the file name is as input
         file_name_output = file_name_input
         if file_name_input == cf.get(
             "file_name_default"
         ):  # The default file is in the pof path
-            file_path_output = paths.demo_path + os.sep
+            file_path_output = paths.demo_path
         else:  # All other files are saved in the model path
-            file_path_output = paths.model_path + os.sep
+            file_path_output = paths.model_path
     logging.info(file_path_output + file_name_output)
 
     # Load the file
     if click_load or click_save:
         if os.path.exists(file_path_output + file_name_output):
             aml = AssetModelLoader(
-                paths.demo_path + os.sep + cf.get("file_name_default")
+                paths.demo_path + cf.get("file_name_default")
             )
-            sys_data = aml.load(paths.demo_path + os.sep + cf.get("file_name_default"))
+            sys_data = aml.load(paths.demo_path + cf.get("file_name_default"))
             system = System.from_dict(sys_data[cf.get("name")])
 
             system.units = cf.get(
