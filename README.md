@@ -1,6 +1,6 @@
 # PoF
 
-A project for determining the probability of failure for an asset once a maintenance strategy has been applied
+A project for determining the probability of failure for an asset once a maintenance strategy has been applied.
 
 ## Description
 
@@ -19,19 +19,7 @@ This project relies on open source packages that are freely available online. Th
 - Lifelines: Survival analysis
 - Reliability: Survival analysis
 
-A full like of the packages can be found in pyproject.toml and requirements.txt
-
-## Technical
-
-There are two areas where we will be providing inputs to setup; the terminal and the VSCode pallete
-
-Terminal commands are typed into the terminal (typically on the bottom edge of your IDE) and exectued by pressing enter
-
-> > > This is a terminal command
-
-The VSCode Pallete is used to make changes to the IDE and is accessed with ctrl + shift + p. If autocomplete matches the command, you can select this with the mouse.
-
-> This is a command pallete command
+A full list of the packages can be found in pyproject.toml and requirements.txt
 
 # Installation
 
@@ -44,7 +32,15 @@ The following steps only need to be completed once
 3. **Clone the repository** - Get the code for the pof project from the cloud
 4. **Virtual environment Setup** - Get the code
 
-The steps below explain how to complete this process in VS Code
+The steps below explain how to complete this process in VS Code. There are two areas where we will be providing inputs to setup; the terminal and the VSCode pallete
+
+Terminal commands are typed into the terminal (typically on the bottom edge of your IDE) and exectued by pressing enter
+
+> > > This is a terminal command
+
+The VSCode Pallete is used to make changes to the IDE and is accessed with ctrl + shift + p. If autocomplete matches the command, you can select this with the mouse.
+
+> This is a command pallete command
 
 ## Software Requirements
 
@@ -145,14 +141,6 @@ Pip is distributed with python by default; however, it receives regular updates 
 Now install the dependencies that are for this module to run. During the installation of these packages, red or yellow warnings indicate a package has not installed correctly. (Note: VSCode cannot install the pacakges when connected to the Essential Energy network or on the F5 VPN)
 
 > > > pip install -r requirements.txt
-
-### Jupter Notebooks
-
-In some instances notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raises ModuleNotFoundError then this is the likely cause
-
-> > > ipython kernel install --user --name=.venv
-
-Note: If this causes issues see gotchas
 
 ## Unit tests
 
@@ -264,3 +252,9 @@ https://anbasile.github.io/posts/2017-06-25-jupyter-venv/
 
 Ensure you have the visual studio C++ base tools installed
 https://visualstudio.microsoft.com/downloads/
+
+## Jupter Notebooks
+
+In some instances notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raises ModuleNotFoundError then this is the likely cause
+
+> > > ipython kernel install --user --name=.venv
