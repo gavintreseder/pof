@@ -3,8 +3,6 @@ from pathlib import Path
 import os
 from os.path import dirname, realpath
 
-str(Path(dirname(realpath(__file__))).parents[1])
-
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
     import sys
