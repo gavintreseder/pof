@@ -37,7 +37,7 @@ from pof.interface.figures import (
     make_pop_table_fig,
     make_table_fig,
 )
-from pof.data.asset_data import SimpleFleet
+from pof.loader.asset_data import SimpleFleet
 from pof.loader.asset_model_loader import AssetModelLoader
 from pof.paths import Paths
 from pof.units import scale_units, unit_ratio
@@ -685,7 +685,7 @@ class Component(PofBase):
 
             # Format
             prefix = ["quantity", "cost"]
-            suffix = ["", "_annual", "_cumulative", '_lifecycle']
+            suffix = ["", "_annual", "_cumulative", "_lifecycle"]
             cols = [f"{pre}{suf}" for pre in prefix for suf in suffix]
 
             # Simulate

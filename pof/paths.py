@@ -1,4 +1,9 @@
+from pathlib import Path
+
 import os
+from os.path import dirname, realpath
+
+str(Path(dirname(realpath(__file__))).parents[1])
 
 # Change the system path if an individual file is being run
 if __package__ is None or __package__ == "":
@@ -14,7 +19,7 @@ class Paths:
 
     def __init__(self):
 
-        self.root_path = os.path.dirname(os.getcwd()) + os.sep
+        self.root_path = str(Path(dirname(realpath(__file__))).parents[1]) + os.sep
         self.pof_path = self.root_path + "pof" + os.sep
         self.demo_path = self.pof_path + "data" + os.sep + "inputs" + os.sep
         self.input_path = self.root_path + "inputs" + os.sep

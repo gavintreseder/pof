@@ -8,7 +8,7 @@ TODO
 
 ## Demo
 
-Larger more detailed demonstrations can be found in notebooks/
+Larger more detailed demonstrations can be found in notebooks.
 
 ## Technology
 

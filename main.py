@@ -21,7 +21,7 @@ from pof.interface.layouts import (
     make_graph_filter,
 )
 
-from pof.data.asset_data import SimpleFleet
+from pof.loader.asset_data import SimpleFleet
 from pof.paths import Paths
 
 # Load the config
@@ -146,9 +146,7 @@ def save_load_file(click_load, click_save, file_name_input):
     # Load the file
     if click_load or click_save:
         if os.path.exists(file_path_output + file_name_output):
-            aml = AssetModelLoader(
-                paths.demo_path + cf.get("file_name_default")
-            )
+            aml = AssetModelLoader(paths.demo_path + cf.get("file_name_default"))
             sys_data = aml.load(paths.demo_path + cf.get("file_name_default"))
             system = System.from_dict(sys_data[cf.get("name")])
 
