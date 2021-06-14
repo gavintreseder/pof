@@ -8,16 +8,12 @@ TODO
 
 ## Demo
 
-Detailed demonstrations can be found in notebooks. Notebook demonstrations include:
-Value Lost
-System - ~the same as component
-Component
-Failure Mode
-Tasks
-Indicators
+Larger more detailed demonstrations can be found in notebooks.
 
 ## Technology
+
 This project relies on open source packages that are freely available online. The key packages used for this project are:
+
 - Dash: Interface in a browser session
 - Plotly: Interactive graphs
 - Lifelines: Survival analysis
@@ -25,7 +21,7 @@ This project relies on open source packages that are freely available online. Th
 
 A full list of the packages can be found in pyproject.toml and requirements.txt
 
-## Installation
+# Installation
 
 Here is a step by step guide on how to install the project. It will get you to the point of having a local running instance and only needs to be completed once per installation.
 
@@ -38,7 +34,7 @@ The following steps only need to be completed once
 
 The steps below explain how to complete this process in VS Code. There are two areas where we will be providing inputs to setup; the terminal and the VSCode pallete
 
-Terminal commands are typed into the terminal (typically on the bottom edge of your IDE, but if not can be accessed with ctrl + shift + `) and exectued by pressing enter
+Terminal commands are typed into the terminal (typically on the bottom edge of your IDE) and exectued by pressing enter
 
 > > > This is a terminal command
 
@@ -62,19 +58,20 @@ The easiest way to navigate and explore this project is through an IDE. VSCode r
 
 - Python: The interpreter using to execute \*.py files and debug the project
 - Jupyter: An extension that supports interactive notebooks
-- GitLens (optional): Used to manage the repository
+- GitLens (optional): Used to manage the
 
-VSCode may detect things about your setup during installation (E.g. install data science tools, linting) via blue boxes in the bottom right corner. The exact content of these messages varies, but it is suggested you accept the VSCode recommendation.
+VSCode may detect things about your setup during installation (E.g. install data science tools, linting) via blue boxes in the bottom right corner. The exact content of these messages varies, but it is suggested you accept the VSCode recommendation
 
-After clicking install for Python, Vscode may prompt you to select an interpreter. This should automatically appear in the bottom right hand corner so follow the given instructions. When the Python options appear as a drop down from the Terminal bar, select the correct version of Python that was downloaded (3.9.0 64-bit)
+### Powershell issues
 
-*To set this up manually, click on the blue status bar in the bottom left-hand corner (the interpreter words will be yellow). This will take you up to the terminal, select Python 3.9.0 64-bit.
-
-Essential Energy Laptop option: The default installation at EE does not add python variables to the PATH so you will need to change your default terminal.
+If the default installation of python does not add to the PATH so will need to change your default terminal
 
 ctrl + shift + p
-Terminal: Select Default Shell
-Command Prompt
+
+> Terminal: Select Default Shell
+> Command Prompt
+
+Launch a new terminal through the ribbon or via the shortcut (ctrl + shift + `)
 
 **_Validation_**: The dropdown box on the top edge of the terminal ends with "cmd"
 
@@ -82,7 +79,7 @@ Command Prompt
 
 The code base is hosted on an online repository called github. To obtain the latest version of the source code the repo can be cloned onto your local machine.
 
-ctrl + shift + p (in vs code)
+ctrl + shift + p
 
 > Git:Clone
 > https://github.com/gavintreseder/pof.git
@@ -120,12 +117,6 @@ ctrl + shift + p
 
 The terminal you created the virtual environment from will still be using the local python installation rather than your new venv. Any new terminals you open will activate in this venv by default.
 
-
-#### Option 4 - Terminal
-Run the command
-
-> .venv\Scripts\activate
-
 **_Validation_**: Your terminal path starts with (.venv) C:\ ....
 
 ### Dependencies
@@ -139,15 +130,7 @@ Install the dependencies that are required to develop this module
 > > > pip install poetry
 > > > poetry install
 
-Note: If the installation does not finish it can be caused by OneDrive locking files during upload. If this occurs attempt the install again.
-
-If an error occurs about ‘Build Code’ not installed, it may be due to C++ not installed on the computer.  If so, follow the link provided in the error message or use the following link https://visualstudio.microsoft.com/vs/ to find and install ‘Desktop Development with C++’.  You will need to restart the computer for this to happen. After installing this program, repeat ‘To develop the project (optional)’ step.
-
-In some instances, notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raise ModuleNotFoundError then this is the likely cause
-
->>> ipython kernel install --user --name=.venv
-
-Note: If this causes issues see gotchas
+Note: If the instlalation does not finish it can be caused by OneDrive locking files during upload. If this occurs attempt the install again.
 
 #### Option 2 - Pip
 
@@ -159,35 +142,27 @@ Now install the dependencies that are for this module to run. During the install
 
 > > > pip install -r requirements.txt
 
+## Unit tests
+
+This package is distributed with unit tests to validate key functionality. The unit tests can be accessed from the test icon (it resembles a beaker) in the activity bar. If there are no tests visible in the test window than you will need to configure the test framework
+
 ### Configure the test framework
 
 The test framework can be configured from the command pallette
 ctrl + shift + p
-
-`Python: Configure Tests`
 
 > Python: Configure Tests
 > unittest
 > test
 > test\_\*.py
 
-Once configured, disover tests (refresh icon) to populate a list of tests for this project.
+Once configured, disover tests (refresh icon) to populate a list of tests for this project
 
-To execute the tests:
-- select the test icon in the activity bar (it resembles a beaker)
-- Run all tests (the green double arrow in the top left corner)
+### Run All Tests
 
-## Usage
+Run all tests (play icon) to confirm the installation has worked correctly.
 
-To run the interface, open the file main.py in the pof folder, and hit the play button at the top right hand corner of VS Code.
-
-After executing main.py, the application can be opened at http://127.0.0.1:8050/. Google chrome is the preferred browser.
-
-
-How to run the interface
-Known limitations
-How to use the interface (screenshot)
-
+# Usage
 
 ## Notebooks
 
@@ -197,7 +172,11 @@ Hint: It is recommended you trust all notebooks. When prompted select "Trust all
 
 **_Validation_**: The top right corner of your notebook window will indicate that it is Trusted
 
-# ADDITIONAL #
+## Dash Interface
+
+The dash interface can be opened by executing main.py. By default the application can be openned http://127.0.0.1:8050/
+
+# Development
 
 ## Poetry
 
@@ -226,7 +205,7 @@ Access the pof-engine
 
 > > > heroku git:remote -a pof-engine
 
-## Gotchas
+# Gotchas
 
 Here is a collection of unique problems I faced at different times during the project and how I solved the issues
 
