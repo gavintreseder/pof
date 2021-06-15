@@ -136,6 +136,9 @@ This python project relies on dependencies (open source pacakges) that need to b
 Install the dependencies that are required to develop this module
 
 `pip install poetry`
+
+then
+
 `poetry install`
 
 Note: If the installation does not finish it can be caused by OneDrive locking files during upload. If this occurs attempt the install again.
@@ -197,6 +200,9 @@ Poetry is a package manager for python projects https://python-poetry.org/docs/ 
 Adding new packages
 
 `poetry add <package>`
+
+Adding new packages which have development dependencies
+
 `poetry add --dev <package>`
 
 Updating packages
