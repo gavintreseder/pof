@@ -40,7 +40,7 @@ The steps below explain how to complete this process in VS Code. There are two a
 
 Terminal commands are typed into the terminal (typically on the bottom edge of your IDE, but if not can be accessed with ctrl + shift + `) and exectued by pressing enter
 
-> > > This is a terminal command
+`This is a terminal command`
 
 The VSCode Pallete is used to make changes to the IDE and is accessed with ctrl + shift + p. If autocomplete matches the command, you can select this with the mouse.
 
@@ -97,7 +97,7 @@ A virtual environment will keep all the requirements for this project in a singl
 
 Create a new virtual environment
 
-> > > python -m venv .venv
+`python -m venv .venv`
 
 Once the virtual environment has been created you will need to select it has your interpreter. You will know this has worked when the interpreter in the status bar reflects the venv you have just made (E.g. "Python 3.9.2 64-bit ('.venv':venv)". This can be achieved through one of three methods.
 
@@ -120,7 +120,6 @@ ctrl + shift + p
 
 The terminal you created the virtual environment from will still be using the local python installation rather than your new venv. Any new terminals you open will activate in this venv by default.
 
-
 #### Option 4 - Terminal
 Run the command
 
@@ -136,8 +135,8 @@ This python project relies on dependencies (open source pacakges) that need to b
 
 Install the dependencies that are required to develop this module
 
-> > > pip install poetry
-> > > poetry install
+`pip install poetry`
+`poetry install`
 
 Note: If the installation does not finish it can be caused by OneDrive locking files during upload. If this occurs attempt the install again.
 
@@ -153,18 +152,16 @@ Note: If this causes issues see gotchas
 
 Pip is distributed with python by default; however, it receives regular updates so it advisable to install latest version before using.
 
-> > > python -m pip install --upgrade pip
+`python -m pip install --upgrade pip`
 
 Now install the dependencies that are for this module to run. During the installation of these packages, red or yellow warnings indicate a package has not installed correctly. (Note: VSCode cannot install the pacakges when connected to the Essential Energy network or on the F5 VPN)
 
-> > > pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 ### Configure the test framework
 
 The test framework can be configured from the command pallette
 ctrl + shift + p
-
-`Python: Configure Tests`
 
 > Python: Configure Tests
 > unittest
@@ -183,12 +180,6 @@ To run the interface, open the file main.py in the pof folder, and hit the play 
 
 After executing main.py, the application can be opened at http://127.0.0.1:8050/. Google chrome is the preferred browser.
 
-
-How to run the interface
-Known limitations
-How to use the interface (screenshot)
-
-
 ## Notebooks
 
 Notebooks have been developed as documentation to explain how various parts of the project have been developed. To execute a notebook select a notebook (\*.ipynb) from the explorer, and confirm you trust the notebook
@@ -205,26 +196,26 @@ Poetry is a package manager for python projects https://python-poetry.org/docs/ 
 
 Adding new packages
 
-> > > poetry add <package>
-> > > poetry add --dev <package>
+`poetry add <package>`
+`poetry add --dev <package>`
 
 Updating packages
 
-> > > poetry update
+`poetry update`
 
 Creating the requirements.txt
 
-> > > poetry export --output requirements.txt --without-hashes
+`poetry export --output requirements.txt --without-hashes`
 
 ## Heroku
 
 Login to heroku
 
-> > > heroku login -i
+`heroku login -i`
 
 Access the pof-engine
 
-> > > heroku git:remote -a pof-engine
+`heroku git:remote -a pof-engine`
 
 ## Gotchas
 
@@ -278,4 +269,4 @@ https://visualstudio.microsoft.com/downloads/
 
 In some instances notebooks may not detect the venv and may need to be linked the ipykernel. If the unittests are passing, but executing the notebooks raises ModuleNotFoundError then this is the likely cause
 
-> > > ipython kernel install --user --name=.venv
+`ipython kernel install --user --name=.venv`
